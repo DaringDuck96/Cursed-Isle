@@ -1,0 +1,217 @@
+{
+ "name": "Governor Ottoline Harrow",
+ "nodes": {
+  "root": {
+   "text": [
+    "Governor Harrow. You have an appointment, I trust? No? Then be brief.",
+    "Port Meridian runs on order, captain. And on taxes. Mostly taxes.",
+    "Ah. A visitor. How... unexpected."
+   ],
+   "text_if": [
+    {
+     "if": [
+      "arcflag:exposed"
+     ],
+     "text": [
+      "You. You've cost me everything. Speak, if you must, and then get out of my house."
+     ]
+    },
+    {
+     "if": [
+      "arcflag:court"
+     ],
+     "text": [
+      "My dear captain. The Court remembers its friends. Do sit."
+     ]
+    },
+    {
+     "if": [
+      "ledger==3"
+     ],
+     "text": [
+      "I know where my ledger went, captain. Every page of it."
+     ]
+    },
+    {
+     "if": [
+      "ledger==2"
+     ],
+     "text": [
+      "My door is always open to you, captain. Port Meridian remembers its friends."
+     ]
+    },
+    {
+     "if": [
+      "relics>=4"
+     ],
+     "text": [
+      "Four relics, I hear. Or is it five? People talk, and I listen. Sit down, captain."
+     ]
+    }
+   ],
+   "aside": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Listen to that thunder. Nobody sane is at sea tonight.",
+      "Storm's right on top of us. Stay in the dry a while.",
+      "Every timber in the harbour's groaning. Ugly night."
+     ]
+    },
+    {
+     "if": [
+      "raining"
+     ],
+     "text": [
+      "Wretched rain. Gets into everything.",
+      "Rain again. Good for the cisterns, bad for the soul.",
+      "You're dripping on my floor, by the way."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Late to be wandering about.",
+      "Night's when the cursed come walking. Keep a lantern lit.",
+      "Can't sleep either, eh?"
+     ]
+    },
+    {
+     "if": [
+      "dawn"
+     ],
+     "text": [
+      "Up with the gulls, I see.",
+      "Early start, {player}.",
+      "Mist'll burn off by mid-morning."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "Is there something you need done?",
+     "action": "quest",
+     "if": [
+      "ledger==0",
+      "arc!=2"
+     ]
+    },
+    {
+     "label": "About your ledger...",
+     "action": "quest",
+     "if": [
+      "ledger==1"
+     ]
+    },
+    {
+     "label": "You wanted to talk about the relics?",
+     "action": "quest",
+     "if": [
+      "arc==2",
+      "relics>=4",
+      "!relic:lantern",
+      "!arcflag:offered"
+     ]
+    },
+    {
+     "label": "I'll take your bargain. (Permanent: join the Lantern Court's deal)",
+     "action": "quest_alt",
+     "if": [
+      "arc==2",
+      "arcflag:offered",
+      "!relic:lantern",
+      "!arcflag:exposed"
+     ]
+    },
+    {
+     "label": "You're finished, Harrow. (Permanent: expose her)",
+     "action": "quest",
+     "if": [
+      "arc==2",
+      "arcflag:offered",
+      "!relic:lantern",
+      "!arcflag:exposed"
+     ]
+    },
+    {
+     "label": "Where's your Hand?",
+     "action": "quest",
+     "if": [
+      "arcflag:exposed",
+      "!relic:lantern"
+     ]
+    },
+    {
+     "label": "Tell me about Port Meridian.",
+     "goto": "town"
+    },
+    {
+     "label": "How did you become governor?",
+     "goto": "about"
+    },
+    {
+     "label": "What is the Lantern Court?",
+     "goto": "court",
+     "if": [
+      "arcflag:offered"
+     ]
+    },
+    {
+     "label": "Heard any rumours?",
+     "goto": "common:rumours"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "town": {
+   "text": [
+    [
+     "The jewel of the Tidewatch's possessions. Paved streets, a proper chapel, a mansion fit for a governor.",
+     "Merchants pay their dues here, and in return they don't get robbed. Mostly. You'll find Merchant Abernathy in the plaza."
+    ]
+   ]
+  },
+  "about": {
+   "text": [
+    "Twenty years climbing the Crown's ladder, captain. One must be patient, and generous to the right people, and forgetful about the wrong ones."
+   ],
+   "text_if": [
+    {
+     "if": [
+      "arcflag:offered"
+     ],
+     "text": [
+      "I was given the post by people who see further than the Crown. Leave it there."
+     ]
+    }
+   ]
+  },
+  "court": {
+   "text": [
+    [
+     "A society of patient people. We collect the past, captain. The First Tide knew things about the sea the Crown never will.",
+     "When the gate opens, someone must hold the door. Better us than pirates. Better us than the drowned."
+    ]
+   ],
+   "text_if": [
+    {
+     "if": [
+      "arcflag:exposed"
+     ],
+     "text": [
+      [
+       "A society you've made an enemy of. Patient people have long memories."
+      ]
+     ]
+    }
+   ]
+  }
+ }
+}

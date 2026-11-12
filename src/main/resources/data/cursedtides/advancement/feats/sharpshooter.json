@@ -1,0 +1,19 @@
+{
+ "display": {
+  "icon": {
+   "id": "cursedtides:musket"
+  },
+  "title": "Sharpshooter",
+  "description": "Score 100 at the shooting range",
+  "frame": "goal",
+  "show_toast": true,
+  "announce_to_chat": true,
+  "hidden": false
+ },
+ "criteria": {
+  "done": {
+   "trigger": "minecraft:impossible"
+  }
+ },
+ "parent": "cursedtides:feats/first_blood"
+}

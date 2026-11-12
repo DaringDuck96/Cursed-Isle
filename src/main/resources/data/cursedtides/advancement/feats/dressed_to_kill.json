@@ -1,0 +1,19 @@
+{
+ "display": {
+  "icon": {
+   "id": "cursedtides:gold_earring"
+  },
+  "title": "Dressed to Kill",
+  "description": "Wear an accessory in every slot",
+  "frame": "goal",
+  "show_toast": true,
+  "announce_to_chat": true,
+  "hidden": false
+ },
+ "criteria": {
+  "done": {
+   "trigger": "minecraft:impossible"
+  }
+ },
+ "parent": "cursedtides:feats/root"
+}

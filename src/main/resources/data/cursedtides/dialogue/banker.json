@@ -1,0 +1,128 @@
+{
+ "name": "Cornelius Fairweather",
+ "nodes": {
+  "root": {
+   "text": [
+    "Cornelius Fairweather, Bank of Kingsport. How may the bank serve you?",
+    "Welcome, welcome. Deposits on the left, insurance on the right, complaints in the harbour.",
+    "Good {time}, {player}. Your strongbox is exactly as you left it. The bank never sleeps."
+   ],
+   "text_if": [
+    {
+     "if": [
+      "wanted"
+     ],
+     "text": [
+      "I'm obliged to tell you the bank does not deal with outlaws. I'm also obliged to keep my mouth shut. Strongbox?"
+     ]
+    },
+    {
+     "if": [
+      "notoriety>=100"
+     ],
+     "text": [
+      "A captain of means! The bank is honoured. Truly. Please don't rob us."
+     ]
+    }
+   ],
+   "aside": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Listen to that thunder. Nobody sane is at sea tonight.",
+      "Storm's right on top of us. Stay in the dry a while.",
+      "Every timber in the harbour's groaning. Ugly night."
+     ]
+    },
+    {
+     "if": [
+      "raining"
+     ],
+     "text": [
+      "Wretched rain. Gets into everything.",
+      "Rain again. Good for the cisterns, bad for the soul.",
+      "You're dripping on my floor, by the way."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Late to be wandering about.",
+      "Night's when the cursed come walking. Keep a lantern lit.",
+      "Can't sleep either, eh?"
+     ]
+    },
+    {
+     "if": [
+      "dawn"
+     ],
+     "text": [
+      "Up with the gulls, I see.",
+      "Early start, {player}.",
+      "Mist'll burn off by mid-morning."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "Open my strongbox.",
+     "action": "quest_screen",
+     "if": [
+      "!holding:deed"
+     ]
+    },
+    {
+     "label": "Insure the ship whose deed I'm holding.",
+     "action": "quest",
+     "if": [
+      "holding:deed"
+     ]
+    },
+    {
+     "label": "How does insurance work?",
+     "goto": "insurance"
+    },
+    {
+     "label": "Tell me about the bank.",
+     "goto": "bank"
+    },
+    {
+     "label": "What do you think of the market?",
+     "goto": "market"
+    },
+    {
+     "label": "Heard any rumours?",
+     "goto": "common:rumours"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "insurance": {
+   "text": [
+    [
+     "Hold your ship's deed and ask me. A fifth of her value buys a policy. If she sinks, the bank stands you a new hull with her name, sails and fittings.",
+     "Not her cargo, mind. Cargo is a gamble. Hulls are an investment."
+    ]
+   ]
+  },
+  "bank": {
+   "text": [
+    "The Bank of Kingsport has never been robbed. Twice. Your strongbox here is the same one your ender chests open, wherever you are. Very modern.",
+    "Three vaults, two locks each, one very bad-tempered clerk. Your coin is safe."
+   ]
+  },
+  "market": {
+   "text": [
+    "Silk is up, sugar is down, rum is always up somewhere. Buy where it grows, sell where it's wanted. That's the whole of economics.",
+    "Watch the news in the market screens. A shortage is the best friend a trader ever had."
+   ]
+  }
+ }
+}

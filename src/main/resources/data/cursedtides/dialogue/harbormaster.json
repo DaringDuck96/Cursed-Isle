@@ -1,0 +1,187 @@
+{
+ "name": "Harbormistress Ysolde Vane",
+ "nodes": {
+  "root": {
+   "text": [
+    "Saltmarrow harbour, {player}. Mind the mooring lines, they bite.",
+    "Back again? The harbour fees haven't gone down, if that's what you're hoping.",
+    "Ysolde Vane, harbormistress. Whatever you need, make it quick: I've three ships wanting the same berth."
+   ],
+   "text_if": [
+    {
+     "if": [
+      "story==1"
+     ],
+     "text": [
+      "So you're the castaway Wren sent word about. You look less drowned than I expected."
+     ]
+    },
+    {
+     "if": [
+      "wanted"
+     ],
+     "text": [
+      "You've got a bounty on you and you walk straight into my harbour office. Bold. I didn't see you. Make it quick."
+     ]
+    },
+    {
+     "if": [
+      "story>=4"
+     ],
+     "text": [
+      "The captain who brought down Ashmere Thorne. Berths are free for you, forever. Don't tell the others."
+     ]
+    }
+   ],
+   "aside": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Listen to that thunder. Nobody sane is at sea tonight.",
+      "Storm's right on top of us. Stay in the dry a while.",
+      "Every timber in the harbour's groaning. Ugly night."
+     ]
+    },
+    {
+     "if": [
+      "raining"
+     ],
+     "text": [
+      "Wretched rain. Gets into everything.",
+      "Rain again. Good for the cisterns, bad for the soul.",
+      "You're dripping on my floor, by the way."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Late to be wandering about.",
+      "Night's when the cursed come walking. Keep a lantern lit.",
+      "Can't sleep either, eh?"
+     ]
+    },
+    {
+     "if": [
+      "dawn"
+     ],
+     "text": [
+      "Up with the gulls, I see.",
+      "Early start, {player}.",
+      "Mist'll burn off by mid-morning."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "About the Drowned Bell...",
+     "action": "quest",
+     "if": [
+      "story>=1",
+      "story<4"
+     ]
+    },
+    {
+     "label": "Any work going?",
+     "action": "quest",
+     "if": [
+      "story>=4"
+     ]
+    },
+    {
+     "label": "Tell me about Saltmarrow.",
+     "goto": "town"
+    },
+    {
+     "label": "How did you end up running the harbour?",
+     "goto": "about"
+    },
+    {
+     "label": "How do ships work around here?",
+     "goto": "ships"
+    },
+    {
+     "label": "Tell me about the Reach.",
+     "goto": "common:reach"
+    },
+    {
+     "label": "Heard any rumours?",
+     "goto": "common:rumours"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "town": {
+   "text": [
+    [
+     "Saltmarrow's the freest port in the Reach. The Brethren keep the peace, more or less, and the Tidewatch keeps its distance, more or less.",
+     "The tavern's up the hill: Mags Tallow sells Brethren contracts there, and there's a card table if you've money to lose. Quartermaster Brack and Trader Oona are in the square."
+    ]
+   ],
+   "options": [
+    {
+     "label": "Who's Mags Tallow?",
+     "goto": "mags"
+    },
+    {
+     "label": "Where do I get a ship?",
+     "goto": "ships"
+    },
+    {
+     "label": "Something else...",
+     "goto": "root"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "mags": {
+   "text": [
+    "Brethren broker. Keeps the book of every job, every debt and every grudge in Saltmarrow. Pays well, forgets nothing."
+   ]
+  },
+  "about": {
+   "text": [
+    [
+     "My father ran this harbour, and his mother before him. Vanes have been telling captains where to tie up for a hundred years.",
+     "I had a ship once. The Kestrel. Sold her to pay for the new breakwater. Best trade I ever made, and the worst."
+    ]
+   ],
+   "options": [
+    {
+     "label": "Do you miss her?",
+     "goto": "kestrel"
+    },
+    {
+     "label": "Something else...",
+     "goto": "root"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "kestrel": {
+   "text": [
+    "Every evening, when the sun goes down behind the mole. Then the morning comes, and somebody's anchored in the wrong berth, and I forget again."
+   ]
+  },
+  "ships": {
+   "text": [
+    [
+     "Hollis Pike at the shipyard sells sloops and trades up: your old deed and some coin for a bigger hull. Schooners, brigs, frigates if you're rich.",
+     "Raise sail with R, drop it with V, fire broadsides with Z and X. Mind the wind: it's everything out there. And press H aboard to go below deck."
+    ]
+   ]
+  }
+ }
+}

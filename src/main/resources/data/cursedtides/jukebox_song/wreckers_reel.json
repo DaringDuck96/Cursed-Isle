@@ -1,0 +1,8 @@
+{
+ "sound_event": "cursedtides:music.wreckers_reel",
+ "description": {
+  "text": "Cursed Tides - The Wrecker's Reel"
+ },
+ "length_in_seconds": 45.0,
+ "comparator_output": 15
+}

@@ -1,0 +1,91 @@
+{
+ "name": "Ibbie Crane",
+ "nodes": {
+  "root": {
+   "text": [
+    "Oh! A visitor! Mind the specimen jars. And the snake. He's friendly. Mostly.",
+    "Ibbie Crane, naturalist, at your service. Have you seen a blue-striped frog? No? Pity.",
+    "The jungle's alive, captain. Every leaf. I've catalogued three hundred and twelve species. Three hundred and thirteen if that beetle on your boot is new."
+   ],
+   "text_if": [
+    {
+     "if": [
+      "specimens==2"
+     ],
+     "text": [
+      "My favourite collector! The parrotfish are thriving in their bucket. I named one after you."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Shh! The fireflies are courting. Come back at dawn. Or stay very, very still."
+     ]
+    }
+   ],
+   "aside": [
+    {
+     "if": [
+      "raining"
+     ],
+     "text": [
+      "Rain's wonderful for frogs. Terrible for paper."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "Need anything collected?",
+     "action": "quest",
+     "if": [
+      "specimens<2"
+     ]
+    },
+    {
+     "label": "What lives on Emerald Cay?",
+     "goto": "wildlife"
+    },
+    {
+     "label": "Is the jungle dangerous?",
+     "goto": "danger"
+    },
+    {
+     "label": "What's the old temple?",
+     "goto": "temple"
+    },
+    {
+     "label": "Heard any rumours?",
+     "goto": "common:rumours"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "wildlife": {
+   "text": [
+    [
+     "Parrots, monkeys, snakes, jaguars, and a beetle that glows when it's upset. I upset it often, for science.",
+     "The monkeys can be befriended with melon, by the way. They're terrible thieves but wonderful company."
+    ]
+   ]
+  },
+  "danger": {
+   "text": [
+    "Only if you're slow, careless or tasty. Jaguars hunt further at night. Snakes bite, and the bite makes you sick. Carry milk!",
+    "Less dangerous than Saltmarrow on a Friday."
+   ]
+  },
+  "temple": {
+   "text": [
+    [
+     "The stepped temple's older than anything else on the island. The Temple Guardian still walks its lower halls, I'm told.",
+     "The carvings show people with fish-scale skin bringing gifts to the sea. The First Tide, the scholars call them."
+    ]
+   ]
+  }
+ }
+}

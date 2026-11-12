@@ -1,0 +1,19 @@
+{
+ "display": {
+  "icon": {
+   "id": "cursedtides:diving_helmet"
+  },
+  "title": "Deep Diver",
+  "description": "Dive below the sea floor in a diving helmet",
+  "frame": "task",
+  "show_toast": true,
+  "announce_to_chat": true,
+  "hidden": false
+ },
+ "criteria": {
+  "done": {
+   "trigger": "minecraft:impossible"
+  }
+ },
+ "parent": "cursedtides:feats/sunken_city"
+}

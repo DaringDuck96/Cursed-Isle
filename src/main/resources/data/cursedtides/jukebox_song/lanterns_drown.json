@@ -1,0 +1,8 @@
+{
+ "sound_event": "cursedtides:music.lanterns_drown",
+ "description": {
+  "text": "Cursed Tides - Down Where the Lanterns Drown"
+ },
+ "length_in_seconds": 82.0,
+ "comparator_output": 6
+}

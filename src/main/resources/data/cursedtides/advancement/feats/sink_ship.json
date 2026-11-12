@@ -1,0 +1,19 @@
+{
+ "display": {
+  "icon": {
+   "id": "cursedtides:cannonball"
+  },
+  "title": "Davy's Due",
+  "description": "Send a ship to the bottom",
+  "frame": "task",
+  "show_toast": true,
+  "announce_to_chat": true,
+  "hidden": false
+ },
+ "criteria": {
+  "done": {
+   "trigger": "minecraft:impossible"
+  }
+ },
+ "parent": "cursedtides:feats/first_blood"
+}

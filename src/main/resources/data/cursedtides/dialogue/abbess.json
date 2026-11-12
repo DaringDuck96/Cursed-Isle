@@ -1,0 +1,126 @@
+{
+ "name": "Mother Celestine",
+ "nodes": {
+  "root": {
+   "text": [
+    "Peace be with you, child. Come in out of the {weather}.",
+    "Mother Celestine. Saint Vesper's door is always open, to anyone, for anything.",
+    "You look tired, {player}. Sit. Let me look at you."
+   ],
+   "text_if": [
+    {
+     "if": [
+      "wanted"
+     ],
+     "text": [
+      "I know your face from the posters. Sanctuary is sanctuary. Come in."
+     ]
+    },
+    {
+     "if": [
+      "ending:claimed"
+     ],
+     "text": [
+      "There's salt in your breath, child. The sea has hold of you. Sit, and I'll pray for both of you."
+     ]
+    }
+   ],
+   "aside": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Listen to that thunder. Nobody sane is at sea tonight.",
+      "Storm's right on top of us. Stay in the dry a while.",
+      "Every timber in the harbour's groaning. Ugly night."
+     ]
+    },
+    {
+     "if": [
+      "raining"
+     ],
+     "text": [
+      "Wretched rain. Gets into everything.",
+      "Rain again. Good for the cisterns, bad for the soul.",
+      "You're dripping on my floor, by the way."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Late to be wandering about.",
+      "Night's when the cursed come walking. Keep a lantern lit.",
+      "Can't sleep either, eh?"
+     ]
+    },
+    {
+     "if": [
+      "dawn"
+     ],
+     "text": [
+      "Up with the gulls, I see.",
+      "Early start, {player}.",
+      "Mist'll burn off by mid-morning."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "Could you tend my wounds?",
+     "action": "quest"
+    },
+    {
+     "label": "Tell me about Saint Vesper.",
+     "goto": "island"
+    },
+    {
+     "label": "Why does the bell ring at dusk?",
+     "goto": "bell"
+    },
+    {
+     "label": "What do you believe in?",
+     "goto": "faith"
+    },
+    {
+     "label": "Heard any rumours?",
+     "goto": "common:rumours"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "island": {
+   "text": [
+    [
+     "Saint Vesper. A cathedral, an infirmary, a graveyard, and more prayers than anywhere else in the Reach.",
+     "Brother Anselm makes tonics by the stall. Sister Odile keeps the market. The rest of us pray and sweep."
+    ]
+   ]
+  },
+  "bell": {
+   "text": [
+    "Every dusk, one toll for every ship lost that day. Some days it rings once. Some days it rings until the stars are out."
+   ],
+   "aside": [
+    {
+     "if": [
+      "dusk"
+     ],
+     "text": [
+      "Listen. It's about to start."
+     ]
+    }
+   ]
+  },
+  "faith": {
+   "text": [
+    "That nobody is past mending. Not the drowned, not pirates, not governors. Though I confess governors try my faith."
+   ]
+  }
+ }
+}

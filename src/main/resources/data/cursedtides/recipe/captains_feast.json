@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "cursedtides:marlin_steak"
+    },
+    {
+      "item": "cursedtides:spiced_snapper"
+    },
+    {
+      "item": "cursedtides:hardtack"
+    },
+    {
+      "item": "cursedtides:grog"
+    },
+    {
+      "item": "minecraft:cake"
+    }
+  ],
+  "result": {
+    "id": "cursedtides:captains_feast",
+    "count": 1
+  }
+}

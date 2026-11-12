@@ -1,0 +1,100 @@
+{
+ "name": "Marlowe Finch",
+ "nodes": {
+  "root": {
+   "text": [
+    "Marlowe Finch, contest judge! Got a big one for me?",
+    "Biggest single fish wins, every two days. Simple. Fair. Fishy.",
+    "Mind my scales, they're calibrated. Mostly."
+   ],
+   "aside": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Listen to that thunder. Nobody sane is at sea tonight.",
+      "Storm's right on top of us. Stay in the dry a while.",
+      "Every timber in the harbour's groaning. Ugly night."
+     ]
+    },
+    {
+     "if": [
+      "raining"
+     ],
+     "text": [
+      "Wretched rain. Gets into everything.",
+      "Rain again. Good for the cisterns, bad for the soul.",
+      "You're dripping on my floor, by the way."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Late to be wandering about.",
+      "Night's when the cursed come walking. Keep a lantern lit.",
+      "Can't sleep either, eh?"
+     ]
+    },
+    {
+     "if": [
+      "dawn"
+     ],
+     "text": [
+      "Up with the gulls, I see.",
+      "Early start, {player}.",
+      "Mist'll burn off by mid-morning."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "Weigh the fish I'm holding.",
+     "action": "quest",
+     "if": [
+      "holding:fish"
+     ]
+    },
+    {
+     "label": "How's the contest going?",
+     "action": "quest",
+     "if": [
+      "!holding:fish"
+     ]
+    },
+    {
+     "label": "Where are the big fish?",
+     "goto": "where"
+    },
+    {
+     "label": "Fishing tips?",
+     "goto": "tips"
+    },
+    {
+     "label": "Heard any rumours?",
+     "goto": "common:rumours"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "where": {
+   "text": [
+    [
+     "Swordfish round Stormbreak. Catfish in the bayou. Parrotfish on the reefs. Eels anywhere at night.",
+     "And out past the charts, far from any land, the Golden Marlin. If you've the skill."
+    ]
+   ]
+  },
+  "tips": {
+   "text": [
+    "More skill, bigger fish. Simple as that.",
+    "Fish at night for eels and ghostfins. Fish in the rain because the fish don't mind it."
+   ]
+  }
+ }
+}

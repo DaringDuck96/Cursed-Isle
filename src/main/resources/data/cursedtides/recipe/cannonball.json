@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [ " # ", "#G#", " # " ],
+  "key": {
+    "#": { "item": "minecraft:iron_ingot" },
+    "G": { "item": "minecraft:gunpowder" }
+  },
+  "result": { "id": "cursedtides:cannonball", "count": 2 }
+}

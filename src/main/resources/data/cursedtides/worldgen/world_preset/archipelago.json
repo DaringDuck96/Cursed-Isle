@@ -1,0 +1,37 @@
+{
+  "dimensions": {
+    "minecraft:overworld": {
+      "type": "minecraft:overworld",
+      "generator": {
+        "type": "minecraft:flat",
+        "settings": {
+          "biome": "cursedtides:cursed_sea",
+          "features": true,
+          "lakes": false,
+          "layers": [
+            { "block": "minecraft:bedrock", "height": 1 },
+            { "block": "minecraft:stone", "height": 99 },
+            { "block": "minecraft:sand", "height": 3 },
+            { "block": "minecraft:water", "height": 24 }
+          ]
+        }
+      }
+    },
+    "minecraft:the_nether": {
+      "type": "minecraft:the_nether",
+      "generator": {
+        "type": "minecraft:noise",
+        "settings": "minecraft:nether",
+        "biome_source": { "type": "minecraft:multi_noise", "preset": "minecraft:nether" }
+      }
+    },
+    "minecraft:the_end": {
+      "type": "minecraft:the_end",
+      "generator": {
+        "type": "minecraft:noise",
+        "settings": "minecraft:end",
+        "biome_source": { "type": "minecraft:the_end" }
+      }
+    }
+  }
+}

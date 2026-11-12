@@ -1,0 +1,109 @@
+{
+ "name": "Shopkeeper",
+ "nodes": {
+  "root": {
+   "text": [
+    "Steel for sale! Cutlasses, rapiers, daggers, axes.",
+    "{npc}, armorer. You want something sharp, or something to stop something sharp?",
+    "Mind the grindstone. It's hungry."
+   ],
+   "text_if": [
+    {
+     "if": [
+      "wanted"
+     ],
+     "text": [
+      "Keep your voice down. There are marines about, and your face is on the posters.",
+      "I'll serve you, but quickly. Bounty hunters drink in here."
+     ]
+    }
+   ],
+   "aside": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Listen to that thunder. Nobody sane is at sea tonight.",
+      "Storm's right on top of us. Stay in the dry a while.",
+      "Every timber in the harbour's groaning. Ugly night."
+     ]
+    },
+    {
+     "if": [
+      "raining"
+     ],
+     "text": [
+      "Wretched rain. Gets into everything.",
+      "Rain again. Good for the cisterns, bad for the soul.",
+      "You're dripping on my floor, by the way."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Late to be wandering about.",
+      "Night's when the cursed come walking. Keep a lantern lit.",
+      "Can't sleep either, eh?"
+     ]
+    },
+    {
+     "if": [
+      "dawn"
+     ],
+     "text": [
+      "Up with the gulls, I see.",
+      "Early start, {player}.",
+      "Mist'll burn off by mid-morning."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "Show me the steel.",
+     "action": "trade"
+    },
+    {
+     "label": "Which blade should I carry?",
+     "goto": "t0"
+    },
+    {
+     "label": "Can I hone my blade?",
+     "goto": "t1"
+    },
+    {
+     "label": "Tell me about the legendary blades.",
+     "goto": "t2"
+    },
+    {
+     "label": "Heard any rumours?",
+     "goto": "common:rumours"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "t0": {
+   "text": [
+    [
+     "Cutlass for a brawl, rapier for a duel, dagger for the dark, boarding axe for the door.",
+     "Most captains carry two. The smart ones carry three."
+    ]
+   ]
+  },
+  "t1": {
+   "text": [
+    "Whetstone in one hand, blade in the other. Better smiths can take it further: up to the third edge, if you've the skill."
+   ]
+  },
+  "t2": {
+   "text": [
+    "Every dungeon vault has something old and sharp in it. Some of those blades have names. Some of them have tempers."
+   ]
+  }
+ }
+}

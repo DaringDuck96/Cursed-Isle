@@ -1,0 +1,62 @@
+{
+ "name": "Crewmate",
+ "nodes": {
+  "root": {
+   "text": [
+    "Aye, captain?",
+    "Ready when you are, captain.",
+    "Ship's in good order, captain. Mostly.",
+    "Fair wind today, captain."
+   ],
+   "text_if": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Storm's a bad one, captain. Shall I lash the guns?"
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Quiet watch, captain. I'll wake you if the dead come calling."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "How's morale?",
+     "goto": "morale"
+    },
+    {
+     "label": "Tell me about yourself.",
+     "goto": "about"
+    },
+    {
+     "label": "Heard any rumours?",
+     "goto": "common:rumours"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "morale": {
+   "text": [
+    "Good, captain. Rum's flowing, pay's regular.",
+    "Fair, captain. The lads would like to sink something soon.",
+    "Better than last voyage, captain. That one had a kraken in it. Well, a big squid."
+   ]
+  },
+  "about": {
+   "text": [
+    "Born in Saltmarrow, raised on the docks. Signed my articles the day I could hold a pen.",
+    "Used to crew a merchantman. Got boarded. Liked the pirates better."
+   ]
+  }
+ }
+}

@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "cursedtides:silverfin_snapper"
+    },
+    {
+      "item": "cursedtides:silverfin_snapper"
+    },
+    {
+      "item": "cursedtides:spice_chest"
+    }
+  ],
+  "result": {
+    "id": "cursedtides:spiced_snapper",
+    "count": 4
+  }
+}

@@ -1,0 +1,110 @@
+{
+ "name": "Shopkeeper",
+ "nodes": {
+  "root": {
+   "text": [
+    "What'll it be, captain? Pistols, blades, shot, rope, rum. If it floats or fights, I've got it.",
+    "{npc}, at your service. Good stock today, fresh off the boats.",
+    "Looking to spend some doubloons? You've come to the right counter."
+   ],
+   "text_if": [
+    {
+     "if": [
+      "wanted"
+     ],
+     "text": [
+      "Keep your voice down. There are marines about, and your face is on the posters.",
+      "I'll serve you, but quickly. Bounty hunters drink in here."
+     ]
+    }
+   ],
+   "aside": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Listen to that thunder. Nobody sane is at sea tonight.",
+      "Storm's right on top of us. Stay in the dry a while.",
+      "Every timber in the harbour's groaning. Ugly night."
+     ]
+    },
+    {
+     "if": [
+      "raining"
+     ],
+     "text": [
+      "Wretched rain. Gets into everything.",
+      "Rain again. Good for the cisterns, bad for the soul.",
+      "You're dripping on my floor, by the way."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Late to be wandering about.",
+      "Night's when the cursed come walking. Keep a lantern lit.",
+      "Can't sleep either, eh?"
+     ]
+    },
+    {
+     "if": [
+      "dawn"
+     ],
+     "text": [
+      "Up with the gulls, I see.",
+      "Early start, {player}.",
+      "Mist'll burn off by mid-morning."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "Let's trade.",
+     "action": "trade"
+    },
+    {
+     "label": "Where does your stock come from?",
+     "goto": "t0"
+    },
+    {
+     "label": "What's selling well?",
+     "goto": "t1"
+    },
+    {
+     "label": "Any advice for a new captain?",
+     "goto": "t2"
+    },
+    {
+     "label": "Heard any rumours?",
+     "goto": "common:rumours"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "t0": {
+   "text": [
+    "Kingsport ironworks, Saltmarrow rope-walks, and the odd wreck. Don't ask which wreck.",
+    "Wherever the boats bring it. This week, mostly from a ship that won't be needing it anymore."
+   ]
+  },
+  "t1": {
+   "text": [
+    "Pistol shot, always. Planks, since the ghost ships started showing up. Map fragments, if you can believe it."
+   ]
+  },
+  "t2": {
+   "text": [
+    [
+     "Keep planks in the hold for patching. Keep shot in your pockets. Keep your crew paid.",
+     "And never, ever sail past Hollowgrave at night with your sails furled."
+    ]
+   ]
+  }
+ }
+}

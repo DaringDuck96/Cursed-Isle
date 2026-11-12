@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "cursedtides:sugar_sack"
+    },
+    {
+      "item": "cursedtides:sugar_sack"
+    },
+    {
+      "item": "minecraft:water_bucket"
+    }
+  ],
+  "result": {
+    "id": "cursedtides:rum_cask",
+    "count": 1
+  }
+}

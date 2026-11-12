@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "id": "cursedtides",
+  "version": "${version}",
+  "name": "Cursed Tides",
+  "description": "An original pirate adventure: cutlasses, flintlocks, broadside cannons, doubloons and cursed skeleton crews that come ashore at night.",
+  "authors": [
+    "You"
+  ],
+  "license": "MIT",
+  "icon": "assets/cursedtides/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.cursedtides.CursedTides"
+    ],
+    "client": [
+      "com.cursedtides.client.CursedTidesClient"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "~1.21.1",
+    "java": ">=21",
+    "fabric-api": "*"
+  },
+  "mixins": [
+    "cursedtides.mixins.json"
+  ]
+}

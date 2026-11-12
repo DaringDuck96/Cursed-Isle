@@ -1,0 +1,101 @@
+{
+ "name": "Shopkeeper",
+ "nodes": {
+  "root": {
+   "text": [
+    "Shh. Not so loud. What are you buying?",
+    "{npc}. Smuggler, if you ask nicely. Merchant, if a marine asks.",
+    "Good timing. The patrol just passed."
+   ],
+   "text_if": [
+    {
+     "if": [
+      "wanted"
+     ],
+     "text": [
+      "Keep your voice down. There are marines about, and your face is on the posters.",
+      "I'll serve you, but quickly. Bounty hunters drink in here."
+     ]
+    }
+   ],
+   "aside": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Listen to that thunder. Nobody sane is at sea tonight.",
+      "Storm's right on top of us. Stay in the dry a while.",
+      "Every timber in the harbour's groaning. Ugly night."
+     ]
+    },
+    {
+     "if": [
+      "raining"
+     ],
+     "text": [
+      "Wretched rain. Gets into everything.",
+      "Rain again. Good for the cisterns, bad for the soul.",
+      "You're dripping on my floor, by the way."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Late to be wandering about.",
+      "Night's when the cursed come walking. Keep a lantern lit.",
+      "Can't sleep either, eh?"
+     ]
+    },
+    {
+     "if": [
+      "dawn"
+     ],
+     "text": [
+      "Up with the gulls, I see.",
+      "Early start, {player}.",
+      "Mist'll burn off by mid-morning."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "Show me your cargo prices.",
+     "action": "market"
+    },
+    {
+     "label": "What else do you sell?",
+     "action": "trade"
+    },
+    {
+     "label": "How do I avoid patrols?",
+     "goto": "t0"
+    },
+    {
+     "label": "What's the best cargo?",
+     "goto": "t1"
+    },
+    {
+     "label": "Heard any rumours?",
+     "goto": "common:rumours"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "t0": {
+   "text": [
+    "Sail at night. Sail fast. If they hail you, you've fifteen seconds to get seventy blocks away. Schooners are good for that."
+   ]
+  },
+  "t1": {
+   "text": [
+    "Untaxed rum's cheap here and dear in Blackthorn. Cursed idols are worth a fortune to the right buyer."
+   ]
+  }
+ }
+}

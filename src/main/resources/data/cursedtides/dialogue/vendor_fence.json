@@ -1,0 +1,113 @@
+{
+ "name": "Shopkeeper",
+ "nodes": {
+  "root": {
+   "text": [
+    "Whatever you've got, I don't want to know where it came from.",
+    "{npc}. I buy, I sell, I forget. Mostly I forget.",
+    "Looking to unload something warm? Step closer."
+   ],
+   "text_if": [
+    {
+     "if": [
+      "wanted"
+     ],
+     "text": [
+      "Keep your voice down. There are marines about, and your face is on the posters.",
+      "I'll serve you, but quickly. Bounty hunters drink in here."
+     ]
+    }
+   ],
+   "aside": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Listen to that thunder. Nobody sane is at sea tonight.",
+      "Storm's right on top of us. Stay in the dry a while.",
+      "Every timber in the harbour's groaning. Ugly night."
+     ]
+    },
+    {
+     "if": [
+      "raining"
+     ],
+     "text": [
+      "Wretched rain. Gets into everything.",
+      "Rain again. Good for the cisterns, bad for the soul.",
+      "You're dripping on my floor, by the way."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Late to be wandering about.",
+      "Night's when the cursed come walking. Keep a lantern lit.",
+      "Can't sleep either, eh?"
+     ]
+    },
+    {
+     "if": [
+      "dawn"
+     ],
+     "text": [
+      "Up with the gulls, I see.",
+      "Early start, {player}.",
+      "Mist'll burn off by mid-morning."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "Show me your cargo prices.",
+     "action": "market"
+    },
+    {
+     "label": "What else do you sell?",
+     "action": "trade"
+    },
+    {
+     "label": "How does the black market work?",
+     "goto": "t0"
+    },
+    {
+     "label": "Where does contraband go?",
+     "goto": "t1"
+    },
+    {
+     "label": "Any jobs?",
+     "goto": "t2"
+    },
+    {
+     "label": "Heard any rumours?",
+     "goto": "common:rumours"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "t0": {
+   "text": [
+    [
+     "I pay best for contraband: untaxed rum, powder, idols, plate. Honest cargo I'll take too, but at a thief's price.",
+     "The smugglers' rank matters. The more they like you, the better I pay."
+    ]
+   ]
+  },
+  "t1": {
+   "text": [
+    "Raven's Landing wants idols and plate. Blackthorn wants rum and powder. Buy here, sell there, don't get boarded."
+   ]
+  },
+  "t2": {
+   "text": [
+    "Talk to the Queen. Isadora. In the warehouse. Knock twice, then once."
+   ]
+  }
+ }
+}

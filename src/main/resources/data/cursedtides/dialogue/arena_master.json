@@ -1,0 +1,150 @@
+{
+ "name": "Grista Vell",
+ "nodes": {
+  "root": {
+   "text": [
+    "Welcome to the Pit! Blood on the sand, gold in the purse.",
+    "Fighter or spectator? Spectators stand back of the posts.",
+    "{player}! Come to test your arm?"
+   ],
+   "text_if": [
+    {
+     "if": [
+      "arena_best>=5"
+     ],
+     "text": [
+      "Champion! The crowd chants your name when you walk past. Badly, but they chant it."
+     ]
+    },
+    {
+     "if": [
+      "arena_best>=3"
+     ],
+     "text": [
+      "You've lasted three waves before. Ready to go further?"
+     ]
+    },
+    {
+     "if": [
+      "blades>=20"
+     ],
+     "text": [
+      "I can see from how you stand you know a blade. Good."
+     ]
+    }
+   ],
+   "aside": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Listen to that thunder. Nobody sane is at sea tonight.",
+      "Storm's right on top of us. Stay in the dry a while.",
+      "Every timber in the harbour's groaning. Ugly night."
+     ]
+    },
+    {
+     "if": [
+      "raining"
+     ],
+     "text": [
+      "Wretched rain. Gets into everything.",
+      "Rain again. Good for the cisterns, bad for the soul.",
+      "You're dripping on my floor, by the way."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Late to be wandering about.",
+      "Night's when the cursed come walking. Keep a lantern lit.",
+      "Can't sleep either, eh?"
+     ]
+    },
+    {
+     "if": [
+      "dawn"
+     ],
+     "text": [
+      "Up with the gulls, I see.",
+      "Early start, {player}.",
+      "Mist'll burn off by mid-morning."
+     ]
+    },
+    {
+     "if": [
+      "festival"
+     ],
+     "text": [
+      "Happy {festival}, {player}! Everyone's in good spirits.",
+      "It's the {festival}. Half the town's drunk and the other half's working on it."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "I'll fight! (3 doubloons)",
+     "action": "special:arena",
+     "then": "good_luck"
+    },
+    {
+     "label": "How does the tournament work?",
+     "goto": "rules"
+    },
+    {
+     "label": "Who holds the record?",
+     "action": "special:top_arena",
+     "then": "root"
+    },
+    {
+     "label": "Any advice?",
+     "goto": "advice"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "rules": {
+   "text": [
+    "Five waves. Each one bigger than the last. Beat them all and you take the purse: twenty-five doubloons.",
+    "Nobody dies in my pit. If you go down, my lads drag you out. You keep a little for each wave you survived.",
+    "Leave the ring and you forfeit."
+   ],
+   "options": [
+    {
+     "label": "Something else...",
+     "goto": "root"
+    }
+   ]
+  },
+  "advice": {
+   "text": [
+    "Chain your blows. Four in a row and the fourth one lands like a falling yard-arm.",
+    "Crouch for a heavy swing. Slower, but it knocks them off balance.",
+    "Paired blades keep a combo going longer. Hammers stagger anything. Pick your poison."
+   ],
+   "options": [
+    {
+     "label": "Something else...",
+     "goto": "root"
+    }
+   ]
+  },
+  "good_luck": {
+   "text": [
+    "Bell's rung. Get in there!"
+   ],
+   "options": [
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  }
+ }
+}

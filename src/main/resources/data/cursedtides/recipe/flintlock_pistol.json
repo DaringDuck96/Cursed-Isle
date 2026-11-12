@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [ "F##", " P " ],
+  "key": {
+    "#": { "item": "minecraft:iron_ingot" },
+    "F": { "item": "minecraft:flint_and_steel" },
+    "P": { "tag": "minecraft:planks" }
+  },
+  "result": { "id": "cursedtides:flintlock_pistol", "count": 1 }
+}

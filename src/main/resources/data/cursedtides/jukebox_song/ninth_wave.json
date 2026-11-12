@@ -1,0 +1,8 @@
+{
+ "sound_event": "cursedtides:music.ninth_wave",
+ "description": {
+  "text": "Cursed Tides - The Ninth Wave"
+ },
+ "length_in_seconds": 93.0,
+ "comparator_output": 2
+}

@@ -1,0 +1,141 @@
+{
+ "music.wreckers_reel": {
+  "category": "music",
+  "sounds": [
+   {
+    "name": "cursedtides:music/wreckers_reel",
+    "stream": true
+   }
+  ]
+ },
+ "music.lanterns_drown": {
+  "category": "music",
+  "sounds": [
+   {
+    "name": "cursedtides:music/lanterns_drown",
+    "stream": true
+   }
+  ]
+ },
+ "music.saltmarrow_hornpipe": {
+  "category": "music",
+  "sounds": [
+   {
+    "name": "cursedtides:music/saltmarrow_hornpipe",
+    "stream": true
+   }
+  ]
+ },
+ "music.ninth_wave": {
+  "category": "music",
+  "sounds": [
+   {
+    "name": "cursedtides:music/ninth_wave",
+    "stream": true
+   }
+  ]
+ },
+ "music.sea": {
+  "category": "music",
+  "sounds": [
+   {
+    "name": "cursedtides:music/wreckers_reel",
+    "stream": true,
+    "weight": 3
+   },
+   {
+    "name": "cursedtides:music/lanterns_drown",
+    "stream": true,
+    "weight": 2
+   },
+   {
+    "name": "cursedtides:music/saltmarrow_hornpipe",
+    "stream": true,
+    "weight": 3
+   },
+   {
+    "name": "cursedtides:music/ninth_wave",
+    "stream": true,
+    "weight": 1
+   }
+  ]
+ },
+ "sfx.sword_clash": {
+  "sounds": [
+   "cursedtides:sfx/sword_clash"
+  ],
+  "subtitle": "subtitles.cursedtides.sword_clash"
+ },
+ "sfx.critical": {
+  "sounds": [
+   "cursedtides:sfx/critical"
+  ],
+  "subtitle": "subtitles.cursedtides.critical"
+ },
+ "sfx.finisher": {
+  "sounds": [
+   "cursedtides:sfx/finisher"
+  ],
+  "subtitle": "subtitles.cursedtides.finisher"
+ },
+ "sfx.cannon_boom": {
+  "sounds": [
+   "cursedtides:sfx/cannon_boom"
+  ],
+  "subtitle": "subtitles.cursedtides.cannon_boom"
+ },
+ "sfx.ship_creak": {
+  "sounds": [
+   "cursedtides:sfx/ship_creak"
+  ],
+  "subtitle": "subtitles.cursedtides.ship_creak"
+ },
+ "sfx.seagulls": {
+  "sounds": [
+   "cursedtides:sfx/seagulls"
+  ],
+  "subtitle": "subtitles.cursedtides.seagulls"
+ },
+ "sfx.waves": {
+  "sounds": [
+   "cursedtides:sfx/waves"
+  ],
+  "subtitle": "subtitles.cursedtides.waves"
+ },
+ "sfx.tavern_crowd": {
+  "sounds": [
+   "cursedtides:sfx/tavern_crowd"
+  ],
+  "subtitle": "subtitles.cursedtides.tavern_crowd"
+ },
+ "sfx.bell_toll": {
+  "sounds": [
+   "cursedtides:sfx/bell_toll"
+  ],
+  "subtitle": "subtitles.cursedtides.bell_toll"
+ },
+ "sfx.whirlpool": {
+  "sounds": [
+   "cursedtides:sfx/whirlpool"
+  ],
+  "subtitle": "subtitles.cursedtides.whirlpool"
+ },
+ "sfx.coins": {
+  "sounds": [
+   "cursedtides:sfx/coins"
+  ],
+  "subtitle": "subtitles.cursedtides.coins"
+ },
+ "sfx.ultimate": {
+  "sounds": [
+   "cursedtides:sfx/ultimate"
+  ],
+  "subtitle": "subtitles.cursedtides.ultimate"
+ },
+ "sfx.festival": {
+  "sounds": [
+   "cursedtides:sfx/festival"
+  ],
+  "subtitle": "subtitles.cursedtides.festival"
+ }
+}

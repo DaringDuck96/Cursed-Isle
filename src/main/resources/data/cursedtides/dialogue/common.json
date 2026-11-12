@@ -1,0 +1,316 @@
+{
+ "name": "",
+ "nodes": {
+  "rumours": {
+   "text": [
+    "They say there's a reef east of Saltmarrow where the fish swim in circles round a sunken bell. Probably nonsense.",
+    "A fisherman from Mariner's Rest swears he hooked something golden and longer than his boat, way out past the charts. Lost the rod.",
+    "Ironwatch doubled the guns on the north wall. Either the Commodore knows something, or he's bored.",
+    "Raven's Landing sells rum without the Crown's stamp. Cheaper, and the hangover's free.",
+    "Somebody in Kingsport bought every map of the Forgotten Keys they could find. Paid in gold. Didn't haggle.",
+    "There's a crocodile in Serpent's Hollow they call Old Gnasher. Big as a longboat, they say, and twice as patient.",
+    "The monks on Saint Vesper ring their bell at dusk, every dusk, for every ship that never came home.",
+    "Stormbreak's regatta record keeps changing hands. The Regatta Master says the stacks shift when no one's looking.",
+    "Prices on silk in Saltmarrow are through the roof. Somebody's making a fortune hauling it from Kingsport.",
+    "The Deep Seam on Goldwater goes down further than anyone's dared. The foreman pays well for brave fools.",
+    "Haven't seen a merchant convoy in a week. Either the trade's dried up or someone's been eating them.",
+    "On Whispering Key a woman in grey walks the mansion halls. The medium says she's waiting for someone.",
+    "A whale-sized shadow followed a sloop out of Crooked Reef. The crew swore off rum for a month. Two days, really.",
+    "The Tidewatch has a frigate that's never lost a fight. Admiral Galloway's own. Nobody's told her it's bad luck to say so.",
+    "If a patrol hails you with a hold full of untaxed rum, the smugglers' advice is simple: don't be there in fifteen seconds.",
+    "Bayou folk at Hookline say the alligators know the names of everyone who's drowned in the Mirefen.",
+    "They say a whole city lies under the sea, south and west. Vesh Amaru. Divers come back with paintings and stories they won't finish.",
+    "Bounty hunters were asking after you. Well, not you. Someone who looked like you. Probably.",
+    "There's a tournament in Saltmarrow. Five waves, and the champion takes the purse.",
+    "Mind the whirlpools. The Drain nearly had my cousin. He's still dizzy.",
+    "A peddler's been seen in the ports. Sells rings that make you lucky. Or so she says.",
+    "There's an old man on the beaches at night. Hums a song. If you can see him, you're one of the lucky ones."
+   ],
+   "text_if": [
+    {
+     "if": [
+      "wanted",
+      "chance:0.6"
+     ],
+     "text": [
+      "Rumour is there's a price on your head, {player}. Not that I'd ever mention it to a marine.",
+      "There are posters with your face on them in Ironwatch. Not a good likeness. Flattering, really."
+     ]
+    },
+    {
+     "if": [
+      "story<=1",
+      "chance:0.5"
+     ],
+     "text": [
+      "The Drowned Bell's been tolling every night this month. Every toll, another crew comes up out of the sea.",
+      "They say the old bellfounder still lives on Ashfall. Tamsin, was it? Nobody's seen her in town for years."
+     ]
+    },
+    {
+     "if": [
+      "story==2",
+      "chance:0.5"
+     ],
+     "text": [
+      "Somebody's poking about the Sunken Reach belltower. Brave, or stupid.",
+      "Ashfall's smugglers have a forge in the hills. They say they found something in the rock that glows."
+     ]
+    },
+    {
+     "if": [
+      "story==3",
+      "chance:0.5"
+     ],
+     "text": [
+      "Word is someone's had a new bell cast. To silence the old one, they say. Good luck to them."
+     ]
+    },
+    {
+     "if": [
+      "story>=4",
+      "chance:0.4"
+     ],
+     "text": [
+      "The Drowned Bell's quiet. Has been since Captain Thorne went down. I owe somebody a drink for that.",
+      "Since the bell stopped, the fishing's come back to Driftwood. My cousin's never been happier."
+     ]
+    },
+    {
+     "if": [
+      "arc==2",
+      "chance:0.5"
+     ],
+     "text": [
+      "There's talk of seven old stones, and every captain in the Reach suddenly wanting them.",
+      "Rook Varga's calling every free captain to Blackthorn. Calls it an Accord. I call it Rook wanting more ships.",
+      "The Lantern Court? Never heard of it. And if you're smart, neither have you."
+     ]
+    },
+    {
+     "if": [
+      "arc>=3",
+      "arc<=6",
+      "chance:0.5"
+     ],
+     "text": [
+      "Folk at the Last Horizon say the gate on the summit's started to hum."
+     ]
+    },
+    {
+     "if": [
+      "ending:sealed",
+      "chance:0.5"
+     ],
+     "text": [
+      "Since the gate shut, the ghost ships have thinned out. You'd know something about that, I hear.",
+      "The cursed stopped coming ashore in the towns. Some say a Warden sealed something at the edge of the chart."
+     ]
+    },
+    {
+     "if": [
+      "ending:claimed",
+      "chance:0.5"
+     ],
+     "text": [
+      "The drowned won't touch a certain captain, they say. Some say that captain's the worst thing in the sea now.",
+      "The Tidewatch has a new name at the top of their list. A Sovereign, of all things."
+     ]
+    },
+    {
+     "if": [
+      "ending:court",
+      "chance:0.5"
+     ],
+     "text": [
+      "There are lanterns burning on the Horizon Gate every night now. Nobody says who lights them.",
+      "Governor Harrow's in a fine mood lately. That never bodes well for anyone else."
+     ]
+    },
+    {
+     "if": [
+      "gate",
+      "chance:0.3"
+     ],
+     "text": [
+      "Somebody opened the Horizon Gate. You can see the light from the Keys on a clear night."
+     ]
+    },
+    {
+     "if": [
+      "thundering",
+      "chance:0.5"
+     ],
+     "text": [
+      "Storms like this wash things up. Old things. Last big blow, a chest of First Tide coins came ashore at the Keys."
+     ]
+    },
+    {
+     "if": [
+      "night",
+      "chance:0.4"
+     ],
+     "text": [
+      "At night, if you sail past Hollowgrave, you can still hear singing under the water.",
+      "Night like this, the Sovereign Dawn's supposed to rise over Crooked Reef. Lost with every hand, forty years back."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "Any other news?",
+     "goto": "common:rumours"
+    },
+    {
+     "label": "Something else...",
+     "goto": "root"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "reach": {
+   "text": [
+    [
+     "The Shattered Reach. A hundred islands, give or take, and every one of them with a story nobody tells straight.",
+     "The Tidewatch holds the forts, the Brethren hold the harbours, the smugglers hold whatever's left, and the sea holds everyone."
+    ]
+   ],
+   "options": [
+    {
+     "label": "Who are the Tidewatch?",
+     "goto": "common:tidewatch"
+    },
+    {
+     "label": "And the Brethren?",
+     "goto": "common:brethren"
+    },
+    {
+     "label": "The smugglers?",
+     "goto": "common:smugglers"
+    },
+    {
+     "label": "What is the curse?",
+     "goto": "common:curse"
+    },
+    {
+     "label": "Something else...",
+     "goto": "root"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "tidewatch": {
+   "text": [
+    [
+     "The Navy. Blue coats, big guns, Ironwatch and Crownwatch and every fort between. Commodore Vey runs the patrols; Admiral Galloway runs Commodore Vey.",
+     "Stay on their good side and they'll pay you to sink ghost ships. Cross them and they'll hang a poster with your face on it."
+    ]
+   ],
+   "options": [
+    {
+     "label": "Tell me about the others.",
+     "goto": "common:reach"
+    },
+    {
+     "label": "Something else...",
+     "goto": "root"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "brethren": {
+   "text": [
+    [
+     "The Saltmarrow Brethren. Pirates with articles and a vote. Mags Tallow keeps their book at the Saltmarrow tavern.",
+     "They don't love the Navy, they don't love the cursed, and they love a full purse more than either."
+    ]
+   ],
+   "options": [
+    {
+     "label": "Tell me about the others.",
+     "goto": "common:reach"
+    },
+    {
+     "label": "Something else...",
+     "goto": "root"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "smugglers": {
+   "text": [
+    [
+     "Raven's Landing. Isadora Vance's people. Untaxed rum, powder without papers, and stranger cargo besides.",
+     "If you can outrun a patrol, there's good money in their crates. If you can't, there's a long rope at Ironwatch."
+    ]
+   ],
+   "options": [
+    {
+     "label": "Tell me about the others.",
+     "goto": "common:reach"
+    },
+    {
+     "label": "Something else...",
+     "goto": "root"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "curse": {
+   "text": [
+    [
+     "The dead don't stay down in the Reach. Ghost ships, cursed crews coming ashore on moonless nights, things in the deep water.",
+     "Some blame the Drowned Bell. The old folk say it's older than any bell: something the First Tide did, before the sea took them."
+    ]
+   ],
+   "text_if": [
+    {
+     "if": [
+      "story>=4"
+     ],
+     "text": [
+      [
+       "The Drowned Bell's quiet now, thanks to somebody. But the dead still walk some nights.",
+       "The old folk say the bell was just the loudest part of it. That the rest is older, out past the charts."
+      ]
+     ]
+    },
+    {
+     "if": [
+      "ending:sealed"
+     ],
+     "text": [
+      [
+       "Quieter than it's been in my lifetime. They say a Warden shut a gate at the edge of the world."
+      ]
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "Something else...",
+     "goto": "root"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  }
+ }
+}

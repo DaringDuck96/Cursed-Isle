@@ -1,0 +1,200 @@
+{
+ "name": "The Old Mariner",
+ "nodes": {
+  "root": {
+   "text": [
+    "...",
+    "Sit a while, sailor. The tide's in no hurry, and neither am I.",
+    "You can see me. Not many can, these days."
+   ],
+   "text_if": [
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Moon's on the water. That's when I walk.",
+      "Ah. Another one who doesn't sleep."
+     ]
+    },
+    {
+     "if": [
+      "relics>=4"
+     ],
+     "text": [
+      "You carry the old stones. I can feel them from here, humming like a hive."
+     ]
+    }
+   ],
+   "aside": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Listen to that thunder. Nobody sane is at sea tonight.",
+      "Storm's right on top of us. Stay in the dry a while.",
+      "Every timber in the harbour's groaning. Ugly night."
+     ]
+    },
+    {
+     "if": [
+      "raining"
+     ],
+     "text": [
+      "Wretched rain. Gets into everything.",
+      "Rain again. Good for the cisterns, bad for the soul.",
+      "You're dripping on my floor, by the way."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Late to be wandering about.",
+      "Night's when the cursed come walking. Keep a lantern lit.",
+      "Can't sleep either, eh?"
+     ]
+    },
+    {
+     "if": [
+      "dawn"
+     ],
+     "text": [
+      "Up with the gulls, I see.",
+      "Early start, {player}.",
+      "Mist'll burn off by mid-morning."
+     ]
+    },
+    {
+     "if": [
+      "festival"
+     ],
+     "text": [
+      "Happy {festival}, {player}! Everyone's in good spirits.",
+      "It's the {festival}. Half the town's drunk and the other half's working on it."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "Who are you?",
+     "goto": "who"
+    },
+    {
+     "label": "What's that song you were humming?",
+     "goto": "song"
+    },
+    {
+     "label": "Do you have anything for me?",
+     "action": "special:mariner_gift",
+     "then": "after_gift"
+    },
+    {
+     "label": "Tell me about the sea.",
+     "goto": "sea"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "who": {
+   "text": [
+    "I sailed with the first fleet that found these islands. That was a long time ago. Longer than you'd credit.",
+    "A name? I had one. I gave it to the sea in trade for something. I forget what."
+   ],
+   "options": [
+    {
+     "label": "You're a ghost?",
+     "goto": "ghost"
+    },
+    {
+     "label": "Something else...",
+     "goto": "root"
+    }
+   ]
+  },
+  "ghost": {
+   "text": [
+    "Ghost is a heavy word. I'm a man the tide hasn't finished with. Same as you, if you sail long enough."
+   ],
+   "options": [
+    {
+     "label": "Something else...",
+     "goto": "root"
+    }
+   ]
+  },
+  "song": {
+   "text": [
+    "\"Down where the lanterns drown, the bell rings slow...\" You'll hear it in the taverns. They've got the words wrong.",
+    "The real last verse goes: 'and the sea gives back what the sea was owed.' Nobody sings that one anymore."
+   ],
+   "options": [
+    {
+     "label": "What does the sea want back?",
+     "goto": "owed"
+    },
+    {
+     "label": "Something else...",
+     "goto": "root"
+    }
+   ]
+  },
+  "owed": {
+   "text": [
+    "Everything it lent. The islands, the ships, us.",
+    "Doesn't mean you can't make it wait."
+   ],
+   "options": [
+    {
+     "label": "Something else...",
+     "goto": "root"
+    }
+   ]
+  },
+  "sea": {
+   "text": [
+    "Whirlpools at the Drain and the Churn: steer wide, or steer through dead centre at full sail. Nothing in between.",
+    "The fog off Blackveil isn't weather. Don't follow lights in it.",
+    "There's a city under the waves, west and south. Vesh Amaru. It drowned all at once, they say, in a single afternoon."
+   ],
+   "options": [
+    {
+     "label": "How do I reach the drowned city?",
+     "goto": "city"
+    },
+    {
+     "label": "Something else...",
+     "goto": "root"
+    }
+   ]
+  },
+  "city": {
+   "text": [
+    "Find a diver. Buy a helmet. Go down where the reef goes dark and keep going.",
+    "There's a temple at the heart, and under the temple floor, more. Mind the guardians."
+   ],
+   "options": [
+    {
+     "label": "Something else...",
+     "goto": "root"
+    }
+   ]
+  },
+  "after_gift": {
+   "text": [
+    "Go on, then. The night won't last, and neither will I."
+   ],
+   "options": [
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  }
+ }
+}

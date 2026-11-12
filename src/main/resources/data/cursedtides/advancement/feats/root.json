@@ -1,0 +1,19 @@
+{
+ "display": {
+  "icon": {
+   "id": "cursedtides:cutlass"
+  },
+  "title": "Cursed Tides",
+  "description": "Feats of a pirate's life",
+  "frame": "task",
+  "show_toast": false,
+  "announce_to_chat": false,
+  "hidden": false,
+  "background": "minecraft:textures/block/dark_oak_planks.png"
+ },
+ "criteria": {
+  "done": {
+   "trigger": "minecraft:tick"
+  }
+ }
+}

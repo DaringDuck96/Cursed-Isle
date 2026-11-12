@@ -1,0 +1,110 @@
+{
+ "name": "Shopkeeper",
+ "nodes": {
+  "root": {
+   "text": [
+    "Hungry? Course you are. Sailors are always hungry.",
+    "{npc}, cook. Stew's on, bread's warm, and the hardtack would stop a cannonball.",
+    "Sit down before you fall down. You look half-starved."
+   ],
+   "text_if": [
+    {
+     "if": [
+      "wanted"
+     ],
+     "text": [
+      "Keep your voice down. There are marines about, and your face is on the posters.",
+      "I'll serve you, but quickly. Bounty hunters drink in here."
+     ]
+    }
+   ],
+   "aside": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Listen to that thunder. Nobody sane is at sea tonight.",
+      "Storm's right on top of us. Stay in the dry a while.",
+      "Every timber in the harbour's groaning. Ugly night."
+     ]
+    },
+    {
+     "if": [
+      "raining"
+     ],
+     "text": [
+      "Wretched rain. Gets into everything.",
+      "Rain again. Good for the cisterns, bad for the soul.",
+      "You're dripping on my floor, by the way."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Late to be wandering about.",
+      "Night's when the cursed come walking. Keep a lantern lit.",
+      "Can't sleep either, eh?"
+     ]
+    },
+    {
+     "if": [
+      "dawn"
+     ],
+     "text": [
+      "Up with the gulls, I see.",
+      "Early start, {player}.",
+      "Mist'll burn off by mid-morning."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "I'll take some food.",
+     "action": "trade"
+    },
+    {
+     "label": "What's good to eat before a fight?",
+     "goto": "t0"
+    },
+    {
+     "label": "Can I cook myself?",
+     "goto": "t1"
+    },
+    {
+     "label": "What's in the stew?",
+     "goto": "t2"
+    },
+    {
+     "label": "Heard any rumours?",
+     "goto": "common:rumours"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "t0": {
+   "text": [
+    "Spiced snapper for strength. Bayou gumbo if there's fire about. Marlin steak if you're rich."
+   ]
+  },
+  "t1": {
+   "text": [
+    [
+     "Any crafting table does. Fish, a bowl, some vegetables: stew. The more you cook, the better it gets.",
+     "A good cook makes Fine dishes. A great cook makes Masterwork. Those last twice as long."
+    ]
+   ]
+  },
+  "t2": {
+   "text": [
+    "Fish. Probably.",
+    "Don't ask. Eat."
+   ]
+  }
+ }
+}

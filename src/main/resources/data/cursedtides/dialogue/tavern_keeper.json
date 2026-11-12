@@ -1,0 +1,176 @@
+{
+ "name": "Bess Tankard",
+ "nodes": {
+  "root": {
+   "text": [
+    "What'll it be, love?",
+    "Pull up a stool. Mind the one with three legs.",
+    "Evening, {player}. Usual?"
+   ],
+   "text_if": [
+    {
+     "if": [
+      "tavern_wins>=3"
+     ],
+     "text": [
+      "Oh no. It's you. I'm watering the champion's rum tonight."
+     ]
+    },
+    {
+     "if": [
+      "wanted"
+     ],
+     "text": [
+      "Sit in the back, will you? There's a Tidewatch man at the bar."
+     ]
+    },
+    {
+     "if": [
+      "festival"
+     ],
+     "text": [
+      "Happy {festival}, {player}! Everyone's in good spirits.",
+      "It's the {festival}. Half the town's drunk and the other half's working on it."
+     ]
+    },
+    {
+     "if": [
+      "prosperity<35"
+     ],
+     "text": [
+      "Times are hard here. The town's {town_mood}.",
+      "Trade's dried up. If you've cargo to sell, sell it here; we need it."
+     ]
+    },
+    {
+     "if": [
+      "prosperity>=75"
+     ],
+     "text": [
+      "Town's {town_mood}! Coin everywhere you look.",
+      "Never seen the harbour so busy."
+     ]
+    }
+   ],
+   "aside": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Listen to that thunder. Nobody sane is at sea tonight.",
+      "Storm's right on top of us. Stay in the dry a while.",
+      "Every timber in the harbour's groaning. Ugly night."
+     ]
+    },
+    {
+     "if": [
+      "raining"
+     ],
+     "text": [
+      "Wretched rain. Gets into everything.",
+      "Rain again. Good for the cisterns, bad for the soul.",
+      "You're dripping on my floor, by the way."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Late to be wandering about.",
+      "Night's when the cursed come walking. Keep a lantern lit.",
+      "Can't sleep either, eh?"
+     ]
+    },
+    {
+     "if": [
+      "dawn"
+     ],
+     "text": [
+      "Up with the gulls, I see.",
+      "Early start, {player}.",
+      "Mist'll burn off by mid-morning."
+     ]
+    },
+    {
+     "if": [
+      "festival"
+     ],
+     "text": [
+      "Happy {festival}, {player}! Everyone's in good spirits.",
+      "It's the {festival}. Half the town's drunk and the other half's working on it."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "I challenge the house to a drinking contest! (2 doubloons)",
+     "action": "special:drink_start",
+     "then": "contest"
+    },
+    {
+     "label": "Any odd jobs?",
+     "goto": "jobs"
+    },
+    {
+     "label": "What's the news?",
+     "action": "special:town_news",
+     "then": "root"
+    },
+    {
+     "label": "Today's challenges?",
+     "action": "special:challenges",
+     "then": "root"
+    },
+    {
+     "label": "Who drinks hardest round here?",
+     "action": "special:top_drinking",
+     "then": "root"
+    },
+    {
+     "label": "Heard any rumours?",
+     "goto": "common:rumours"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "contest": {
+   "text": [
+    "The table's cleared, the tankards are full."
+   ],
+   "options": [
+    {
+     "label": "Drink!",
+     "action": "special:drink_round",
+     "then": "contest"
+    },
+    {
+     "label": "I yield.",
+     "action": "special:drink_concede",
+     "then": "root"
+    }
+   ]
+  },
+  "jobs": {
+   "text": [
+    "There's always a parcel needs carrying. Folk trust a sealed parcel with a pirate more than you'd think.",
+    "Get it there on time and you'll be paid in full. Late, and they'll grumble and pay half."
+   ],
+   "options": [
+    {
+     "label": "I'll carry one.",
+     "action": "special:parcel",
+     "then": "root"
+    },
+    {
+     "label": "Something else...",
+     "goto": "root"
+    }
+   ]
+  }
+ }
+}

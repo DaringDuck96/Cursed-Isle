@@ -1,0 +1,39 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": { "type": "minecraft:uniform", "min": 6, "max": 9 },
+      "entries": [
+        { "type": "minecraft:item", "name": "cursedtides:doubloon", "weight": 30,
+          "functions": [ { "function": "minecraft:set_count", "count": { "type": "minecraft:uniform", "min": 32, "max": 64 } } ] },
+        { "type": "minecraft:item", "name": "minecraft:gold_block", "weight": 10,
+          "functions": [ { "function": "minecraft:set_count", "count": { "type": "minecraft:uniform", "min": 1, "max": 4 } } ] },
+        { "type": "minecraft:item", "name": "minecraft:diamond", "weight": 12,
+          "functions": [ { "function": "minecraft:set_count", "count": { "type": "minecraft:uniform", "min": 2, "max": 6 } } ] },
+        { "type": "minecraft:item", "name": "minecraft:heart_of_the_sea", "weight": 6 },
+        { "type": "minecraft:item", "name": "minecraft:enchanted_golden_apple", "weight": 3 },
+        { "type": "minecraft:item", "name": "cursedtides:galleon_deed", "weight": 2 }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        { "type": "minecraft:item", "name": "cursedtides:cutlass", "weight": 2,
+          "functions": [
+            { "function": "minecraft:enchant_with_levels", "levels": 39 },
+            { "function": "minecraft:set_name", "target": "item_name", "name": { "text": "The Drowned King's Blade", "color": "gold", "italic": false } }
+          ] },
+        { "type": "minecraft:item", "name": "cursedtides:blunderbuss", "weight": 1,
+          "functions": [
+            { "function": "minecraft:enchant_with_levels", "levels": 39 },
+            { "function": "minecraft:set_name", "target": "item_name", "name": { "text": "Thunderclap", "color": "gold", "italic": false } }
+          ] },
+        { "type": "minecraft:item", "name": "cursedtides:hex_staff", "weight": 1,
+          "functions": [
+            { "function": "minecraft:enchant_with_levels", "levels": 39 },
+            { "function": "minecraft:set_name", "target": "item_name", "name": { "text": "Staff of the Ninth Fathom", "color": "gold", "italic": false } }
+          ] }
+      ]
+    }
+  ]
+}

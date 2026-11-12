@@ -1,0 +1,108 @@
+{
+ "name": "Sorrel Vane-Ashby",
+ "nodes": {
+  "root": {
+   "text": [
+    "Come in, come in. The spirits said you'd come. Well. They said someone would.",
+    "Sit, captain. Mind the candles. The dead are very particular about candles.",
+    "You've a lot of ghosts following you, {player}. No, don't look. They don't like it."
+   ],
+   "text_if": [
+    {
+     "if": [
+      "shade>=2"
+     ],
+     "text": [
+      "The house is quiet now. Lady Morrow is at rest, thanks to you. I sleep better too."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "The veil's thin tonight. Speak softly."
+     ]
+    }
+   ],
+   "aside": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Storms make the spirits restless. And me."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "Can I help with something?",
+     "action": "quest",
+     "if": [
+      "shade<3"
+     ]
+    },
+    {
+     "label": "Who haunts the mansion?",
+     "goto": "morrow"
+    },
+    {
+     "label": "Can you really talk to the dead?",
+     "goto": "talent"
+    },
+    {
+     "label": "Tell me my fortune.",
+     "goto": "fortune"
+    },
+    {
+     "label": "Heard any rumours?",
+     "goto": "common:rumours"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "morrow": {
+   "text": [
+    [
+     "Lady Morrow. She waited in that house for a husband who sailed with the Meridian Fleet and never came home.",
+     "She's still waiting. The waiting has made her cruel."
+    ]
+   ]
+  },
+  "talent": {
+   "text": [
+    "Since I was seven. I heard my grandmother calling from the well. She'd been dead a year.",
+    "Mostly the dead talk about the weather and their feet. It's very disappointing."
+   ]
+  },
+  "fortune": {
+   "text": [
+    "I see water. A great deal of water. And a choice, at the end of it, that only you can make.",
+    "Gold, and a long voyage, and a betrayal by a friend who laughs too easily.",
+    "I see you eating soup. That's all. Sometimes the spirits are lazy."
+   ],
+   "text_if": [
+    {
+     "if": [
+      "arc>=2"
+     ],
+     "text": [
+      "Seven stones. A door at the edge of the world. And a man with a crow's name, smiling at you over a fire."
+     ]
+    },
+    {
+     "if": [
+      "ending:claimed"
+     ],
+     "text": [
+      "The sea is in you now. I can't see past it. That frightens me."
+     ]
+    }
+   ]
+  }
+ }
+}

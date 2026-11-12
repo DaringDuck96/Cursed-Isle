@@ -1,0 +1,86 @@
+{
+ "name": "Card Dealer",
+ "nodes": {
+  "root": {
+   "text": [
+    "Hold'em, blinds one and two. Buy in with what's in your purse, between ten and sixty-four doubloons.",
+    "Table's open. Three locals, one empty seat. Yours if you want it.",
+    "Cards don't care who you are, captain. That's what I like about them."
+   ],
+   "aside": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Listen to that thunder. Nobody sane is at sea tonight.",
+      "Storm's right on top of us. Stay in the dry a while.",
+      "Every timber in the harbour's groaning. Ugly night."
+     ]
+    },
+    {
+     "if": [
+      "raining"
+     ],
+     "text": [
+      "Wretched rain. Gets into everything.",
+      "Rain again. Good for the cisterns, bad for the soul.",
+      "You're dripping on my floor, by the way."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Late to be wandering about.",
+      "Night's when the cursed come walking. Keep a lantern lit.",
+      "Can't sleep either, eh?"
+     ]
+    },
+    {
+     "if": [
+      "dawn"
+     ],
+     "text": [
+      "Up with the gulls, I see.",
+      "Early start, {player}.",
+      "Mist'll burn off by mid-morning."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "Deal me in.",
+     "action": "quest_screen"
+    },
+    {
+     "label": "Who's at the table?",
+     "goto": "table"
+    },
+    {
+     "label": "How does the game go?",
+     "goto": "rules"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "table": {
+   "text": [
+    "Tonight? A cautious net-mender, a drunk who raises everything, and a quiet woman who never loses. Watch her.",
+    "Regulars. Some careful, some reckless, one or two who bluff like they mean it. You'll learn which is which, or you'll learn poorer."
+   ]
+  },
+  "rules": {
+   "text": [
+    [
+     "Two cards each, face down. Five on the table: three, then one, then one. Best five of seven wins.",
+     "Check, call, raise or fold. Small blind one, big blind two. Leave whenever you like and cash out what's in front of you."
+    ]
+   ]
+  }
+ }
+}

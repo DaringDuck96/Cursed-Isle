@@ -1,0 +1,120 @@
+{
+ "name": "Foreman Dagny Bell",
+ "nodes": {
+  "root": {
+   "text": [
+    "Hard hats on, fools out. What do you want?",
+    "Dagny Bell, foreman. Goldwater's the richest rock in the Reach and the most dangerous. Both at once.",
+    "If you're here to dig, see the assayer. If you're here to die, see the Deep Seam."
+   ],
+   "text_if": [
+    {
+     "if": [
+      "seam>=2"
+     ],
+     "text": [
+      "The one who came back up from the Seam! Drinks are on the company. Don't tell the company."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Night shift's the worst. You hear things down there. Knocking."
+     ]
+    }
+   ],
+   "aside": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Listen to that thunder. Nobody sane is at sea tonight.",
+      "Storm's right on top of us. Stay in the dry a while.",
+      "Every timber in the harbour's groaning. Ugly night."
+     ]
+    },
+    {
+     "if": [
+      "raining"
+     ],
+     "text": [
+      "Wretched rain. Gets into everything.",
+      "Rain again. Good for the cisterns, bad for the soul.",
+      "You're dripping on my floor, by the way."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Late to be wandering about.",
+      "Night's when the cursed come walking. Keep a lantern lit.",
+      "Can't sleep either, eh?"
+     ]
+    },
+    {
+     "if": [
+      "dawn"
+     ],
+     "text": [
+      "Up with the gulls, I see.",
+      "Early start, {player}.",
+      "Mist'll burn off by mid-morning."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "Any work for a brave fool?",
+     "action": "quest",
+     "if": [
+      "seam<2"
+     ]
+    },
+    {
+     "label": "What's the Deep Seam?",
+     "goto": "seam"
+    },
+    {
+     "label": "How's the gold?",
+     "goto": "gold"
+    },
+    {
+     "label": "Tell me about yourself.",
+     "goto": "about"
+    },
+    {
+     "label": "Heard any rumours?",
+     "goto": "common:rumours"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "seam": {
+   "text": [
+    [
+     "The deepest shaft on Goldwater. We hit a vein so rich you could see it by lamplight. Then we hit something else.",
+     "Lost two crews. Sealed the bottom. Something's been knocking on the seal ever since."
+    ]
+   ]
+  },
+  "gold": {
+   "text": [
+    "Quill Hart the assayer buys raw gold at a fair rate. Fairer than Kingsport. Don't tell Kingsport.",
+    "The cliffs are full of it. Bring a pick, bring a lamp, bring a friend who runs slower than you."
+   ]
+  },
+  "about": {
+   "text": [
+    "Twenty years in the mines of the mainland before I came out here. Never saw the sun. Now I see it every day and I still don't trust it."
+   ]
+  }
+ }
+}

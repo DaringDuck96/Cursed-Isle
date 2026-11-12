@@ -1,0 +1,125 @@
+{
+ "name": "Isadora Vance",
+ "nodes": {
+  "root": {
+   "text": [
+    "Isadora Vance. You're in my warehouse. Everything in it is mine, including the air you're breathing.",
+    "Shut the door. Quickly. Now, what's your business?",
+    "Another fresh face. Raven's Landing collects them."
+   ],
+   "text_if": [
+    {
+     "if": [
+      "navy>=300"
+     ],
+     "text": [
+      "A Tidewatch favourite in my warehouse. You can find the door, or my lads can show you it."
+     ]
+    },
+    {
+     "if": [
+      "smugglers>=600"
+     ],
+     "text": [
+      "My Shadow Captain! Sit. I've something special in the back."
+     ]
+    },
+    {
+     "if": [
+      "ending:court"
+     ],
+     "text": [
+      "The Court's lantern-bearer. You'll never be searched again. I'm almost jealous."
+     ]
+    }
+   ],
+   "aside": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Listen to that thunder. Nobody sane is at sea tonight.",
+      "Storm's right on top of us. Stay in the dry a while.",
+      "Every timber in the harbour's groaning. Ugly night."
+     ]
+    },
+    {
+     "if": [
+      "raining"
+     ],
+     "text": [
+      "Wretched rain. Gets into everything.",
+      "Rain again. Good for the cisterns, bad for the soul.",
+      "You're dripping on my floor, by the way."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Late to be wandering about.",
+      "Night's when the cursed come walking. Keep a lantern lit.",
+      "Can't sleep either, eh?"
+     ]
+    },
+    {
+     "if": [
+      "dawn"
+     ],
+     "text": [
+      "Up with the gulls, I see.",
+      "Early start, {player}.",
+      "Mist'll burn off by mid-morning."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "Any smuggling work?",
+     "action": "quest"
+    },
+    {
+     "label": "How does smuggling work here?",
+     "goto": "howto"
+    },
+    {
+     "label": "Tell me about Raven's Landing.",
+     "goto": "town"
+    },
+    {
+     "label": "Why smuggling?",
+     "goto": "about"
+    },
+    {
+     "label": "Heard any rumours?",
+     "goto": "common:rumours"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "howto": {
+   "text": [
+    [
+     "Buy untaxed rum or powder from the fence in the square. Sell it where it's wanted: Blackthorn, or back here for idols and plate.",
+     "If a Tidewatch patrol hails you, you've fifteen seconds to get seventy blocks away. Or they search the lot and take it. Marines in port check pockets too."
+    ]
+   ]
+  },
+  "town": {
+   "text": [
+    "Raven's Landing. A tavern, two warehouses, a crooked pier, and nobody who'll admit to living here.",
+    "We don't have a governor. We have me. It works out better for everyone."
+   ]
+  },
+  "about": {
+   "text": [
+    "My mother ran powder past the Kingsport batteries in a rowboat. My grandmother ran rum past them in a bathtub. Family business."
+   ]
+  }
+ }
+}

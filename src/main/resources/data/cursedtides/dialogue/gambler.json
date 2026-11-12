@@ -1,0 +1,87 @@
+{
+ "name": "Lucky Jory Bones",
+ "nodes": {
+  "root": {
+   "text": [
+    "Jory Bones! Lucky Jory, they call me. Ironic, mostly. Roll the bones with me?",
+    "Feel lucky, {player}? I always do. It's never once been true.",
+    "Two dice, high roll doubles your stake. Simplest game on the sea."
+   ],
+   "aside": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Listen to that thunder. Nobody sane is at sea tonight.",
+      "Storm's right on top of us. Stay in the dry a while.",
+      "Every timber in the harbour's groaning. Ugly night."
+     ]
+    },
+    {
+     "if": [
+      "raining"
+     ],
+     "text": [
+      "Wretched rain. Gets into everything.",
+      "Rain again. Good for the cisterns, bad for the soul.",
+      "You're dripping on my floor, by the way."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Late to be wandering about.",
+      "Night's when the cursed come walking. Keep a lantern lit.",
+      "Can't sleep either, eh?"
+     ]
+    },
+    {
+     "if": [
+      "dawn"
+     ],
+     "text": [
+      "Up with the gulls, I see.",
+      "Early start, {player}.",
+      "Mist'll burn off by mid-morning."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "Let's roll. (Bet what's in my purse, up to 16 doubloons)",
+     "action": "quest"
+    },
+    {
+     "label": "How did you get the name?",
+     "goto": "name"
+    },
+    {
+     "label": "Any tips?",
+     "goto": "tips"
+    },
+    {
+     "label": "Heard any rumours?",
+     "goto": "common:rumours"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "name": {
+   "text": [
+    "Won a sloop off a Tidewatch lieutenant with a pair of sixes. Lost it next morning on a pair of ones. Nobody remembers the second part."
+   ]
+  },
+  "tips": {
+   "text": [
+    "Never bet the ship. Never bet on a cursed man's dice. And never, ever play cards with the dealer in the corner. He counts.",
+    "Luck's like wind. You can't make it, but you can be there when it blows."
+   ]
+  }
+ }
+}

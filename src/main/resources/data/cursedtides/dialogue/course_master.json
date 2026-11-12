@@ -1,0 +1,116 @@
+{
+ "name": "Skip Lanyard",
+ "nodes": {
+  "root": {
+   "text": [
+    "The Stack Run! Up the crags, round the top, back down. Ten flags!",
+    "Legs warmed up?",
+    "Fastest feet on the island, they call me. Fair's fair: they call me that because I'm the only one here."
+   ],
+   "text_if": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "You'd run the Stack in this? Lightning likes the tall rocks. So do I. Go on then."
+     ]
+    }
+   ],
+   "aside": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Listen to that thunder. Nobody sane is at sea tonight.",
+      "Storm's right on top of us. Stay in the dry a while.",
+      "Every timber in the harbour's groaning. Ugly night."
+     ]
+    },
+    {
+     "if": [
+      "raining"
+     ],
+     "text": [
+      "Wretched rain. Gets into everything.",
+      "Rain again. Good for the cisterns, bad for the soul.",
+      "You're dripping on my floor, by the way."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Late to be wandering about.",
+      "Night's when the cursed come walking. Keep a lantern lit.",
+      "Can't sleep either, eh?"
+     ]
+    },
+    {
+     "if": [
+      "dawn"
+     ],
+     "text": [
+      "Up with the gulls, I see.",
+      "Early start, {player}.",
+      "Mist'll burn off by mid-morning."
+     ]
+    },
+    {
+     "if": [
+      "festival"
+     ],
+     "text": [
+      "Happy {festival}, {player}! Everyone's in good spirits.",
+      "It's the {festival}. Half the town's drunk and the other half's working on it."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "I'll run it!",
+     "action": "special:course",
+     "then": "go"
+    },
+    {
+     "label": "How does it work?",
+     "goto": "rules"
+    },
+    {
+     "label": "Record times?",
+     "action": "special:top_course",
+     "then": "root"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "rules": {
+   "text": [
+    "Touch every flag in order. The one you need burns gold; the rest are marked with red smoke.",
+    "On foot, no ships, no tricks. Fall in the sea and you're out. Under ninety seconds and you're a legend."
+   ],
+   "options": [
+    {
+     "label": "Something else...",
+     "goto": "root"
+    }
+   ]
+  },
+  "go": {
+   "text": [
+    "Clock's running! Go go go!"
+   ],
+   "options": [
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  }
+ }
+}

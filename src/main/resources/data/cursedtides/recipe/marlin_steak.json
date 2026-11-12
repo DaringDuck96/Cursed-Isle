@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "cursedtides:golden_marlin"
+    }
+  ],
+  "result": {
+    "id": "cursedtides:marlin_steak",
+    "count": 6
+  }
+}

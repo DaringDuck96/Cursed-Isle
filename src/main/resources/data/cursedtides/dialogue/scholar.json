@@ -1,0 +1,138 @@
+{
+ "name": "Professor Ansel Thwaite",
+ "nodes": {
+  "root": {
+   "text": [
+    "Professor Ansel Thwaite. Mind the trench, I've been digging since dawn.",
+    "The First Tide! Fascinating people. Terrible taste in gods.",
+    "Every stone on these keys has writing on it, if you know how to look."
+   ],
+   "text_if": [
+    {
+     "if": [
+      "arc==1"
+     ],
+     "text": [
+      "Is that... a relic? Bring it here, bring it here!"
+     ]
+    },
+    {
+     "if": [
+      "arc==2"
+     ],
+     "text": [
+      "{relics} of seven! Remarkable. Let me see what's still missing."
+     ]
+    }
+   ],
+   "aside": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Listen to that thunder. Nobody sane is at sea tonight.",
+      "Storm's right on top of us. Stay in the dry a while.",
+      "Every timber in the harbour's groaning. Ugly night."
+     ]
+    },
+    {
+     "if": [
+      "raining"
+     ],
+     "text": [
+      "Wretched rain. Gets into everything.",
+      "Rain again. Good for the cisterns, bad for the soul.",
+      "You're dripping on my floor, by the way."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Late to be wandering about.",
+      "Night's when the cursed come walking. Keep a lantern lit.",
+      "Can't sleep either, eh?"
+     ]
+    },
+    {
+     "if": [
+      "dawn"
+     ],
+     "text": [
+      "Up with the gulls, I see.",
+      "Early start, {player}.",
+      "Mist'll burn off by mid-morning."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "I have something for you to read.",
+     "action": "quest",
+     "if": [
+      "arc==1"
+     ]
+    },
+    {
+     "label": "What am I still missing?",
+     "action": "quest",
+     "if": [
+      "arc==2"
+     ]
+    },
+    {
+     "label": "What news of the gate?",
+     "action": "quest",
+     "if": [
+      "arc>=3"
+     ]
+    },
+    {
+     "label": "Who were the First Tide?",
+     "goto": "firsttide"
+    },
+    {
+     "label": "What are you digging for?",
+     "goto": "dig"
+    },
+    {
+     "label": "Tell me about the Lantern Court.",
+     "goto": "court",
+     "if": [
+      "arc>=2"
+     ]
+    },
+    {
+     "label": "Heard any rumours?",
+     "goto": "common:rumours"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "firsttide": {
+   "text": [
+    [
+     "Sea people. Scales tattooed on their skin, cities on the islands before the islands were small.",
+     "They believed the tide was alive and could be spoken to. Then, by every account, it spoke back."
+    ]
+   ]
+  },
+  "dig": {
+   "text": [
+    "Coins, mostly. The odd tablet. Once, a whole jaw. Not human. I've stopped digging in that trench.",
+    "The antiquarian buys the coins. I keep the tablets. We have an arrangement."
+   ]
+  },
+  "court": {
+   "text": [
+    "Collectors. Rich ones. Buying every scrap of the First Tide for thirty years, through a dozen agents.",
+    "I've had offers for my notes. Large ones. I've refused them all, so far."
+   ]
+  }
+ }
+}

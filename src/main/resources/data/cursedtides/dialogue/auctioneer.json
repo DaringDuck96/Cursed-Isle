@@ -1,0 +1,90 @@
+{
+ "name": "Barnaby Lott",
+ "nodes": {
+  "root": {
+   "text": [
+    "Barnaby Lott, auctioneer! Going once, going twice... oh, you're just looking. Wonderful!",
+    "Lots on the board, captain! Something for everyone and everyone for something!",
+    "The Kingsport auction house! Where the Reach sells what it shouldn't have and buys what it can't afford!"
+   ],
+   "aside": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Listen to that thunder. Nobody sane is at sea tonight.",
+      "Storm's right on top of us. Stay in the dry a while.",
+      "Every timber in the harbour's groaning. Ugly night."
+     ]
+    },
+    {
+     "if": [
+      "raining"
+     ],
+     "text": [
+      "Wretched rain. Gets into everything.",
+      "Rain again. Good for the cisterns, bad for the soul.",
+      "You're dripping on my floor, by the way."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Late to be wandering about.",
+      "Night's when the cursed come walking. Keep a lantern lit.",
+      "Can't sleep either, eh?"
+     ]
+    },
+    {
+     "if": [
+      "dawn"
+     ],
+     "text": [
+      "Up with the gulls, I see.",
+      "Early start, {player}.",
+      "Mist'll burn off by mid-morning."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "Show me the board.",
+     "action": "quest_screen"
+    },
+    {
+     "label": "How do I sell something?",
+     "goto": "sell"
+    },
+    {
+     "label": "What sells well?",
+     "goto": "tips"
+    },
+    {
+     "label": "Heard any rumours?",
+     "goto": "common:rumours"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "sell": {
+   "text": [
+    [
+     "Hold the item up and name your price: '/auction sell' and a number of doubloons. It goes straight on the board.",
+     "If it sells while you're at sea, I keep your takings safe. Five percent to the house, naturally."
+    ]
+   ]
+  },
+  "tips": {
+   "text": [
+    "Legendary blades go for a fortune. Ship deeds too. Golden marlin, if anyone ever catches one again.",
+    "Rare flags! Collectors pay through the nose for a Kraken's Coil."
+   ]
+  }
+ }
+}

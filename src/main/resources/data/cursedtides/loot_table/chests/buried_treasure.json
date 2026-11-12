@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": { "type": "minecraft:uniform", "min": 4, "max": 7 },
+      "entries": [
+        { "type": "minecraft:item", "name": "cursedtides:doubloon", "weight": 40,
+          "functions": [ { "function": "minecraft:set_count", "count": { "type": "minecraft:uniform", "min": 8, "max": 24 } } ] },
+        { "type": "minecraft:item", "name": "minecraft:gold_ingot", "weight": 15,
+          "functions": [ { "function": "minecraft:set_count", "count": { "type": "minecraft:uniform", "min": 2, "max": 6 } } ] },
+        { "type": "minecraft:item", "name": "minecraft:emerald", "weight": 12,
+          "functions": [ { "function": "minecraft:set_count", "count": { "type": "minecraft:uniform", "min": 1, "max": 5 } } ] },
+        { "type": "minecraft:item", "name": "minecraft:diamond", "weight": 5,
+          "functions": [ { "function": "minecraft:set_count", "count": { "type": "minecraft:uniform", "min": 1, "max": 2 } } ] },
+        { "type": "minecraft:item", "name": "cursedtides:map_fragment", "weight": 6 },
+        { "type": "minecraft:item", "name": "minecraft:heart_of_the_sea", "weight": 2 }
+      ]
+    }
+  ]
+}

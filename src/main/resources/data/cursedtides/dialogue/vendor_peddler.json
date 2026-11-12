@@ -1,0 +1,104 @@
+{
+ "name": "Wandering Peddler",
+ "nodes": {
+  "root": {
+   "text": [
+    "Curios! Trinkets! Things you didn't know you needed!",
+    "Only here till nightfall, friend. Then the wind takes me.",
+    "Rings, charms, a flag or two. All honestly come by. Mostly."
+   ],
+   "text_if": [
+    {
+     "if": [
+      "festival"
+     ],
+     "text": [
+      "Happy {festival}, {player}! Everyone's in good spirits.",
+      "It's the {festival}. Half the town's drunk and the other half's working on it."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "Show me your wares.",
+     "action": "trade"
+    },
+    {
+     "label": "Where do you come from?",
+     "goto": "from"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ],
+   "aside": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Listen to that thunder. Nobody sane is at sea tonight.",
+      "Storm's right on top of us. Stay in the dry a while.",
+      "Every timber in the harbour's groaning. Ugly night."
+     ]
+    },
+    {
+     "if": [
+      "raining"
+     ],
+     "text": [
+      "Wretched rain. Gets into everything.",
+      "Rain again. Good for the cisterns, bad for the soul.",
+      "You're dripping on my floor, by the way."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Late to be wandering about.",
+      "Night's when the cursed come walking. Keep a lantern lit.",
+      "Can't sleep either, eh?"
+     ]
+    },
+    {
+     "if": [
+      "dawn"
+     ],
+     "text": [
+      "Up with the gulls, I see.",
+      "Early start, {player}.",
+      "Mist'll burn off by mid-morning."
+     ]
+    },
+    {
+     "if": [
+      "festival"
+     ],
+     "text": [
+      "Happy {festival}, {player}! Everyone's in good spirits.",
+      "It's the {festival}. Half the town's drunk and the other half's working on it."
+     ]
+    }
+   ]
+  },
+  "from": {
+   "text": [
+    "Here and there. Mostly there.",
+    "I sail the gaps between the islands. You'd be amazed what floats."
+   ],
+   "options": [
+    {
+     "label": "Something else...",
+     "goto": "root"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  }
+ }
+}

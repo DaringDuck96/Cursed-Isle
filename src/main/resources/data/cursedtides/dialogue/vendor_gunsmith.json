@@ -1,0 +1,109 @@
+{
+ "name": "Shopkeeper",
+ "nodes": {
+  "root": {
+   "text": [
+    "Powder's dry, flints are sharp. What are you shooting at?",
+    "{npc}. Pistols, muskets, blunderbusses. All guaranteed not to explode. Mostly.",
+    "Careful with that, it's loaded. No, the other one."
+   ],
+   "text_if": [
+    {
+     "if": [
+      "wanted"
+     ],
+     "text": [
+      "Keep your voice down. There are marines about, and your face is on the posters.",
+      "I'll serve you, but quickly. Bounty hunters drink in here."
+     ]
+    }
+   ],
+   "aside": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Listen to that thunder. Nobody sane is at sea tonight.",
+      "Storm's right on top of us. Stay in the dry a while.",
+      "Every timber in the harbour's groaning. Ugly night."
+     ]
+    },
+    {
+     "if": [
+      "raining"
+     ],
+     "text": [
+      "Wretched rain. Gets into everything.",
+      "Rain again. Good for the cisterns, bad for the soul.",
+      "You're dripping on my floor, by the way."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Late to be wandering about.",
+      "Night's when the cursed come walking. Keep a lantern lit.",
+      "Can't sleep either, eh?"
+     ]
+    },
+    {
+     "if": [
+      "dawn"
+     ],
+     "text": [
+      "Up with the gulls, I see.",
+      "Early start, {player}.",
+      "Mist'll burn off by mid-morning."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "Let's trade.",
+     "action": "trade"
+    },
+    {
+     "label": "Which gun is best?",
+     "goto": "t0"
+    },
+    {
+     "label": "Can a gun be improved?",
+     "goto": "t1"
+    },
+    {
+     "label": "Seen any strange guns?",
+     "goto": "t2"
+    },
+    {
+     "label": "Heard any rumours?",
+     "goto": "common:rumours"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "t0": {
+   "text": [
+    [
+     "Pistol's quick to draw and quick to reload. Musket hits far and hard. Blunderbuss empties a deck at close range.",
+     "A good shot with a pistol beats a bad one with a cannon."
+    ]
+   ]
+  },
+  "t1": {
+   "text": [
+    "A rifling kit cuts grooves in the barrel. More bite per shot. Three goes at it, if your hands are steady enough."
+   ]
+  },
+  "t2": {
+   "text": [
+    "A customer once brought me a pistol from the Sovereign Dawn. Forty years underwater and it still fired. Wouldn't sell it to me, either."
+   ]
+  }
+ }
+}

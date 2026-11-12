@@ -1,0 +1,90 @@
+{
+ "name": "Tidewatch Marine",
+ "nodes": {
+  "root": {
+   "text": [
+    "Move along, citizen.",
+    "Tidewatch business. Keep your nose clean.",
+    "Nothing to see here.",
+    "Fine {time}. Keep it that way.",
+    "Eyes front, sailor."
+   ],
+   "text_if": [
+    {
+     "if": [
+      "wanted"
+     ],
+     "text": [
+      "Halt! I know that face! ...I'm off duty in five minutes. Run.",
+      "There's a price on you. Don't make me earn it."
+     ]
+    },
+    {
+     "if": [
+      "navy>=600"
+     ],
+     "text": [
+      "Captain! Sir! Ma'am! Captain!",
+      "An honour, captain. The lads talk about you."
+     ]
+    },
+    {
+     "if": [
+      "navy<-100"
+     ],
+     "text": [
+      "Watch yourself, pirate.",
+      "One wrong move."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Quiet watch tonight. Too quiet.",
+      "Seen anything moving on the water? Good. Keep it that way."
+     ]
+    },
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Can't see a thing in this. Perfect night for the dead to come ashore."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "Anything happening?",
+     "goto": "duty"
+    },
+    {
+     "label": "What's it like in the Tidewatch?",
+     "goto": "life"
+    },
+    {
+     "label": "Heard any rumours?",
+     "goto": "common:rumours"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "duty": {
+   "text": [
+    "Patrols, mostly. Searching pockets for untaxed rum. Shooting at things that should be dead.",
+    "There's been ghost ships off the north point. Commodore says to double the watch."
+   ]
+  },
+  "life": {
+   "text": [
+    "The pay's bad, the food's worse, and the dead don't stay dead. But the coat's nice.",
+    "Joined for the adventure. Got guard duty. Story of every marine."
+   ]
+  }
+ }
+}

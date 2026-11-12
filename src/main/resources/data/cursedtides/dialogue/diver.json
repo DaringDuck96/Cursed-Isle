@@ -1,0 +1,116 @@
+{
+ "name": "Tobiah Sounding",
+ "nodes": {
+  "root": {
+   "text": [
+    "Salvage and soundings. What can I raise for you?",
+    "Mind the drip. Always dripping, me.",
+    "{player}! Fancy a swim?"
+   ],
+   "text_if": [
+    {
+     "if": [
+      "found:painting_city"
+     ],
+     "text": [
+      "You've been down to the city! The temple! What was it like?"
+     ]
+    }
+   ],
+   "aside": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Listen to that thunder. Nobody sane is at sea tonight.",
+      "Storm's right on top of us. Stay in the dry a while.",
+      "Every timber in the harbour's groaning. Ugly night."
+     ]
+    },
+    {
+     "if": [
+      "raining"
+     ],
+     "text": [
+      "Wretched rain. Gets into everything.",
+      "Rain again. Good for the cisterns, bad for the soul.",
+      "You're dripping on my floor, by the way."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Late to be wandering about.",
+      "Night's when the cursed come walking. Keep a lantern lit.",
+      "Can't sleep either, eh?"
+     ]
+    },
+    {
+     "if": [
+      "dawn"
+     ],
+     "text": [
+      "Up with the gulls, I see.",
+      "Early start, {player}.",
+      "Mist'll burn off by mid-morning."
+     ]
+    },
+    {
+     "if": [
+      "festival"
+     ],
+     "text": [
+      "Happy {festival}, {player}! Everyone's in good spirits.",
+      "It's the {festival}. Half the town's drunk and the other half's working on it."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "I'll buy a diving helmet. (22 doubloons)",
+     "action": "special:buy_helmet",
+     "then": "root"
+    },
+    {
+     "label": "How does the helmet work?",
+     "goto": "how"
+    },
+    {
+     "label": "Where's worth diving?",
+     "goto": "where"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "how": {
+   "text": [
+    "Four minutes of air in the brass. It only breathes for you while your head's under, and refills the moment you surface.",
+    "Wear boots with it and you'll walk the bottom quicker. The bell rings when you're down to half a minute."
+   ],
+   "options": [
+    {
+     "label": "Something else...",
+     "goto": "root"
+    }
+   ]
+  },
+  "where": {
+   "text": [
+    "Vesh Amaru, the drowned city, west of Serpent's Hollow and far south. Streets, houses, a temple, and a grotto under it.",
+    "Every wreck you sink, too. And there's always something on the reef if you look."
+   ],
+   "options": [
+    {
+     "label": "Something else...",
+     "goto": "root"
+    }
+   ]
+  }
+ }
+}

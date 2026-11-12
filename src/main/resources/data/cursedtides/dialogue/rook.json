@@ -1,0 +1,168 @@
+{
+ "name": "Captain Rook Varga",
+ "nodes": {
+  "root": {
+   "text": [
+    "Welcome to Blackthorn. Mind the fire, mind your purse, and don't touch my tents.",
+    "Rook Varga. You've heard of me, I'm sure. Everything you've heard is true, especially the bad bits.",
+    "Sit by the fire, captain. Tell me something interesting or buy me a drink. Ideally both."
+   ],
+   "text_if": [
+    {
+     "if": [
+      "ledger==3"
+     ],
+     "text": [
+      "Always welcome by my fire, friend. Harrow's still fuming. It's the best thing I've ever bought."
+     ]
+    },
+    {
+     "if": [
+      "ledger==2"
+     ],
+     "text": [
+      "Harrow's lapdog. Drink your rum and keep your hands where I can see them."
+     ]
+    },
+    {
+     "if": [
+      "arc>=5"
+     ],
+     "text": [
+      "...you're still alive. Of course you are."
+     ]
+    },
+    {
+     "if": [
+      "arcflag:met_rook"
+     ],
+     "text": [
+      "My partner in the Accord! Found any more shiny rocks?"
+     ]
+    }
+   ],
+   "aside": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Listen to that thunder. Nobody sane is at sea tonight.",
+      "Storm's right on top of us. Stay in the dry a while.",
+      "Every timber in the harbour's groaning. Ugly night."
+     ]
+    },
+    {
+     "if": [
+      "raining"
+     ],
+     "text": [
+      "Wretched rain. Gets into everything.",
+      "Rain again. Good for the cisterns, bad for the soul.",
+      "You're dripping on my floor, by the way."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Late to be wandering about.",
+      "Night's when the cursed come walking. Keep a lantern lit.",
+      "Can't sleep either, eh?"
+     ]
+    },
+    {
+     "if": [
+      "dawn"
+     ],
+     "text": [
+      "Up with the gulls, I see.",
+      "Early start, {player}.",
+      "Mist'll burn off by mid-morning."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "About the ledger...",
+     "action": "quest",
+     "if": [
+      "ledger==1",
+      "has:cursedtides:governors_ledger"
+     ]
+    },
+    {
+     "label": "Sell him the ledger. (Permanent)",
+     "action": "quest_alt",
+     "if": [
+      "ledger==1",
+      "has:cursedtides:governors_ledger"
+     ]
+    },
+    {
+     "label": "I hear you're gathering captains.",
+     "action": "quest",
+     "if": [
+      "arc>=2",
+      "arc<8",
+      "!arcflag:met_rook"
+     ]
+    },
+    {
+     "label": "Tell me about Blackthorn.",
+     "goto": "island"
+    },
+    {
+     "label": "How did you become a captain?",
+     "goto": "about"
+    },
+    {
+     "label": "What's this Accord?",
+     "goto": "accord",
+     "if": [
+      "arcflag:met_rook"
+     ]
+    },
+    {
+     "label": "Heard any rumours?",
+     "goto": "common:rumours"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "island": {
+   "text": [
+    [
+     "Blackthorn's mine. A palisade, a fire, a fence called Tilda who buys anything, and a card table for when the rum runs low.",
+     "The Navy knows where it is. They just don't like how many guns I've got pointed at the only beach."
+    ]
+   ]
+  },
+  "about": {
+   "text": [
+    "Mutinied off a Tidewatch frigate at sixteen. Took the purser's strongbox and the cook. Kept the cook. Best decision I ever made.",
+    "Nobody makes you a captain, captain. You just start giving orders and see who listens."
+   ]
+  },
+  "accord": {
+   "text": [
+    "Every free captain under one flag. No Navy, no Court, no Brethren votes taking a week. Just us, and whatever's past the edge of the chart.",
+    "Trust me. You can always trust Rook Varga. Ask anyone. Well. Ask anyone still around."
+   ],
+   "text_if": [
+    {
+     "if": [
+      "arc>=5"
+     ],
+     "text": [
+      "The Accord was always going to be mine. You were useful. Nothing personal."
+     ]
+    }
+   ]
+  }
+ }
+}

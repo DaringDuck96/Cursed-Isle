@@ -1,0 +1,138 @@
+{
+ "name": "Percival Deedes",
+ "nodes": {
+  "root": {
+   "text": [
+    "Percival Deedes, Land Office. Property is the only treasure that doesn't sink.",
+    "Looking to put down roots, captain?",
+    "Ah, {player}. A pirate with a mortgage is a pirate who comes home."
+   ],
+   "text_if": [
+    {
+     "if": [
+      "house"
+     ],
+     "text": [
+      "How's the property treating you? Leak in the roof? Not my department."
+     ]
+    },
+    {
+     "if": [
+      "prosperity>=75"
+     ],
+     "text": [
+      "Town's {town_mood}! Coin everywhere you look.",
+      "Never seen the harbour so busy."
+     ]
+    },
+    {
+     "if": [
+      "prosperity<35"
+     ],
+     "text": [
+      "Times are hard here. The town's {town_mood}.",
+      "Trade's dried up. If you've cargo to sell, sell it here; we need it."
+     ]
+    }
+   ],
+   "aside": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Listen to that thunder. Nobody sane is at sea tonight.",
+      "Storm's right on top of us. Stay in the dry a while.",
+      "Every timber in the harbour's groaning. Ugly night."
+     ]
+    },
+    {
+     "if": [
+      "raining"
+     ],
+     "text": [
+      "Wretched rain. Gets into everything.",
+      "Rain again. Good for the cisterns, bad for the soul.",
+      "You're dripping on my floor, by the way."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Late to be wandering about.",
+      "Night's when the cursed come walking. Keep a lantern lit.",
+      "Can't sleep either, eh?"
+     ]
+    },
+    {
+     "if": [
+      "dawn"
+     ],
+     "text": [
+      "Up with the gulls, I see.",
+      "Early start, {player}.",
+      "Mist'll burn off by mid-morning."
+     ]
+    },
+    {
+     "if": [
+      "festival"
+     ],
+     "text": [
+      "Happy {festival}, {player}! Everyone's in good spirits.",
+      "It's the {festival}. Half the town's drunk and the other half's working on it."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "I'd like a house. (60 doubloons)",
+     "action": "special:buy_house",
+     "then": "root"
+    },
+    {
+     "label": "Something quieter: a hideout. (45 doubloons)",
+     "action": "special:buy_hideout",
+     "then": "root"
+    },
+    {
+     "label": "I want to run a tavern. (150 doubloons)",
+     "action": "special:buy_tavern",
+     "then": "root"
+    },
+    {
+     "label": "A headquarters for my crew. (300, from the crew chest)",
+     "action": "special:buy_hq",
+     "if": [
+      "crew"
+     ],
+     "then": "root"
+    },
+    {
+     "label": "How do deeds work?",
+     "goto": "how"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "how": {
+   "text": [
+    "Stand on open ground, away from the town's own buildings, and use the deed. Up it goes.",
+    "The plot is yours: nobody else breaks or opens anything inside. A headquarters is shared with your crew.",
+    "Taverns earn a share of the port's trade every day; the busier the town, the fatter the till. /home collect.",
+    "Walk home with /home go, once in a while. And if you tire of it, /home sell from inside."
+   ],
+   "options": [
+    {
+     "label": "Something else...",
+     "goto": "root"
+    }
+   ]
+  }
+ }
+}

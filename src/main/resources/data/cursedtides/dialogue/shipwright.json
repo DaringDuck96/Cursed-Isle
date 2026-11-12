@@ -1,0 +1,120 @@
+{
+ "name": "Shipwright",
+ "nodes": {
+  "root": {
+   "text": [
+    "Hollis Pike's yard. Hulls bought, sold, mended and improved.",
+    "Mind the timber, it's seasoning. Like me.",
+    "Every ship in the Reach has a bit of my sawdust in it somewhere."
+   ],
+   "text_if": [
+    {
+     "if": [
+      "wanted"
+     ],
+     "text": [
+      "A wanted captain needs a fast ship. I don't ask questions. I just charge more."
+     ]
+    }
+   ],
+   "aside": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Listen to that thunder. Nobody sane is at sea tonight.",
+      "Storm's right on top of us. Stay in the dry a while.",
+      "Every timber in the harbour's groaning. Ugly night."
+     ]
+    },
+    {
+     "if": [
+      "raining"
+     ],
+     "text": [
+      "Wretched rain. Gets into everything.",
+      "Rain again. Good for the cisterns, bad for the soul.",
+      "You're dripping on my floor, by the way."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Late to be wandering about.",
+      "Night's when the cursed come walking. Keep a lantern lit.",
+      "Can't sleep either, eh?"
+     ]
+    },
+    {
+     "if": [
+      "dawn"
+     ],
+     "text": [
+      "Up with the gulls, I see.",
+      "Early start, {player}.",
+      "Mist'll burn off by mid-morning."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "Let's do business.",
+     "action": "trade"
+    },
+    {
+     "label": "Which ship should I sail?",
+     "goto": "ships"
+    },
+    {
+     "label": "Can I sell my ship?",
+     "goto": "sell"
+    },
+    {
+     "label": "What upgrades do you fit?",
+     "goto": "upgrades"
+    },
+    {
+     "label": "Tell me about going below deck.",
+     "goto": "below"
+    },
+    {
+     "label": "Heard any rumours?",
+     "goto": "common:rumours"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "ships": {
+   "text": [
+    [
+     "Sloop to start. Schooner if you trade, she's the fastest thing afloat. Brig or frigate if you fight. Galleon if you carry.",
+     "Bring your old deed and coin and I'll trade you up. Never throw a ship away."
+    ]
+   ]
+  },
+  "sell": {
+   "text": [
+    "Sneak up to me holding the deed, with her hold empty, and I'll buy her back for half her value. Hulls, not cargo."
+   ]
+  },
+  "upgrades": {
+   "text": [
+    [
+     "Hull plating, gun carriages, fine canvas, cargo bulkheads, and swivel guns for the rail.",
+     "Flags too: run up the Skull and Cutlasses, or the Tidewatch Ensign if you're feeling respectable."
+    ]
+   ]
+  },
+  "below": {
+   "text": [
+    "Press H aboard and you'll be in her belly: quarters, galley, the hold, a gun deck on the big ones. Furnish it how you like."
+   ]
+  }
+ }
+}

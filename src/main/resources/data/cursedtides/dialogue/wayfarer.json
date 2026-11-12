@@ -1,0 +1,155 @@
+{
+ "name": "The Wayfarer",
+ "nodes": {
+  "root": {
+   "text": [
+    "The horizon is clear today.",
+    "You came a long way to the edge of the chart, {player}.",
+    "Sit. The fire's warm and the view goes on forever."
+   ],
+   "text_if": [
+    {
+     "if": [
+      "arc==0"
+     ],
+     "text": [
+      "Few sail this far. Fewer sail back the same as they came."
+     ]
+    },
+    {
+     "if": [
+      "arc==7"
+     ],
+     "text": [
+      "The gate is open. The tide is waiting. So am I."
+     ]
+    },
+    {
+     "if": [
+      "ending:sealed"
+     ],
+     "text": [
+      "Warden. The gate sleeps, and the sea is quieter for it."
+     ]
+    },
+    {
+     "if": [
+      "ending:claimed"
+     ],
+     "text": [
+      "Sovereign. The sea moves when you walk past it."
+     ]
+    },
+    {
+     "if": [
+      "ending:court"
+     ],
+     "text": [
+      "Lantern-Bearer. The Court's lights burn on the gate every night."
+     ]
+    }
+   ],
+   "aside": [
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "The stars out here are older than the sea."
+     ]
+    },
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Even storms seem small at the end of the world."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "Tell me about the gate.",
+     "action": "quest",
+     "if": [
+      "arc==0"
+     ]
+    },
+    {
+     "label": "What next?",
+     "action": "quest",
+     "if": [
+      "arc>=1",
+      "arc<=6"
+     ]
+    },
+    {
+     "label": "Seal the gate. (Permanent)",
+     "action": "quest",
+     "if": [
+      "arc==7",
+      "arcflag:end_offered"
+     ]
+    },
+    {
+     "label": "Claim the tide. (Permanent)",
+     "action": "quest_alt",
+     "if": [
+      "arc==7",
+      "arcflag:end_offered"
+     ]
+    },
+    {
+     "label": "Give it to the Lantern Court. (Permanent)",
+     "action": "quest_third",
+     "if": [
+      "arc==7",
+      "arcflag:end_offered",
+      "arcflag:court"
+     ]
+    },
+    {
+     "label": "What lies beyond the gate?",
+     "action": "quest",
+     "if": [
+      "arc==7",
+      "!arcflag:end_offered"
+     ]
+    },
+    {
+     "label": "Tell me about the First Tide.",
+     "goto": "firsttide"
+    },
+    {
+     "label": "Who are you, really?",
+     "goto": "who"
+    },
+    {
+     "label": "How's the gate now?",
+     "action": "quest",
+     "if": [
+      "arc==8"
+     ]
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "firsttide": {
+   "text": [
+    [
+     "They lived on the Keys when the Keys were mountains. They built the gate to speak to the tide, and the tide answered.",
+     "Then it kept answering. The sea rose. The First Tide drowned, and their king with them."
+    ]
+   ]
+  },
+  "who": {
+   "text": [
+    "A traveller. Someone who has watched this horizon longer than they'd like to say.",
+    "My name went down with my ship a long time ago. 'Wayfarer' will do."
+   ]
+  }
+ }
+}

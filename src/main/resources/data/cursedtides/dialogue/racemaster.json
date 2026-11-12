@@ -1,0 +1,110 @@
+{
+ "name": "Pip Halyard",
+ "nodes": {
+  "root": {
+   "text": [
+    "Pip Halyard, Regatta Master! You've the look of someone who thinks they're fast.",
+    "Stormbreak regatta! Eight buoys, one lap, the stacks don't care how pretty your sails are.",
+    "Wind's {weather} today. Perfect racing weather. It's always perfect racing weather."
+   ],
+   "text_if": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Lightning and gales! Best racing day of the year! Probably the last, too, if you're unlucky."
+     ]
+    }
+   ],
+   "aside": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Listen to that thunder. Nobody sane is at sea tonight.",
+      "Storm's right on top of us. Stay in the dry a while.",
+      "Every timber in the harbour's groaning. Ugly night."
+     ]
+    },
+    {
+     "if": [
+      "raining"
+     ],
+     "text": [
+      "Wretched rain. Gets into everything.",
+      "Rain again. Good for the cisterns, bad for the soul.",
+      "You're dripping on my floor, by the way."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Late to be wandering about.",
+      "Night's when the cursed come walking. Keep a lantern lit.",
+      "Can't sleep either, eh?"
+     ]
+    },
+    {
+     "if": [
+      "dawn"
+     ],
+     "text": [
+      "Up with the gulls, I see.",
+      "Early start, {player}.",
+      "Mist'll burn off by mid-morning."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "Start the clock! (or give up a run)",
+     "action": "quest"
+    },
+    {
+     "label": "How does the race work?",
+     "goto": "rules"
+    },
+    {
+     "label": "Tips for the course?",
+     "goto": "tips"
+    },
+    {
+     "label": "Why race out here?",
+     "goto": "why"
+    },
+    {
+     "label": "Heard any rumours?",
+     "goto": "common:rumours"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "rules": {
+   "text": [
+    [
+     "Talk to me to start the clock, get in a boat, and round all eight buoys in order: yellow first, then sunwise round the island, then back to the yellow.",
+     "Under seventy-five seconds pays thirty doubloons. The record's announced to the whole Reach."
+    ]
+   ]
+  },
+  "tips": {
+   "text": [
+    "Cut close inside the stacks on the far side, but not too close. They bite.",
+    "A schooner's the fastest hull afloat. Just saying.",
+    "Raise full sail on the straights, half sail on the bends."
+   ]
+  },
+  "why": {
+   "text": [
+    "Because nowhere else in the Reach has wind like Stormbreak. If you can sail here, you can sail anywhere."
+   ]
+  }
+ }
+}

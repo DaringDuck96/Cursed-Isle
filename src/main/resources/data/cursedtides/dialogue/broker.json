@@ -1,0 +1,151 @@
+{
+ "name": "Mags Tallow",
+ "nodes": {
+  "root": {
+   "text": [
+    "Mags Tallow, keeper of the book. Sit down and buy a drink, or stand up and buy one for me.",
+    "Well, well. Come to make some honest Brethren money?",
+    "Every name in Saltmarrow is in my book, {player}. Yours too. Want to know what it says?"
+   ],
+   "text_if": [
+    {
+     "if": [
+      "brethren>=600"
+     ],
+     "text": [
+      "There's my favourite captain! Sit down, the good bottle's under the counter."
+     ]
+    },
+    {
+     "if": [
+      "brethren<-100"
+     ],
+     "text": [
+      "Turncoat. You've got some nerve. Talk fast, there's people here who'd love an excuse."
+     ]
+    },
+    {
+     "if": [
+      "navy>=300"
+     ],
+     "text": [
+      "Smells like Tidewatch in here. Oh, it's you. Sit down, we don't judge. Much."
+     ]
+    }
+   ],
+   "aside": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Listen to that thunder. Nobody sane is at sea tonight.",
+      "Storm's right on top of us. Stay in the dry a while.",
+      "Every timber in the harbour's groaning. Ugly night."
+     ]
+    },
+    {
+     "if": [
+      "raining"
+     ],
+     "text": [
+      "Wretched rain. Gets into everything.",
+      "Rain again. Good for the cisterns, bad for the soul.",
+      "You're dripping on my floor, by the way."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Late to be wandering about.",
+      "Night's when the cursed come walking. Keep a lantern lit.",
+      "Can't sleep either, eh?"
+     ]
+    },
+    {
+     "if": [
+      "dawn"
+     ],
+     "text": [
+      "Up with the gulls, I see.",
+      "Early start, {player}.",
+      "Mist'll burn off by mid-morning."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "Any Brethren contracts?",
+     "action": "quest"
+    },
+    {
+     "label": "What does my name say in your book?",
+     "goto": "book"
+    },
+    {
+     "label": "How do the Brethren work?",
+     "goto": "brethren"
+    },
+    {
+     "label": "Tell me about yourself.",
+     "goto": "about"
+    },
+    {
+     "label": "Heard any rumours?",
+     "goto": "common:rumours"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "book": {
+   "text": [
+    "It says you've done some things and you'll do more. Write a bigger page, captain."
+   ],
+   "text_if": [
+    {
+     "if": [
+      "brethren>=600"
+     ],
+     "text": [
+      "It says 'friend of the Brethren', underlined twice. I only underline once for most."
+     ]
+    },
+    {
+     "if": [
+      "brethren>=100"
+     ],
+     "text": [
+      "It says you pay your debts and sink the right ships. That's a good line in this book."
+     ]
+    },
+    {
+     "if": [
+      "brethren<0"
+     ],
+     "text": [
+      "It says 'watch this one'. Three times."
+     ]
+    }
+   ]
+  },
+  "brethren": {
+   "text": [
+    [
+     "Articles signed by every captain, a vote for every crew, and a share for every hand. The Brethren are the closest thing the Reach has to a fair deal.",
+     "Do Brethren contracts, sink Tidewatch patrols, keep the cursed off our lanes. You'll rise. Ranks come with presents."
+    ]
+   ]
+  },
+  "about": {
+   "text": [
+    "Born in this tavern, likely die in it. I keep the book because I can read and nobody else could be bothered.",
+    "Sailed with three captains, buried two. The third owes me money, so I keep him alive out of spite."
+   ]
+  }
+ }
+}

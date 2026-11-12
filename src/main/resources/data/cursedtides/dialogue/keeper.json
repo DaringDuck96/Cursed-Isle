@@ -1,0 +1,179 @@
+{
+ "name": "Keeper Wren",
+ "nodes": {
+  "root": {
+   "text": [
+    "Ahoy, {player}. Driftwood's lighthouse is still burning, if that's what you came to check.",
+    "Back on my little rock? Sit, sit. The kettle's always on.",
+    "Mind the steps. Forty years I've kept this light and I still trip on the third one."
+   ],
+   "text_if": [
+    {
+     "if": [
+      "story==0"
+     ],
+     "text": [
+      "Easy, easy. The tide spat you onto Driftwood Island, same as it did me forty years back. You're lucky to be breathing."
+     ]
+    },
+    {
+     "if": [
+      "story>=4"
+     ],
+     "text": [
+      "There's the one who silenced the Bell! Listen to that: nothing but gulls. Forty years I've waited for quiet like this.",
+      "Hah! The hero of Hollowgrave, on my doorstep. Kettle's on, you've earned the good tea."
+     ]
+    },
+    {
+     "if": [
+      "ending:sealed"
+     ],
+     "text": [
+      "Warden of the Horizon, they're calling you now. I always said you had the look of someone who'd go far. Well. I thought it."
+     ]
+    }
+   ],
+   "aside": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Listen to that thunder. Nobody sane is at sea tonight.",
+      "Storm's right on top of us. Stay in the dry a while.",
+      "Every timber in the harbour's groaning. Ugly night."
+     ]
+    },
+    {
+     "if": [
+      "raining"
+     ],
+     "text": [
+      "Wretched rain. Gets into everything.",
+      "Rain again. Good for the cisterns, bad for the soul.",
+      "You're dripping on my floor, by the way."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Late to be wandering about.",
+      "Night's when the cursed come walking. Keep a lantern lit.",
+      "Can't sleep either, eh?"
+     ]
+    },
+    {
+     "if": [
+      "dawn"
+     ],
+     "text": [
+      "Up with the gulls, I see.",
+      "Early start, {player}.",
+      "Mist'll burn off by mid-morning."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "What should I be doing?",
+     "action": "quest",
+     "if": [
+      "story<4"
+     ]
+    },
+    {
+     "label": "Tell me about yourself.",
+     "goto": "about"
+    },
+    {
+     "label": "What's Driftwood like?",
+     "goto": "island"
+    },
+    {
+     "label": "What is the Drowned Bell?",
+     "goto": "bell",
+     "if": [
+      "story<4"
+     ]
+    },
+    {
+     "label": "Tell me about the Reach.",
+     "goto": "common:reach"
+    },
+    {
+     "label": "Heard any rumours?",
+     "goto": "common:rumours"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "about": {
+   "text": [
+    [
+     "Washed up here forty years back, same as you. My ship was the Margery Ann, out of Kingsport.",
+     "Everyone else aboard went down with her. I took the keeper's job because somebody had to keep the light, and because I couldn't bear to get on another ship."
+    ]
+   ],
+   "options": [
+    {
+     "label": "You never sailed again?",
+     "goto": "never"
+    },
+    {
+     "label": "Something else...",
+     "goto": "root"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "never": {
+   "text": [
+    "Not once. I watch them come and go from the gallery. That's enough sea for me.",
+    "Once, in a fit of bravery, I rowed out to the reef. Got halfway and rowed back. Proudest day of my life."
+   ],
+   "text_if": [
+    {
+     "if": [
+      "story>=4"
+     ],
+     "text": [
+      "Mind, now the Bell's quiet... maybe one day. A short trip. To Saltmarrow. With a lot of rum."
+     ]
+    }
+   ]
+  },
+  "island": {
+   "text": [
+    "Driftwood's the gentlest island in the Reach: palms, a pier, the lighthouse and me. Wreckage washes up on the north beach after every storm.",
+    "Nothing much on Driftwood but sand, palms, the light and an old fool. The Old Chapel Crypt's under the hill if you want trouble, though."
+   ],
+   "aside": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Tomorrow morning the north beach will be covered in wreck. Get there before the gulls."
+     ]
+    }
+   ]
+  },
+  "bell": {
+   "text": [
+    [
+     "Out on Hollowgrave there's a bell under the water. When it tolls, the drowned get up and walk.",
+     "It's been tolling louder every year. Someone cast it to call the dead, and someone could cast another to silence it. That's what the stories say."
+    ]
+   ]
+  }
+ }
+}

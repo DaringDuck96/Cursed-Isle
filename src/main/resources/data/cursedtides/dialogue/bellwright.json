@@ -1,0 +1,134 @@
+{
+ "name": "Tamsin Coil",
+ "nodes": {
+  "root": {
+   "text": [
+    "Mind the forge, it bites harder than I do.",
+    "Bellfounder's the last of a trade, {player}. Last of the Coils too. What do you want?",
+    "You've got soot on your boots already. Ashfall does that."
+   ],
+   "text_if": [
+    {
+     "if": [
+      "story==2"
+     ],
+     "text": [
+      "Ysolde sent you, didn't she? Thinks I can cast a bell to silence the Drowned one. She's right, curse her, if I had the shards."
+     ]
+    },
+    {
+     "if": [
+      "story>=4"
+     ],
+     "text": [
+      "Heard my bell did its work. Forty years since I cast anything that mattered. Thank you for that."
+     ]
+    }
+   ],
+   "aside": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Listen to that thunder. Nobody sane is at sea tonight.",
+      "Storm's right on top of us. Stay in the dry a while.",
+      "Every timber in the harbour's groaning. Ugly night."
+     ]
+    },
+    {
+     "if": [
+      "raining"
+     ],
+     "text": [
+      "Wretched rain. Gets into everything.",
+      "Rain again. Good for the cisterns, bad for the soul.",
+      "You're dripping on my floor, by the way."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Late to be wandering about.",
+      "Night's when the cursed come walking. Keep a lantern lit.",
+      "Can't sleep either, eh?"
+     ]
+    },
+    {
+     "if": [
+      "dawn"
+     ],
+     "text": [
+      "Up with the gulls, I see.",
+      "Early start, {player}.",
+      "Mist'll burn off by mid-morning."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "About the Stilling Bell...",
+     "action": "quest",
+     "if": [
+      "story>=2",
+      "story<4"
+     ]
+    },
+    {
+     "label": "What's a bellfounder do?",
+     "goto": "trade"
+    },
+    {
+     "label": "Why live out on Ashfall?",
+     "goto": "ashfall"
+    },
+    {
+     "label": "Tell me about the Drowned Bell.",
+     "goto": "drowned"
+    },
+    {
+     "label": "Heard any rumours?",
+     "goto": "common:rumours"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "trade": {
+   "text": [
+    [
+     "Pour bronze, tune it, hang it. A good bell's heard across three islands. A great one's heard by things that aren't alive.",
+     "My great-grandmother cast the bells for Saint Vesper. I've cast exactly one bell in twenty years worth hanging."
+    ]
+   ]
+  },
+  "ashfall": {
+   "text": [
+    "Because the volcano's warm, the clay's good, and nobody comes to bother me. Usually.",
+    "The smugglers up in the hills keep their distance. They know I've got a forge and a temper."
+   ],
+   "aside": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Storms on Ashfall are something else. The lightning finds the mountain like a moth finds a lamp."
+     ]
+    }
+   ]
+  },
+  "drowned": {
+   "text": [
+    [
+     "Captain Ashmere Thorne had it cast to call his drowned crew back from the sea. It worked too well.",
+     "A bell's just a voice. Thorne's said 'come back'. Mine says 'be still'. Simple, when you put it like that. Hard, when you pour it."
+    ]
+   ]
+  }
+ }
+}

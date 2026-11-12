@@ -1,0 +1,137 @@
+{
+ "name": "Admiral Hester Galloway",
+ "nodes": {
+  "root": {
+   "text": [
+    "Admiral Galloway. You have two minutes, captain. Use them well.",
+    "Crownwatch is the beating heart of the Tidewatch. Mind you don't make it skip.",
+    "The Admiralty is busy, captain. The sea doesn't patrol itself."
+   ],
+   "text_if": [
+    {
+     "if": [
+      "wanted"
+     ],
+     "text": [
+      "A wanted pirate in Crownwatch. Either very brave or very stupid. Commodore Vey handles bounties. Leave."
+     ]
+    },
+    {
+     "if": [
+      "navy>=600"
+     ],
+     "text": [
+      "Captain! The commission suits you. What does the Admiralty need to know?"
+     ]
+    },
+    {
+     "if": [
+      "arcflag:exposed"
+     ],
+     "text": [
+      "The captain who unmasked Harrow. The Admiralty does not forget."
+     ]
+    }
+   ],
+   "aside": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Listen to that thunder. Nobody sane is at sea tonight.",
+      "Storm's right on top of us. Stay in the dry a while.",
+      "Every timber in the harbour's groaning. Ugly night."
+     ]
+    },
+    {
+     "if": [
+      "raining"
+     ],
+     "text": [
+      "Wretched rain. Gets into everything.",
+      "Rain again. Good for the cisterns, bad for the soul.",
+      "You're dripping on my floor, by the way."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Late to be wandering about.",
+      "Night's when the cursed come walking. Keep a lantern lit.",
+      "Can't sleep either, eh?"
+     ]
+    },
+    {
+     "if": [
+      "dawn"
+     ],
+     "text": [
+      "Up with the gulls, I see.",
+      "Early start, {player}.",
+      "Mist'll burn off by mid-morning."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "Any orders for me?",
+     "action": "quest",
+     "if": [
+      "!wanted"
+     ]
+    },
+    {
+     "label": "Tell me about Crownwatch.",
+     "goto": "fort"
+    },
+    {
+     "label": "What threatens the Reach most?",
+     "goto": "threat"
+    },
+    {
+     "label": "Tell me about yourself.",
+     "goto": "about"
+    },
+    {
+     "label": "Heard any rumours?",
+     "goto": "common:rumours"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "fort": {
+   "text": [
+    [
+     "Crownwatch: the Admiralty, the drydock, the finest gun deck in the Reach. Every Tidewatch frigate is fitted out here.",
+     "Reach six hundred standing with the Tidewatch and you'll hold a commission: a galleon of your own and the coat to match."
+    ]
+   ]
+  },
+  "threat": {
+   "text": [
+    "The dead. The Court, if it exists. Pirates with ambition. In that order, most days. Some days in a different order."
+   ],
+   "text_if": [
+    {
+     "if": [
+      "ending:claimed"
+     ],
+     "text": [
+      "At present? A captain who calls themself Sovereign. I'm told you know them."
+     ]
+    }
+   ]
+  },
+  "about": {
+   "text": [
+    "Thirty years at sea. Two wrecks, one mutiny, one battle that history won't remember properly. I remember it. That's enough."
+   ]
+  }
+ }
+}

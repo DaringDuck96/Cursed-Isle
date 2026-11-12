@@ -1,0 +1,109 @@
+{
+ "name": "Shopkeeper",
+ "nodes": {
+  "root": {
+   "text": [
+    "Salvage! Everything the sea gave back. Mostly rust, some treasure.",
+    "{npc}. If it sank, I've probably got a bit of it.",
+    "Careful on the raft, it moves. Everything moves out here."
+   ],
+   "text_if": [
+    {
+     "if": [
+      "wanted"
+     ],
+     "text": [
+      "Keep your voice down. There are marines about, and your face is on the posters.",
+      "I'll serve you, but quickly. Bounty hunters drink in here."
+     ]
+    }
+   ],
+   "aside": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Listen to that thunder. Nobody sane is at sea tonight.",
+      "Storm's right on top of us. Stay in the dry a while.",
+      "Every timber in the harbour's groaning. Ugly night."
+     ]
+    },
+    {
+     "if": [
+      "raining"
+     ],
+     "text": [
+      "Wretched rain. Gets into everything.",
+      "Rain again. Good for the cisterns, bad for the soul.",
+      "You're dripping on my floor, by the way."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Late to be wandering about.",
+      "Night's when the cursed come walking. Keep a lantern lit.",
+      "Can't sleep either, eh?"
+     ]
+    },
+    {
+     "if": [
+      "dawn"
+     ],
+     "text": [
+      "Up with the gulls, I see.",
+      "Early start, {player}.",
+      "Mist'll burn off by mid-morning."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "Let's trade.",
+     "action": "trade"
+    },
+    {
+     "label": "What do you pull up?",
+     "goto": "t0"
+    },
+    {
+     "label": "Tell me about the ship graveyard.",
+     "goto": "t1"
+    },
+    {
+     "label": "What do you buy?",
+     "goto": "t2"
+    },
+    {
+     "label": "Heard any rumours?",
+     "goto": "common:rumours"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "t0": {
+   "text": [
+    "Chain, nails, hull plating, the odd strongbox. Once, a piano. Nobody's bought the piano."
+   ]
+  },
+  "t1": {
+   "text": [
+    [
+     "Six wrecks on Crooked Reef, more under the sand. The drowned walk on them at low tide.",
+     "One of them's the Meridian Fleet's. You'd know her if you saw her: three masts, all broken."
+    ]
+   ]
+  },
+  "t2": {
+   "text": [
+    "Iron nuggets, chain, nautilus shells. Hearts of the sea, if you've got one. Don't tell me where you got it."
+   ]
+  }
+ }
+}

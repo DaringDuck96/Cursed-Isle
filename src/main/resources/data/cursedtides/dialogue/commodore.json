@@ -1,0 +1,178 @@
+{
+ "name": "Commodore Aldous Vey",
+ "nodes": {
+  "root": {
+   "text": [
+    "Commodore Vey, Tidewatch, Ironwatch station. State your business.",
+    "You again. I hope you've brought me something better than excuses.",
+    "Stand straight when you address an officer of the Tidewatch."
+   ],
+   "text_if": [
+    {
+     "if": [
+      "wanted"
+     ],
+     "text": [
+      "You've a price on your head and you walk into my fort. Either you've come to pay it, or you've come to hang."
+     ]
+    },
+    {
+     "if": [
+      "navy>=600"
+     ],
+     "text": [
+      "Captain! Good to see you. The patrols speak well of you, and the patrols speak well of nobody."
+     ]
+    },
+    {
+     "if": [
+      "navy<-100"
+     ],
+     "text": [
+      "I know your name, pirate. Speak quickly, and keep your hands where my marines can see them."
+     ]
+    }
+   ],
+   "aside": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Listen to that thunder. Nobody sane is at sea tonight.",
+      "Storm's right on top of us. Stay in the dry a while.",
+      "Every timber in the harbour's groaning. Ugly night."
+     ]
+    },
+    {
+     "if": [
+      "raining"
+     ],
+     "text": [
+      "Wretched rain. Gets into everything.",
+      "Rain again. Good for the cisterns, bad for the soul.",
+      "You're dripping on my floor, by the way."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Late to be wandering about.",
+      "Night's when the cursed come walking. Keep a lantern lit.",
+      "Can't sleep either, eh?"
+     ]
+    },
+    {
+     "if": [
+      "dawn"
+     ],
+     "text": [
+      "Up with the gulls, I see.",
+      "Early start, {player}.",
+      "Mist'll burn off by mid-morning."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "I'd like to settle my bounty.",
+     "action": "quest",
+     "if": [
+      "wanted"
+     ]
+    },
+    {
+     "label": "Any contracts for the Tidewatch?",
+     "action": "quest",
+     "if": [
+      "!wanted"
+     ]
+    },
+    {
+     "label": "Tell me about Ironwatch.",
+     "goto": "fort"
+    },
+    {
+     "label": "What does the Tidewatch want?",
+     "goto": "mission"
+    },
+    {
+     "label": "What do you think of the Brethren?",
+     "goto": "brethren"
+    },
+    {
+     "label": "Heard any rumours?",
+     "goto": "common:rumours"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "fort": {
+   "text": [
+    [
+     "Ironwatch Isle. Forty guns, two hundred marines, and the only dry powder magazine west of Kingsport.",
+     "From the north tower you can see three islands on a clear day. On a foggy one, you can see nothing, and that is when they come."
+    ]
+   ],
+   "options": [
+    {
+     "label": "Who comes?",
+     "goto": "who"
+    },
+    {
+     "label": "Something else...",
+     "goto": "root"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "who": {
+   "text": [
+    "Ghost ships. Cursed crews. Pirates who think fog makes them clever. All three have learned the same lesson from my guns."
+   ]
+  },
+  "mission": {
+   "text": [
+    [
+     "Order. Safe lanes for honest trade. Hangings for those who'd make the lanes unsafe.",
+     "And these days, mostly, putting the dead back in the sea where they belong."
+    ]
+   ],
+   "text_if": [
+    {
+     "if": [
+      "ending:sealed"
+     ],
+     "text": [
+      [
+       "Order. And for once, the dead are mostly staying down. I'm told I have you to thank. I don't enjoy thanking people."
+      ]
+     ]
+    }
+   ]
+  },
+  "brethren": {
+   "text": [
+    "Thieves with a constitution. Useful thieves, sometimes. When the cursed come ashore, the Brethren fight beside us. Then they rob us. It's almost a tradition."
+   ],
+   "text_if": [
+    {
+     "if": [
+      "brethren>=300"
+     ],
+     "text": [
+      "You'd know them better than me, from what I hear. Choose your friends with care, captain."
+     ]
+    }
+   ]
+  }
+ }
+}

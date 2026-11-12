@@ -1,0 +1,129 @@
+{
+ "name": "Odalys Quill",
+ "nodes": {
+  "root": {
+   "text": [
+    "The Archive of the Reach. Speak softly, the papers are sleeping.",
+    "Have you brought me something? Please say you've brought me something.",
+    "{player}! What treasures today?"
+   ],
+   "text_if": [
+    {
+     "if": [
+      "collected>=20"
+     ],
+     "text": [
+      "You've found more of the Reach's history than my last three assistants combined."
+     ]
+    },
+    {
+     "if": [
+      "collected>=1"
+     ],
+     "text": [
+      "Your encyclopedia's coming along nicely."
+     ]
+    }
+   ],
+   "aside": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Listen to that thunder. Nobody sane is at sea tonight.",
+      "Storm's right on top of us. Stay in the dry a while.",
+      "Every timber in the harbour's groaning. Ugly night."
+     ]
+    },
+    {
+     "if": [
+      "raining"
+     ],
+     "text": [
+      "Wretched rain. Gets into everything.",
+      "Rain again. Good for the cisterns, bad for the soul.",
+      "You're dripping on my floor, by the way."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Late to be wandering about.",
+      "Night's when the cursed come walking. Keep a lantern lit.",
+      "Can't sleep either, eh?"
+     ]
+    },
+    {
+     "if": [
+      "dawn"
+     ],
+     "text": [
+      "Up with the gulls, I see.",
+      "Early start, {player}.",
+      "Mist'll burn off by mid-morning."
+     ]
+    },
+    {
+     "if": [
+      "festival"
+     ],
+     "text": [
+      "Happy {festival}, {player}! Everyone's in good spirits.",
+      "It's the {festival}. Half the town's drunk and the other half's working on it."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "I've curios for the archive.",
+     "action": "special:sell_curios",
+     "then": "root"
+    },
+    {
+     "label": "Show me my encyclopedia.",
+     "action": "special:encyclopedia"
+    },
+    {
+     "label": "What sort of things do you collect?",
+     "goto": "what"
+    },
+    {
+     "label": "Tell me about the drowned city.",
+     "goto": "city"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "what": {
+   "text": [
+    "Messages in bottles, washed up or fished up. Logs from sunken ships. Paintings from vaults and drowned halls.",
+    "Instruments, too. The great and terrible carry them. Don't ask me why; I've a theory involving morale.",
+    "Read each one, and it goes in your encyclopedia. Bring them to me and I'll pay for the originals."
+   ],
+   "options": [
+    {
+     "label": "Something else...",
+     "goto": "root"
+    }
+   ]
+  },
+  "city": {
+   "text": [
+    "Vesh Amaru. A city of pale towers that went under in an afternoon.",
+    "The diver at Crooked Reef sells helmets. Bring me back a painting."
+   ],
+   "options": [
+    {
+     "label": "Something else...",
+     "goto": "root"
+    }
+   ]
+  }
+ }
+}

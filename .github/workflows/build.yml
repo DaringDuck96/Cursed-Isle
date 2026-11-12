@@ -1,0 +1,60 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build the mod
+        id: build
+        shell: bash
+        run: |
+          set +e
+          chmod +x gradlew
+          ./gradlew build --stacktrace --no-daemon > build.log 2>&1
+          code=$?
+          tail -n 80 build.log
+          echo "status=$code" >> "$GITHUB_OUTPUT"
+
+      - name: Publish the log and jar to the build-output branch
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p ci-out
+          cp build.log ci-out/ || true
+          cp build/libs/*.jar ci-out/ 2>/dev/null || true
+          echo "${{ steps.build.outputs.status }}" > ci-out/STATUS
+          echo "$GITHUB_SHA" > ci-out/COMMIT
+          cd ci-out
+          git init -q
+          git checkout -q -b build-output
+          git add -A
+          git -c user.name="build bot" -c user.email="build-bot@users.noreply.github.com" commit -qm "Build of $GITHUB_SHA (exit ${{ steps.build.outputs.status }})"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" build-output
+
+      - name: Upload the mod jar
+        if: steps.build.outputs.status == '0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: cursed-tides
+          path: build/libs/*.jar
+
+      - name: Fail if the build failed
+        if: steps.build.outputs.status != '0'
+        run: exit 1
