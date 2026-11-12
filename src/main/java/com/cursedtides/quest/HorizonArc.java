@@ -302,6 +302,10 @@ public final class HorizonArc {
         for (int[] o : new int[][]{{-5, -2}, {5, -2}, {-3, -7}, {3, -7}}) {
             minion(w, gx + o[0] + 0.5, y, gz + o[1] + 0.5, EntityType.DROWNED::create, "Drowned Herald");
         }
+        net.minecraft.util.math.Vec3d at = new net.minecraft.util.math.Vec3d(gx + 0.5, y + 2, gz - 4.5);
+        Cutscenes.playNear(w, at, 80, "The Tide Sovereign", java.util.List.of(
+                new Cutscenes.Shot(at.add(0, 6, 16), at.add(0, 3, 9), at, 80, "The seven relics blaze in the gate, and the Last Horizon opens."),
+                Cutscenes.orbit(at, 7, 1, 60, 120, 80, "Out of it steps the thing the old tides served: the Tide Sovereign, crowned in coral.")));
     }
 
     private static void onDeath(LivingEntity victim, DamageSource source) {

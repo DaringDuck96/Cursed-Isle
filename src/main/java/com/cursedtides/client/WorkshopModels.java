@@ -20,6 +20,11 @@ public final class WorkshopModels {
             case "old_gnasher" -> new String[]{"body", "body/head", "body/head/jaw", "leg_fl", "leg_fr", "leg_bl", "leg_br", "body/tail1", "body/tail1/tail2", "body/tail1/tail2/tail3"};
             case "slag_beast" -> new String[]{"body", "head", "leg_fl", "leg_fr", "leg_bl", "leg_br", "body/tail1"};
             case "reach_serpent" -> new String[]{"head", "head/jaw", "seg1", "seg1/seg2", "seg1/seg2/seg3", "seg1/seg2/seg3/seg4", "seg1/seg2/seg3/seg4/seg5", "seg1/seg2/seg3/seg4/seg5/seg6"};
+            case "giant_wasp" -> new String[]{"body", "body/head", "body/tail1", "body/tail1/tail2", "body/wing_l", "body/wing_r", "body/leg_fl", "body/leg_fr", "body/leg_bl", "body/leg_br"};
+            case "cave_bat" -> new String[]{"body", "body/head", "body/wing_l", "body/wing_r", "body/leg_fl", "body/leg_fr"};
+            case "dune_scorpion" -> new String[]{"body", "body/head", "claw_l", "claw_r", "leg_fl", "leg_ml", "leg_bl", "leg_fr", "leg_mr", "leg_br", "body/tail1", "body/tail1/tail2", "body/tail1/tail2/tail3"};
+            case "snapjaw" -> new String[]{"seg1", "seg1/head", "seg1/head/jaw", "fin_l", "fin_r"};
+            case "living_stump" -> new String[]{"body", "arm_l", "arm_r", "leg_fl", "leg_fr"};
             default -> null;
         };
     }
@@ -95,6 +100,11 @@ public final class WorkshopModels {
         net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry.registerModelLayer(layer("signal_keeper"), WorkshopModels::signalKeeper);
         net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry.registerModelLayer(layer("reach_serpent"), WorkshopModels::reachSerpent);
         net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry.registerModelLayer(layer("siren"), WorkshopModels::siren);
+        net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry.registerModelLayer(layer("giant_wasp"), WorkshopModels::giantWasp);
+        net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry.registerModelLayer(layer("cave_bat"), WorkshopModels::caveBat);
+        net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry.registerModelLayer(layer("dune_scorpion"), WorkshopModels::duneScorpion);
+        net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry.registerModelLayer(layer("snapjaw"), WorkshopModels::snapjaw);
+        net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry.registerModelLayer(layer("living_stump"), WorkshopModels::livingStump);
         net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry.registerModelLayer(layer("ship_sloop"), WorkshopModels::shipSloop);
         net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry.registerModelLayer(layer("ship_schooner"), WorkshopModels::shipSchooner);
         net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry.registerModelLayer(layer("ship_brigantine"), WorkshopModels::shipBrigantine);
@@ -1016,6 +1026,75 @@ public final class WorkshopModels {
         ModelPartData p4 = root.addChild("left_arm", ModelPartBuilder.create().uv(12, 34).cuboid(-1.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), ModelTransform.pivot(5.0f, 2.0f, 0.0f));
         ModelPartData p5 = root.addChild("right_leg", ModelPartBuilder.create().uv(24, 34).cuboid(-1.5f, 0.0f, -1.5f, 3.0f, 12.0f, 3.0f), ModelTransform.pivot(-1.9f, 12.0f, 0.0f));
         ModelPartData p6 = root.addChild("left_leg", ModelPartBuilder.create().uv(36, 34).cuboid(-1.5f, 0.0f, -1.5f, 3.0f, 12.0f, 3.0f), ModelTransform.pivot(1.9f, 12.0f, 0.0f));
+        return TexturedModelData.of(data, 64, 64);
+    }
+
+    public static TexturedModelData giantWasp() {
+        ModelData data = new ModelData();
+        ModelPartData root = data.getRoot();
+        ModelPartData p0 = root.addChild("body", ModelPartBuilder.create().uv(28, 0).cuboid(-2.5f, -2.5f, -3.0f, 5.0f, 5.0f, 6.0f), ModelTransform.pivot(0.0f, 12.0f, 0.0f));
+        ModelPartData p1 = p0.addChild("head", ModelPartBuilder.create().uv(0, 14).cuboid(-2.0f, -2.0f, -4.0f, 4.0f, 4.0f, 4.0f).uv(58, 22).cuboid(-2.4f, -1.6f, -3.6f, 1.0f, 2.0f, 2.0f).uv(0, 29).cuboid(1.4f, -1.6f, -3.6f, 1.0f, 2.0f, 2.0f).uv(14, 29).cuboid(-1.5f, 1.5f, -4.6f, 1.0f, 1.0f, 1.0f).uv(18, 29).cuboid(0.5f, 1.5f, -4.6f, 1.0f, 1.0f, 1.0f).uv(6, 29).cuboid(-1.5f, -4.0f, -3.5f, 0.5f, 2.0f, 0.5f).uv(10, 29).cuboid(1.0f, -4.0f, -3.5f, 0.5f, 2.0f, 0.5f), ModelTransform.pivot(0.0f, -0.5f, -3.0f));
+        ModelPartData p2 = p0.addChild("tail1", ModelPartBuilder.create().uv(0, 0).cuboid(-3.0f, -3.0f, 0.0f, 6.0f, 6.0f, 8.0f), ModelTransform.of(0.0f, 0.5f, 3.0f, -0.314f, 0.0f, 0.0f));
+        ModelPartData p3 = p2.addChild("tail2", ModelPartBuilder.create().uv(50, 22).cuboid(-0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 3.0f), ModelTransform.of(0.0f, 0.5f, 8.0f, 0.349f, 0.0f, 0.0f));
+        ModelPartData p4 = p0.addChild("wing_l", ModelPartBuilder.create().uv(16, 14).cuboid(-11.0f, 0.0f, -2.0f, 11.0f, 0.5f, 6.0f), ModelTransform.of(-1.5f, -2.5f, -1.0f, 0.0f, 0.0f, 0.349f));
+        ModelPartData p5 = p0.addChild("wing_r", ModelPartBuilder.create().uv(0, 22).cuboid(0.0f, 0.0f, -2.0f, 11.0f, 0.5f, 6.0f), ModelTransform.of(1.5f, -2.5f, -1.0f, 0.0f, 0.0f, -0.349f));
+        ModelPartData p6 = p0.addChild("leg_fl", ModelPartBuilder.create().uv(34, 22).cuboid(-0.5f, 0.0f, -0.5f, 1.0f, 5.0f, 1.0f), ModelTransform.pivot(-2.0f, 2.5f, -2.0f));
+        ModelPartData p7 = p0.addChild("leg_fr", ModelPartBuilder.create().uv(38, 22).cuboid(-0.5f, 0.0f, -0.5f, 1.0f, 5.0f, 1.0f), ModelTransform.pivot(2.0f, 2.5f, -2.0f));
+        ModelPartData p8 = p0.addChild("leg_bl", ModelPartBuilder.create().uv(42, 22).cuboid(-0.5f, 0.0f, -0.5f, 1.0f, 5.0f, 1.0f), ModelTransform.pivot(-2.0f, 2.5f, 2.0f));
+        ModelPartData p9 = p0.addChild("leg_br", ModelPartBuilder.create().uv(46, 22).cuboid(-0.5f, 0.0f, -0.5f, 1.0f, 5.0f, 1.0f), ModelTransform.pivot(2.0f, 2.5f, 2.0f));
+        return TexturedModelData.of(data, 64, 64);
+    }
+
+    public static TexturedModelData caveBat() {
+        ModelData data = new ModelData();
+        ModelPartData root = data.getRoot();
+        ModelPartData p0 = root.addChild("body", ModelPartBuilder.create().uv(0, 0).cuboid(-3.0f, -3.0f, -3.0f, 6.0f, 7.0f, 6.0f), ModelTransform.pivot(0.0f, 10.0f, 0.0f));
+        ModelPartData p1 = p0.addChild("head", ModelPartBuilder.create().uv(0, 33).cuboid(-2.5f, -4.0f, -3.0f, 5.0f, 4.0f, 5.0f).uv(20, 33).cuboid(-2.5f, -6.5f, -1.0f, 1.5f, 3.0f, 1.0f).uv(26, 33).cuboid(1.0f, -6.5f, -1.0f, 1.5f, 3.0f, 1.0f).uv(6, 44).cuboid(-1.8f, -2.8f, -3.3f, 1.0f, 1.0f, 0.5f).uv(10, 44).cuboid(0.8f, -2.8f, -3.3f, 1.0f, 1.0f, 0.5f).uv(0, 44).cuboid(-1.0f, -1.0f, -3.6f, 2.0f, 1.0f, 1.0f), ModelTransform.pivot(0.0f, -3.0f, -1.0f));
+        ModelPartData p2 = p0.addChild("wing_l", ModelPartBuilder.create().uv(0, 13).cuboid(-15.0f, 0.0f, -1.0f, 15.0f, 0.6f, 9.0f).uv(0, 42).cuboid(-15.0f, -0.5f, -1.0f, 15.0f, 1.0f, 1.0f), ModelTransform.of(-3.0f, -2.0f, 0.0f, 0.0f, 0.0f, 0.175f));
+        ModelPartData p3 = p0.addChild("wing_r", ModelPartBuilder.create().uv(0, 23).cuboid(0.0f, 0.0f, -1.0f, 15.0f, 0.6f, 9.0f).uv(32, 42).cuboid(0.0f, -0.5f, -1.0f, 15.0f, 1.0f, 1.0f), ModelTransform.of(3.0f, -2.0f, 0.0f, 0.0f, 0.0f, -0.175f));
+        ModelPartData p4 = p0.addChild("leg_fl", ModelPartBuilder.create().uv(32, 33).cuboid(-0.5f, 0.0f, -0.5f, 1.0f, 3.0f, 1.0f), ModelTransform.pivot(-1.5f, 4.0f, 1.0f));
+        ModelPartData p5 = p0.addChild("leg_fr", ModelPartBuilder.create().uv(36, 33).cuboid(-0.5f, 0.0f, -0.5f, 1.0f, 3.0f, 1.0f), ModelTransform.pivot(1.5f, 4.0f, 1.0f));
+        return TexturedModelData.of(data, 64, 64);
+    }
+
+    public static TexturedModelData duneScorpion() {
+        ModelData data = new ModelData();
+        ModelPartData root = data.getRoot();
+        ModelPartData p0 = root.addChild("body", ModelPartBuilder.create().uv(0, 0).cuboid(-4.0f, -2.5f, -6.0f, 8.0f, 5.0f, 12.0f), ModelTransform.pivot(0.0f, 19.0f, 0.0f));
+        ModelPartData p1 = p0.addChild("head", ModelPartBuilder.create().uv(16, 17).cuboid(-3.0f, -2.0f, -3.0f, 6.0f, 3.5f, 3.0f).uv(42, 36).cuboid(-2.0f, -2.6f, -2.6f, 1.0f, 1.0f, 1.0f).uv(46, 36).cuboid(1.0f, -2.6f, -2.6f, 1.0f, 1.0f, 1.0f), ModelTransform.pivot(0.0f, 0.0f, -6.0f));
+        ModelPartData p2 = p0.addChild("tail1", ModelPartBuilder.create().uv(40, 0).cuboid(-1.5f, -1.5f, 0.0f, 3.0f, 3.0f, 6.0f), ModelTransform.of(0.0f, -1.5f, 6.0f, 0.96f, 0.0f, 0.0f));
+        ModelPartData p3 = p2.addChild("tail2", ModelPartBuilder.create().uv(0, 17).cuboid(-1.2f, -1.2f, 0.0f, 2.4f, 2.4f, 5.0f), ModelTransform.of(0.0f, 0.0f, 6.0f, 0.698f, 0.0f, 0.0f));
+        ModelPartData p4 = p3.addChild("tail3", ModelPartBuilder.create().uv(48, 25).cuboid(-1.0f, -1.0f, 0.0f, 2.0f, 2.0f, 4.0f).uv(16, 32).cuboid(-0.5f, -0.5f, 4.0f, 1.0f, 1.0f, 2.0f), ModelTransform.of(0.0f, 0.0f, 5.0f, 0.785f, 0.0f, 0.0f));
+        ModelPartData p5 = root.addChild("claw_l", ModelPartBuilder.create().uv(34, 17).cuboid(-3.0f, -1.0f, -5.0f, 3.0f, 2.0f, 5.0f).uv(0, 25).cuboid(-4.0f, -1.5f, -9.0f, 4.0f, 3.0f, 4.0f).uv(0, 32).cuboid(-4.0f, -1.0f, -11.0f, 2.0f, 2.0f, 2.0f), ModelTransform.of(-4.0f, 19.0f, -6.0f, 0.0f, -0.349f, 0.0f));
+        ModelPartData p6 = root.addChild("claw_r", ModelPartBuilder.create().uv(16, 25).cuboid(0.0f, -1.0f, -5.0f, 3.0f, 2.0f, 5.0f).uv(32, 25).cuboid(0.0f, -1.5f, -9.0f, 4.0f, 3.0f, 4.0f).uv(8, 32).cuboid(2.0f, -1.0f, -11.0f, 2.0f, 2.0f, 2.0f), ModelTransform.of(4.0f, 19.0f, -6.0f, 0.0f, 0.349f, 0.0f));
+        ModelPartData p7 = root.addChild("leg_fl", ModelPartBuilder.create().uv(22, 32).cuboid(-6.0f, -0.5f, -0.5f, 6.0f, 1.0f, 1.0f), ModelTransform.of(-4.0f, 20.0f, -3.0f, 0.0f, 0.0f, -0.611f));
+        ModelPartData p8 = root.addChild("leg_ml", ModelPartBuilder.create().uv(36, 32).cuboid(-6.0f, -0.5f, -0.5f, 6.0f, 1.0f, 1.0f), ModelTransform.of(-4.0f, 20.0f, 0.0f, 0.0f, 0.0f, -0.611f));
+        ModelPartData p9 = root.addChild("leg_bl", ModelPartBuilder.create().uv(50, 32).cuboid(-6.0f, -0.5f, -0.5f, 6.0f, 1.0f, 1.0f), ModelTransform.of(-4.0f, 20.0f, 3.0f, 0.0f, 0.0f, -0.611f));
+        ModelPartData p10 = root.addChild("leg_fr", ModelPartBuilder.create().uv(0, 36).cuboid(0.0f, -0.5f, -0.5f, 6.0f, 1.0f, 1.0f), ModelTransform.of(4.0f, 20.0f, -3.0f, 0.0f, 0.0f, 0.611f));
+        ModelPartData p11 = root.addChild("leg_mr", ModelPartBuilder.create().uv(14, 36).cuboid(0.0f, -0.5f, -0.5f, 6.0f, 1.0f, 1.0f), ModelTransform.of(4.0f, 20.0f, 0.0f, 0.0f, 0.0f, 0.611f));
+        ModelPartData p12 = root.addChild("leg_br", ModelPartBuilder.create().uv(28, 36).cuboid(0.0f, -0.5f, -0.5f, 6.0f, 1.0f, 1.0f), ModelTransform.of(4.0f, 20.0f, 3.0f, 0.0f, 0.0f, 0.611f));
+        return TexturedModelData.of(data, 64, 64);
+    }
+
+    public static TexturedModelData snapjaw() {
+        ModelData data = new ModelData();
+        ModelPartData root = data.getRoot();
+        ModelPartData p0 = root.addChild("seg1", ModelPartBuilder.create().uv(0, 0).cuboid(-1.5f, -12.0f, -1.5f, 3.0f, 12.0f, 3.0f), ModelTransform.pivot(0.0f, 24.0f, 0.0f));
+        ModelPartData p1 = p0.addChild("head", ModelPartBuilder.create().uv(12, 0).cuboid(-5.0f, -4.0f, -9.0f, 10.0f, 4.0f, 10.0f).uv(30, 37).cuboid(-4.5f, 0.0f, -9.0f, 1.0f, 1.5f, 1.0f).uv(34, 37).cuboid(-2.5f, 0.0f, -9.0f, 1.0f, 1.5f, 1.0f).uv(38, 37).cuboid(-0.5f, 0.0f, -9.0f, 1.0f, 1.5f, 1.0f).uv(42, 37).cuboid(1.5f, 0.0f, -9.0f, 1.0f, 1.5f, 1.0f).uv(46, 37).cuboid(3.5f, 0.0f, -9.0f, 1.0f, 1.5f, 1.0f), ModelTransform.pivot(0.0f, -12.0f, 0.0f));
+        ModelPartData p2 = p1.addChild("jaw", ModelPartBuilder.create().uv(0, 15).cuboid(-5.0f, 0.0f, -10.0f, 10.0f, 3.0f, 10.0f).uv(50, 37).cuboid(-3.5f, -1.5f, -9.5f, 1.0f, 1.5f, 1.0f).uv(54, 37).cuboid(-1.5f, -1.5f, -9.5f, 1.0f, 1.5f, 1.0f).uv(58, 37).cuboid(0.5f, -1.5f, -9.5f, 1.0f, 1.5f, 1.0f).uv(0, 44).cuboid(2.5f, -1.5f, -9.5f, 1.0f, 1.5f, 1.0f).uv(0, 28).cuboid(-4.0f, -0.2f, -9.0f, 8.0f, 0.5f, 8.0f), ModelTransform.pivot(0.0f, 0.0f, 1.0f));
+        ModelPartData p3 = root.addChild("fin_l", ModelPartBuilder.create().uv(32, 28).cuboid(-9.0f, 0.0f, -3.0f, 9.0f, 0.5f, 6.0f), ModelTransform.of(-1.5f, 23.5f, 0.0f, 0.0f, 0.0f, 0.436f));
+        ModelPartData p4 = root.addChild("fin_r", ModelPartBuilder.create().uv(0, 37).cuboid(0.0f, 0.0f, -3.0f, 9.0f, 0.5f, 6.0f), ModelTransform.of(1.5f, 23.5f, 0.0f, 0.0f, 0.0f, -0.436f));
+        return TexturedModelData.of(data, 64, 64);
+    }
+
+    public static TexturedModelData livingStump() {
+        ModelData data = new ModelData();
+        ModelPartData root = data.getRoot();
+        ModelPartData p0 = root.addChild("body", ModelPartBuilder.create().uv(0, 0).cuboid(-5.0f, 0.0f, -5.0f, 10.0f, 16.0f, 10.0f).uv(0, 26).cuboid(-5.5f, -2.0f, -5.5f, 11.0f, 2.0f, 11.0f).uv(0, 47).cuboid(-3.0f, 4.0f, -5.3f, 2.0f, 2.0f, 0.5f).uv(6, 47).cuboid(1.0f, 4.0f, -5.3f, 2.0f, 2.0f, 0.5f).uv(16, 39).cuboid(-2.5f, 9.0f, -5.3f, 5.0f, 1.5f, 0.5f), ModelTransform.pivot(0.0f, 4.0f, 0.0f));
+        ModelPartData p1 = root.addChild("arm_l", ModelPartBuilder.create().uv(40, 0).cuboid(-3.0f, -1.0f, -1.5f, 3.0f, 13.0f, 3.0f).uv(28, 39).cuboid(-5.0f, 6.0f, -1.0f, 3.0f, 1.0f, 2.0f), ModelTransform.of(-5.0f, 8.0f, 0.0f, 0.0f, 0.0f, 0.262f));
+        ModelPartData p2 = root.addChild("arm_r", ModelPartBuilder.create().uv(52, 0).cuboid(0.0f, -1.0f, -1.5f, 3.0f, 13.0f, 3.0f).uv(38, 39).cuboid(2.0f, 9.0f, -1.0f, 3.0f, 1.0f, 2.0f), ModelTransform.of(5.0f, 8.0f, 0.0f, 0.0f, 0.0f, -0.262f));
+        ModelPartData p3 = root.addChild("leg_fl", ModelPartBuilder.create().uv(44, 26).cuboid(-2.0f, 0.0f, -2.0f, 4.0f, 4.0f, 4.0f).uv(48, 39).cuboid(-3.5f, 3.0f, -3.0f, 2.0f, 1.0f, 2.0f), ModelTransform.pivot(-2.5f, 20.0f, 0.0f));
+        ModelPartData p4 = root.addChild("leg_fr", ModelPartBuilder.create().uv(0, 39).cuboid(-2.0f, 0.0f, -2.0f, 4.0f, 4.0f, 4.0f).uv(56, 39).cuboid(1.5f, 3.0f, 1.0f, 2.0f, 1.0f, 2.0f), ModelTransform.pivot(2.5f, 20.0f, 0.0f));
         return TexturedModelData.of(data, 64, 64);
     }
 

@@ -342,6 +342,11 @@ public final class LanternArc {
         }
         w.playSound(null, BlockPos.ofFloored(x, 62, z), SoundEvents.ENTITY_ELDER_GUARDIAN_CURSE, SoundCategory.HOSTILE, 3f, 0.5f);
         w.setWeather(0, 6000, true, true);
+        net.minecraft.util.math.Vec3d at = new net.minecraft.util.math.Vec3d(x, Archipelago.WATER_TOP, z);
+        Cutscenes.playNear(w, at, 150, "The Abyssal", List.of(
+                Cutscenes.orbit(at, 34, 14, 0, 110, 110, "Where the three beams cross, the sea draws back like a held breath."),
+                new Cutscenes.Shot(at.add(0, 4, -40), at.add(0, 2, -22), at.add(0, 3, 0), 90,
+                        "It has slept beneath the Reach since before the sea rose. It is not asleep any more.")));
     }
 
     private static void onDeath(LivingEntity victim, DamageSource source) {

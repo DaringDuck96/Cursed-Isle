@@ -44,6 +44,12 @@ public final class Objectives {
         return null;
     }
 
+    /** The person the story (or a side tale) wants you to talk to next, if it's a person. */
+    public static StoryNpcEntity.Role storyRole(ServerPlayerEntity p) {
+        Goal g = goal(p);
+        return g == null ? null : g.role();
+    }
+
     private static Goal goal(ServerPlayerEntity p) {
         int stage = QuestData.stage(p);
         switch (stage) {

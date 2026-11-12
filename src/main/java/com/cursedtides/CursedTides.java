@@ -94,6 +94,12 @@ public class CursedTides implements ModInitializer {
         com.cursedtides.sea.SeaMonsters.register();
         com.cursedtides.dungeon.Delves.register();
         com.cursedtides.quest.Errands.register();
+        com.cursedtides.wildlife.IslandBeasts.register();
+        com.cursedtides.quest.Cutscenes.register();
+        com.cursedtides.social.QuickChat.register();
+        com.cursedtides.social.Guilds.register();
+        com.cursedtides.social.Nameplates.register();
+        com.cursedtides.combat.LockOn.register();
         com.cursedtides.living.Gaols.registerKeepInventory();
         LOGGER.info("Cursed Tides: hoist the colours!");
     }

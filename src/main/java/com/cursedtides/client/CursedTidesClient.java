@@ -21,6 +21,12 @@ public class CursedTidesClient implements ClientModInitializer {
 
         // Characters, crews and the cursed, drawn with the Mob Workshop's models (see WorkshopModels)
         WorkshopModels.registerLayers();
+        net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.registerGlobalReceiver(com.cursedtides.social.Nameplates.Markers.ID, (payload, context) ->
+                context.client().execute(() -> {
+                    WorkshopBipedRenderer.MARKERS.clear();
+                    for (int i = 0; i < payload.ids().size(); i++) WorkshopBipedRenderer.MARKERS.put(payload.ids().get(i), payload.kinds().get(i));
+                }));
+        CutsceneClient.register();
         EntityRendererRegistry.register(ModEntities.CURSED_PIRATE, ctx -> BossLooks.rebuild(ctx, new WorkshopBipedRenderer<>(ctx,
                 new String[]{"cursed_grunt", "cursed_brute", "cursed_captain"},
                 e -> "cursed_" + e.rank().name().toLowerCase(),
@@ -70,6 +76,18 @@ public class CursedTidesClient implements ClientModInitializer {
     }
 
     private static void registerWildlife() {
+        // The island creatures, from the Mob Workshop (see IslandBeasts)
+        for (Object[] b : new Object[][]{{com.cursedtides.wildlife.IslandBeasts.GIANT_WASP, "giant_wasp", 0.4f, 1.0f},
+                {com.cursedtides.wildlife.IslandBeasts.CAVE_BAT, "cave_bat", 0.4f, 1.0f},
+                {com.cursedtides.wildlife.IslandBeasts.DUNE_SCORPION, "dune_scorpion", 0.6f, 1.0f},
+                {com.cursedtides.wildlife.IslandBeasts.SNAPJAW, "snapjaw", 0.5f, 1.0f},
+                {com.cursedtides.wildlife.IslandBeasts.LIVING_STUMP, "living_stump", 0.6f, 1.0f}}) {
+            @SuppressWarnings("unchecked")
+            net.minecraft.entity.EntityType<net.minecraft.entity.mob.HostileEntity> type = (net.minecraft.entity.EntityType<net.minecraft.entity.mob.HostileEntity>) b[0];
+            String id = (String) b[1];
+            float shadow = (Float) b[2], scale = (Float) b[3];
+            EntityRendererRegistry.register(type, ctx -> new CreatureRenderer<>(ctx, WorkshopModels.layer(id), WorkshopModels.parts(id), shadow, scale, e -> id, "workshop"));
+        }
         var croc = CreatureRenderer.layer("crocodile");
         var shark = CreatureRenderer.layer("shark");
         var jaguar = CreatureRenderer.layer("jaguar");

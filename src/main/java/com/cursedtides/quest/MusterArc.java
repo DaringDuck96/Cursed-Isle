@@ -332,6 +332,12 @@ public final class MusterArc {
         p.sendMessage(Text.literal("A great black ship of the line slides out from behind the wrecks. Her timbers glow at the seams. On her quarterdeck, a tall figure in an admiral's coat raises a hand, and every gun on her side runs out.")
                 .formatted(Formatting.DARK_AQUA, Formatting.ITALIC), false);
         w.playSound(null, p.getBlockPos(), SoundEvents.ENTITY_ELDER_GUARDIAN_CURSE, SoundCategory.HOSTILE, 3f, 0.6f);
+        Vec3d ship = s.getPos().add(0, 3, 0);
+        Vec3d side = ship.subtract(p.getPos()).multiply(1, 0, 1).normalize();
+        Cutscenes.play(p, "The Last Muster", List.of(
+                new Cutscenes.Shot(p.getEyePos().add(0, 8, 0), ship.subtract(side.multiply(25)).add(0, 6, 0), ship, 90,
+                        "Out from behind the wrecks of the Graveyard comes a black ship of the line, her seams glowing like coals."),
+                Cutscenes.orbit(ship, 14, 4, 0, 70, 80, "On her quarterdeck, Dread Admiral Corvin Hale. Every gun on her side runs out at once.")));
     }
 
     /** Hale himself, at the head of his flagship's boarders. */

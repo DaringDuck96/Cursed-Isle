@@ -51,7 +51,7 @@ import java.util.function.Supplier;
 public final class SkillBar {
     private SkillBar() {}
 
-    public enum Family { BLADE, GUN, STAFF, DOLL }
+    public enum Family { BLADE, GUN, STAFF, DOLL, DAGGER, GRENADE, SHIP }
 
     public enum Skill {
         SWEEP(Family.BLADE, "Sweep", () -> Items.IRON_SWORD, 0, 6, 0, "Cut every foe in front of you."),
@@ -69,7 +69,20 @@ public final class SkillBar {
         POKE(Family.DOLL, "Poke", () -> Items.STICK, 0, 3, 0, "Stab the doll: hurt every attuned foe."),
         MEND(Family.DOLL, "Mend", () -> Items.STRING, 0, 6, 0, "Stitch the doll: heal every attuned friend."),
         SWARM(Family.DOLL, "Swarm", () -> Items.SPIDER_EYE, 8, 10, 0, "Poison and slow every attuned foe."),
-        SHACKLES(Family.DOLL, "Shackles", () -> Items.CHAIN, 16, 14, 0, "Bind every attuned foe in place.");
+        SHACKLES(Family.DOLL, "Shackles", () -> Items.CHAIN, 16, 14, 0, "Bind every attuned foe in place."),
+        GOUGE(Family.DAGGER, "Gouge", () -> ModItems.DAGGER, 0, 5, 0, "A quick, dirty stab that leaves the foe bleeding and slow."),
+        FAN_OF_KNIVES(Family.DAGGER, "Fan of Knives", () -> ModItems.THROWING_KNIFE, 3, 10, 0, "Throw five knives in a spread."),
+        BACKSTAB(Family.DAGGER, "Backstab", () -> Items.ENDER_PEARL, 7, 12, 0, "Slip behind a foe and strike where it hurts most."),
+        VENOM_EDGE(Family.DAGGER, "Venom Edge", () -> Items.SPIDER_EYE, 12, 20, 0, "Poison everyone close, and dance away quick."),
+        LONG_TOSS(Family.GRENADE, "Long Toss", () -> Items.SNOWBALL, 0, 3, 0, "Hurl the grenade in hand twice as far."),
+        CLUSTER(Family.GRENADE, "Cluster", () -> Items.FIRE_CHARGE, 4, 14, 0, "Throw three at once, in a spread."),
+        QUICK_FUSE(Family.GRENADE, "Quick Fuse", () -> Items.FLINT_AND_STEEL, 8, 10, 0, "A flat, fast throw that bursts on the first thing it hits."),
+        POWDER_KEG(Family.GRENADE, "Powder Keg", () -> Items.TNT, 13, 25, 0, "Two grenades lashed to a keg of powder. Stand back."),
+        FULL_SAIL(Family.SHIP, "Full Sail", () -> Items.WHITE_BANNER, 0, 30, 0, "Every stitch of canvas: much faster for ten seconds."),
+        COME_ABOUT(Family.SHIP, "Come About", () -> Items.COMPASS, 3, 20, 0, "Swing her round to the opposite heading in a second."),
+        OPEN_FIRE(Family.SHIP, "Open Fire", () -> Items.FIRE_CHARGE, 6, 40, 0, "Gun crews load double-quick: broadsides reload twice as fast for 15 seconds."),
+        RAMMING_SPEED(Family.SHIP, "Ramming Speed", () -> Items.IRON_BLOCK, 10, 45, 0, "Charge! A burst of speed, and the first enemy you hit takes a terrible blow."),
+        TAKE_COVER(Family.SHIP, "Take Cover", () -> Items.SHIELD, 14, 45, 0, "Everyone down: half damage to hull and crew for 12 seconds.");
 
         public final Family family;
         public final String title, text;
@@ -96,8 +109,17 @@ public final class SkillBar {
         }
     }
 
+    /** The bar for this player: their ship's, if they're aboard one of their own, else their weapon's. */
+    public static Family family(ServerPlayerEntity p) {
+        if (p.getVehicle() instanceof com.cursedtides.entity.ShipEntity s && !s.isHostile()) return Family.SHIP;
+        if (p.hasVehicle()) return null;
+        return family(p.getMainHandStack());
+    }
+
     public static Family family(ItemStack held) {
         Item item = held.getItem();
+        if (item == ModItems.DAGGER || item == ModItems.THROWING_KNIFE) return Family.DAGGER;
+        if (item instanceof Grenades.GrenadeItem) return Family.GRENADE;
         if (item instanceof FlintlockPistolItem) return Family.GUN;
         if (item instanceof HexStaffItem) return Family.STAFF;
         if (item == Grenades.VOODOO_DOLL) return Family.DOLL;
@@ -110,6 +132,9 @@ public final class SkillBar {
             case BLADE -> Weapon.CUTLASS;
             case GUN -> Weapon.PISTOL;
             case STAFF, DOLL -> Weapon.HEX;
+            case DAGGER -> Weapon.CUTLASS;
+            case GRENADE -> Weapon.CANNON;
+            case SHIP -> Weapon.SAILING;
         };
     }
 
@@ -162,14 +187,15 @@ public final class SkillBar {
     }
 
     private static State state(ServerPlayerEntity p) {
-        Family f = family(p.getMainHandStack());
+        Family f = family(p);
         if (f == null) return new State(-1, 0, List.of(0, 0, 0, 0));
+        int slots = f == Family.SHIP ? 5 : 4;
         int lvl = PirateData.level(p, mastery(f));
         long now = p.getServerWorld().getTime();
         int unlocked = 0;
-        Integer[] cd = new Integer[4];
+        Integer[] cd = new Integer[slots];
         Map<Skill, Long> ready = READY.getOrDefault(p.getUuid(), Map.of());
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < slots; i++) {
             Skill s = Skill.of(f, i);
             if (s != null && s.level <= lvl) unlocked |= 1 << i;
             long r = s == null ? 0 : ready.getOrDefault(s, 0L);
@@ -180,9 +206,9 @@ public final class SkillBar {
     }
 
     private static void use(ServerPlayerEntity p, int slot) {
-        if (p.isSpectator() || p.hasVehicle() || slot < 0 || slot > 3) return;
+        if (p.isSpectator() || slot < 0 || slot > 4) return;
         ItemStack held = p.getMainHandStack();
-        Family f = family(held);
+        Family f = family(p);
         if (f == null) {
             p.sendMessage(Text.literal("Draw a weapon to use its skills.").formatted(Formatting.GRAY), true);
             return;
@@ -302,6 +328,80 @@ public final class SkillBar {
                 w.spawnParticles(ParticleTypes.DAMAGE_INDICATOR, t.getX(), t.getBodyY(0.6), t.getZ(), 10, 0.3, 0.3, 0.3, 0.1);
                 w.spawnParticles(ParticleTypes.HEART, p.getX(), p.getBodyY(1), p.getZ(), 4, 0.3, 0.3, 0.3, 0.1);
             }
+            case GOUGE -> {
+                LivingEntity t = aim(p, 4, 40);
+                if (t == null) return nothing(p);
+                t.damage(p.getDamageSources().playerAttack(p), base + 3);
+                t.addStatusEffect(new StatusEffectInstance(StatusEffects.WITHER, 80, 0));
+                t.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 60, 1));
+                w.spawnParticles(ParticleTypes.DAMAGE_INDICATOR, t.getX(), t.getBodyY(0.5), t.getZ(), 6, 0.2, 0.2, 0.2, 0.1);
+                w.playSound(null, p.getBlockPos(), SoundEvents.ENTITY_PLAYER_ATTACK_STRONG, SoundCategory.PLAYERS, 1f, 1.4f);
+            }
+            case FAN_OF_KNIVES -> {
+                for (int k = -2; k <= 2; k++) {
+                    com.cursedtides.entity.ThrowingKnifeEntity knife = new com.cursedtides.entity.ThrowingKnifeEntity(w, p);
+                    knife.setVelocity(p, p.getPitch(), p.getYaw() + k * 9, 0f, 2.1f, 0.4f);
+                    w.spawnEntity(knife);
+                }
+                w.playSound(null, p.getBlockPos(), SoundEvents.ITEM_TRIDENT_THROW.value(), SoundCategory.PLAYERS, 1f, 1.6f);
+            }
+            case BACKSTAB -> {
+                LivingEntity t = aim(p, 8, 25);
+                if (t == null) return nothing(p);
+                Vec3d behind = t.getPos().subtract(t.getRotationVector().multiply(1, 0, 1).normalize().multiply(1.3));
+                w.spawnParticles(ParticleTypes.LARGE_SMOKE, p.getX(), p.getBodyY(0.5), p.getZ(), 12, 0.3, 0.5, 0.3, 0.02);
+                p.teleport(w, behind.x, t.getY(), behind.z, java.util.Set.of(), t.getYaw(), p.getPitch());
+                t.damage(p.getDamageSources().playerAttack(p), base * 2.5f + 4);
+                w.playSound(null, t.getBlockPos(), SoundEvents.ENTITY_PLAYER_ATTACK_CRIT, SoundCategory.PLAYERS, 1f, 0.8f);
+            }
+            case VENOM_EDGE -> {
+                for (LivingEntity e : foes(p, 3.5)) e.addStatusEffect(new StatusEffectInstance(StatusEffects.POISON, 120, 1));
+                p.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, 100, 1));
+                w.spawnParticles(ParticleTypes.ITEM_SLIME, p.getX(), p.getBodyY(0.5), p.getZ(), 30, 1.5, 0.4, 1.5, 0.05);
+                w.playSound(null, p.getBlockPos(), SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, SoundCategory.PLAYERS, 1f, 1.5f);
+            }
+            case LONG_TOSS, CLUSTER, QUICK_FUSE -> {
+                if (!(held.getItem() instanceof Grenades.GrenadeItem g)) return false;
+                int n = s == Skill.CLUSTER ? Math.min(3, p.getAbilities().creativeMode ? 3 : held.getCount()) : 1;
+                for (int k = 0; k < n; k++) {
+                    Grenades.GrenadeEntity e = new Grenades.GrenadeEntity(w, p, g.kind);
+                    e.setItem(new ItemStack(g));
+                    float spread = n == 1 ? 0 : (k - 1) * 14;
+                    float pitch = s == Skill.QUICK_FUSE ? p.getPitch() : p.getPitch() - 10;
+                    float speed = s == Skill.LONG_TOSS ? 2.0f : s == Skill.QUICK_FUSE ? 3.2f : 1.3f;
+                    e.setVelocity(p, pitch, p.getYaw() + spread, 0f, speed, 0.5f);
+                    w.spawnEntity(e);
+                }
+                if (!p.getAbilities().creativeMode) held.decrement(n);
+                w.playSound(null, p.getBlockPos(), SoundEvents.ENTITY_SNOWBALL_THROW, SoundCategory.PLAYERS, 1f, 0.5f);
+            }
+            case POWDER_KEG -> {
+                if (!(held.getItem() instanceof Grenades.GrenadeItem)) return false;
+                if (!p.getAbilities().creativeMode && held.getCount() < 2) {
+                    p.sendMessage(Text.literal("You need two grenades for a powder keg.").formatted(Formatting.GRAY), true);
+                    return false;
+                }
+                var hit = p.raycast(16, 1f, false);
+                Vec3d at = hit.getPos();
+                for (LivingEntity e : w.getEntitiesByClass(LivingEntity.class, new Box(at, at).expand(5), e -> e != p && e.isAlive() && Levels.isFoe(e))) {
+                    e.damage(p.getDamageSources().explosion(p, p), 16f);
+                    Styles.stagger(e, 60);
+                }
+                w.createExplosion(p, at.x, at.y, at.z, 2.5f, net.minecraft.world.World.ExplosionSourceType.NONE);
+                if (!p.getAbilities().creativeMode) held.decrement(2);
+            }
+            case FULL_SAIL, COME_ABOUT, OPEN_FIRE, RAMMING_SPEED, TAKE_COVER -> {
+                if (!(p.getVehicle() instanceof com.cursedtides.entity.ShipEntity ship)) return false;
+                long now = w.getTime();
+                switch (s) {
+                    case FULL_SAIL -> { ship.fullSail(now + 200); shout(ship, "Full sail! Every stitch of canvas!"); }
+                    case COME_ABOUT -> { ship.comeAbout(20, 180); shout(ship, "Come about! Hard over!"); }
+                    case OPEN_FIRE -> { ship.openFire(now + 300); shout(ship, "Open fire! Load and run out, double quick!"); }
+                    case RAMMING_SPEED -> { ship.rammingSpeed(now + 120); shout(ship, "Ramming speed! Brace for impact!"); }
+                    default -> { ship.takeCover(now + 240); shout(ship, "Take cover! Everybody down!"); }
+                }
+                w.playSound(null, ship.getBlockPos(), SoundEvents.EVENT_RAID_HORN.value(), SoundCategory.PLAYERS, 0.6f, 1.4f);
+            }
             case POKE, MEND, SWARM, SHACKLES -> {
                 if (p.isSneaking()) return false;
                 String working = switch (s) { case POKE -> "POKE"; case MEND -> "HEAL"; case SWARM -> "SWARM"; default -> "SHACKLES"; };
@@ -312,6 +412,12 @@ public final class SkillBar {
             }
         }
         return true;
+    }
+
+    private static void shout(com.cursedtides.entity.ShipEntity ship, String order) {
+        for (Entity e : ship.getPassengerList()) {
+            if (e instanceof ServerPlayerEntity q) q.sendMessage(Text.literal(order).formatted(Formatting.GOLD, Formatting.BOLD), true);
+        }
     }
 
     private static boolean nothing(ServerPlayerEntity p) {
@@ -354,6 +460,8 @@ public final class SkillBar {
 
     /** The foe closest to where you're looking, within range and a narrow cone, that you can see. */
     private static LivingEntity aim(ServerPlayerEntity p, double range, double cone) {
+        LivingEntity locked = LockOn.target(p);
+        if (locked != null && locked.squaredDistanceTo(p) <= range * range && p.canSee(locked)) return locked;
         Vec3d eye = p.getEyePos(), look = p.getRotationVec(1f);
         LivingEntity best = null;
         double bestDot = Math.cos(Math.toRadians(cone));

@@ -77,6 +77,7 @@ public final class ShipKeys {
     private static final KeyBinding LOOKS = register("key.cursedtides.looks", GLFW.GLFW_KEY_O);
     private static final KeyBinding ULTIMATE = register("key.cursedtides.ultimate", GLFW.GLFW_KEY_U);
     private static final KeyBinding EMOTES = register("key.cursedtides.emotes", GLFW.GLFW_KEY_P);
+    private static final KeyBinding QUICK_CHAT = register("key.cursedtides.quick_chat", GLFW.GLFW_KEY_Y);
 
     private static KeyBinding register(String id, int key) {
         return KeyBindingHelper.registerKeyBinding(new KeyBinding(id, InputUtil.Type.KEYSYM, key, CATEGORY));
@@ -88,12 +89,23 @@ public final class ShipKeys {
 
     private static void tick(MinecraftClient client) {
         boolean aboard = client.player != null && client.player.getVehicle() instanceof ShipEntity;
-        send(SAILS_UP, ShipControlPayload.SAILS_UP, aboard);
         boolean onFoot = client.player != null && !aboard && client.player.getVehicle() == null && client.currentScreen == null;
+        // R: sails up aboard; on foot, lock on to a foe (again to cycle, sneak to let go)
+        while (SAILS_UP.wasPressed()) {
+            if (aboard) ClientPlayNetworking.send(new ShipControlPayload(ShipControlPayload.SAILS_UP));
+            else if (onFoot) LockOnClient.cycle(client, client.player.isSneaking());
+        }
+        LockOnClient.tick(client);
+        while (QUICK_CHAT.wasPressed()) {
+            if (client.player != null && client.currentScreen == null) client.setScreen(new QuickChatScreen());
+        }
         sendOrSkill(SAILS_DOWN, ShipControlPayload.SAILS_DOWN, aboard, onFoot, 3);
         sendOrSkill(FIRE_PORT, ShipControlPayload.FIRE_PORT, aboard, onFoot, 0);
         sendOrSkill(FIRE_STARBOARD, ShipControlPayload.FIRE_STARBOARD, aboard, onFoot, 1);
-        send(OPEN_HOLD, ShipControlPayload.OPEN_HOLD, aboard);
+        while (OPEN_HOLD.wasPressed()) {
+            if (aboard && DODGE.isPressed()) ClientPlayNetworking.send(new com.cursedtides.combat.SkillBar.Use(4));
+            else if (aboard) ClientPlayNetworking.send(new ShipControlPayload(ShipControlPayload.OPEN_HOLD));
+        }
         sendOrSkill(CYCLE_AMMO, ShipControlPayload.CYCLE_AMMO, aboard, onFoot, 2);
         send(SWIVEL, ShipControlPayload.FIRE_SWIVEL, aboard);
         send(ANCHOR, ShipControlPayload.ANCHOR, aboard);
@@ -119,10 +131,14 @@ public final class ShipKeys {
         }
     }
 
-    /** Aboard, the ship keys work the ship; on foot, Z X C V fire the skills of the weapon in hand. */
+    /**
+     * Aboard, the ship keys work the ship, and with Alt held they're the sailing skills; on foot, Z X C V fire the
+     * skills of the weapon in hand.
+     */
     private static void sendOrSkill(KeyBinding key, int action, boolean aboard, boolean onFoot, int slot) {
         while (key.wasPressed()) {
-            if (aboard) ClientPlayNetworking.send(new ShipControlPayload(action));
+            if (aboard && DODGE.isPressed()) ClientPlayNetworking.send(new com.cursedtides.combat.SkillBar.Use(slot));
+            else if (aboard) ClientPlayNetworking.send(new ShipControlPayload(action));
             else if (onFoot) ClientPlayNetworking.send(new com.cursedtides.combat.SkillBar.Use(slot));
         }
     }

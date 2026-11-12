@@ -413,11 +413,12 @@ public class ShipEntity extends BoatEntity {
         double torn = isTorn() ? 0.4 : 1.0;
         // Water drag takes a tenth of her way each tick, so she settles at about nine times this push: for a sloop
         // under full sail in a fair wind, some 25-30 blocks a second, as fast as the old pirate games' ships
+        double boost = active(rammingUntil) ? 1.9 : active(fullSailUntil) ? 1.5 : 1.0;
         double accel = 0.2 * sailAmount * Wind.efficiency(this.getYaw(), time) * Wind.strength(time)
-                * speedFactor() * weather * torn;
+                * speedFactor() * weather * torn * boost;
         Vec3d forward = Vec3d.fromPolar(0.0f, this.getYaw());
         Vec3d v = this.getVelocity().add(forward.multiply(accel));
-        double max = 1.2 * speedFactor() * torn;
+        double max = 1.2 * speedFactor() * torn * (active(rammingUntil) ? 1.5 : active(fullSailUntil) ? 1.3 : 1.0);
         double horizontal = Math.hypot(v.x, v.z);
         if (horizontal > max) {
             v = new Vec3d(v.x / horizontal * max, v.y, v.z / horizontal * max);
@@ -548,7 +549,57 @@ public class ShipEntity extends BoatEntity {
 
     // ================================================================== server upkeep
 
+    // ------------------------------------------------------------------ sailing skills (see SkillBar)
+
+    /** Game time until which each sailing skill's effect lasts. */
+    private long fullSailUntil, rammingUntil, openFireUntil, coverUntil;
+    private int comeAboutTicks;
+    private float comeAboutStep;
+
+    public void fullSail(long until) { fullSailUntil = until; }
+    public void rammingSpeed(long until) { rammingUntil = until; }
+    public void openFire(long until) { openFireUntil = until; }
+    public void takeCover(long until) { coverUntil = until; }
+    public void comeAbout(int ticks, float degrees) { comeAboutTicks = ticks; comeAboutStep = degrees / ticks; }
+    private boolean active(long until) { return this.getWorld().getTime() < until; }
+
+    private void sailingSkills(ServerWorld world) {
+        if (comeAboutTicks > 0) {
+            comeAboutTicks--;
+            this.setYaw(this.getYaw() + comeAboutStep);
+            this.setVelocity(this.getVelocity().multiply(0.97));
+        }
+        if (active(fullSailUntil) && this.age % 4 == 0) {
+            world.spawnParticles(ParticleTypes.CLOUD, getX(), getY() + 2 * shipClass().scale(), getZ(), 2, 1, 0.5, 1, 0.02);
+        }
+        if (active(rammingUntil)) {
+            Vec3d v = this.getVelocity();
+            if (Math.hypot(v.x, v.z) > 0.4) {
+                for (ShipEntity other : world.getEntitiesByClass(ShipEntity.class, getBoundingBox().expand(1.5), o -> o != this && o.isHostile())) {
+                    if (other.getCommandTags().contains("ct_rammed_" + this.age / 40)) continue;
+                    other.addCommandTag("ct_rammed_" + this.age / 40);
+                    LivingEntity cap = getControllingPassenger();
+                    float dmg = 35f + shipClass().ordinal() * 8f;
+                    other.damage(cap != null ? world.getDamageSources().mobAttack(cap) : world.getDamageSources().generic(), dmg);
+                    this.setHull(this.getHull() - dmg * 0.2f);
+                    this.setVelocity(v.multiply(0.3));
+                    world.playSound(null, getBlockPos(), SoundEvents.ENTITY_ZOMBIE_BREAK_WOODEN_DOOR, SoundCategory.NEUTRAL, 2f, 0.6f);
+                    world.spawnParticles(ParticleTypes.EXPLOSION, other.getX(), other.getY() + 1, other.getZ(), 4, 1, 0.5, 1, 0);
+                    rammingUntil = 0;
+                    break;
+                }
+            }
+        }
+        if (active(coverUntil) && this.age % 20 == 0) {
+            for (Entity e : getPassengerList()) {
+                if (e instanceof LivingEntity l) l.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
+                        net.minecraft.entity.effect.StatusEffects.RESISTANCE, 30, 1, false, false));
+            }
+        }
+    }
+
     private void serverTick(ServerWorld world) {
+        sailingSkills(world);
         if (portCooldown > 0) portCooldown--;
         if (starboardCooldown > 0) starboardCooldown--;
         if (gunnerCooldown > 0) gunnerCooldown--;
@@ -814,6 +865,7 @@ public class ShipEntity extends BoatEntity {
         int reload = Math.max(30, 80 - PirateData.level(gunner, Weapon.CANNON) * 2);
         reload = (int) Math.max(15, Math.round(reload * (1.0 - com.cursedtides.pirate.PerkData.stat(gunner,
                 com.cursedtides.pirate.Perk.Stat.CANNON_RELOAD))));
+        if (active(openFireUntil)) reload = Math.max(10, reload / 2);
         if (side > 0) starboardCooldown = reload; else portCooldown = reload;
     }
 
@@ -899,6 +951,7 @@ public class ShipEntity extends BoatEntity {
         this.setDamageWobbleTicks(10);
         this.setDamageWobbleStrength(this.getDamageWobbleStrength() + amount * 2.0f);
         float hullDamage = source.isIn(DamageTypeTags.IS_EXPLOSION) ? amount * 1.5f : amount;
+        if (active(coverUntil)) hullDamage *= 0.5f;
         if (com.cursedtides.quest.MusterArc.isFlagship(this) && getHull() - hullDamage < maxHull() * 0.2f) {
             setHull(maxHull() * 0.2f);
             if (attacker instanceof PlayerEntity pl) pl.sendMessage(Text.literal("The curse holds her timbers together. Grapple her and board!")

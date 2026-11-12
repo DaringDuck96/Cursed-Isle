@@ -105,6 +105,11 @@ const ROSTER = [
   { id: "signal_keeper", name: "The Signal Keeper", group: "Bosses", tpl: "biped", opt: { kind: "skeleton", hat: "bicorne", coat: true, epaulettes: true, lantern: true }, pal: P({ bone: "#d6cfbd", coat: "#2a3a6a", hat: "#1a2240", accent: "#e0c060", glow: "#ffd27a" }) },
   { id: "reach_serpent", name: "Reach Serpent", group: "Sea monsters", tpl: "serpent", pal: P({ skin: "#2f5a46", shirt: "#8ab88a", accent: "#c8503a", glow: "#f2e66a", bone: "#e0dcc8" }) },
   { id: "siren", name: "Siren of the Shoals", group: "Sea monsters", tpl: "biped", opt: { kind: "drowned", female: true, hair: "long", seaweed: true, robe: true }, pal: P({ skin: "#8fc0b8", hair: "#1f6a72", coat: "#2a5a66", accent: "#6ad0c8", glow: "#c8fff4" }) },
+  { id: "giant_wasp", name: "Giant Wasp", group: "Creatures", tpl: "wasp", pal: P({ skin: "#3a2a12", shirt: "#e8b020", hair: "#1a140c", accent: "#d8e8ee", glow: "#ff5a2a", bone: "#e8e0c0" }) },
+  { id: "cave_bat", name: "Cave Bat", group: "Creatures", tpl: "bat", pal: P({ skin: "#3a2e2a", hair: "#1e1816", accent: "#5a3a3a", glow: "#ff3a3a", bone: "#f0e8d8" }) },
+  { id: "dune_scorpion", name: "Dune Scorpion", group: "Creatures", tpl: "scorpion", pal: P({ skin: "#b0803a", shirt: "#7a5226", hair: "#4a3218", glow: "#7aff5a" }) },
+  { id: "snapjaw", name: "Snapjaw Flytrap", group: "Creatures", tpl: "flytrap", pal: P({ skin: "#4a7a2a", shirt: "#6aa03a", accent: "#c03a4a", bone: "#f0ecd0" }) },
+  { id: "living_stump", name: "Living Stump", group: "Creatures", tpl: "stump", pal: P({ skin: "#5a4228", shirt: "#2a1a10", hair: "#4a7a2a", glow: "#ffd23a" }) },
   // Wildlife
   ...[["crocodile","Crocodile",{ skin: "#4f6a3c", shirt: "#c9c499" }],["shark","Shark",{ skin: "#6a7f8c", shirt: "#e9ecea" }],["jaguar","Jaguar",{ skin: "#d39a3e", shirt: "#f1e2c2", accent: "#2a1e16" }],
       ["boar","Boar",{ skin: "#5d4433", shirt: "#3a2a1f", bone: "#efe6d0" }],["crab","Crab",{ skin: "#b9452e", shirt: "#e6b8a0" }],["snake","Snake",{ skin: "#4d7a34", shirt: "#d4cf82", accent: "#2a3f1d" }],
@@ -239,6 +244,78 @@ function shipModel(cls) {
   return { tex: [256, 512], parts: p, kind: "ship" };
 }
 
+
+// ----- Island creatures (0.26): giant wasp, cave bat, scorpion, snapjaw flytrap, living stump -----
+function wasp() {
+  const p = [];
+  p.push(part("body", null, [0, 12, 0], [0, 0, 0], [cube([-2.5, -2.5, -3], [5, 5, 6], "fur", "skin")]));
+  p.push(part("head", "body", [0, -0.5, -3], [0, 0, 0], [cube([-2, -2, -4], [4, 4, 4], "plain", "skin"),
+    cube([-2.4, -1.6, -3.6], [1, 2, 2], "eyeglow", "glow"), cube([1.4, -1.6, -3.6], [1, 2, 2], "eyeglow", "glow"),
+    cube([-1.5, 1.5, -4.6], [1, 1, 1], "plain", "bone"), cube([0.5, 1.5, -4.6], [1, 1, 1], "plain", "bone"),
+    cube([-1.5, -4, -3.5], [0.5, 2, 0.5], "plain", "hair"), cube([1, -4, -3.5], [0.5, 2, 0.5], "plain", "hair")]));
+  p.push(part("tail1", "body", [0, 0.5, 3], [-18, 0, 0], [cube([-3, -3, 0], [6, 6, 8], "stripes", "shirt")]));
+  p.push(part("tail2", "tail1", [0, 0.5, 8], [20, 0, 0], [cube([-0.5, -0.5, 0], [1, 1, 3], "plain", "bone")]));
+  p.push(part("wing_l", "body", [-1.5, -2.5, -1], [0, 0, 20], [cube([-11, 0, -2], [11, 0.5, 6], "membrane", "accent")]));
+  p.push(part("wing_r", "body", [1.5, -2.5, -1], [0, 0, -20], [cube([0, 0, -2], [11, 0.5, 6], "membrane", "accent")]));
+  for (const [n, x, z] of [["leg_fl", -2, -2], ["leg_fr", 2, -2], ["leg_bl", -2, 2], ["leg_br", 2, 2]])
+    p.push(part(n, "body", [x, 2.5, z], [0, 0, 0], [cube([-0.5, 0, -0.5], [1, 5, 1], "plain", "hair")]));
+  return { tex: [64, 64], parts: p, kind: "creature" };
+}
+function bat() {
+  const p = [];
+  p.push(part("body", null, [0, 10, 0], [0, 0, 0], [cube([-3, -3, -3], [6, 7, 6], "fur", "skin")]));
+  p.push(part("head", "body", [0, -3, -1], [0, 0, 0], [cube([-2.5, -4, -3], [5, 4, 5], "fur", "skin"),
+    cube([-2.5, -6.5, -1], [1.5, 3, 1], "fur", "hair"), cube([1, -6.5, -1], [1.5, 3, 1], "fur", "hair"),
+    cube([-1.8, -2.8, -3.3], [1, 1, 0.5], "eyeglow", "glow"), cube([0.8, -2.8, -3.3], [1, 1, 0.5], "eyeglow", "glow"),
+    cube([-1, -1, -3.6], [2, 1, 1], "plain", "bone")]));
+  p.push(part("wing_l", "body", [-3, -2, 0], [0, 0, 10], [cube([-15, 0, -1], [15, 0.6, 9], "membrane", "accent"), cube([-15, -0.5, -1], [15, 1, 1], "plain", "hair")]));
+  p.push(part("wing_r", "body", [3, -2, 0], [0, 0, -10], [cube([0, 0, -1], [15, 0.6, 9], "membrane", "accent"), cube([0, -0.5, -1], [15, 1, 1], "plain", "hair")]));
+  p.push(part("leg_fl", "body", [-1.5, 4, 1], [0, 0, 0], [cube([-0.5, 0, -0.5], [1, 3, 1], "plain", "hair")]));
+  p.push(part("leg_fr", "body", [1.5, 4, 1], [0, 0, 0], [cube([-0.5, 0, -0.5], [1, 3, 1], "plain", "hair")]));
+  return { tex: [64, 64], parts: p, kind: "creature" };
+}
+function scorpion() {
+  const p = [];
+  p.push(part("body", null, [0, 19, 0], [0, 0, 0], [cube([-4, -2.5, -6], [8, 5, 12], "shell", "skin")]));
+  p.push(part("head", "body", [0, 0, -6], [0, 0, 0], [cube([-3, -2, -3], [6, 3.5, 3], "shell", "skin"),
+    cube([-2, -2.6, -2.6], [1, 1, 1], "eyeglow", "glow"), cube([1, -2.6, -2.6], [1, 1, 1], "eyeglow", "glow")]));
+  for (const sd of [-1, 1]) {
+    const n = sd < 0 ? "claw_l" : "claw_r";
+    p.push(part(n, null, [sd * 4, 19, -6], [0, sd * 20, 0], [cube(sd < 0 ? [-3, -1, -5] : [0, -1, -5], [3, 2, 5], "shell", "skin"),
+      cube(sd < 0 ? [-4, -1.5, -9] : [0, -1.5, -9], [4, 3, 4], "shell", "shirt"), cube(sd < 0 ? [-4, -1, -11] : [2, -1, -11], [2, 2, 2], "shell", "shirt")]));
+  }
+  const legs = [["leg_fl", -1, -3], ["leg_ml", -1, 0], ["leg_bl", -1, 3], ["leg_fr", 1, -3], ["leg_mr", 1, 0], ["leg_br", 1, 3]];
+  for (const [n, sd, z] of legs)
+    p.push(part(n, null, [sd * 4, 20, z], [0, 0, sd * 35], [cube(sd < 0 ? [-6, -0.5, -0.5] : [0, -0.5, -0.5], [6, 1, 1], "plain", "hair")]));
+  p.push(part("tail1", "body", [0, -1.5, 6], [55, 0, 0], [cube([-1.5, -1.5, 0], [3, 3, 6], "shell", "skin")]));
+  p.push(part("tail2", "tail1", [0, 0, 6], [40, 0, 0], [cube([-1.2, -1.2, 0], [2.4, 2.4, 5], "shell", "skin")]));
+  p.push(part("tail3", "tail2", [0, 0, 5], [45, 0, 0], [cube([-1, -1, 0], [2, 2, 4], "shell", "skin"), cube([-0.5, -0.5, 4], [1, 1, 2], "glow", "glow")]));
+  return { tex: [64, 64], parts: p, kind: "creature" };
+}
+function flytrap() {
+  const p = [];
+  p.push(part("seg1", null, [0, 24, 0], [0, 0, 0], [cube([-1.5, -12, -1.5], [3, 12, 3], "leaf", "skin")]));
+  p.push(part("head", "seg1", [0, -12, 0], [0, 0, 0], [cube([-5, -4, -9], [10, 4, 10], "leaf", "shirt"),
+    ...[-4, -2, 0, 2, 4].map(x => cube([x - 0.5, 0, -9], [1, 1.5, 1], "plain", "bone"))]));
+  p.push(part("jaw", "head", [0, 0, 1], [0, 0, 0], [cube([-5, 0, -10], [10, 3, 10], "leaf", "shirt"),
+    ...[-3, -1, 1, 3].map(x => cube([x - 0.5, -1.5, -9.5], [1, 1.5, 1], "plain", "bone")), cube([-4, -0.2, -9], [8, 0.5, 8], "maw", "accent")]));
+  p.push(part("fin_l", null, [-1.5, 23.5, 0], [0, 0, 25], [cube([-9, 0, -3], [9, 0.5, 6], "leaf", "skin")]));
+  p.push(part("fin_r", null, [1.5, 23.5, 0], [0, 0, -25], [cube([0, 0, -3], [9, 0.5, 6], "leaf", "skin")]));
+  return { tex: [64, 64], parts: p, kind: "creature" };
+}
+function stump() {
+  const p = [];
+  p.push(part("body", null, [0, 4, 0], [0, 0, 0], [cube([-5, 0, -5], [10, 16, 10], "bark", "skin"),
+    cube([-5.5, -2, -5.5], [11, 2, 11], "moss", "hair"),
+    cube([-3, 4, -5.3], [2, 2, 0.5], "eyeglow", "glow"), cube([1, 4, -5.3], [2, 2, 0.5], "eyeglow", "glow"),
+    cube([-2.5, 9, -5.3], [5, 1.5, 0.5], "plain", "shirt")]));
+  p.push(part("arm_l", null, [-5, 8, 0], [0, 0, 15], [cube([-3, -1, -1.5], [3, 13, 3], "bark", "skin"), cube([-5, 6, -1], [3, 1, 2], "bark", "skin")]));
+  p.push(part("arm_r", null, [5, 8, 0], [0, 0, -15], [cube([0, -1, -1.5], [3, 13, 3], "bark", "skin"), cube([2, 9, -1], [3, 1, 2], "bark", "skin")]));
+  p.push(part("leg_fl", null, [-2.5, 20, 0], [0, 0, 0], [cube([-2, 0, -2], [4, 4, 4], "bark", "skin"), cube([-3.5, 3, -3], [2, 1, 2], "bark", "skin")]));
+  p.push(part("leg_fr", null, [2.5, 20, 0], [0, 0, 0], [cube([-2, 0, -2], [4, 4, 4], "bark", "skin"), cube([1.5, 3, 1], [2, 1, 2], "bark", "skin")]));
+  return { tex: [64, 128], parts: p, kind: "creature" };
+}
+
 function serpent() {
   const p = [];
   p.push(part("head", null, [0, 8, -10], [0, 0, 0], [cube([-9, -8, -18], [18, 14, 18], "scales", "skin"), cube([-6, -4, -30], [12, 8, 12], "scales", "skin"),
@@ -288,6 +365,11 @@ function buildTemplate(entry) {
   else if (entry.tpl.startsWith("wild:")) m = wild(entry.tpl.slice(5));
   else if (entry.tpl === "serpent") m = serpent();
   else if (entry.tpl === "beast") m = beast();
+  else if (entry.tpl === "wasp") m = wasp();
+  else if (entry.tpl === "bat") m = bat();
+  else if (entry.tpl === "scorpion") m = scorpion();
+  else if (entry.tpl === "flytrap") m = flytrap();
+  else if (entry.tpl === "stump") m = stump();
   else if (entry.tpl === "bigcroc") { m = wild("crocodile", 1.7); m.tex = [128, 256]; }
   return { id: entry.id, name: entry.name, model: m, palette: clone(entry.pal), status: "started", notes: "", texture: null, version: 1 };
 }
@@ -368,6 +450,11 @@ function paintModel(proj, img) {
           case "rock": case "rockface": if (hash(x + fx, y + fy, 11) > 0.93) col = hex2rgb(pal.glow); break;
           case "maw": if (face === "top" && (x % 3 === 0)) col = hex2rgb(pal.bone); break;
           case "fin": col = shade(col, -0.05 * gy); break;
+          case "stripes": if (Math.floor((face === "top" || face === "bottom" ? y : x + y * 0) / 2) % 2 === 0 && face !== "north" && face !== "south") col = shade(hex2rgb(pal.hair), n * 0.1); if ((face === "north" || face === "south") && y % 3 === 0) col = shade(hex2rgb(pal.hair), n * 0.1); break;
+          case "membrane": col = shade(col, n * 0.12); if ((x + Math.floor(y / 2)) % 5 === 0) col = shade(col, -0.35); break;
+          case "bark": if (x % 3 === 0) col = shade(col, -0.22); if (hash(Math.floor((x + fx) / 2), y + fy, 11) > 0.85) col = shade(col, -0.3); break;
+          case "moss": col = shade(col, (hash(x + fx, y + fy, 5) - 0.5) * 0.3); if (face !== "top" && y > 0 && hash(x, y, 9) > 0.6) hole = true; break;
+          case "leaf": col = shade(col, -0.1 * gy + n * 0.08); if (x % 4 === 2 && face !== "bottom") col = shade(col, 0.15); if (face === "bottom") col = shade(hex2rgb(pal.accent), n * 0.1); break;
           case "glow": case "eyeglow": col = shade(hex2rgb(pal.glow), n * 0.1); break;
           case "feathers": if ((x + y * 2) % 5 === 0) col = shade(col, -0.2); if (y % 4 === 3) col = shade(col, 0.1); break;
           case "veil": if ((face === "north" || face === "south") && y > 0 && (x + y) % 2 === 0) hole = true; else col = shade(col, -0.15); break;

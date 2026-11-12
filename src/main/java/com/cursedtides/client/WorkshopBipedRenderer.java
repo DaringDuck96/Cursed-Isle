@@ -42,7 +42,20 @@ public class WorkshopBipedRenderer<T extends MobEntity> extends BipedEntityRende
         BipedEntityModel<T> m = models.get(modelFor.apply(entity));
         if (m != null) this.model = m;
         super.render(entity, yaw, tickDelta, matrices, consumers, light);
+        // A marker over the head of anyone with something for you (see Nameplates)
+        int mark = MARKERS.getOrDefault(entity.getId(), 0);
+        if (mark > 0) {
+            net.minecraft.text.Text t = mark == 2 ? net.minecraft.text.Text.literal("?").formatted(net.minecraft.util.Formatting.GREEN, net.minecraft.util.Formatting.BOLD)
+                    : net.minecraft.text.Text.literal("!").formatted(mark == 3 ? net.minecraft.util.Formatting.GOLD : net.minecraft.util.Formatting.YELLOW, net.minecraft.util.Formatting.BOLD);
+            matrices.push();
+            matrices.translate(0, 0.45 + Math.sin((entity.age + tickDelta) * 0.1) * 0.06, 0);
+            this.renderLabelIfPresent(entity, t, matrices, consumers, light, tickDelta);
+            matrices.pop();
+        }
     }
+
+    /** Entity id to marker kind, from the server (1 work, 2 come back, 3 story). */
+    public static final Map<Integer, Integer> MARKERS = new HashMap<>();
 
     @Override
     protected void scale(T entity, MatrixStack matrices, float amount) {

@@ -70,7 +70,7 @@ for (const rank of ["cursed_grunt", "cursed_brute", "cursed_captain"]) {
   }
 }
 // Bosses: one model and texture each; creature-shaped ones also list their part paths for CreatureModel
-const BOSSES = L.ROSTER.filter(e => e.group === "Bosses" || e.group === "Sea monsters").map(e => e.id);
+const BOSSES = L.ROSTER.filter(e => e.group === "Bosses" || e.group === "Sea monsters" || e.group === "Creatures").map(e => e.id);
 const creatureParts = {};
 for (const id of BOSSES) {
   const proj = model(id);

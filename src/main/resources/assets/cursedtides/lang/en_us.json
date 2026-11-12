@@ -70,7 +70,7 @@
   "entity.cursedtides.ship": "Ship",
   "entity.cursedtides.shipwright": "Shipwright",
   "category.cursedtides.ship": "Cursed Tides: Ships",
-  "key.cursedtides.sails_up": "Raise sails",
+  "key.cursedtides.sails_up": "Raise sails (aboard) / lock on to a foe (on foot)",
   "key.cursedtides.sails_down": "Lower sails",
   "key.cursedtides.fire_port": "Fire port broadside",
   "key.cursedtides.fire_starboard": "Fire starboard broadside",
@@ -317,5 +317,16 @@
   "item.cursedtides.black_pennant": "Black Pennant",
   "tooltip.cursedtides.black_pennant": "Cut from a dead ship's masthead. A noose around an anchor, stitched in grey thread.",
   "item.cursedtides.admirals_commission": "Admiral's Commission",
-  "tooltip.cursedtides.admirals_commission": "Corvin Hale's commission, sealed in blue wax. Signed by a king two kings ago."
+  "tooltip.cursedtides.admirals_commission": "Corvin Hale's commission, sealed in blue wax. Signed by a king two kings ago.",
+  "key.cursedtides.quick_chat": "Quick chat",
+  "entity.cursedtides.giant_wasp": "Giant Wasp",
+  "entity.cursedtides.cave_bat": "Cave Bat",
+  "entity.cursedtides.dune_scorpion": "Dune Scorpion",
+  "entity.cursedtides.snapjaw": "Snapjaw Flytrap",
+  "entity.cursedtides.living_stump": "Living Stump",
+  "item.cursedtides.giant_wasp_spawn_egg": "Giant Wasp Spawn Egg",
+  "item.cursedtides.cave_bat_spawn_egg": "Cave Bat Spawn Egg",
+  "item.cursedtides.dune_scorpion_spawn_egg": "Dune Scorpion Spawn Egg",
+  "item.cursedtides.snapjaw_spawn_egg": "Snapjaw Flytrap Spawn Egg",
+  "item.cursedtides.living_stump_spawn_egg": "Living Stump Spawn Egg"
 }

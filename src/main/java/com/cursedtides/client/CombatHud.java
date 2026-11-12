@@ -142,7 +142,8 @@ public final class CombatHud {
             }
         }
         radar(ctx, mc, p, sw);
-        if (p.getVehicle() == null) skillBar(ctx, mc, sw, sh);
+        if (p.getVehicle() == null || p.getVehicle() instanceof com.cursedtides.entity.ShipEntity) skillBar(ctx, mc, sw, sh);
+        LockOnClient.render(ctx, mc, sw, sh);
         // The foe you're fighting
         Entity target = mc.targetedEntity instanceof LivingEntity le && Levels.isFoeClient(le) ? le : null;
         if (target == null && targetId >= 0 && System.currentTimeMillis() < targetUntil && mc.world != null) {
@@ -164,17 +165,19 @@ public final class CombatHud {
 
     // ------------------------------------------------------------------ skill bar
 
-    private static final String[] KEYS = {"Z", "X", "C", "V"};
+    private static final String[] KEYS = {"Z", "X", "C", "V", "B"};
 
     /** Four skill slots to the right of the hotbar, for the weapon in hand. */
     private static void skillBar(DrawContext ctx, MinecraftClient mc, int sw, int sh) {
         if (skills.family() < 0) return;
         com.cursedtides.combat.SkillBar.Family f = com.cursedtides.combat.SkillBar.Family.values()[skills.family()];
         long since = System.currentTimeMillis() - skillsAt;
-        for (int i = 0; i < 4; i++) {
+        boolean ship = f == com.cursedtides.combat.SkillBar.Family.SHIP;
+        for (int i = 0; i < skills.cooldowns().size(); i++) {
             com.cursedtides.combat.SkillBar.Skill s = com.cursedtides.combat.SkillBar.Skill.of(f, i);
             if (s == null) continue;
             int x = sw / 2 + 98 + i * 22, y = sh - 22;
+            if (ship && i == 0) small(ctx, mc.textRenderer, "Hold Alt", x + 10, y - 8, 0xFFFFD24A, true);
             ctx.fill(x, y, x + 20, y + 20, 0xC0000000);
             ctx.fill(x + 1, y + 1, x + 19, y + 19, 0xC03A2C1C);
             ctx.drawItem(new net.minecraft.item.ItemStack(s.icon.get()), x + 2, y + 2);

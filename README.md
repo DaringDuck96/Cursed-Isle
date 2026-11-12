@@ -1,4 +1,4 @@
-# Cursed Tides (Fabric 1.21.1), version 0.25.0
+# Cursed Tides (Fabric 1.21.1), version 0.26.0
 
 An original pirate adventure built around four pillars: **sailing, ship ownership,
 island exploration and character progression**. Everything in it (islands, characters,
@@ -11,7 +11,7 @@ You need **Java 21** (the JDK, e.g. from adoptium.net).
 1. Unzip this folder.
 2. Open a terminal in it and run `gradlew.bat build` (Windows) or `./gradlew build` (Mac/Linux).
 3. The first build downloads Minecraft and Fabric (a few minutes).
-4. Your mod is at `build/libs/cursed-tides-0.25.0.jar` (ignore the `-sources` jar).
+4. Your mod is at `build/libs/cursed-tides-0.26.0.jar` (ignore the `-sources` jar).
 
 Put that jar plus **Fabric API** for 1.21.1 into `.minecraft/mods`. To test without installing: `./gradlew runClient`.
 
@@ -152,6 +152,44 @@ and leather. The captain's attire comes with Brethren rank 300; the Tidewatch un
 | Boarding Axe | 2 iron, an iron block and 2 sticks |
 | Throwing Knives (x4) | Shapeless: iron ingot and 2 iron nuggets |
 | Sailor's garb | Wool (bandana, shirt, breeches with a leather belt) and leather (boots) in armour shapes |
+
+### New in 0.26: sailing skills, lock-on, island creatures, cutscenes, quick chat, guilds
+
+**Sailing skills.** Aboard your ship, hold **Alt** and press Z, X, C, V or B (the bar shows above the hotbar),
+unlocked by Sailing mastery:
+- **Full Sail** (Alt+Z): much faster for ten seconds.
+- **Come About** (Alt+X, mastery 3): swing round to the opposite heading in a second.
+- **Open Fire** (Alt+C, mastery 6): broadsides reload twice as fast for 15 seconds.
+- **Ramming Speed** (Alt+V, mastery 10): a burst of speed; the first enemy ship you hit takes a terrible blow.
+- **Take Cover** (Alt+B, mastery 14): half damage to hull and crew for 12 seconds.
+
+**Dagger and grenade skills** (Z X C V with a dagger, throwing knives or a grenade in hand):
+- Daggers: **Gouge** (bleed and slow), **Fan of Knives** (five thrown at once), **Backstab** (slip behind a foe for
+  a huge hit), **Venom Edge** (poison everyone close, and get away fast).
+- Grenades: **Long Toss**, **Cluster** (three at once), **Quick Fuse** (fast and flat), **Powder Keg** (two
+  grenades and a keg of powder: a huge blast).
+
+**Lock-on.** On foot, press **R** to lock on to the foe nearest your crosshair; R again cycles along the line of
+foes, sneak + R lets go. Your view eases round to follow it, a frame under the crosshair shows its name and health,
+and aimed skills go for it.
+
+**Island creatures**, made in the Mob Workshop: **Giant Wasps** (jungles, poison stings), **Cave Bats** (at night,
+draining bites), **Dune Scorpions** (deserts and volcanoes, poison tails), **Snapjaw Flytraps** (rooted in the jungle
+and bayou, they bite and drag you in) and **Living Stumps** (they stand still until you're close; burn well).
+
+**Cutscenes** at the story's big moments: Thorne rising at the temple, the Tide Sovereign, the Pretender on his
+throne, the Abyssal rising, and Hale's flagship. Black bars, a moving camera and narration. Esc skips.
+
+**Quick chat** (Y): a menu of pirate phrases by topic (greetings, battle, sailing, crew, treasure, moods). Your
+pirate says it aloud, in a speech bubble over your head and in nearby chat.
+
+**Guilds**: big, lasting companies of pirates beside your sailing crew. `/guild create <name>`, `/guild invite`,
+`/guild accept`, ranks from Member to Guildmaster (`/guild promote`/`demote`/`kick`), a message of the day
+(`/guild motd`), `/guild info`, `/guild list`, and `/g <message>` to talk to the whole guild.
+
+**Nameplates**: over every pirate, their crew tag, name, level and guild. Over the townsfolk, a yellow **!** when
+they've an errand for you, a green **?** when they're waiting for you to come back, and a gold **!** over whoever
+your story sends you to next.
 
 ### New in 0.25: a fifth act, sea monsters, wrecks and spires, boarding, errands
 

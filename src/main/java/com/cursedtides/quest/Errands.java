@@ -324,6 +324,20 @@ public final class Errands {
     }
 
     /** When each person last offered work to each player, so a second word gets their usual business. */
+    /** For the marker over a person's head: 0 nothing, 1 has work for you, 2 waiting for you to come back. */
+    public static int marker(ServerPlayerEntity p, Role role) {
+        if (!ready(p)) return 0;
+        int best = 0;
+        for (Errand e : ALL) {
+            int s = get(p, e.id());
+            if (s == ACTIVE && e.step() instanceof Deliver d && d.to() == role) return 2;
+            if (e.giver() != role) continue;
+            if (s == READY || (s == ACTIVE && e.step() instanceof Fetch f && count(p, f.item().get()) >= f.count())) return 2;
+            if (s == NONE) best = 1;
+        }
+        return best;
+    }
+
     private static final Map<String, Long> OFFERED = new HashMap<>();
 
     // ------------------------------------------------------------------ talking

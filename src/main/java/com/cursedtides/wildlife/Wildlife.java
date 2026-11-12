@@ -132,6 +132,23 @@ public final class Wildlife {
                 default -> { }
             }
         }
+        // The island creatures (see IslandBeasts): a second roll, so they add to what's above
+        if (!water && col.isLand()) {
+            float r2 = r.nextFloat();
+            EntityType<? extends MobEntity> beast = switch (col.island().style()) {
+                case JUNGLE, ANCIENT -> r2 < 0.12f ? IslandBeasts.GIANT_WASP : r2 < 0.2f ? IslandBeasts.SNAPJAW : null;
+                case BAYOU -> r2 < 0.12f ? IslandBeasts.SNAPJAW : r2 < 0.22f ? IslandBeasts.LIVING_STUMP : night && r2 < 0.32f ? IslandBeasts.CAVE_BAT : null;
+                case DESERT, VOLCANIC -> r2 < 0.25f ? IslandBeasts.DUNE_SCORPION : night && r2 < 0.32f ? IslandBeasts.CAVE_BAT : null;
+                case CURSED -> r2 < 0.15f ? IslandBeasts.LIVING_STUMP : night && r2 < 0.3f ? IslandBeasts.CAVE_BAT : null;
+                case FORTRESS, CLIFFS, CRAGS -> night && r2 < 0.14f ? IslandBeasts.CAVE_BAT : null;
+                case SANDY, KEYS -> r2 < 0.07f ? IslandBeasts.GIANT_WASP : null;
+                default -> null;
+            };
+            if (beast != null) {
+                pick = beast;
+                y = top + (beast == IslandBeasts.GIANT_WASP || beast == IslandBeasts.CAVE_BAT ? 3 : 0);
+            }
+        }
         if (pick == null) return;
         MobEntity mob = pick.create(world);
         if (mob == null) return;

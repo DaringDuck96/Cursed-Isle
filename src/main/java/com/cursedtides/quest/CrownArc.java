@@ -270,6 +270,10 @@ public final class CrownArc {
         BlockPos throne = new BlockPos(kr.cx(), Builds.groundY(kr.cx(), kr.cz() - 10), kr.cz() - 10);
         MobEntity boss = spawnBossAt(world, throne, EntityType.WITHER_SKELETON, "The Pretender", PRETENDER, 400, Formatting.DARK_PURPLE);
         if (boss != null) {
+            net.minecraft.util.math.Vec3d at = net.minecraft.util.math.Vec3d.ofBottomCenter(throne).add(0, 1.8, 0);
+            Cutscenes.play(p, "The Pretender", java.util.List.of(
+                    new Cutscenes.Shot(at.add(0, 2, 14), at.add(0, 1, 6), at, 80, "The throne hall of Kingsrest. Someone is already sitting in the king's chair."),
+                    Cutscenes.orbit(at, 4, 0.4, 70, 110, 70, "The Pretender rises, and the dead of the old court rise with him.")));
             boss.equipStack(EquipmentSlot.HEAD, new ItemStack(Items.GOLDEN_HELMET));
             boss.equipStack(EquipmentSlot.MAINHAND, new ItemStack(ModItems.BROADSWORD));
             boss.setTarget(p);

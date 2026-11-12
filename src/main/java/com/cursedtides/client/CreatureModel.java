@@ -47,6 +47,9 @@ public class CreatureModel<T extends LivingEntity> extends EntityModel<T> {
                 case "claw_l" -> p.yaw += MathHelper.sin(age * 0.2f) * 0.2f;
                 case "claw_r" -> p.yaw -= MathHelper.sin(age * 0.2f) * 0.2f;
                 case "fin_l", "fin_r" -> p.roll += MathHelper.sin(age * 0.15f) * 0.12f * (name.endsWith("l") ? 1 : -1);
+                // Wings beat hard and fast; a flytrap's leaves and a wasp's wings are told apart by name
+                case "wing_l" -> p.roll += MathHelper.sin(age * 1.3f) * 0.75f;
+                case "wing_r" -> p.roll -= MathHelper.sin(age * 1.3f) * 0.75f;
                 default -> {
                     if (name.startsWith("tail")) {
                         int k = name.length() > 4 && Character.isDigit(name.charAt(name.length() - 1)) ? name.charAt(name.length() - 1) - '0' : 3;

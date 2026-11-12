@@ -19,16 +19,8 @@ public final class CrewTeams {
     public static void sync(MinecraftServer server) {
         ServerScoreboard sb = server.getScoreboard();
         for (Team t : new ArrayList<>(sb.getTeams())) {
-            if (t.getName().startsWith("ct_")) sb.removeTeam(t);
+            if (t.getName().startsWith("ct_")) sb.removeTeam(t); // the old one-team-per-crew nameplates
         }
-        for (CrewState.Crew c : CrewState.get(server).all()) {
-            String id = "ct_" + Integer.toHexString(c.name.toLowerCase().hashCode());
-            Team t = sb.addTeam(id);
-            t.setColor(c.formatting());
-            t.setPrefix(Text.literal("[" + c.name + "] ").formatted(c.formatting()));
-            t.setFriendlyFireAllowed(false);
-            t.setShowFriendlyInvisibles(true);
-            for (String name : c.names.values()) sb.addScoreHolderToTeam(name, t);
-        }
+        Nameplates.syncAll(server);
     }
 }
