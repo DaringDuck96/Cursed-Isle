@@ -14,7 +14,32 @@ import net.minecraft.util.math.Direction;
 public final class HiddenBuilds {
     private HiddenBuilds() {}
 
+    /** The Tidewatch brig on Ironwatch: x, floor y, z of the cell's centre. */
+    public static int[] BRIG = {0, 70, 0};
+
+    public static int[] brig() {
+        if (Builds.ALL.isEmpty()) throw new IllegalStateException("builds not loaded");
+        return BRIG;
+    }
+
     static void addAll() {
+        Island iw = Archipelago.IRONWATCH_ISLE;
+        outer:
+        for (double f = 0.35; f <= 0.7; f += 0.05) {
+            for (int i = 0; i < 12; i++) {
+                double a = Math.PI * 2 * i / 12 + 0.4;
+                int x = iw.cx() + (int) Math.round(Math.cos(a) * iw.radius() * f), z = iw.cz() + (int) Math.round(Math.sin(a) * iw.radius() * f);
+                boolean clear = true;
+                for (int dx = -4; dx <= 4 && clear; dx++) for (int dz = -4; dz <= 6 && clear; dz++) {
+                    if (!Archipelago.column(x + dx, z + dz).isLand() || Builds.blocksPlants(x + dx, z + dz)) clear = false;
+                }
+                if (!clear) continue;
+                BRIG = new int[]{x, Builds.floorAt(x, z), z};
+                final int bx = x, bz = z;
+                Builds.add(bx - 3, bz - 3, bx + 3, bz + 5, c -> brig(c, bx, bz));
+                break outer;
+            }
+        }
         Island mist = Archipelago.ISLE_THAT_ISNT;
         Builds.add(mist.cx() - 8, mist.cz() - 8, mist.cx() + 8, mist.cz() + 8, c -> mistShrine(c, mist.cx(), mist.cz()));
         Island kr = Archipelago.KINGSREST;
@@ -94,6 +119,20 @@ public final class HiddenBuilds {
         c.set(cx - 3, y, cz, s(Blocks.BARREL));
         c.set(cx + 3, y, cz, s(Blocks.BARREL));
         c.set(cx, y + 3, cz, s(Blocks.LANTERN).with(net.minecraft.block.LanternBlock.HANGING, true));
+    }
+
+    /** The brig: an iron-bound cell with a barred window, and a gaoler's step outside. */
+    private static void brig(Canvas c, int x, int z) {
+        int y = Builds.floorAt(x, z);
+        BlockState wall = com.cursedtides.block.ModBlocks.SEALED_GATE.getDefaultState();
+        c.fill(x - 3, y - 1, z - 3, x + 3, y + 4, z + 3, wall);
+        c.fill(x - 2, y, z - 2, x + 2, y + 2, z + 2, s(Blocks.AIR));
+        c.fill(x - 1, y + 1, z + 3, x + 1, y + 1, z + 3, s(Blocks.IRON_BARS));
+        c.set(x - 2, y, z - 2, s(Blocks.HAY_BLOCK));
+        c.set(x + 2, y, z - 2, s(Blocks.CAULDRON));
+        c.set(x, y + 2, z, s(Blocks.LANTERN).with(net.minecraft.block.LanternBlock.HANGING, true));
+        c.fill(x - 2, y - 1, z + 4, x + 2, y - 1, z + 5, s(Blocks.STONE_BRICKS));
+        c.fill(x - 2, y, z + 4, x + 2, y + 2, z + 5, s(Blocks.AIR));
     }
 
     /** A gun emplacement: a stone platform and the gun itself. */

@@ -18,6 +18,8 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Rarity;
 import net.minecraft.util.math.Box;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -84,6 +86,13 @@ public final class ModSounds {
         boolean day = tod > 0 && tod < 12500;
         for (ServerPlayerEntity p : world.getPlayers()) {
             var r = p.getRandom();
+            if ((!p.getShoulderEntityLeft().isEmpty() || !p.getShoulderEntityRight().isEmpty()) && r.nextInt(12) == 0) {
+                String[] lines = {"Silver! Silver!", "Mind the boom! Mind the boom!", "Rum's gone! Rum's gone!", "Pretty bird! Pretty pirate!",
+                        "All hands! All hands!", "Dead men bite! Dead men bite!", "Squawk! Doubloons!", "Who's a good captain?"};
+                Text line = Text.literal("[Parrot] " + lines[r.nextInt(lines.length)]).formatted(Formatting.GREEN);
+                for (ServerPlayerEntity o : world.getPlayers(o -> o.squaredDistanceTo(p) < 16 * 16)) o.sendMessage(line, false);
+                world.playSound(null, p.getBlockPos(), net.minecraft.sound.SoundEvents.ENTITY_PARROT_AMBIENT, SoundCategory.NEUTRAL, 1f, 1f);
+            }
             if (p.getVehicle() instanceof ShipEntity ship) {
                 if (r.nextInt(3) == 0) p.playSoundToPlayer(SHIP_CREAK.value(), SoundCategory.AMBIENT, 0.5f, 0.8f + r.nextFloat() * 0.4f);
                 if (r.nextInt(4) == 0) p.playSoundToPlayer(WAVES.value(), SoundCategory.AMBIENT, 0.4f, 1f);

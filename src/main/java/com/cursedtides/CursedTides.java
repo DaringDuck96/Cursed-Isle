@@ -57,6 +57,8 @@ public class CursedTides implements ModInitializer {
         com.cursedtides.combat.CombatData.register();
         com.cursedtides.combat.Styles.register();
         com.cursedtides.combat.Ultimates.register();
+        com.cursedtides.combat.Grenades.register();
+        com.cursedtides.sea.Leviathan.register();
         com.cursedtides.character.CharacterData.register();
         com.cursedtides.pirate.PerkData.register();
         com.cursedtides.poker.PokerTables.register();

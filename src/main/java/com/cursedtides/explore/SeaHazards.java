@@ -56,6 +56,7 @@ public final class SeaHazards {
 
     private static final Map<UUID, Vec3d> LAST_VEL = new HashMap<>();
     private static final Map<UUID, String> LAST_ZONE = new HashMap<>();
+    private static final Map<UUID, Long> RAM_READY = new HashMap<>();
 
     public static void register() {
         ServerTickEvents.END_SERVER_TICK.register(SeaHazards::tick);
@@ -106,6 +107,23 @@ public final class SeaHazards {
             // Running aground: a sudden stop against land at speed
             Vec3d before = LAST_VEL.getOrDefault(ship.getUuid(), Vec3d.ZERO);
             double speed = before.horizontalLength();
+            // Ramming: drive your bow into another ship at speed
+            if (speed > 0.3 && RAM_READY.getOrDefault(ship.getUuid(), 0L) < world.getTime()) {
+                Vec3d fwd = Vec3d.fromPolar(0, ship.getYaw());
+                net.minecraft.util.math.Box bow = ship.getBoundingBox().offset(fwd.multiply(2 * ship.shipClass().scale())).expand(1.5, 1, 1.5);
+                for (ShipEntity other : world.getEntitiesByClass(ShipEntity.class, bow, o -> o != ship && o.isAlive())) {
+                    float hit = (float) (speed * 60 * ship.shipClass().scale());
+                    other.damage(world.getDamageSources().playerAttack(p), hit);
+                    ship.seaDamage(world, hit * 0.25f, "Ramming speed! You stove in her side.");
+                    other.setVelocity(other.getVelocity().add(fwd.multiply(speed * 0.8)));
+                    ship.setVelocity(ship.getVelocity().multiply(0.2));
+                    world.playSound(null, other.getBlockPos(), net.minecraft.sound.SoundEvents.ENTITY_ZOMBIE_BREAK_WOODEN_DOOR, SoundCategory.NEUTRAL, 2f, 0.4f);
+                    world.spawnParticles(ParticleTypes.EXPLOSION, other.getX(), other.getY() + 1, other.getZ(), 2, 1, 0.5, 1, 0);
+                    com.cursedtides.pirate.PirateData.addXp(p, com.cursedtides.pirate.Weapon.SAILING, 20);
+                    RAM_READY.put(ship.getUuid(), world.getTime() + 60);
+                    break;
+                }
+            }
             if (ship.horizontalCollision && speed > 0.35 && t % 5 == 0) {
                 ship.seaDamage(world, (float) (speed * 30), "You've run aground! Timbers crack below the waterline.");
                 ship.setVelocity(before.multiply(-0.3));

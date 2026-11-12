@@ -39,6 +39,22 @@ public class HeavyWeaponItem extends SwordItem {
     public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
         ItemStack stack = user.getStackInHand(hand);
         if (hand != Hand.MAIN_HAND) return TypedActionResult.pass(stack);
+        if (user.isSneaking()) {
+            // Taunt: every foe nearby turns on you, and you brace for it
+            if (world instanceof ServerWorld sw) {
+                int n = 0;
+                for (net.minecraft.entity.mob.MobEntity m : world.getEntitiesByClass(net.minecraft.entity.mob.MobEntity.class,
+                        user.getBoundingBox().expand(14), m -> m instanceof net.minecraft.entity.mob.Monster && m.isAlive())) {
+                    m.setTarget(user);
+                    n++;
+                }
+                user.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(net.minecraft.entity.effect.StatusEffects.RESISTANCE, 160, 1));
+                user.getItemCooldownManager().set(this, 300);
+                sw.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_RAVAGER_ROAR, SoundCategory.PLAYERS, 0.6f, 1.4f);
+                user.sendMessage(Text.literal("\"Come on, then!\" " + n + " foes turn on you.").formatted(Formatting.GOLD), true);
+            }
+            return TypedActionResult.success(stack, world.isClient);
+        }
         if (hammer && !user.isOnGround()) return TypedActionResult.pass(stack);
         int level = PirateData.level(user, Weapon.CUTLASS);
         user.getItemCooldownManager().set(this, Math.max(50, 110 - level * 2));
@@ -86,5 +102,6 @@ public class HeavyWeaponItem extends SwordItem {
         tooltip.add(Text.literal("Heavy: every blow staggers the foe.").formatted(Formatting.GRAY));
         tooltip.add(Text.literal(hammer ? "Use: Ground Slam, knocking down everything around you."
                 : "Use: Cleave, a wide arc that hurls foes back.").formatted(Formatting.DARK_GRAY));
+        tooltip.add(Text.literal("Sneak + use: Taunt, drawing every foe nearby onto you.").formatted(Formatting.DARK_GRAY));
     }
 }

@@ -32,7 +32,10 @@ public class Leaderboards extends PersistentState {
             new Board("regatta", "Regatta (fastest)", true, "s"),
             new Board("fishing", "Fish landed", false, "fish"),
             new Board("sinkings", "Ships sunk", false, "ships"),
-            new Board("rival_kills", "Rivals bested", false, "kills"));
+            new Board("rival_kills", "Rivals bested", false, "kills"),
+            new Board("defense", "Cannon Defense (waves held)", false, "waves"),
+            new Board("privateer", "Privateer War points", false, "pts"),
+            new Board("siege", "Siege defence points", false, "pts"));
 
     private final Map<String, Map<UUID, Integer>> scores = new HashMap<>();
     private final Map<UUID, String> names = new HashMap<>();

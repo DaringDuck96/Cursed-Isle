@@ -1,0 +1,19 @@
+{
+ "display": {
+  "icon": {
+   "id": "cursedtides:ships_cannon"
+  },
+  "title": "Harbour Guard",
+  "description": "Hold the harbour through all eight waves of Cannon Defense",
+  "frame": "goal",
+  "show_toast": true,
+  "announce_to_chat": true,
+  "hidden": false
+ },
+ "criteria": {
+  "done": {
+   "trigger": "minecraft:impossible"
+  }
+ },
+ "parent": "cursedtides:feats/sink_ship"
+}

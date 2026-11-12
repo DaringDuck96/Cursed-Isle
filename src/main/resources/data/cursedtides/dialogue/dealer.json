@@ -55,6 +55,11 @@
      "action": "quest_screen"
     },
     {
+     "label": "A hand of Twenty-One. (5 doubloons)",
+     "action": "special:bj_deal",
+     "then": "bj"
+    },
+    {
      "label": "Who's at the table?",
      "goto": "table"
     },
@@ -80,6 +85,39 @@
      "Two cards each, face down. Five on the table: three, then one, then one. Best five of seven wins.",
      "Check, call, raise or fold. Small blind one, big blind two. Leave whenever you like and cash out what's in front of you."
     ]
+   ]
+  },
+  "bj": {
+   "text": [
+    "The cards are dealt."
+   ],
+   "options": [
+    {
+     "label": "Hit me.",
+     "action": "special:bj_hit",
+     "then": "bj"
+    },
+    {
+     "label": "I'll stand.",
+     "action": "special:bj_stand",
+     "then": "bj_after"
+    }
+   ]
+  },
+  "bj_after": {
+   "text": [
+    "Another hand?"
+   ],
+   "options": [
+    {
+     "label": "Deal again. (5 doubloons)",
+     "action": "special:bj_deal",
+     "then": "bj"
+    },
+    {
+     "label": "That'll do.",
+     "goto": "root"
+    }
    ]
   }
  }

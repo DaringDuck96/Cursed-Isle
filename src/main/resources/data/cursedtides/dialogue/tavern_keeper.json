@@ -114,6 +114,15 @@
      "goto": "jobs"
     },
     {
+     "label": "A hand of Twenty-One. (5 doubloons)",
+     "action": "special:bj_deal",
+     "then": "bj"
+    },
+    {
+     "label": "Who's looking for a crew? (the Lookout)",
+     "goto": "lookout"
+    },
+    {
      "label": "What's the news?",
      "action": "special:town_news",
      "then": "root"
@@ -166,6 +175,51 @@
      "action": "special:parcel",
      "then": "root"
     },
+    {
+     "label": "Something else...",
+     "goto": "root"
+    }
+   ]
+  },
+  "bj": {
+   "text": [
+    "The cards are dealt."
+   ],
+   "options": [
+    {
+     "label": "Hit me.",
+     "action": "special:bj_hit",
+     "then": "bj"
+    },
+    {
+     "label": "I'll stand.",
+     "action": "special:bj_stand",
+     "then": "bj_after"
+    }
+   ]
+  },
+  "bj_after": {
+   "text": [
+    "Another hand?"
+   ],
+   "options": [
+    {
+     "label": "Deal again. (5 doubloons)",
+     "action": "special:bj_deal",
+     "then": "bj"
+    },
+    {
+     "label": "That'll do.",
+     "goto": "root"
+    }
+   ]
+  },
+  "lookout": {
+   "text": [
+    "The Lookout board's by the door. Sign up for the tournament, the range, the guns or a privateer war, and when enough of you are keen, off you all go together.",
+    "Type /lookout to see who's waiting."
+   ],
+   "options": [
     {
      "label": "Something else...",
      "goto": "root"

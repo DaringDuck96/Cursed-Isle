@@ -16,6 +16,17 @@ public final class Activities {
         ShootingRange.register();
         StackRun.register();
         Emotes.register();
+        CannonDefense.register();
+        TreasureSets.register();
+        MiniGames.register();
+        PrivateerWar.register();
+        Lookout.register();
+
+        Specials.register("defense", CannonDefense::start);
+        Specials.register("bj_deal", Blackjack::deal);
+        Specials.register("bj_hit", (p, npc) -> Blackjack.hit(p));
+        Specials.register("bj_stand", (p, npc) -> Blackjack.stand(p));
+        Specials.register("privateer", (p, npc) -> { PrivateerWar.join(p); return List.of("Signed and sealed. Off to Bloodwake with you when the call goes up."); });
 
         Specials.register("arena", Arena::start);
         Specials.register("range", ShootingRange::start);

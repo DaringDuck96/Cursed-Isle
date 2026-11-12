@@ -1,0 +1,132 @@
+{
+ "name": "Sergeant Maud Kettle",
+ "nodes": {
+  "root": {
+   "text": [
+    "Harbour guns, Sergeant Kettle. You here to help or to gawk?",
+    "Mind the powder, {player}. It minds you back.",
+    "Every ship that gets into this harbour is a ship I didn't sink. I don't like those ships."
+   ],
+   "text_if": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Can't see a sail in this. That's exactly when they'll come."
+     ]
+    }
+   ],
+   "aside": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Listen to that thunder. Nobody sane is at sea tonight.",
+      "Storm's right on top of us. Stay in the dry a while.",
+      "Every timber in the harbour's groaning. Ugly night."
+     ]
+    },
+    {
+     "if": [
+      "raining"
+     ],
+     "text": [
+      "Wretched rain. Gets into everything.",
+      "Rain again. Good for the cisterns, bad for the soul.",
+      "You're dripping on my floor, by the way."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Late to be wandering about.",
+      "Night's when the cursed come walking. Keep a lantern lit.",
+      "Can't sleep either, eh?"
+     ]
+    },
+    {
+     "if": [
+      "dawn"
+     ],
+     "text": [
+      "Up with the gulls, I see.",
+      "Early start, {player}.",
+      "Mist'll burn off by mid-morning."
+     ]
+    },
+    {
+     "if": [
+      "festival"
+     ],
+     "text": [
+      "Happy {festival}, {player}! Everyone's in good spirits.",
+      "It's the {festival}. Half the town's drunk and the other half's working on it."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "Man the guns! (Cannon Defense)",
+     "action": "special:defense",
+     "then": "go"
+    },
+    {
+     "label": "How does the defence work?",
+     "goto": "how"
+    },
+    {
+     "label": "Who's held the harbour longest?",
+     "action": "special:top_defense",
+     "then": "root"
+    },
+    {
+     "label": "When's the next siege?",
+     "goto": "siege"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "how": {
+   "text": [
+    "Ships come straight for the docks, eight waves of them. I'll lend you a cannon and shot.",
+    "Sink them before they get within the harbour mouth. Five get through and the town's lost. More hands on the guns, more chance we have."
+   ],
+   "options": [
+    {
+     "label": "Something else...",
+     "goto": "root"
+    }
+   ]
+  },
+  "siege": {
+   "text": [
+    "Saturday nights, eight bells. The cursed fleet picks a port and comes ashore in force. Never the same port twice running.",
+    "Type /siege and the harbour office will tell you where they're expected. Bring friends. Bring more friends than that."
+   ],
+   "options": [
+    {
+     "label": "Something else...",
+     "goto": "root"
+    }
+   ]
+  },
+  "go": {
+   "text": [
+    "To your gun! Here they come!"
+   ],
+   "options": [
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  }
+ }
+}

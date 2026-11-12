@@ -289,5 +289,17 @@
   "item.cursedtides.hollow_crown": "The Hollow Crown",
   "block.cursedtides.chime_stone": "Chime Stone",
   "block.cursedtides.song_altar": "Song Altar",
-  "block.cursedtides.moon_seal": "Moon Seal"
+  "block.cursedtides.moon_seal": "Moon Seal",
+  "item.cursedtides.voodoo_doll": "Voodoo Doll",
+  "item.cursedtides.firebomb": "Firebomb",
+  "item.cursedtides.stinkpot": "Stinkpot",
+  "item.cursedtides.smoke_bomb": "Smoke Bomb",
+  "item.cursedtides.blast_charge": "Blast Charge",
+  "item.cursedtides.lockpick": "Lockpick",
+  "item.cursedtides.brewers_kit": "Brewer's Kit",
+  "item.cursedtides.carpenters_mallet": "Carpenter's Mallet",
+  "item.cursedtides.treasure_piece": "Treasure",
+  "item.cursedtides.ship_of_the_line_deed": "Ship of the Line Deed",
+  "entity.cursedtides.tentacle": "Tentacle",
+  "entity.cursedtides.grenade": "Grenade"
 }

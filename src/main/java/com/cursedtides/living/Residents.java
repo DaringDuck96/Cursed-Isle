@@ -50,7 +50,12 @@ public final class Residents {
             new Home(Role.ARCHIVIST, Archipelago.KINGSPORT, -24, 18),
             new Home(Role.COURSE_MASTER, Archipelago.STORMBREAK_ISLE, -12, 16),
             new Home(Role.DIVER, Archipelago.CROOKED_REEF, 20, -18),
-            new Home(Role.DIVER, Archipelago.SUNKEN_REACH, -16, 14)
+            new Home(Role.DIVER, Archipelago.SUNKEN_REACH, -16, 14),
+            new Home(Role.GUNNERY_SERGEANT, Archipelago.SALTMARROW, -6, 44),
+            new Home(Role.BARBER, Archipelago.SALTMARROW, 22, -26),
+            new Home(Role.TATTOOIST, Archipelago.SALTMARROW, 26, -20),
+            new Home(Role.BARBER, Archipelago.KINGSPORT, 20, 14),
+            new Home(Role.TATTOOIST, Archipelago.KINGSPORT, -14, -18)
     );
 
     public static void register() {

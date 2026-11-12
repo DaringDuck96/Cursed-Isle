@@ -33,6 +33,24 @@ public class DualBladesItem extends SwordItem {
         ItemStack stack = user.getStackInHand(hand);
         if (hand != Hand.MAIN_HAND) return TypedActionResult.pass(stack);
         int level = PirateData.level(user, Weapon.CUTLASS);
+        if (user.isSneaking()) {
+            // Brawl: a boot to the chest of whoever is in front of you
+            if (world instanceof ServerWorld sw) {
+                Vec3d f = user.getRotationVec(1f).multiply(1, 0, 1).normalize();
+                for (Entity t : world.getOtherEntities(user, user.getBoundingBox().expand(2.5, 1, 2.5), e -> CutlassItem.isValidTarget(user, e))) {
+                    Vec3d to = t.getPos().subtract(user.getPos()).multiply(1, 0, 1);
+                    if (to.lengthSquared() < 1e-4 || to.normalize().dotProduct(f) < 0.5) continue;
+                    t.damage(world.getDamageSources().playerAttack(user), 2f);
+                    if (t instanceof LivingEntity l) {
+                        l.takeKnockback(1.6, -f.x, -f.z);
+                        com.cursedtides.combat.Styles.stagger(l, 40);
+                    }
+                }
+                sw.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_PLAYER_ATTACK_KNOCKBACK, SoundCategory.PLAYERS, 1f, 0.8f);
+                user.getItemCooldownManager().set(this, 60);
+            }
+            return TypedActionResult.success(stack, world.isClient);
+        }
         user.getItemCooldownManager().set(this, Math.max(25, 60 - level));
         if (world instanceof ServerWorld sw) {
             Vec3d look = user.getRotationVec(1f);
@@ -61,5 +79,6 @@ public class DualBladesItem extends SwordItem {
     public void appendTooltip(ItemStack stack, TooltipContext context, List<Text> tooltip, TooltipType type) {
         tooltip.add(Text.literal("Combos last twice as long with paired blades.").formatted(Formatting.GRAY));
         tooltip.add(Text.literal("Use: Flurry, three quick cuts on the foe in front.").formatted(Formatting.DARK_GRAY));
+        tooltip.add(Text.literal("Sneak + use: Brawl, a kick that sends a foe sprawling.").formatted(Formatting.DARK_GRAY));
     }
 }

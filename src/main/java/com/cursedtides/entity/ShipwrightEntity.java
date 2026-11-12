@@ -38,8 +38,11 @@ public class ShipwrightEntity extends QuartermasterEntity {
                 new ItemStack(ModItems.BRIG_DEED), UNLIMITED, 15, 0.0f));
         offers.add(new TradeOffer(new TradedItem(ModItems.DOUBLOON, 64), Optional.of(new TradedItem(ModItems.BRIG_DEED, 1)),
                 new ItemStack(ModItems.FRIGATE_DEED), UNLIMITED, 25, 0.0f));
+        offers.add(new TradeOffer(new TradedItem(ModItems.DOUBLOON, 64), Optional.of(new TradedItem(ModItems.FRIGATE_DEED, 1)),
+                new ItemStack(ModItems.SHIP_OF_THE_LINE_DEED), UNLIMITED, 40, 0.0f));
         // Fittings
         offers.add(sell(24, ModItems.SWIVEL_GUN, 1));
+        offers.add(sell(8, com.cursedtides.activity.MiniGames.CARPENTERS_MALLET, 1));
         offers.add(sell(35, com.cursedtides.ship.FigureheadItem.MERMAID, 1));
         offers.add(sell(35, com.cursedtides.ship.FigureheadItem.LION, 1));
         offers.add(sell(45, com.cursedtides.ship.FigureheadItem.SKULL, 1));

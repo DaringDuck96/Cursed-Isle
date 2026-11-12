@@ -1,4 +1,4 @@
-# Cursed Tides (Fabric 1.21.1), version 0.16.0
+# Cursed Tides (Fabric 1.21.1), version 0.17.0
 
 An original pirate adventure built around four pillars: **sailing, ship ownership,
 island exploration and character progression**. Everything in it (islands, characters,
@@ -11,7 +11,7 @@ You need **Java 21** (the JDK, e.g. from adoptium.net).
 1. Unzip this folder.
 2. Open a terminal in it and run `gradlew.bat build` (Windows) or `./gradlew build` (Mac/Linux).
 3. The first build downloads Minecraft and Fabric (a few minutes).
-4. Your mod is at `build/libs/cursed-tides-0.16.0.jar` (ignore the `-sources` jar).
+4. Your mod is at `build/libs/cursed-tides-0.17.0.jar` (ignore the `-sources` jar).
 
 Put that jar plus **Fabric API** for 1.21.1 into `.minecraft/mods`. To test without installing: `./gradlew runClient`.
 
@@ -152,6 +152,39 @@ and leather. The captain's attire comes with Brethren rank 300; the Tidewatch un
 | Boarding Axe | 2 iron, an iron block and 2 sticks |
 | Throwing Knives (x4) | Shapeless: iron ingot and 2 iron nuggets |
 | Sailor's garb | Wool (bandana, shirt, breeches with a leather belt) and leather (boots) in armour shapes |
+
+### New in 0.17
+
+- **The weekly siege:** every Saturday at 8pm (server time) the cursed fleet attacks one of the great ports, a
+  different one each week (`/siege` tells you which). Six waves land from three beaches, a ghost ship shells the
+  harbour in the fourth, and the Dread Captain comes ashore at the end. A bar shows the town's morale; every invader
+  that reaches the plaza wears it down, and at zero the port falls. Hold it and the town pays every defender by their
+  tally, the top three handsomely. Admins can start one with `/cursedtides siege`.
+- **Voodoo dolls** (Hexes): use one on a creature or person to attune (up to three), then use it in the air: Poke,
+  Mend, Swarm (8), Cure (12), Shackles (16) and Life Drain (22). Sneak-use to choose. Foes are hurt; friends are healed.
+- **Grenades** (Gunnery): firebombs, stinkpots, smoke bombs (you vanish) and blast charges (which hurt ships). Sneak
+  to lob them further. Gunsmiths sell them; craft them from gunpowder.
+- **Weapon skills:** sneak-use a firearm to Take Aim (+50% on the next shot); a heavy weapon to Taunt; dual blades to
+  Brawl (a kick that sends foes sprawling).
+- **Old Hundred-Arms:** far out in deep water, something can rise under your ship and wrap it in tentacles. Cut them
+  all before the hull gives way.
+- **Dread ships and treasure fleets:** named pirate galleons with legendary loot, and gold-laden treasure galleons
+  under Tidewatch escort.
+- **Ramming:** drive your bow into another ship at speed.
+- **Ship of the Line:** a fourth heavy hull: 560 hull, seven guns a side, three masts. Trade up from a frigate.
+- **Sail emblems:** sneak-use any flag on your ship to paint its design across the mainsail.
+- **Cannon Defense:** at Saltmarrow harbour, Sergeant Kettle lends you a cannon to hold the docks against eight waves.
+- **Repair and brewing mini-games:** a Carpenter's Mallet (shipwright) opens a quick patching game aboard a damaged
+  ship; a Brewer's Kit opens a match-three board, and the better you play, the better the tonic.
+- **Twenty-One** at the card dealer and in taverns.
+- **Treasure collections:** pearls, jewels, old coins and Brethren keepsakes drop from the cursed and bosses; use them
+  to collect (`/collections`), complete a set for a reward.
+- **Ferries:** `/ferry` from any port to any port you've already found, for a fare.
+- **The brig:** wanted pirates who fall wake up in a cell on Ironwatch. Serve two minutes, `/bail`, or try a lockpick.
+- **The Privateer War:** two teams fight over Bloodwake Cay's signal mast (`/privateer join`, two players needed).
+- **The Lookout:** `/lookout join <activity>` gathers a group and carries everyone there together.
+- **Barbers and tattooists** in Saltmarrow and Kingsport: after your first look, restyling takes a visit (5 doubloons).
+- **Parrots** on your shoulder chatter now and then (peddlers sell them).
 
 ### New in 0.16
 

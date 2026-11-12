@@ -1,0 +1,77 @@
+{
+ "name": "Flossie Snips",
+ "nodes": {
+  "root": {
+   "text": [
+    "Sit, sit! What are we doing today, dear?",
+    "Ooh, who's been cutting your hair? Never mind, I can fix it.",
+    "A trim, a shave, a whole new you?"
+   ],
+   "aside": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Listen to that thunder. Nobody sane is at sea tonight.",
+      "Storm's right on top of us. Stay in the dry a while.",
+      "Every timber in the harbour's groaning. Ugly night."
+     ]
+    },
+    {
+     "if": [
+      "raining"
+     ],
+     "text": [
+      "Wretched rain. Gets into everything.",
+      "Rain again. Good for the cisterns, bad for the soul.",
+      "You're dripping on my floor, by the way."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Late to be wandering about.",
+      "Night's when the cursed come walking. Keep a lantern lit.",
+      "Can't sleep either, eh?"
+     ]
+    },
+    {
+     "if": [
+      "dawn"
+     ],
+     "text": [
+      "Up with the gulls, I see.",
+      "Early start, {player}.",
+      "Mist'll burn off by mid-morning."
+     ]
+    },
+    {
+     "if": [
+      "festival"
+     ],
+     "text": [
+      "Happy {festival}, {player}! Everyone's in good spirits.",
+      "It's the {festival}. Half the town's drunk and the other half's working on it."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "A new look, please. (5 doubloons)",
+     "action": "special:barber"
+    },
+    {
+     "label": "Any gossip?",
+     "goto": "common:rumours"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  }
+ }
+}

@@ -76,12 +76,33 @@ public final class Appearance {
         @Override public Id<? extends CustomPayload> getId() { return ID; }
     }
 
+    /** Players who've paid a barber or tattooist and may restyle, until this world time. */
+    private static final java.util.Map<UUID, Long> RESTYLE = new java.util.HashMap<>();
+
+    public static java.util.List<String> visitStylist(ServerPlayerEntity p, String what) {
+        if (!com.cursedtides.trade.Wallet.pay(p, 50)) return java.util.List.of("Five doubloons for the chair. Come back when you have it.");
+        RESTYLE.put(p.getUuid(), p.getServerWorld().getTime() + 6000);
+        ServerPlayNetworking.send(p, new Open(code(p)));
+        return null;
+    }
+
     public static void register() {
+        com.cursedtides.dialogue.Specials.register("barber", (p, npc) -> visitStylist(p, "hair"));
+        com.cursedtides.dialogue.Specials.register("tattoo", (p, npc) -> visitStylist(p, "ink"));
         PayloadTypeRegistry.playS2C().register(Sync.ID, Sync.CODEC);
         PayloadTypeRegistry.playS2C().register(Open.ID, Open.CODEC);
         PayloadTypeRegistry.playC2S().register(Set.ID, Set.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(Set.ID, (payload, ctx) -> ctx.server().execute(() -> {
             ServerPlayerEntity p = ctx.player();
+            boolean firstLook = !Look.enabled(p.getAttachedOrElse(LOOK, 0));
+            Long pass = RESTYLE.get(p.getUuid());
+            if (!firstLook && payload.code() != 0 && (pass == null || pass < p.getServerWorld().getTime())) {
+                p.sendMessage(Text.literal("A new look takes a barber or a tattooist. You'll find them in Saltmarrow and Kingsport.")
+                        .formatted(Formatting.GRAY), false);
+                broadcast(p);
+                return;
+            }
+            RESTYLE.remove(p.getUuid());
             p.setAttached(LOOK, Look.withAccessories(payload.code(), 0));
             broadcast(p);
             p.sendMessage(Text.literal("You check yourself in the glass. Looking piratical.").formatted(Formatting.GOLD), true);

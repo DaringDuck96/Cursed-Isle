@@ -1,0 +1,23 @@
+{
+ "type": "minecraft:crafting_shaped",
+ "category": "equipment",
+ "pattern": [
+  "GGG",
+  "PCP"
+ ],
+ "key": {
+  "G": {
+   "item": "minecraft:glass_bottle"
+  },
+  "P": {
+   "item": "minecraft:oak_planks"
+  },
+  "C": {
+   "item": "minecraft:cauldron"
+  }
+ },
+ "result": {
+  "id": "cursedtides:brewers_kit",
+  "count": 1
+ }
+}

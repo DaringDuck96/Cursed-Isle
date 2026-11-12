@@ -21,6 +21,7 @@ public class ShipModel extends EntityModel<ShipEntity> {
     private final ModelPart mast;
     private final ModelPart yard;
     private final ModelPart flag;
+    private final ModelPart emblem;
 
     public ShipModel(ModelPart root) {
         this.root = root;
@@ -28,6 +29,18 @@ public class ShipModel extends EntityModel<ShipEntity> {
         this.mast = root.getChild("mast");
         this.yard = root.getChild("yard");
         this.flag = root.getChild("flag");
+        this.emblem = root.getChild("emblem");
+        this.emblem.visible = false;
+    }
+
+    /** A flag design painted large across the mainsail, drawn with that flag's texture. */
+    public void renderEmblem(MatrixStack matrices, VertexConsumer vertices, int light, int overlay) {
+        if (!this.sail.visible || this.sail.yScale < 1.0f) return;
+        this.emblem.visible = true;
+        this.emblem.yScale = 3.4f;
+        this.emblem.zScale = 2.2f;
+        this.emblem.render(matrices, vertices, light, overlay, 0xFFFFFFFF);
+        this.emblem.visible = false;
     }
 
     /** Hide the painted pennant while a custom flag is drawn in its place. */
@@ -68,6 +81,8 @@ public class ShipModel extends EntityModel<ShipEntity> {
         root.addChild("yard", ModelPartBuilder.create().uv(0, 262).cuboid(-20f, -68f, 3f, 40f, 2f, 2f), ModelTransform.NONE);
         root.addChild("bowsprit", ModelPartBuilder.create().uv(84, 262).cuboid(-1f, -12f, 36f, 2f, 2f, 16f), ModelTransform.NONE);
         root.addChild("flag", ModelPartBuilder.create().uv(120, 262).cuboid(0f, -80f, -6f, 1f, 6f, 10f), ModelTransform.NONE);
+        root.addChild("emblem", ModelPartBuilder.create().uv(120, 262).cuboid(0f, 0f, -5f, 1f, 6f, 10f),
+                ModelTransform.of(0f, -57f, 7.6f, 0f, (float) (Math.PI / 2), 0f));
         root.addChild("cannon_l1", ModelPartBuilder.create().uv(142, 262).cuboid(-14f, -8f, -10f, 2f, 2f, 4f), ModelTransform.NONE);
         root.addChild("cannon_l2", ModelPartBuilder.create().uv(154, 262).cuboid(-14f, -8f, 8f, 2f, 2f, 4f), ModelTransform.NONE);
         root.addChild("cannon_r1", ModelPartBuilder.create().uv(166, 262).cuboid(12f, -8f, -10f, 2f, 2f, 4f), ModelTransform.NONE);

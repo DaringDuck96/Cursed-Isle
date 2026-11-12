@@ -14,7 +14,9 @@ public enum ShipClass {
     /** A two-masted fighting ship, heavier than a brigantine. */
     BRIG("Brig", 1.4f, 280, 4, 4, 1.0, 5),
     /** The best warship a captain can buy: strong, well gunned, and quick for her size. */
-    FRIGATE("Frigate", 1.55f, 340, 5, 5, 1.02, 6);
+    FRIGATE("Frigate", 1.55f, 340, 5, 5, 1.02, 6),
+    /** The heaviest ship afloat: a floating fortress, slow to turn and slower to sink. */
+    SHIP_OF_THE_LINE("Ship of the Line", 1.9f, 560, 6, 7, 0.82, 8);
 
     private final String displayName;
     private final float scale;
@@ -50,6 +52,7 @@ public enum ShipClass {
             case SCHOONER -> ModItems.SCHOONER_DEED;
             case BRIG -> ModItems.BRIG_DEED;
             case FRIGATE -> ModItems.FRIGATE_DEED;
+            case SHIP_OF_THE_LINE -> ModItems.SHIP_OF_THE_LINE_DEED;
         };
     }
 
@@ -57,7 +60,7 @@ public enum ShipClass {
     public int masts() {
         return switch (this) {
             case SLOOP -> 1;
-            case GALLEON, FRIGATE -> 3;
+            case GALLEON, FRIGATE, SHIP_OF_THE_LINE -> 3;
             default -> 2;
         };
     }

@@ -39,6 +39,7 @@ public final class Insurance {
             case SCHOONER -> 80;
             case BRIG -> 140;
             case FRIGATE -> 220;
+            case SHIP_OF_THE_LINE -> 300;
         };
     }
 

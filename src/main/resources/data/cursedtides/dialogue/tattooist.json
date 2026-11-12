@@ -1,0 +1,89 @@
+{
+ "name": "Ink-Eyed Moss",
+ "nodes": {
+  "root": {
+   "text": [
+    "Ink, scars, a little of both. Sit.",
+    "Every mark tells a story. What's yours going to say?",
+    "Hold still. Or don't. Gives it character."
+   ],
+   "aside": [
+    {
+     "if": [
+      "thundering"
+     ],
+     "text": [
+      "Listen to that thunder. Nobody sane is at sea tonight.",
+      "Storm's right on top of us. Stay in the dry a while.",
+      "Every timber in the harbour's groaning. Ugly night."
+     ]
+    },
+    {
+     "if": [
+      "raining"
+     ],
+     "text": [
+      "Wretched rain. Gets into everything.",
+      "Rain again. Good for the cisterns, bad for the soul.",
+      "You're dripping on my floor, by the way."
+     ]
+    },
+    {
+     "if": [
+      "night"
+     ],
+     "text": [
+      "Late to be wandering about.",
+      "Night's when the cursed come walking. Keep a lantern lit.",
+      "Can't sleep either, eh?"
+     ]
+    },
+    {
+     "if": [
+      "dawn"
+     ],
+     "text": [
+      "Up with the gulls, I see.",
+      "Early start, {player}.",
+      "Mist'll burn off by mid-morning."
+     ]
+    },
+    {
+     "if": [
+      "festival"
+     ],
+     "text": [
+      "Happy {festival}, {player}! Everyone's in good spirits.",
+      "It's the {festival}. Half the town's drunk and the other half's working on it."
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "I want some new ink. (5 doubloons)",
+     "action": "special:tattoo"
+    },
+    {
+     "label": "Where'd you learn the trade?",
+     "goto": "learn"
+    },
+    {
+     "label": "Farewell.",
+     "action": "close"
+    }
+   ]
+  },
+  "learn": {
+   "text": [
+    "On a whaler, off the cold coast. Long nights, a needle and a lot of very bored sailors.",
+    "The scars I do for free. Well, the sea does them for free. I just tidy them up."
+   ],
+   "options": [
+    {
+     "label": "Something else...",
+     "goto": "root"
+    }
+   ]
+  }
+ }
+}

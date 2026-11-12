@@ -1,0 +1,19 @@
+{
+ "display": {
+  "icon": {
+   "id": "minecraft:red_banner"
+  },
+  "title": "Letter of Marque",
+  "description": "Win a Privateer War",
+  "frame": "goal",
+  "show_toast": true,
+  "announce_to_chat": true,
+  "hidden": false
+ },
+ "criteria": {
+  "done": {
+   "trigger": "minecraft:impossible"
+  }
+ },
+ "parent": "cursedtides:feats/duel_won"
+}

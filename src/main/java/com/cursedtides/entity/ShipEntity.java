@@ -81,6 +81,7 @@ public class ShipEntity extends BoatEntity {
     /** RGB sail tint, or -1 for natural canvas. */
     private static final TrackedData<Integer> SAIL_COLOR = DataTracker.registerData(ShipEntity.class, TrackedDataHandlerRegistry.INTEGER);
     private static final TrackedData<Integer> FIGUREHEAD = DataTracker.registerData(ShipEntity.class, TrackedDataHandlerRegistry.INTEGER);
+    private static final TrackedData<Integer> EMBLEM = DataTracker.registerData(ShipEntity.class, TrackedDataHandlerRegistry.INTEGER);
     private static final TrackedData<Integer> AMMO = DataTracker.registerData(ShipEntity.class, TrackedDataHandlerRegistry.INTEGER);
     private static final TrackedData<Integer> NAVIGATORS = DataTracker.registerData(ShipEntity.class, TrackedDataHandlerRegistry.INTEGER);
     /** Ticks of torn rigging left (from chain shot or lightning). */
@@ -134,6 +135,7 @@ public class ShipEntity extends BoatEntity {
         builder.add(UPGRADES, 0);
         builder.add(SAIL_COLOR, -1);
         builder.add(FIGUREHEAD, 0);
+        builder.add(EMBLEM, 0);
         builder.add(AMMO, 0);
         builder.add(NAVIGATORS, 0);
         builder.add(TORN, 0);
@@ -146,6 +148,8 @@ public class ShipEntity extends BoatEntity {
     }
     public void setFigurehead(com.cursedtides.ship.FigureheadItem.Kind kind) { this.dataTracker.set(FIGUREHEAD, kind.ordinal()); }
     public int getFlag() { return this.dataTracker.get(FLAG); }
+    /** Flag design painted on the mainsail, plus one; 0 for plain canvas. */
+    public int getEmblem() { return this.dataTracker.get(EMBLEM); }
     /** Spotted by a sea eagle: glows for ten seconds. */
     public void addStatusEffectGlow() {
         this.setGlowing(true);
@@ -459,7 +463,27 @@ public class ShipEntity extends BoatEntity {
         return best;
     }
 
+    /** If set, a hostile ship makes for this point, fighting what it meets on the way (Cannon Defense). */
+    public Vec3d forcedDestination;
+
     private void hostileAi(ServerWorld world) {
+        if (forcedDestination != null) {
+            double dx = forcedDestination.x - getX(), dz = forcedDestination.z - getZ();
+            float desired = (float) Math.toDegrees(Math.atan2(-dx, dz));
+            float diff = MathHelper.wrapDegrees(desired - this.getYaw());
+            this.setYaw(this.getYaw() + MathHelper.clamp(diff, -2.5f, 2.5f));
+            setSail(2);
+            applySail(0.7);
+            if (--aiFireCooldown <= 0 && hasLivingCrew()) {
+                PlayerEntity near = world.getClosestPlayer(getX(), getY(), getZ(), 40, false);
+                if (near != null) {
+                    int side = rightVector().dotProduct(near.getPos().subtract(getPos())) >= 0 ? 1 : -1;
+                    fireBroadside(world, side, null, near.getPos(), ShipAmmo.ROUND);
+                }
+                aiFireCooldown = 120 + this.random.nextInt(40);
+            }
+            return;
+        }
         if (getFaction() == ShipFaction.MERCHANT) {
             merchantAi(world);
             return;
@@ -898,6 +922,7 @@ public class ShipEntity extends BoatEntity {
                 PirateData.addXp(sinker, Weapon.CANNON, 60);
                 FactionEvents.onShipSunk(sinker, getFaction());
                 com.cursedtides.quest.HorizonArc.onShipSunk(sinker, this);
+                com.cursedtides.sea.SeaEvents.onSunk(world, this, sinker);
             }
             for (ServerPlayerEntity p : world.getPlayers(p -> p.squaredDistanceTo(this) < 80 * 80)) {
                 p.sendMessage(Text.literal("The ").append(shipName()).append(Text.literal(" slips beneath the waves!"))
@@ -918,6 +943,7 @@ public class ShipEntity extends BoatEntity {
                 fittings.putInt("SailColor", getSailColor());
                 fittings.putInt("Flag", getFlag());
                 fittings.putInt("Figurehead", this.dataTracker.get(FIGUREHEAD));
+                fittings.putInt("Emblem", this.dataTracker.get(EMBLEM));
                 replacement.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(fittings));
                 if (this.hasCustomName()) replacement.set(DataComponentTypes.CUSTOM_NAME, this.getCustomName());
                 com.cursedtides.trade.Insurance.payOut(world.getServer(), owner, replacement);
@@ -976,6 +1002,14 @@ public class ShipEntity extends BoatEntity {
                 if (getHull() > maxHull()) setHull(maxHull());
                 player.sendMessage(Text.literal("The " + fh.kind.title + " is fixed to the bow. " + fh.kind.effect + ".").formatted(Formatting.GOLD), true);
                 this.getWorld().playSound(null, getX(), getY(), getZ(), SoundEvents.BLOCK_WOOD_PLACE, SoundCategory.PLAYERS, 1.0f, 0.7f);
+            }
+            return ActionResult.success(!server);
+        }
+        if (mine && held.getItem() instanceof com.cursedtides.ship.FlagItem paint && player.isSneaking()) {
+            if (server) {
+                this.dataTracker.set(EMBLEM, paint.design().ordinal() + 1);
+                player.sendMessage(Text.literal("The sailmaker paints the " + paint.design().displayName + " across your mainsail.").formatted(Formatting.GOLD), true);
+                this.getWorld().playSound(null, getX(), getY(), getZ(), SoundEvents.BLOCK_WOOL_PLACE, SoundCategory.PLAYERS, 1.0f, 0.8f);
             }
             return ActionResult.success(!server);
         }
@@ -1089,6 +1123,7 @@ public class ShipEntity extends BoatEntity {
         data.putInt("SailColor", getSailColor());
         data.putInt("Flag", getFlag());
         data.putInt("Figurehead", this.dataTracker.get(FIGUREHEAD));
+        data.putInt("Emblem", this.dataTracker.get(EMBLEM));
         data.putBoolean("Anchored", isAnchored());
         data.putInt("Ammo", getAmmo().ordinal());
         data.put("Cargo", cargo.toNbtList(this.getRegistryManager()));
@@ -1103,6 +1138,7 @@ public class ShipEntity extends BoatEntity {
         if (data.contains("SailColor")) this.dataTracker.set(SAIL_COLOR, data.getInt("SailColor"));
         setFlag(data.getInt("Flag"));
         this.dataTracker.set(FIGUREHEAD, data.getInt("Figurehead"));
+        this.dataTracker.set(EMBLEM, data.getInt("Emblem"));
         setAnchored(data.getBoolean("Anchored"));
         if (data.contains("Ammo")) this.dataTracker.set(AMMO, data.getInt("Ammo"));
         if (data.contains("Cargo", NbtElement.LIST_TYPE)) {

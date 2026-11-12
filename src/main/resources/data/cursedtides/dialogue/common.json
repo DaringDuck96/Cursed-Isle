@@ -29,7 +29,13 @@
     "Ironwatch's guns can reach a mile out, they say. Somebody silenced Blackthorn's last week, and the smugglers are still furious.",
     "The cartographers swear there are islands nobody's charted. They draw them on the hidden sheets and won't show anyone.",
     "There's fever in one of the ports, I heard. If they close the market, the black markets will make a fortune on spices.",
-    "A ship with a kraken on her bow sailed straight through the Drain and came out the other side. I'd want that figurehead."
+    "A ship with a kraken on her bow sailed straight through the Drain and came out the other side. I'd want that figurehead.",
+    "Saturday nights the cursed fleet comes for one of the great ports. Different one each week. Type /siege if you want to know where.",
+    "A sailor swears something with a hundred arms took his schooner under off the Southern Drift. He swam. Nobody believes him. I do.",
+    "There's a treasure fleet out there somewhere, gold to the gunwales, with Tidewatch frigates riding herd.",
+    "Old Kettle at the harbour guns needs hands every time the pirates make a run at the docks.",
+    "If you get pinched by the Tidewatch while you're wanted, you'll wake up in the Ironwatch brig. Keep a lockpick in your boot.",
+    "Fancy a new look? Flossie Snips in Saltmarrow cuts hair like she's sharpening a cutlass."
    ],
    "text_if": [
     {

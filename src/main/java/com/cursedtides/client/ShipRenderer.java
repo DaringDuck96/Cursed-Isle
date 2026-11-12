@@ -77,6 +77,12 @@ public class ShipRenderer extends EntityRenderer<ShipEntity> {
             this.model.renderFlag(matrices, flagVertices, light, OverlayTexture.DEFAULT_UV);
         }
         this.model.setCustomFlag(false);
+        if (ship.getEmblem() > 0) {
+            Identifier emblemTexture = CursedTides.id("textures/entity/flags/" + com.cursedtides.ship.FlagItem.Design.byIndex(ship.getEmblem() - 1)
+                    .name().toLowerCase() + ".png");
+            this.model.renderEmblem(matrices, vertexConsumers.getBuffer(net.minecraft.client.render.RenderLayer.getEntityCutoutNoCull(emblemTexture)),
+                    light, OverlayTexture.DEFAULT_UV);
+        }
         var fig = ship.getFigurehead();
         if (fig != com.cursedtides.ship.FigureheadItem.Kind.NONE) {
             var item = com.cursedtides.ship.FigureheadItem.itemFor(fig);

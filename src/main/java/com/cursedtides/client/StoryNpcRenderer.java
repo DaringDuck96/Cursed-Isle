@@ -56,6 +56,9 @@ public class StoryNpcRenderer extends WanderingTraderEntityRenderer {
                 case BOUNTY_CLERK -> tex("bounty_clerk");
                 case ARCHIVIST -> tex("archivist");
                 case DIVER -> tex("diver");
+                case GUNNERY_SERGEANT -> tex("gunnery_sergeant");
+                case BARBER -> tex("barber");
+                case TATTOOIST -> tex("tattooist");
             };
         }
         return KEEPER;

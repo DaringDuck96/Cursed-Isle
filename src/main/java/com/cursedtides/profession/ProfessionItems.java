@@ -120,7 +120,7 @@ public final class ProfessionItems {
         return c == null ? 0 : c.copyNbt().getInt("Quality");
     }
 
-    static void setInt(ItemStack stack, String key, int value) {
+    public static void setInt(ItemStack stack, String key, int value) {
         NbtComponent c = stack.get(DataComponentTypes.CUSTOM_DATA);
         NbtCompound data = c == null ? new NbtCompound() : c.copyNbt();
         data.putInt(key, value);

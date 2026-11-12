@@ -90,6 +90,22 @@ public final class WildlifeModels {
         return TexturedModelData.of(data, 64, 32);
     }
 
+    public static final String[] TENTACLE_PARTS = {"tent1", "tent1/tent2", "tent1/tent2/tent3", "tent1/tent2/tent3/tent4",
+            "tent1/tent2/tent3/tent4/tent5", "tent1/tent2/tent3/tent4/tent5/tent6"};
+
+    /** A great arm rising out of the water: six tapering segments. */
+    public static TexturedModelData tentacle() {
+        ModelData data = new ModelData();
+        ModelPartData root = data.getRoot();
+        ModelPartData t1 = root.addChild("tent1", ModelPartBuilder.create().uv(0, 0).cuboid(-4f, -8f, -4f, 8f, 8f, 8f), ModelTransform.of(0f, 24f, 0f, 0f, 0f, 0f));
+        ModelPartData t2 = t1.addChild("tent2", ModelPartBuilder.create().uv(0, 16).cuboid(-3.5f, -8f, -3.5f, 7f, 8f, 7f), ModelTransform.of(0f, -8f, 0f, 0f, 0f, 0f));
+        ModelPartData t3 = t2.addChild("tent3", ModelPartBuilder.create().uv(32, 0).cuboid(-3f, -8f, -3f, 6f, 8f, 6f), ModelTransform.of(0f, -8f, 0f, 0f, 0f, 0f));
+        ModelPartData t4 = t3.addChild("tent4", ModelPartBuilder.create().uv(32, 16).cuboid(-2.5f, -8f, -2.5f, 5f, 8f, 5f), ModelTransform.of(0f, -8f, 0f, 0f, 0f, 0f));
+        ModelPartData t5 = t4.addChild("tent5", ModelPartBuilder.create().uv(0, 32).cuboid(-2f, -8f, -2f, 4f, 8f, 4f), ModelTransform.of(0f, -8f, 0f, 0.25f, 0f, 0f));
+        t5.addChild("tent6", ModelPartBuilder.create().uv(20, 32).cuboid(-1.5f, -8f, -1.5f, 3f, 8f, 3f), ModelTransform.of(0f, -8f, 0f, 0.5f, 0f, 0f));
+        return TexturedModelData.of(data, 64, 64);
+    }
+
     public static TexturedModelData snake() {
         ModelData data = new ModelData();
         ModelPartData root = data.getRoot();

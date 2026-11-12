@@ -25,6 +25,9 @@ public final class LivingWorld {
         Festivals.register();
         Residents.register();
         Bounties.register();
+        Brig.register();
+        Ferry.register();
+        Siege.register();
 
         Specials.register("bounty_board", (p, npc) -> {
             List<String> lines = new ArrayList<>();

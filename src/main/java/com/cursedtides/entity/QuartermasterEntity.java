@@ -130,6 +130,10 @@ public class QuartermasterEntity extends WanderingTraderEntity {
             case "gunsmith" -> {
                 offers.add(sell(16, ModItems.FLINTLOCK_PISTOL, 1));
                 offers.add(sell(28, ModItems.DOUBLE_BARREL_PISTOL, 1));
+                offers.add(sell(3, com.cursedtides.combat.Grenades.FIREBOMB, 2));
+                offers.add(sell(3, com.cursedtides.combat.Grenades.STINKPOT, 2));
+                offers.add(sell(3, com.cursedtides.combat.Grenades.SMOKE_BOMB, 2));
+                offers.add(sell(6, com.cursedtides.combat.Grenades.BLAST_CHARGE, 2));
                 offers.add(sell(45, ModItems.HAND_CANNON, 1));
                 offers.add(sell(28, ModItems.MUSKET, 1));
                 offers.add(sell(34, ModItems.BLUNDERBUSS, 1));
@@ -187,6 +191,8 @@ public class QuartermasterEntity extends WanderingTraderEntity {
                 return;
             }
             case "peddler" -> {
+                offers.add(sell(12, net.minecraft.item.Items.PARROT_SPAWN_EGG, 1));
+                offers.add(sell(10, com.cursedtides.activity.MiniGames.BREWERS_KIT, 1));
                 net.minecraft.util.math.random.Random r = this.getRandom();
                 for (int i = 0; i < 4; i++) offers.add(sell(10 + r.nextInt(16), com.cursedtides.appearance.Accessories.random(r, true), 1));
                 offers.add(sell(30, com.cursedtides.ship.FlagItem.randomRare(r), 1));
@@ -210,6 +216,7 @@ public class QuartermasterEntity extends WanderingTraderEntity {
                 return;
             }
             case "fence", "smuggler" -> {
+                offers.add(sell(4, com.cursedtides.living.Brig.LOCKPICK, 2));
                 // The black market: better prices for plunder, and no questions about where it came from
                 offers.add(buy(Items.GOLD_INGOT, 1, 1));
                 offers.add(buy(Items.EMERALD, 1, 3));
@@ -243,6 +250,8 @@ public class QuartermasterEntity extends WanderingTraderEntity {
                 return;
             }
             case "apothecary" -> {
+                offers.add(sell(30, com.cursedtides.combat.Grenades.VOODOO_DOLL, 1));
+                offers.add(sell(10, com.cursedtides.activity.MiniGames.BREWERS_KIT, 1));
                 offers.add(potion(4, net.minecraft.potion.Potions.HEALING));
                 offers.add(potion(6, net.minecraft.potion.Potions.REGENERATION));
                 offers.add(potion(6, net.minecraft.potion.Potions.LONG_WATER_BREATHING));

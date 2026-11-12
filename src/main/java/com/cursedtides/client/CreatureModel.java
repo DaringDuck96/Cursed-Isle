@@ -51,6 +51,10 @@ public class CreatureModel<T extends LivingEntity> extends EntityModel<T> {
                     if (name.startsWith("tail")) {
                         int k = name.length() > 4 && Character.isDigit(name.charAt(name.length() - 1)) ? name.charAt(name.length() - 1) - '0' : 3;
                         p.yaw += MathHelper.sin(age * 0.18f - k * 0.7f) * (0.18f + limbDistance * 0.4f);
+                    } else if (name.startsWith("tent")) {
+                        int k = name.charAt(4) - '0';
+                        p.pitch += MathHelper.sin(age * 0.09f - k * 0.6f) * 0.16f;
+                        p.roll += MathHelper.cos(age * 0.07f - k * 0.5f) * 0.14f;
                     } else if (name.startsWith("seg")) {
                         int k = name.charAt(3) - '0';
                         p.yaw += MathHelper.sin(age * 0.25f + limbAngle * 0.8f - k * 0.9f) * 0.42f;

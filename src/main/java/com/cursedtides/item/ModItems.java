@@ -102,6 +102,8 @@ public final class ModItems {
             new ShipDeedItem(ShipClass.BRIG, new Item.Settings().maxCount(1).rarity(Rarity.RARE)));
     public static final Item FRIGATE_DEED = register("frigate_deed",
             new ShipDeedItem(ShipClass.FRIGATE, new Item.Settings().maxCount(1).rarity(Rarity.EPIC)));
+    public static final Item SHIP_OF_THE_LINE_DEED = register("ship_of_the_line_deed",
+            new ShipDeedItem(ShipClass.SHIP_OF_THE_LINE, new Item.Settings().maxCount(1).rarity(Rarity.EPIC)));
     public static final Item SWIVEL_GUN = register("swivel_gun",
             new ShipUpgradeItem(ShipUpgradeItem.Kind.SWIVEL, new Item.Settings().maxCount(4)));
     public static final Item HULL_PLATING = register("hull_plating",
@@ -207,6 +209,7 @@ public final class ModItems {
                         entries.add(SCHOONER_DEED);
                         entries.add(BRIG_DEED);
                         entries.add(FRIGATE_DEED);
+                        entries.add(SHIP_OF_THE_LINE_DEED);
                         entries.add(SWIVEL_GUN);
                         entries.add(HULL_PLATING);
                         entries.add(GUN_CARRIAGE);

@@ -1,0 +1,19 @@
+{
+ "display": {
+  "icon": {
+   "id": "minecraft:ink_sac"
+  },
+  "title": "Hundred-Arms",
+  "description": "Cut every tentacle of the thing in the deep",
+  "frame": "challenge",
+  "show_toast": true,
+  "announce_to_chat": true,
+  "hidden": false
+ },
+ "criteria": {
+  "done": {
+   "trigger": "minecraft:impossible"
+  }
+ },
+ "parent": "cursedtides:feats/sink_ship"
+}

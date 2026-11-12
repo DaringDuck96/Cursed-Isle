@@ -91,6 +91,7 @@ public class FlagItem extends Item {
     @Override
     public void appendTooltip(ItemStack stack, TooltipContext context, List<Text> tooltip, TooltipType type) {
         tooltip.add(Text.literal("Right-click your ship to fly it. You keep the flag.").formatted(Formatting.GRAY));
+        tooltip.add(Text.literal("Sneak + right-click to paint it on your mainsail.").formatted(Formatting.DARK_GRAY));
         if (design.price == 0) tooltip.add(Text.literal("A rare colour: not sold in any yard").formatted(Formatting.GOLD));
     }
 }

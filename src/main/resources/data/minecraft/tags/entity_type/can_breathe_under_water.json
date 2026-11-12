@@ -1,6 +1,7 @@
 {
  "replace": false,
  "values": [
-  "cursedtides:crocodile"
+  "cursedtides:crocodile",
+  "cursedtides:tentacle"
  ]
 }

@@ -1,0 +1,19 @@
+{
+ "type": "minecraft:crafting_shapeless",
+ "category": "equipment",
+ "ingredients": [
+  {
+   "item": "minecraft:gunpowder"
+  },
+  {
+   "item": "minecraft:coal"
+  },
+  {
+   "item": "minecraft:string"
+  }
+ ],
+ "result": {
+  "id": "cursedtides:firebomb",
+  "count": 2
+ }
+}

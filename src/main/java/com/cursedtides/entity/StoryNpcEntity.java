@@ -50,7 +50,10 @@ public class StoryNpcEntity extends WanderingTraderEntity {
         LAND_AGENT("Percival Deedes, Land Agent"),
         BOUNTY_CLERK("Clerk Abel Marsh, Bounty Office"),
         ARCHIVIST("Odalys Quill, Archivist"),
-        DIVER("Tobiah Sounding, Salvage Diver");
+        DIVER("Tobiah Sounding, Salvage Diver"),
+        GUNNERY_SERGEANT("Sergeant Maud Kettle, Harbour Guns"),
+        BARBER("Flossie Snips, Barber"),
+        TATTOOIST("Ink-Eyed Moss, Tattooist");
 
         private final String displayName;
 

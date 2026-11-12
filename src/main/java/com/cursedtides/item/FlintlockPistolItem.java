@@ -60,9 +60,21 @@ public class FlintlockPistolItem extends Item {
         this.stats = stats;
     }
 
+    /** Players steadying their aim, and until when. */
+    private static final java.util.Map<java.util.UUID, Long> AIMING = new java.util.HashMap<>();
+
     @Override
     public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
         ItemStack gun = user.getStackInHand(hand);
+        if (user.isSneaking() && !world.isClient) {
+            // Take Aim: steady yourself; the next shot within five seconds hits half again as hard
+            AIMING.put(user.getUuid(), world.getTime() + 100);
+            user.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(net.minecraft.entity.effect.StatusEffects.SLOWNESS, 100, 2, false, false));
+            user.sendMessage(Text.literal("You steady your aim...").formatted(Formatting.GOLD), true);
+            world.playSound(null, user.getBlockPos(), SoundEvents.ITEM_CROSSBOW_LOADING_MIDDLE.value(), SoundCategory.PLAYERS, 0.8f, 1.2f);
+            return TypedActionResult.success(gun);
+        }
+        if (user.isSneaking()) return TypedActionResult.success(gun, true);
 
         double save = com.cursedtides.pirate.PerkData.stat(user, com.cursedtides.pirate.Perk.Stat.AMMO_SAVE);
         boolean keepShot = !world.isClient && user.getRandom().nextDouble() < save
@@ -81,6 +93,11 @@ public class FlintlockPistolItem extends Item {
                 + (float) com.cursedtides.pirate.PerkData.stat(user, com.cursedtides.pirate.Perk.Stat.GUN_DAMAGE))
                 * com.cursedtides.profession.Honing.gunBonus(gun);
         double faster = com.cursedtides.pirate.PerkData.stat(user, com.cursedtides.pirate.Perk.Stat.RELOAD);
+        Long aimed = AIMING.remove(user.getUuid());
+        if (aimed != null && aimed >= world.getTime()) {
+            damage *= 1.5f;
+            user.removeStatusEffect(net.minecraft.entity.effect.StatusEffects.SLOWNESS);
+        }
 
         world.playSound(null, user.getX(), user.getY(), user.getZ(),
                 SoundEvents.ENTITY_FIREWORK_ROCKET_LARGE_BLAST, SoundCategory.PLAYERS, 1.0f,
@@ -173,6 +190,7 @@ public class FlintlockPistolItem extends Item {
     @Override
     public void appendTooltip(ItemStack stack, TooltipContext context, List<Text> tooltip, TooltipType type) {
         tooltip.add(Text.translatable(stats.tooltipKey()).formatted(Formatting.GRAY));
+        tooltip.add(Text.literal("Sneak + use: Take Aim (next shot +50%).").formatted(Formatting.DARK_GRAY));
         if (stats.barrels() > 1) tooltip.add(Text.literal("Two barrels: fire twice, then reload.").formatted(Formatting.DARK_GRAY));
     }
 }

@@ -49,7 +49,7 @@ public final class WorldEvents {
     private static final int INTERVAL = 6000;
     private static final float CHANCE = 0.35f;
 
-    public enum Kind { CONVOY, RIVAL, BLOCKADE, MONSTER, INVASION }
+    public enum Kind { CONVOY, RIVAL, BLOCKADE, MONSTER, INVASION, LEVIATHAN, TREASURE_FLEET, DREAD_SHIP }
 
     public static void register() {
         ServerTickEvents.END_SERVER_TICK.register(WorldEvents::tick);
@@ -90,6 +90,9 @@ public final class WorldEvents {
             options.add(Kind.CONVOY);
             options.add(Kind.RIVAL);
             options.add(Kind.MONSTER);
+            options.add(Kind.TREASURE_FLEET);
+            options.add(Kind.DREAD_SHIP);
+            options.add(Kind.LEVIATHAN);
         }
         if (ModWorld.isArchipelago()) {
             if (distanceTo(player, Archipelago.SALTMARROW) < 160) options.add(Kind.BLOCKADE);
@@ -169,6 +172,15 @@ public final class WorldEvents {
                 announce(server, Text.literal("Something vast is moving under the water " + where(at)
                         + ". Sailors are calling it the Brinewyrm.").formatted(Formatting.DARK_GREEN, Formatting.ITALIC));
                 return true;
+            }
+            case LEVIATHAN -> {
+                return player.getVehicle() instanceof ShipEntity ship && com.cursedtides.sea.Leviathan.rise(world, ship);
+            }
+            case TREASURE_FLEET -> {
+                return com.cursedtides.sea.SeaEvents.treasureFleet(world, player);
+            }
+            case DREAD_SHIP -> {
+                return com.cursedtides.sea.SeaEvents.bossShip(world, player);
             }
             case INVASION -> {
                 if (!ModWorld.isArchipelago()) return false;

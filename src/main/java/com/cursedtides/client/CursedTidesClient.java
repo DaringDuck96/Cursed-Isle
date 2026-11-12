@@ -31,6 +31,7 @@ public class CursedTidesClient implements ClientModInitializer {
 
         EntityRendererRegistry.register(ModEntities.CREWMATE, CrewmateRenderer::new);
         EntityRendererRegistry.register(ModEntities.THROWING_KNIFE, FlyingItemEntityRenderer::new);
+        EntityRendererRegistry.register(com.cursedtides.combat.Grenades.TYPE, FlyingItemEntityRenderer::new);
 
         // Sailor's garb icons take the cloth's dye colour (the overlay layer stays as drawn)
         net.fabricmc.fabric.api.client.rendering.v1.ColorProviderRegistry.ITEM.register(
@@ -41,6 +42,7 @@ public class CursedTidesClient implements ClientModInitializer {
         ShipKeys.register();
         ShipKeys.registerReceivers();
         AppearanceClient.register();
+        MiniGameScreens.register();
         net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap.INSTANCE.putBlock(
                 com.cursedtides.block.ModBlocks.MOON_SEAL, net.minecraft.client.render.RenderLayer.getCutout());
     }
@@ -65,6 +67,10 @@ public class CursedTidesClient implements ClientModInitializer {
         var crab = CreatureRenderer.layer("crab");
         var snake = CreatureRenderer.layer("snake");
         var monkey = CreatureRenderer.layer("monkey");
+        var tentacle = CreatureRenderer.layer("tentacle");
+        EntityModelLayerRegistry.registerModelLayer(tentacle, WildlifeModels::tentacle);
+        EntityRendererRegistry.register(com.cursedtides.sea.Leviathan.TENTACLE, ctx -> new CreatureRenderer<>(ctx, tentacle,
+                WildlifeModels.TENTACLE_PARTS, 1.2f, 2.2f, e -> "tentacle"));
         EntityModelLayerRegistry.registerModelLayer(croc, WildlifeModels::crocodile);
         EntityModelLayerRegistry.registerModelLayer(shark, WildlifeModels::shark);
         EntityModelLayerRegistry.registerModelLayer(jaguar, WildlifeModels::jaguar);

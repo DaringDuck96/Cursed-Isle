@@ -210,8 +210,9 @@ public final class BelowDeck {
             case BRIGANTINE -> new String[]{"quarters", "crew", "galley", "hold"};
             case BRIG -> new String[]{"quarters", "crew", "galley", "brig", "hold"};
             case FRIGATE, GALLEON -> new String[]{"quarters", "chart", "crew", "galley", "brig", "hold"};
+            case SHIP_OF_THE_LINE -> new String[]{"quarters", "chart", "crew", "crew", "galley", "brig", "hold"};
         };
-        boolean gunDeck = cls == ShipClass.FRIGATE || cls == ShipClass.GALLEON || cls == ShipClass.BRIG;
+        boolean gunDeck = cls == ShipClass.FRIGATE || cls == ShipClass.GALLEON || cls == ShipClass.BRIG || cls == ShipClass.SHIP_OF_THE_LINE;
         int length = rooms.length * (ROOM + 1) + 1;
         int levels = gunDeck ? 2 : 1;
         int height = 5;

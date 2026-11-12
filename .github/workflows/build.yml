@@ -62,7 +62,7 @@ jobs:
           done
           # Generate every island so all the world-building code runs
           python3 .github/scripts/rcon.py smoketest "forceload add -34 -34 34 34" "forceload add 168 -92 292 32" "forceload add 30 200 110 280" "forceload add -274 86 -146 214" "forceload add -162 -302 -58 -198" "forceload add 384 124 476 216" "forceload add -380 -100 -260 20" "forceload add 360 -260 480 -140" "forceload add 108 -372 192 -288" "forceload add -116 364 -4 476" "forceload add -466 -326 -374 -234" "forceload add 254 354 346 446" "forceload add 536 -84 664 44" "forceload add 134 514 226 606" "forceload add -610 70 -510 170" "forceload add -8 -608 88 -512" "forceload add -288 -538 -212 -462" "forceload add -384 366 -276 474" "forceload add -90 -770 10 -670" "forceload add 720 290 800 370" "forceload add -668 -208 -572 -112" "forceload add -764 556 -636 684" "forceload add 416 636 544 764" "forceload add 838 -462 962 -338" "forceload add 762 -118 878 -2" "forceload add -64 1036 64 1164" "forceload add -534 796 -406 924" "forceload add -982 -762 -898 -678" "forceload add 1088 268 1192 372" "forceload add 688 -892 752 -828" > rcon.log 2>&1
-          python3 .github/scripts/rcon.py smoketest "forceload query" "time set midnight" "weather thunder" "list" >> rcon.log 2>&1
+          python3 .github/scripts/rcon.py smoketest "time set midnight" "weather thunder" "summon cursedtides:tentacle 0 64 60" "summon cursedtides:grenade 0 80 0" "summon cursedtides:story_npc 2 70 2" "list" >> rcon.log 2>&1
           sleep 90
           python3 .github/scripts/rcon.py smoketest "forceload remove all" "save-all" >> rcon.log 2>&1
           sleep 10
