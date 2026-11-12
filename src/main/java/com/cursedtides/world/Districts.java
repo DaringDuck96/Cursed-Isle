@@ -71,6 +71,7 @@ final class Districts {
                 }
             }
         }
+        com.cursedtides.CursedTides.LOGGER.info("Town of {}: {} new plots", is.name(), plot);
         // The roads themselves (after the plots are claimed, so a road never runs through a building)
         final List<int[]> cells = List.copyOf(roadCells);
         int minX = Integer.MAX_VALUE, minZ = Integer.MAX_VALUE, maxX = Integer.MIN_VALUE, maxZ = Integer.MIN_VALUE;
