@@ -63,6 +63,21 @@ public final class ModItems {
             new HeavyWeaponItem(ToolMaterials.IRON, true, new Item.Settings().rarity(Rarity.UNCOMMON)
                     .attributeModifiers(SwordItem.createAttributeModifiers(ToolMaterials.IRON, 8, -3.3f))));
 
+    public static final Item REPEATER_PISTOL = register("repeater_pistol",
+            new FlintlockPistolItem(new Item.Settings().maxCount(1).maxDamage(350).rarity(Rarity.RARE), FlintlockPistolItem.REPEATER));
+    public static final Item BAYONET_MUSKET = register("bayonet_musket",
+            new FlintlockPistolItem(new Item.Settings().maxCount(1).maxDamage(450).rarity(Rarity.RARE)
+                    .attributeModifiers(net.minecraft.component.type.AttributeModifiersComponent.builder()
+                            .add(net.minecraft.entity.attribute.EntityAttributes.GENERIC_ATTACK_DAMAGE,
+                                    new net.minecraft.entity.attribute.EntityAttributeModifier(com.cursedtides.CursedTides.id("bayonet_damage"), 6.0,
+                                            net.minecraft.entity.attribute.EntityAttributeModifier.Operation.ADD_VALUE),
+                                    net.minecraft.component.type.AttributeModifierSlot.MAINHAND)
+                            .add(net.minecraft.entity.attribute.EntityAttributes.GENERIC_ATTACK_SPEED,
+                                    new net.minecraft.entity.attribute.EntityAttributeModifier(com.cursedtides.CursedTides.id("bayonet_speed"), -2.9,
+                                            net.minecraft.entity.attribute.EntityAttributeModifier.Operation.ADD_VALUE),
+                                    net.minecraft.component.type.AttributeModifierSlot.MAINHAND)
+                            .build()), FlintlockPistolItem.BAYONET));
+
     public static final Item DOUBLE_BARREL_PISTOL = register("double_barrel_pistol",
             new FlintlockPistolItem(new Item.Settings().maxCount(1).maxDamage(300).rarity(Rarity.UNCOMMON), FlintlockPistolItem.DOUBLE_BARREL));
 
@@ -194,6 +209,8 @@ public final class ModItems {
                         entries.add(BROADSWORD);
                         entries.add(WAR_HAMMER);
                         entries.add(DOUBLE_BARREL_PISTOL);
+                        entries.add(REPEATER_PISTOL);
+                        entries.add(BAYONET_MUSKET);
                         entries.add(HAND_CANNON);
                         entries.add(WANTED_POSTER);
                         entries.add(MUSKET);

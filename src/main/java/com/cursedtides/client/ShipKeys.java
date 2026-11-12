@@ -89,11 +89,12 @@ public final class ShipKeys {
     private static void tick(MinecraftClient client) {
         boolean aboard = client.player != null && client.player.getVehicle() instanceof ShipEntity;
         send(SAILS_UP, ShipControlPayload.SAILS_UP, aboard);
-        send(SAILS_DOWN, ShipControlPayload.SAILS_DOWN, aboard);
-        send(FIRE_PORT, ShipControlPayload.FIRE_PORT, aboard);
-        send(FIRE_STARBOARD, ShipControlPayload.FIRE_STARBOARD, aboard);
+        boolean onFoot = client.player != null && !aboard && client.player.getVehicle() == null && client.currentScreen == null;
+        sendOrSkill(SAILS_DOWN, ShipControlPayload.SAILS_DOWN, aboard, onFoot, 3);
+        sendOrSkill(FIRE_PORT, ShipControlPayload.FIRE_PORT, aboard, onFoot, 0);
+        sendOrSkill(FIRE_STARBOARD, ShipControlPayload.FIRE_STARBOARD, aboard, onFoot, 1);
         send(OPEN_HOLD, ShipControlPayload.OPEN_HOLD, aboard);
-        send(CYCLE_AMMO, ShipControlPayload.CYCLE_AMMO, aboard);
+        sendOrSkill(CYCLE_AMMO, ShipControlPayload.CYCLE_AMMO, aboard, onFoot, 2);
         send(SWIVEL, ShipControlPayload.FIRE_SWIVEL, aboard);
         send(ANCHOR, ShipControlPayload.ANCHOR, aboard);
         boolean inWorld = client.player != null && client.currentScreen == null;
@@ -115,6 +116,14 @@ public final class ShipKeys {
                         : side < -0.1f ? ShipControlPayload.DODGE_RIGHT : ShipControlPayload.DODGE_BACK;
                 ClientPlayNetworking.send(new ShipControlPayload(action));
             }
+        }
+    }
+
+    /** Aboard, the ship keys work the ship; on foot, Z X C V fire the skills of the weapon in hand. */
+    private static void sendOrSkill(KeyBinding key, int action, boolean aboard, boolean onFoot, int slot) {
+        while (key.wasPressed()) {
+            if (aboard) ClientPlayNetworking.send(new ShipControlPayload(action));
+            else if (onFoot) ClientPlayNetworking.send(new com.cursedtides.combat.SkillBar.Use(slot));
         }
     }
 

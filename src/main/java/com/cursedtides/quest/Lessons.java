@@ -45,7 +45,7 @@ public final class Lessons {
     public enum Step {
         TALK("Talk to Keeper Wren by the lighthouse.", null, null),
         BLADE("Clear the crabs off Wren's beach with your cutlass (3).",
-                "Left-click to swing", "Swing again and again to chain a combo; the fourth blow is a finisher"),
+                "Left-click to swing, Z to Sweep", "Chain swings into a combo (the fourth is a finisher); Z X C V are your weapon skills"),
         GUARD("Cut down the cursed deckhand.",
                 "Sneak + right-click to parry, Left Alt to dodge-roll", "A parry turns a blow and staggers them; a roll slips everything"),
         PISTOL("Shoot the deckhands with your flintlock (3 hits).",
@@ -175,7 +175,8 @@ public final class Lessons {
             case DONE -> {
                 wren(p, "Ha! You'll make a captain yet.",
                         "Now: Saltmarrow lies east, a short sail. Open your chart (M) and you'll see it. Ask for Ysolde Vane, the harbormistress.",
-                        "And keep your journal (J) about you. When your skills grow, K lets you choose what you learn.");
+                        "And keep your journal (J) about you. When your skills grow, K lets you choose what you learn.",
+                        "One more thing: every port has a warp stone beside its gaol. Touch one, and it'll bring you back there from anywhere.");
                 ensure(p, ModItems.SEA_CHART, 1);
                 QuestData.give(p, new ItemStack(net.minecraft.item.Items.BREAD, 8));
                 QuestData.setStage(p, QuestData.FIND_YSOLDE);

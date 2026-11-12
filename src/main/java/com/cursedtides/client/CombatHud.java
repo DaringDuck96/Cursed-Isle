@@ -33,6 +33,8 @@ public final class CombatHud {
     private CombatHud() {}
 
     private static boolean active;
+    /** When we last hit or were hit (for the battle music). */
+    public static long lastFight;
     private static Levels.Hud hud = new Levels.Hud(1, 0, 1, 100, 100);
     private static int targetId = -1;
     private static long targetUntil;
@@ -40,6 +42,9 @@ public final class CombatHud {
     private record Floater(Vec3d pos, String text, int color, long born) {}
 
     private static final List<Floater> FLOATERS = new ArrayList<>();
+    private static com.cursedtides.combat.SkillBar.State skills = new com.cursedtides.combat.SkillBar.State(-1, 0, List.of(0, 0, 0, 0));
+    private static long skillsAt;
+    private static com.cursedtides.quest.Objectives.Target objective = new com.cursedtides.quest.Objectives.Target(false, 0, 0, "", List.of());
 
     /** Only once the server has told us it runs Cursed Tides (otherwise hearts stay). */
     public static boolean enabled() {
@@ -56,6 +61,7 @@ public final class CombatHud {
             if (mc.world == null) return;
             Entity e = mc.world.getEntityById(payload.entity());
             if (e == null) return;
+            lastFight = System.currentTimeMillis();
             if (payload.kind() != 2) {
                 targetId = e.getId();
                 targetUntil = System.currentTimeMillis() + 6000;
@@ -77,6 +83,10 @@ public final class CombatHud {
                 if (FLOATERS.size() > 60) FLOATERS.remove(0);
             }
         }));
+        ClientPlayNetworking.registerGlobalReceiver(com.cursedtides.combat.SkillBar.State.ID, (payload, context) ->
+                context.client().execute(() -> { skills = payload; skillsAt = System.currentTimeMillis(); }));
+        ClientPlayNetworking.registerGlobalReceiver(com.cursedtides.quest.Objectives.Target.ID, (payload, context) ->
+                context.client().execute(() -> objective = payload));
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
             active = false;
             synchronized (FLOATERS) { FLOATERS.clear(); }
@@ -131,6 +141,8 @@ public final class CombatHud {
                 ctx.drawCenteredTextWithShadow(font, line, sw / 2, sh - 54, 0xFFE8D9A8);
             }
         }
+        radar(ctx, mc, p, sw);
+        if (p.getVehicle() == null) skillBar(ctx, mc, sw, sh);
         // The foe you're fighting
         Entity target = mc.targetedEntity instanceof LivingEntity le && Levels.isFoeClient(le) ? le : null;
         if (target == null && targetId >= 0 && System.currentTimeMillis() < targetUntil && mc.world != null) {
@@ -150,6 +162,114 @@ public final class CombatHud {
         }
     }
 
+    // ------------------------------------------------------------------ skill bar
+
+    private static final String[] KEYS = {"Z", "X", "C", "V"};
+
+    /** Four skill slots to the right of the hotbar, for the weapon in hand. */
+    private static void skillBar(DrawContext ctx, MinecraftClient mc, int sw, int sh) {
+        if (skills.family() < 0) return;
+        com.cursedtides.combat.SkillBar.Family f = com.cursedtides.combat.SkillBar.Family.values()[skills.family()];
+        long since = System.currentTimeMillis() - skillsAt;
+        for (int i = 0; i < 4; i++) {
+            com.cursedtides.combat.SkillBar.Skill s = com.cursedtides.combat.SkillBar.Skill.of(f, i);
+            if (s == null) continue;
+            int x = sw / 2 + 98 + i * 22, y = sh - 22;
+            ctx.fill(x, y, x + 20, y + 20, 0xC0000000);
+            ctx.fill(x + 1, y + 1, x + 19, y + 19, 0xC03A2C1C);
+            ctx.drawItem(new net.minecraft.item.ItemStack(s.icon.get()), x + 2, y + 2);
+            boolean open = (skills.unlocked() & (1 << i)) != 0;
+            if (!open) {
+                ctx.fill(x + 1, y + 1, x + 19, y + 19, 0xB0000000);
+                small(ctx, mc.textRenderer, "Lv" + s.level, x + 10, y + 7, 0xFFAAAAAA, true);
+            } else {
+                double left = skills.cooldowns().get(i) * 50.0 - since;
+                if (left > 0) {
+                    int h = (int) Math.round(18 * Math.min(1, left / (s.cooldownTicks * 50.0)));
+                    ctx.fill(x + 1, y + 19 - h, x + 19, y + 19, 0xA0000000);
+                    small(ctx, mc.textRenderer, String.valueOf((int) Math.ceil(left / 1000)), x + 10, y + 7, 0xFFFFFFFF, true);
+                }
+            }
+            small(ctx, mc.textRenderer, KEYS[i], x + 3, y + 1, 0xFFFFD24A, true);
+        }
+    }
+
+    // ------------------------------------------------------------------ radar
+
+    private static final int RADAR_R = 46;
+    private static final double RADAR_RANGE = 112;
+
+    /** A north-up radar in the top-right corner: coast, foes, folk, ships, and where your story points. */
+    private static void radar(DrawContext ctx, MinecraftClient mc, PlayerEntity p, int sw) {
+        int cx = sw - RADAR_R - 8, cy = RADAR_R + 8, r = RADAR_R;
+        double scale = r / RADAR_RANGE;
+        for (int dy = -r - 2; dy <= r + 2; dy++) {
+            int hw = (int) Math.sqrt(Math.max(0, (r + 2) * (r + 2) - dy * dy));
+            ctx.fill(cx - hw, cy + dy, cx + hw + 1, cy + dy + 1, 0xFF2A1E10);
+        }
+        for (int dy = -r; dy <= r; dy++) {
+            int hw = (int) Math.sqrt(r * r - dy * dy);
+            ctx.fill(cx - hw, cy + dy, cx + hw + 1, cy + dy + 1, 0xE01C4A66);
+        }
+        // Land
+        for (com.cursedtides.world.Archipelago.Island is : com.cursedtides.world.Archipelago.ISLANDS) {
+            if (is.edgeDistance(p.getX(), p.getZ()) > RADAR_RANGE * 1.5) continue;
+            landDisc(ctx, cx, cy, r, (is.cx() - p.getX()) * scale, (is.cz() - p.getZ()) * scale, is.radius() * 0.92 * scale);
+            if (is.hasLobe()) landDisc(ctx, cx, cy, r, (is.lobeX() - p.getX()) * scale, (is.lobeZ() - p.getZ()) * scale, is.lobeR() * 0.92 * scale);
+        }
+        // Things nearby
+        if (mc.world != null) {
+            for (Entity e : mc.world.getEntities()) {
+                if (e == p) continue;
+                double dx = (e.getX() - p.getX()) * scale, dz = (e.getZ() - p.getZ()) * scale;
+                if (dx * dx + dz * dz > (r - 2) * (r - 2)) continue;
+                int color;
+                int size = 1;
+                if (e instanceof com.cursedtides.entity.ShipEntity) { color = 0xFF7FB2FF; size = 2; }
+                else if (e instanceof PlayerEntity) color = 0xFFFFFFFF;
+                else if (e instanceof com.cursedtides.entity.StoryNpcEntity) color = objective.marked().contains(e.getId()) ? 0xFFFFD24A : 0xFF6BE36B;
+                else if (e instanceof LivingEntity le && Levels.isFoeClient(le)) color = 0xFFE04040;
+                else continue;
+                int ex = cx + (int) dx, ey = cy + (int) dz;
+                ctx.fill(ex - size, ey - size, ex + size + 1, ey + size + 1, color);
+            }
+        }
+        // The story's next step
+        if (objective.has()) {
+            double dx = (objective.x() - p.getX()) * scale, dz = (objective.z() - p.getZ()) * scale;
+            double d = Math.sqrt(dx * dx + dz * dz);
+            if (d > r - 4) { dx = dx / d * (r - 4); dz = dz / d * (r - 4); }
+            int ox = cx + (int) dx, oy = cy + (int) dz;
+            ctx.fill(ox - 3, oy - 3, ox + 4, oy + 4, 0xFF000000);
+            ctx.fill(ox - 2, oy - 2, ox + 3, oy + 3, 0xFFFFD24A);
+            double blocks = Math.hypot(objective.x() - p.getX(), objective.z() - p.getZ());
+            String label = objective.label() + "  " + (blocks > 999 ? String.format("%.1fk", blocks / 1000) : String.valueOf((int) blocks));
+            small(ctx, mc.textRenderer, label, cx, cy + r + 6, 0xFFFFE8A0, true);
+        }
+        // You, and which way you face
+        double yaw = Math.toRadians(p.getYaw());
+        double fx = -Math.sin(yaw), fz = Math.cos(yaw);
+        for (int k = 0; k <= 5; k++) {
+            int px = cx + (int) Math.round(fx * k), py = cy + (int) Math.round(fz * k);
+            ctx.fill(px, py, px + 1, py + 1, 0xFFFFFFFF);
+        }
+        ctx.fill(cx - 1, cy - 1, cx + 2, cy + 2, 0xFFFFFFFF);
+        ctx.drawCenteredTextWithShadow(mc.textRenderer, "N", cx, cy - r - 1, 0xFFE8D9A8);
+    }
+
+    private static void landDisc(DrawContext ctx, int cx, int cy, int r, double ox, double oz, double rr) {
+        if (rr < 0.5) return;
+        for (int dy = (int) Math.floor(oz - rr); dy <= (int) Math.ceil(oz + rr); dy++) {
+            if (dy < -r || dy > r) continue;
+            double inner = rr * rr - (dy - oz) * (dy - oz);
+            if (inner < 0) continue;
+            double half = Math.sqrt(inner);
+            int hw = (int) Math.sqrt(r * r - dy * dy);
+            int a = (int) Math.max(-hw, Math.round(ox - half)), b = (int) Math.min(hw, Math.round(ox + half));
+            if (a <= b) ctx.fill(cx + a, cy + dy, cx + b + 1, cy + dy + 1, 0xFFC9B27A);
+        }
+    }
+
     private static void small(DrawContext ctx, TextRenderer font, String s, float cx, float y, int color, boolean shadow) {
         MatrixStack m = ctx.getMatrices();
         m.push();
@@ -162,8 +282,20 @@ public final class CombatHud {
     // ------------------------------------------------------------------ world
 
     private static void renderWorld(WorldRenderContext context) {
-        if (FLOATERS.isEmpty()) return;
         MinecraftClient mc = MinecraftClient.getInstance();
+        if (FLOATERS.isEmpty() && objective.marked().isEmpty()) return;
+        if (mc.world != null) {
+            synchronized (FLOATERS) {
+                for (int id : objective.marked()) {
+                    Entity e = mc.world.getEntityById(id);
+                    if (e == null) continue;
+                    double bob = Math.sin(System.currentTimeMillis() / 300.0) * 0.08;
+                    // A marker shows for one frame (born now), so it never floats away or fades
+                    FLOATERS.add(new Floater(e.getLerpedPos(context.tickCounter().getTickDelta(false)).add(0, e.getHeight() + 0.75 + bob, 0),
+                            "!", 0xFFD24A, System.currentTimeMillis() + 100000));
+                }
+            }
+        }
         Camera camera = context.camera();
         Vec3d cam = camera.getPos();
         MatrixStack matrices = context.matrixStack() != null ? context.matrixStack() : new MatrixStack();
@@ -174,12 +306,14 @@ public final class CombatHud {
             Iterator<Floater> it = FLOATERS.iterator();
             while (it.hasNext()) {
                 Floater f = it.next();
-                float age = (now - f.born()) / 1000f;
-                if (age > 1.2f) { it.remove(); continue; }
+                boolean marker = f.born() > now;
+                float age = marker ? 0.6f : (now - f.born()) / 1000f;
+                if (marker) it.remove();
+                else if (age > 1.2f) { it.remove(); continue; }
                 matrices.push();
-                matrices.translate(f.pos().x - cam.x, f.pos().y - cam.y + age * 0.9, f.pos().z - cam.z);
+                matrices.translate(f.pos().x - cam.x, f.pos().y - cam.y + (marker ? 0 : age * 0.9), f.pos().z - cam.z);
                 matrices.multiply(camera.getRotation());
-                float s = 0.03f * (age < 0.15f ? 1.4f - age * 2.6f : 1f);
+                float s = marker ? 0.06f : 0.03f * (age < 0.15f ? 1.4f - age * 2.6f : 1f);
                 matrices.scale(s, -s, s);
                 int alpha = (int) (255 * Math.max(0.1f, Math.min(1f, (1.2f - age) / 0.5f)));
                 Matrix4f m = matrices.peek().getPositionMatrix();

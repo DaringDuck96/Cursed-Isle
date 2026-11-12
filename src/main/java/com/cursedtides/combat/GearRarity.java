@@ -39,7 +39,7 @@ public final class GearRarity {
 
     private static final List<Item> MELEE = List.of(ModItems.CUTLASS, ModItems.SABER, ModItems.RAPIER, ModItems.DAGGER,
             ModItems.DUAL_BLADES, ModItems.BROADSWORD, ModItems.WAR_HAMMER, ModItems.BOARDING_AXE);
-    private static final List<Item> GUNS = List.of(ModItems.FLINTLOCK_PISTOL, ModItems.DOUBLE_BARREL_PISTOL, ModItems.MUSKET,
+    private static final List<Item> GUNS = List.of(ModItems.FLINTLOCK_PISTOL, ModItems.DOUBLE_BARREL_PISTOL, ModItems.MUSKET, ModItems.REPEATER_PISTOL, ModItems.BAYONET_MUSKET,
             ModItems.BLUNDERBUSS, ModItems.HAND_CANNON);
 
     public static ItemStack legendaryOf(ServerWorld world, net.minecraft.item.Item item, Random r) {

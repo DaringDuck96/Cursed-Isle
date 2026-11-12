@@ -23,9 +23,104 @@ import net.minecraft.world.WorldAccess;
  * makes skeleton AI switch to melee), burns in daylight like any undead.
  */
 public class CursedPirateEntity extends SkeletonEntity {
+    /** What the sea made of them, by the island they rose on. */
+    public enum Kind { DECKHAND("Cursed"), BONE("Bone"), BARNACLE("Barnacle"), EMBER("Ember");
+        public final String word; Kind(String word) { this.word = word; } }
+    /** Their place in the dead crew. */
+    public enum Rank { GRUNT("Grunt"), BRUTE("Brute"), CAPTAIN("Captain");
+        public final String word; Rank(String word) { this.word = word; } }
+
+    private static final net.minecraft.entity.data.TrackedData<Integer> VARIANT =
+            net.minecraft.entity.data.DataTracker.registerData(CursedPirateEntity.class, net.minecraft.entity.data.TrackedDataHandlerRegistry.INTEGER);
 
     public CursedPirateEntity(EntityType<? extends SkeletonEntity> type, World world) {
         super(type, world);
+    }
+
+    @Override
+    protected void initDataTracker(net.minecraft.entity.data.DataTracker.Builder builder) {
+        super.initDataTracker(builder);
+        builder.add(VARIANT, 0);
+    }
+
+    public Kind kind() { return Kind.values()[Math.floorMod(this.dataTracker.get(VARIANT) & 0xF, Kind.values().length)]; }
+    public Rank rank() { return Rank.values()[Math.floorMod(this.dataTracker.get(VARIANT) >> 4, Rank.values().length)]; }
+
+    /** "Barnacle Brute", "Ember Captain", "Cursed Grunt". */
+    public net.minecraft.text.Text title() {
+        return net.minecraft.text.Text.literal(kind().word + " " + rank().word);
+    }
+
+    public void setVariant(Kind kind, Rank rank) {
+        this.dataTracker.set(VARIANT, kind.ordinal() | (rank.ordinal() << 4));
+        var scale = this.getAttributeInstance(EntityAttributes.GENERIC_SCALE);
+        var hp = this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
+        var dmg = this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE);
+        var speed = this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+        if (rank == Rank.BRUTE) {
+            if (scale != null) scale.setBaseValue(1.3);
+            if (hp != null) hp.setBaseValue(42);
+            if (dmg != null) dmg.setBaseValue(5);
+            if (speed != null) speed.setBaseValue(0.25);
+            this.equipStack(EquipmentSlot.MAINHAND, new ItemStack(this.random.nextBoolean() ? ModItems.BOARDING_AXE : ModItems.BROADSWORD));
+        } else if (rank == Rank.CAPTAIN) {
+            if (scale != null) scale.setBaseValue(1.1);
+            if (hp != null) hp.setBaseValue(36);
+            if (dmg != null) dmg.setBaseValue(4);
+            ItemStack hat = new ItemStack(net.minecraft.item.Items.LEATHER_HELMET);
+            hat.set(net.minecraft.component.DataComponentTypes.DYED_COLOR, new net.minecraft.component.type.DyedColorComponent(0x2A2018, false));
+            ItemStack coat = new ItemStack(net.minecraft.item.Items.LEATHER_CHESTPLATE);
+            coat.set(net.minecraft.component.DataComponentTypes.DYED_COLOR, new net.minecraft.component.type.DyedColorComponent(0x7A1E1E, false));
+            this.equipStack(EquipmentSlot.HEAD, hat);
+            this.equipStack(EquipmentSlot.CHEST, coat);
+            this.setEquipmentDropChance(EquipmentSlot.HEAD, 0f);
+            this.setEquipmentDropChance(EquipmentSlot.CHEST, 0f);
+        }
+        this.setEquipmentDropChance(EquipmentSlot.MAINHAND, 0.03f);
+        this.setHealth(this.getMaxHealth());
+    }
+
+    @Override
+    public net.minecraft.entity.EntityData initialize(net.minecraft.world.ServerWorldAccess world, LocalDifficulty difficulty,
+                                                     SpawnReason reason, net.minecraft.entity.EntityData data) {
+        net.minecraft.entity.EntityData out = super.initialize(world, difficulty, reason, data);
+        // The island decides what they're made of; the dice decide their rank
+        com.cursedtides.world.Archipelago.Column col = com.cursedtides.world.Archipelago.column(this.getBlockX(), this.getBlockZ());
+        Kind kind = Kind.DECKHAND;
+        if (col.island() != null) {
+            kind = switch (col.island().style()) {
+                case CURSED, ANCIENT, CLIFFS, CRAGS -> Kind.BONE;
+                case REEF, KEYS, ATOLL, BAYOU, SANDY -> Kind.BARNACLE;
+                case VOLCANIC, DESERT -> Kind.EMBER;
+                default -> Kind.DECKHAND;
+            };
+        }
+        float roll = this.random.nextFloat();
+        setVariant(kind, roll < 0.07f ? Rank.CAPTAIN : roll < 0.25f ? Rank.BRUTE : Rank.GRUNT);
+        return out;
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        // A captain rallies the dead around him
+        if (!this.getWorld().isClient && rank() == Rank.CAPTAIN && this.age % 40 == 0 && this.getTarget() != null) {
+            for (CursedPirateEntity mate : this.getWorld().getEntitiesByClass(CursedPirateEntity.class, this.getBoundingBox().expand(8), m -> m != this)) {
+                mate.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(net.minecraft.entity.effect.StatusEffects.STRENGTH, 60, 0));
+            }
+        }
+    }
+
+    @Override
+    public void writeCustomDataToNbt(net.minecraft.nbt.NbtCompound nbt) {
+        super.writeCustomDataToNbt(nbt);
+        nbt.putInt("Variant", this.dataTracker.get(VARIANT));
+    }
+
+    @Override
+    public void readCustomDataFromNbt(net.minecraft.nbt.NbtCompound nbt) {
+        super.readCustomDataFromNbt(nbt);
+        this.dataTracker.set(VARIANT, nbt.getInt("Variant"));
     }
 
     public static DefaultAttributeContainer.Builder createPirateAttributes() {

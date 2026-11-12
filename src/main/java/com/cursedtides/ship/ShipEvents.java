@@ -239,7 +239,11 @@ public final class ShipEvents {
             case PIRATE -> { name = PIRATE_NAMES[world.random.nextInt(PIRATE_NAMES.length)]; color = Formatting.RED; }
             default -> { name = GHOST_NAMES[world.random.nextInt(GHOST_NAMES.length)]; color = Formatting.DARK_AQUA; }
         }
-        ship.setCustomName(Text.literal(name).formatted(color));
+        // The sea has levels as the islands do: the further out, the tougher the crews
+        int[] band = com.cursedtides.combat.Levels.bandAt(net.minecraft.util.math.BlockPos.ofFloored(x, y, z));
+        int level = band[0] + world.random.nextInt(band[1] - band[0] + 1);
+        ship.addCommandTag(com.cursedtides.combat.Levels.TAG_PREFIX + level);
+        ship.setCustomName(Text.literal(name).formatted(color).append(Text.literal(" [Lv " + level + "]").formatted(Formatting.GRAY)));
         float yaw = (float) Math.toDegrees(Math.atan2(-(facing.getX() - x), facing.getZ() - z));
         if ((faction == ShipFaction.NAVY && !FactionData.isWanted(facing)) || faction == ShipFaction.MERCHANT) {
             yaw += 90.0f; // sail past, not at you

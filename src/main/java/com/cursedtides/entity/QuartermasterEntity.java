@@ -136,6 +136,8 @@ public class QuartermasterEntity extends WanderingTraderEntity {
                 offers.add(sell(6, com.cursedtides.combat.Grenades.BLAST_CHARGE, 2));
                 offers.add(sell(45, ModItems.HAND_CANNON, 1));
                 offers.add(sell(28, ModItems.MUSKET, 1));
+                offers.add(sell(44, ModItems.REPEATER_PISTOL, 1));
+                offers.add(sell(40, ModItems.BAYONET_MUSKET, 1));
                 offers.add(sell(34, ModItems.BLUNDERBUSS, 1));
                 offers.add(sell(3, ModItems.PISTOL_SHOT, 8));
                 offers.add(sell(4, Items.GUNPOWDER, 4));

@@ -137,5 +137,50 @@
    "cursedtides:sfx/festival"
   ],
   "subtitle": "subtitles.cursedtides.festival"
+ },
+ "music.under_the_canopy": {
+  "category": "music",
+  "sounds": [
+   {
+    "name": "cursedtides:music/under_the_canopy",
+    "stream": true
+   }
+  ]
+ },
+ "music.hollow_bones": {
+  "category": "music",
+  "sounds": [
+   {
+    "name": "cursedtides:music/hollow_bones",
+    "stream": true
+   }
+  ]
+ },
+ "music.full_sail": {
+  "category": "music",
+  "sounds": [
+   {
+    "name": "cursedtides:music/full_sail",
+    "stream": true
+   }
+  ]
+ },
+ "music.steel_and_powder": {
+  "category": "music",
+  "sounds": [
+   {
+    "name": "cursedtides:music/steel_and_powder",
+    "stream": true
+   }
+  ]
+ },
+ "music.admiralty_march": {
+  "category": "music",
+  "sounds": [
+   {
+    "name": "cursedtides:music/admiralty_march",
+    "stream": true
+   }
+  ]
  }
 }

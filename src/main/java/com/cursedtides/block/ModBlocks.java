@@ -51,6 +51,10 @@ public final class ModBlocks {
             new CaveRopeBlock(AbstractBlock.Settings.create().mapColor(MapColor.BROWN).strength(-1.0f, 3600000.0f)
                     .dropsNothing().noCollision().nonOpaque().sounds(BlockSoundGroup.WOOL).pistonBehavior(PistonBehavior.BLOCK)));
 
+    public static final Block WARP_TOTEM = Registry.register(Registries.BLOCK, CursedTides.id("warp_totem"),
+            new WarpTotemBlock(AbstractBlock.Settings.create().mapColor(MapColor.STONE_GRAY).strength(-1.0f, 3600000.0f)
+                    .dropsNothing().luminance(s -> 10).sounds(BlockSoundGroup.LODESTONE).pistonBehavior(PistonBehavior.BLOCK)));
+
     public static void register() {
         PuzzleBlocks.register();
         CursedTides.LOGGER.debug("Registered Cursed Tides blocks");

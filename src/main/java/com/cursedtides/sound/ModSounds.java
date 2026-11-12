@@ -42,6 +42,11 @@ public final class ModSounds {
     public static final RegistryEntry.Reference<SoundEvent> SALTMARROW_HORNPIPE = reg("music.saltmarrow_hornpipe");
     public static final RegistryEntry.Reference<SoundEvent> NINTH_WAVE = reg("music.ninth_wave");
     public static final RegistryEntry.Reference<SoundEvent> MUSIC_SEA = reg("music.sea");
+    public static final RegistryEntry.Reference<SoundEvent> UNDER_THE_CANOPY = reg("music.under_the_canopy");
+    public static final RegistryEntry.Reference<SoundEvent> HOLLOW_BONES = reg("music.hollow_bones");
+    public static final RegistryEntry.Reference<SoundEvent> FULL_SAIL = reg("music.full_sail");
+    public static final RegistryEntry.Reference<SoundEvent> STEEL_AND_POWDER = reg("music.steel_and_powder");
+    public static final RegistryEntry.Reference<SoundEvent> ADMIRALTY_MARCH = reg("music.admiralty_march");
 
     public static final RegistryEntry.Reference<SoundEvent> SWORD_CLASH = reg("sfx.sword_clash");
     public static final RegistryEntry.Reference<SoundEvent> CRITICAL = reg("sfx.critical");

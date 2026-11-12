@@ -170,6 +170,12 @@ public final class PirateEvents {
             if (held.getItem() instanceof com.cursedtides.item.FlintlockPistolItem) {
                 return Weapon.PISTOL;
             }
+            if (held.isOf(ModItems.HEX_STAFF)) {
+                return Weapon.HEX;
+            }
+            if (held.getItem() instanceof net.minecraft.item.SwordItem || held.getItem() instanceof net.minecraft.item.AxeItem) {
+                return Weapon.CUTLASS;
+            }
         }
         return null;
     }

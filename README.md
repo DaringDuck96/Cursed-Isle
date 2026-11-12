@@ -1,4 +1,4 @@
-# Cursed Tides (Fabric 1.21.1), version 0.20.0
+# Cursed Tides (Fabric 1.21.1), version 0.21.0
 
 An original pirate adventure built around four pillars: **sailing, ship ownership,
 island exploration and character progression**. Everything in it (islands, characters,
@@ -11,7 +11,7 @@ You need **Java 21** (the JDK, e.g. from adoptium.net).
 1. Unzip this folder.
 2. Open a terminal in it and run `gradlew.bat build` (Windows) or `./gradlew build` (Mac/Linux).
 3. The first build downloads Minecraft and Fabric (a few minutes).
-4. Your mod is at `build/libs/cursed-tides-0.20.0.jar` (ignore the `-sources` jar).
+4. Your mod is at `build/libs/cursed-tides-0.21.0.jar` (ignore the `-sources` jar).
 
 Put that jar plus **Fabric API** for 1.21.1 into `.minecraft/mods`. To test without installing: `./gradlew runClient`.
 
@@ -152,6 +152,40 @@ and leather. The captain's attire comes with Brethren rank 300; the Tidewatch un
 | Boarding Axe | 2 iron, an iron block and 2 sticks |
 | Throwing Knives (x4) | Shapeless: iron ingot and 2 iron nuggets |
 | Sailor's garb | Wool (bandana, shirt, breeches with a leather belt) and leather (boots) in armour shapes |
+
+### New in 0.21: the rest of the old games' feel
+
+- **Weapon skills:** whatever's in your hand gives you four skills on Z, X, C and V (on foot; aboard ship those
+  keys still work the guns). They sit to the right of your hotbar with their cooldowns, and unlock as you master
+  that weapon (levels 0, 3, 7 and 12).
+  - Blades: Sweep, Lunge, Hamstring, Whirlwind.
+  - Firearms: Take Aim, Scattershot, Leg Shot, Volley (each uses pistol shot).
+  - Hex staff: Hex Blast, Spirit Ward, Withering Curse, Soul Siphon (each costs voodoo).
+  - Voodoo doll: Poke, Mend, Swarm, Shackles.
+- **Warp stones:** every port has a warp stone beside its gaol. Touch one to attune to it; touch any stone or type
+  `/warp` to get a clickable list and jump to any port you're attuned to (on foot, out of combat). `/warp ship`
+  puts you back aboard the last ship you captained.
+- **Radar:** a north-up radar in the top-right corner shows the coast, foes (red), townsfolk (green), other
+  pirates and ships, and a gold marker for your next story goal (on the rim when it's further off), with its name
+  and distance. Whoever you need to talk to next has a gold "!" over their head.
+- **Named wilds:** every hinterland is split into three named areas (for example "the Weeping Barrows" or "Gull's
+  Heights"), each a level or more tougher than the last. A title shows their name and level range as you enter.
+  Each has a landmark (a ruined tower, standing stones, an abandoned camp or a shrine, some with treasure) and a
+  named elite who comes back five minutes after you kill them.
+- **Undead ranks:** cursed pirates now come as Grunts, Brutes (bigger, slower, axe or broadsword) and Captains
+  (coat and hat; they rally the dead around them). They're Bone on the cursed isles, Barnacle by the reefs and
+  swamps, and Ember on the volcanoes, so you get names like "Barnacle Brute [Lv 9]". The wilds' camps are mostly
+  the cursed now.
+- **Loot containers:** foes with a level leave a Loot Pouch, a Sea Chest or (if they were tough) a Skull Chest
+  instead of bones and rotten flesh. Use it to open a loot window: coin, shot, firebombs, curios, trinkets and
+  gear, better the higher the level. Whatever you don't take goes into your pack when you close it.
+- **Leveled ships:** ships you meet at sea carry the level of the waters they sail (`[Lv 23]` after the name).
+  Tougher crews take less from your guns and hit harder with theirs.
+- **Music by place:** five new original pieces. "The Admiralty March" plays in the navy towns, "Under the Canopy"
+  in the jungles and wilds, "Hollow Bones" on the cursed isles, "Full Sail" at sea and "Steel and Powder" the moment
+  a fight starts. The older shanties play in the free ports, the caverns and the deep.
+- **New guns:** the Repeater Pistol (four quick shots, then a slow reload) and the Bayonet Musket (a hard-hitting
+  long gun that's also good up close). Gunsmiths sell both, and they turn up as loot.
 
 ### New in 0.20: the old pirate games' scale (start a new world)
 

@@ -302,5 +302,13 @@
   "item.cursedtides.ship_of_the_line_deed": "Ship of the Line Deed",
   "entity.cursedtides.tentacle": "Tentacle",
   "entity.cursedtides.grenade": "Grenade",
-  "block.cursedtides.cave_rope": "Cave Rope"
+  "block.cursedtides.cave_rope": "Cave Rope",
+  "block.cursedtides.warp_totem": "Warp Stone",
+  "item.cursedtides.loot_pouch": "Loot Pouch",
+  "item.cursedtides.sea_chest": "Sea Chest",
+  "item.cursedtides.skull_chest": "Skull Chest",
+  "item.cursedtides.repeater_pistol": "Repeater Pistol",
+  "item.cursedtides.bayonet_musket": "Bayonet Musket",
+  "tooltip.cursedtides.repeater": "Four quick shots from turning barrels, then a slow reload",
+  "tooltip.cursedtides.bayonet_musket": "A long, hard-hitting gun with a blade on the end for close work"
 }

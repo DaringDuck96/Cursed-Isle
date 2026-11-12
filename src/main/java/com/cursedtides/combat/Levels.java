@@ -117,7 +117,10 @@ public final class Levels {
             int[] b = band(com.cursedtides.dungeon.Caverns.SITES.get(cv.index).island());
             return new int[]{Math.min(50, b[0] + 3), Math.min(50, b[1] + 3)};
         }
-        return band(nearest(pos.getX(), pos.getZ()));
+        int[] b = band(nearest(pos.getX(), pos.getZ()));
+        com.cursedtides.world.Areas.Area area = com.cursedtides.world.Areas.at(pos.getX(), pos.getZ());
+        if (area != null) return new int[]{Math.min(50, b[0] + area.bonus()), Math.min(50, b[1] + area.bonus())};
+        return b;
     }
 
     // ------------------------------------------------------------------ enemies
@@ -157,7 +160,8 @@ public final class Levels {
         level = Math.max(1, Math.min(50, level));
         boolean named = mob.hasCustomName();
         mob.addCommandTag(TAG_PREFIX + level);
-        Text base = named ? mob.getCustomName() : mob.getType().getName();
+        Text base = named ? mob.getCustomName()
+                : mob instanceof com.cursedtides.entity.CursedPirateEntity cp ? cp.title() : mob.getType().getName();
         MutableText name = base.copy().append(Text.literal(" [Lv " + level + "]").formatted(color(level)));
         mob.setCustomName(name);
         if (!named) {

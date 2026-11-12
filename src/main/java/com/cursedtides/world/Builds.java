@@ -161,6 +161,7 @@ public final class Builds {
         // ===== Grand caverns: last, so their mouths keep clear of everything above =====
         // ===== The towns grow out to full size (see Districts) =====
         Districts.addAll(ALL);
+        Areas.addBuilds(ALL);
 
         com.cursedtides.dungeon.Caverns.addBuilds(ALL);
         com.cursedtides.living.Gaols.addBuilds(ALL);

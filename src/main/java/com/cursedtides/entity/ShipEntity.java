@@ -871,6 +871,12 @@ public class ShipEntity extends BoatEntity {
             amount *= 0.5f;
         }
         Entity attacker = source.getAttacker();
+        // Leveled crews: a tough ship shrugs off more, and a tough ship's guns bite harder
+        int myLevel = com.cursedtides.combat.Levels.levelOf(this);
+        if (myLevel > 0) amount /= (float) (1 + 0.05 * (myLevel - 1));
+        else if (attacker != null && com.cursedtides.combat.Levels.levelOf(attacker) > 0) {
+            amount *= (float) com.cursedtides.combat.Levels.damageFactor(com.cursedtides.combat.Levels.levelOf(attacker));
+        }
         if (attacker == this || (attacker != null && attacker.getVehicle() == this)) {
             return false; // your own crew and your own guns don't hole your hull
         }

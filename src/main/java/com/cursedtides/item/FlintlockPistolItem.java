@@ -49,6 +49,11 @@ public class FlintlockPistolItem extends Item {
     /** A stubby cannon fired from the hip: the shot bursts where it lands. */
     public static final Stats HAND_CANNON = new Stats(24.0, 14.0f, 80, 1, 0.0f, "tooltip.cursedtides.hand_cannon", 1, true);
 
+    /** Four turning barrels: four quick shots, then a slow reload. */
+    public static final Stats REPEATER = new Stats(26.0, 6.5f, 70, 1, 1.0f, "tooltip.cursedtides.repeater", 4, false);
+    /** A long gun with a blade on the end, for when they get close. */
+    public static final Stats BAYONET = new Stats(56.0, 13.0f, 60, 1, 0.0f, "tooltip.cursedtides.bayonet_musket");
+
     private final Stats stats;
 
     public FlintlockPistolItem(Settings settings) {

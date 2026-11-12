@@ -48,7 +48,7 @@ public final class Gaols {
             int[] at = com.cursedtides.dungeon.Caverns.findMouth(is);
             Gaol g = new Gaol(is, at[0], Builds.groundY(at[0], at[1]), at[1]);
             list.add(g);
-            out.add(new Builds.Build(at[0] - 5, at[1] - 4, at[0] + 5, at[1] + 4, true, c -> place(c, g)));
+            out.add(new Builds.Build(at[0] - 5, at[1] - 4, at[0] + 9, at[1] + 4, true, c -> { place(c, g); stone(c, g); }));
         }
         built = List.copyOf(list);
     }
@@ -91,6 +91,20 @@ public final class Gaols {
         c.set(x + 3, y, z - 2, s(Blocks.BARREL));
         c.set(x + 2, y, z - 2, s(Blocks.SPRUCE_STAIRS));
         c.set(x + 3, y + 3, z + 2, s(Blocks.LANTERN).with(LanternBlock.HANGING, true));
+    }
+
+    /** The port's warp stone on a little paved stand beside the gaol door, with two lamps. */
+    private static void stone(Canvas c, Gaol g) {
+        net.minecraft.util.math.BlockPos p = Totems.stone(g);
+        int x = p.getX(), y = p.getY(), z = p.getZ();
+        c.foundation(x - 1, z - 1, x + 1, z + 1, y, s(Blocks.COBBLESTONE));
+        c.fill(x - 1, y - 1, z - 1, x + 1, y - 1, z + 1, s(Blocks.CHISELED_STONE_BRICKS));
+        c.set(x, y, z, com.cursedtides.block.ModBlocks.WARP_TOTEM.getDefaultState());
+        c.set(x, y + 1, z, s(Blocks.AMETHYST_CLUSTER));
+        for (int dx : new int[]{-1, 1}) {
+            c.set(x + dx, y, z - 1, s(Blocks.SPRUCE_FENCE));
+            c.set(x + dx, y + 1, z - 1, s(Blocks.SOUL_LANTERN));
+        }
     }
 
     public static Gaol nearest(double x, double z) {

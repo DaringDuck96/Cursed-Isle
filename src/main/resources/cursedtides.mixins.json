@@ -5,12 +5,14 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "LivingEntityMixin",
-    "MobEntityMixin"
+    "MobEntityMixin",
+    "LivingEntityLootMixin"
   ],
   "client": [
     "AbstractClientPlayerMixin",
     "BackgroundRendererMixin",
-    "InGameHudMixin"
+    "InGameHudMixin",
+    "MinecraftClientMusicMixin"
   ],
   "injectors": {
     "defaultRequire": 1
