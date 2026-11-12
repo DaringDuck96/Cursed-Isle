@@ -80,12 +80,15 @@ public final class Camps {
         List<Camp> out = new ArrayList<>();
         for (Archipelago.Island is : Archipelago.ISLANDS) {
             int[] band = Levels.band(is);
-            int want = Math.max(3, is.radius() / 7);
+            double area = Math.PI * is.radius() * is.radius() + (is.hasLobe() ? Math.PI * is.lobeR() * is.lobeR() : 0);
+            int want = Math.max(3, (int) Math.round(area / 2200));
             int made = 0;
             for (int k = 0; k < want * 8 && made < want; k++) {
                 double a = Noise.rand(is.seed(), k, 61) * Math.PI * 2;
-                double r = is.radius() * (0.2 + Noise.rand(is.seed(), k, 62) * 0.65);
-                int x = is.cx() + (int) (Math.cos(a) * r), z = is.cz() + (int) (Math.sin(a) * r);
+                boolean wilds = is.hasLobe() && Noise.rand(is.seed(), k, 66) < 0.85;
+                int ccx = wilds ? is.lobeX() : is.cx(), ccz = wilds ? is.lobeZ() : is.cz();
+                double r = (wilds ? is.lobeR() : is.radius()) * (0.1 + Noise.rand(is.seed(), k, 62) * 0.75);
+                int x = ccx + (int) (Math.cos(a) * r), z = ccz + (int) (Math.sin(a) * r);
                 if (!wild(x, z)) continue;
                 boolean crowded = false;
                 for (Camp c : out) if ((c.x - x) * (c.x - x) + (c.z - z) * (c.z - z) < 22 * 22) crowded = true;

@@ -104,7 +104,7 @@ public final class Levels {
         Archipelago.Island best = Archipelago.DRIFTWOOD_ISLAND;
         double bd = Double.MAX_VALUE;
         for (Archipelago.Island is : Archipelago.ISLANDS) {
-            double d = Math.hypot(x - is.cx(), z - is.cz()) - is.radius();
+            double d = is.edgeDistance(x, z);
             if (d < bd) { bd = d; best = is; }
         }
         return best;

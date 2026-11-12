@@ -411,11 +411,13 @@ public class ShipEntity extends BoatEntity {
         long time = world.getTime();
         double weather = world.isThundering() ? 1.35 : world.isRaining() ? 1.1 : 1.0;
         double torn = isTorn() ? 0.4 : 1.0;
-        double accel = 0.03 * sailAmount * Wind.efficiency(this.getYaw(), time) * Wind.strength(time)
+        // Water drag takes a tenth of her way each tick, so she settles at about nine times this push: for a sloop
+        // under full sail in a fair wind, some 25-30 blocks a second, as fast as the old pirate games' ships
+        double accel = 0.2 * sailAmount * Wind.efficiency(this.getYaw(), time) * Wind.strength(time)
                 * speedFactor() * weather * torn;
         Vec3d forward = Vec3d.fromPolar(0.0f, this.getYaw());
         Vec3d v = this.getVelocity().add(forward.multiply(accel));
-        double max = 0.55 * speedFactor() * torn;
+        double max = 1.2 * speedFactor() * torn;
         double horizontal = Math.hypot(v.x, v.z);
         if (horizontal > max) {
             v = new Vec3d(v.x / horizontal * max, v.y, v.z / horizontal * max);

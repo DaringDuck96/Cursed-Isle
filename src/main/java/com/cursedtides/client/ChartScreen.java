@@ -26,10 +26,18 @@ public class ChartScreen extends Screen {
         this.chart = chart;
         minX = Integer.MAX_VALUE; minZ = Integer.MAX_VALUE; maxX = Integer.MIN_VALUE; maxZ = Integer.MIN_VALUE;
         for (Archipelago.Island is : Archipelago.ISLANDS) {
-            minX = Math.min(minX, is.cx() - is.radius() - 40);
-            maxX = Math.max(maxX, is.cx() + is.radius() + 40);
-            minZ = Math.min(minZ, is.cz() - is.radius() - 40);
-            maxZ = Math.max(maxZ, is.cz() + is.radius() + 40);
+            int e = is.extent() + 200;
+            minX = Math.min(minX, is.cx() - e);
+            maxX = Math.max(maxX, is.cx() + e);
+            minZ = Math.min(minZ, is.cz() - e);
+            maxZ = Math.max(maxZ, is.cz() + e);
+        }
+    }
+
+    private static void disc(DrawContext context, int cx, int cz, int r, int color) {
+        for (int dz = -r; dz <= r; dz++) {
+            int half = (int) Math.sqrt(r * r - dz * dz);
+            context.fill(cx - half, cz + dz, cx + half + 1, cz + dz + 1, color);
         }
     }
 
@@ -60,12 +68,10 @@ public class ChartScreen extends Screen {
             boolean known = (chart.islands() & (1 << i)) != 0;
             if (!known && Archipelago.isHidden(i)) continue; // off the charts until someone finds it
             int color = known ? colorFor(is.style()) : 0x553C5A6E;
-            int r = Math.max(2, (int) (is.radius() * 0.75 * scale()));
+            int r = Math.max(2, (int) (is.radius() * 0.85 * scale()));
             int cx = sx(is.cx()), cz = sz(is.cz());
-            for (int dz = -r; dz <= r; dz++) {
-                int half = (int) Math.sqrt(r * r - dz * dz);
-                context.fill(cx - half, cz + dz, cx + half + 1, cz + dz + 1, color);
-            }
+            disc(context, cx, cz, r, color);
+            if (is.hasLobe()) disc(context, sx(is.lobeX()), sz(is.lobeZ()), Math.max(2, (int) (is.lobeR() * 0.85 * scale())), color);
             String label = known ? is.name() : "?";
             context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(label), cx, cz + r + 3, known ? 0xFFF2D9 : 0x9FB3C8);
         }

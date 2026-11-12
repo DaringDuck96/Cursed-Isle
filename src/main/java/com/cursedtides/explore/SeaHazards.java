@@ -1,5 +1,7 @@
 package com.cursedtides.explore;
 
+import com.cursedtides.world.Archipelago;
+
 import com.cursedtides.entity.ShipEntity;
 import com.cursedtides.world.ModWorld;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -34,25 +36,25 @@ public final class SeaHazards {
     public record FogBank(String name, int x, int z, int radius) {}
 
     public static final List<Whirlpool> WHIRLPOOLS = List.of(
-            new Whirlpool("the Drain", 330, 180, 26),
-            new Whirlpool("Widow's Gullet", -180, -420, 24),
-            new Whirlpool("the Churn", 620, 520, 30),
-            new Whirlpool("Old Mother's Eye", -560, 360, 28),
-            new Whirlpool("the Throat", -330, 980, 32));
+            new Whirlpool("the Drain", Archipelago.rx(330, 180), Archipelago.rz(330, 180), 41),
+            new Whirlpool("Widow's Gullet", Archipelago.rx(-180, -420), Archipelago.rz(-180, -420), 38),
+            new Whirlpool("the Churn", Archipelago.rx(620, 520), Archipelago.rz(620, 520), 48),
+            new Whirlpool("Old Mother's Eye", Archipelago.rx(-560, 360), Archipelago.rz(-560, 360), 44),
+            new Whirlpool("the Throat", Archipelago.rx(-330, 980), Archipelago.rz(-330, 980), 51));
 
     public static final List<Current> CURRENTS = List.of(
-            new Current("the Trade Wind Run", -200, -60, 520, -60, 40, 0.035),
-            new Current("the Southern Drift", 100, 300, 100, 900, 36, 0.03),
-            new Current("the Cold Reach", 700, -400, 300, -700, 34, 0.03),
-            new Current("the Bloodwake Rip", -500, -400, -100, -760, 30, 0.04));
+            new Current("the Trade Wind Run", Archipelago.seaX(-200), Archipelago.seaZ(-60), Archipelago.seaX(520), Archipelago.seaZ(-60), 120, 0.035),
+            new Current("the Southern Drift", Archipelago.seaX(100), Archipelago.seaZ(300), Archipelago.seaX(100), Archipelago.seaZ(900), 108, 0.03),
+            new Current("the Cold Reach", Archipelago.seaX(700), Archipelago.seaZ(-400), Archipelago.seaX(300), Archipelago.seaZ(-700), 102, 0.03),
+            new Current("the Bloodwake Rip", Archipelago.seaX(-500), Archipelago.seaZ(-400), Archipelago.seaX(-100), Archipelago.seaZ(-760), 90, 0.04));
 
     public static final List<FogBank> FOG = List.of(
-            new FogBank("the Murk", -380, -360, 140),
-            new FogBank("the Grey Veil", 900, -400, 120),
-            new FogBank("the Shroud", -470, 860, 150),
-            new FogBank("Lanternless Water", 0, 1100, 160),
-            new FogBank("the Nowhere Mist", -940, -720, 130),
-            new FogBank("the Crown's Veil", 1140, 320, 110));
+            new FogBank("the Murk", Archipelago.rx(-380, -360), Archipelago.rz(-380, -360), 364),
+            new FogBank("the Grey Veil", Archipelago.rx(900, -400), Archipelago.rz(900, -400), 312),
+            new FogBank("the Shroud", Archipelago.rx(-470, 860), Archipelago.rz(-470, 860), 390),
+            new FogBank("Lanternless Water", Archipelago.rx(0, 1100), Archipelago.rz(0, 1100), 416),
+            new FogBank("the Nowhere Mist", Archipelago.rx(-940, -720), Archipelago.rz(-940, -720), 338),
+            new FogBank("the Crown's Veil", Archipelago.rx(1140, 320), Archipelago.rz(1140, 320), 286));
 
     private static final Map<UUID, Vec3d> LAST_VEL = new HashMap<>();
     private static final Map<UUID, String> LAST_ZONE = new HashMap<>();

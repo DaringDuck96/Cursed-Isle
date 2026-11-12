@@ -152,6 +152,9 @@ public final class Builds {
                 c -> cemetery(c, Archipelago.ALTAR_X + 15, Archipelago.ALTAR_Z - 7, Archipelago.ALTAR_X + 25, Archipelago.ALTAR_Z + 7));
 
         // ===== Grand caverns: last, so their mouths keep clear of everything above =====
+        // ===== The towns grow out to full size (see Districts) =====
+        Districts.addAll(ALL);
+
         com.cursedtides.dungeon.Caverns.addBuilds(ALL);
         com.cursedtides.living.Gaols.addBuilds(ALL);
     }

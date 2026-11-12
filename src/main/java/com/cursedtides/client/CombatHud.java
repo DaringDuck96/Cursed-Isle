@@ -113,6 +113,24 @@ public final class CombatHud {
             float rf = Math.min(1f, hud.rep() / (float) hud.repNeeded());
             ctx.fill(bx + 1, y + 9, bx + 1 + Math.round(21 * rf), y + 10, 0xFFFFD24A);
         }
+        // At the helm: the nearest landfall, how far and which way (the sea is wide, and land is out of sight)
+        if (p.getVehicle() instanceof com.cursedtides.entity.ShipEntity) {
+            com.cursedtides.world.Archipelago.Island near = null;
+            double best = Double.MAX_VALUE;
+            for (com.cursedtides.world.Archipelago.Island is : com.cursedtides.world.Archipelago.ISLANDS) {
+                if (com.cursedtides.world.Archipelago.HIDDEN.contains(is)) continue;
+                double d = is.edgeDistance(p.getX(), p.getZ());
+                if (d < best) { best = d; near = is; }
+            }
+            if (near != null && best > 40) {
+                double dx = near.cx() - p.getX(), dz = near.cz() - p.getZ();
+                double bearing = (Math.toDegrees(Math.atan2(dx, -dz)) + 360) % 360;
+                String[] pts = {"N", "NE", "E", "SE", "S", "SW", "W", "NW"};
+                String dir = pts[(int) Math.round(bearing / 45) % 8];
+                String line = near.name() + "  " + String.format("%,d", (int) best) + " blocks " + dir;
+                ctx.drawCenteredTextWithShadow(font, line, sw / 2, sh - 54, 0xFFE8D9A8);
+            }
+        }
         // The foe you're fighting
         Entity target = mc.targetedEntity instanceof LivingEntity le && Levels.isFoeClient(le) ? le : null;
         if (target == null && targetId >= 0 && System.currentTimeMillis() < targetUntil && mc.world != null) {

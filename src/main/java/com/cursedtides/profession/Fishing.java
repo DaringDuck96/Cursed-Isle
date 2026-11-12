@@ -86,8 +86,7 @@ public final class Fishing {
         Archipelago.Island near = null;
         if (ModWorld.isArchipelago()) {
             for (Archipelago.Island is : Archipelago.ISLANDS) {
-                double d = Math.hypot(p.getX() - is.cx(), p.getZ() - is.cz());
-                if (d < is.radius() * 1.6) { near = is; break; }
+                if (is.edgeDistance(p.getX(), p.getZ()) < is.radius() * 0.6) { near = is; break; }
             }
         }
         if (near == null) {

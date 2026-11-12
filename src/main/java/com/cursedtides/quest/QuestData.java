@@ -40,10 +40,10 @@ public final class QuestData {
     public static Text objective(int stage) {
         return Text.literal(switch (stage) {
             case START -> "Find Keeper Wren beside the lighthouse on Driftwood Island.";
-            case FIND_YSOLDE -> "Sail north-east to Saltmarrow (230, -30) and find Harbormistress Ysolde Vane.";
-            case FIND_SHARDS -> "Recover the Reef Shard (The Sunken Reach, 70, 240) and the Ember Shard "
-                    + "(smugglers' forge, Ashfall Island, -245, 150). Bring both to Tamsin Coil on Ashfall's east shore.";
-            case RING_BELL -> "Ring the Stilling Bell at the altar on Hollowgrave Island (-110, -250).";
+            case FIND_YSOLDE -> "Row east to Saltmarrow (" + at(com.cursedtides.world.Archipelago.SALTMARROW) + ") and find Harbormistress Ysolde Vane.";
+            case FIND_SHARDS -> "Recover the Reef Shard (The Sunken Reach, " + at(com.cursedtides.world.Archipelago.SUNKEN_REACH) + ") and the Ember Shard "
+                    + "(smugglers' forge, Ashfall Island, " + com.cursedtides.world.Archipelago.rx(-245, 150) + ", " + com.cursedtides.world.Archipelago.rz(-245, 150) + "). Bring both to Tamsin Coil on Ashfall's east shore.";
+            case RING_BELL -> "Ring the Stilling Bell at the altar on Hollowgrave Island (" + com.cursedtides.world.Archipelago.ALTAR_X + ", " + com.cursedtides.world.Archipelago.ALTAR_Z + ").";
             default -> "The Drowned Bell is silent. The Shattered Reach is yours to roam.";
         });
     }
@@ -67,5 +67,9 @@ public final class QuestData {
         if (!player.getInventory().insertStack(stack)) {
             player.dropItem(stack, false);
         }
+    }
+
+    private static String at(com.cursedtides.world.Archipelago.Island is) {
+        return is.cx() + ", " + is.cz();
     }
 }

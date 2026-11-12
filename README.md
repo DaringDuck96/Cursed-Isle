@@ -1,4 +1,4 @@
-# Cursed Tides (Fabric 1.21.1), version 0.19.0
+# Cursed Tides (Fabric 1.21.1), version 0.20.0
 
 An original pirate adventure built around four pillars: **sailing, ship ownership,
 island exploration and character progression**. Everything in it (islands, characters,
@@ -11,7 +11,7 @@ You need **Java 21** (the JDK, e.g. from adoptium.net).
 1. Unzip this folder.
 2. Open a terminal in it and run `gradlew.bat build` (Windows) or `./gradlew build` (Mac/Linux).
 3. The first build downloads Minecraft and Fabric (a few minutes).
-4. Your mod is at `build/libs/cursed-tides-0.19.0.jar` (ignore the `-sources` jar).
+4. Your mod is at `build/libs/cursed-tides-0.20.0.jar` (ignore the `-sources` jar).
 
 Put that jar plus **Fabric API** for 1.21.1 into `.minecraft/mods`. To test without installing: `./gradlew runClient`.
 
@@ -152,6 +152,26 @@ and leather. The captain's attire comes with Brethren rank 300; the Tidewatch un
 | Boarding Axe | 2 iron, an iron block and 2 sticks |
 | Throwing Knives (x4) | Shapeless: iron ingot and 2 iron nuggets |
 | Sailor's garb | Wool (bandana, shirt, breeches with a leather belt) and leather (boots) in armour shapes |
+
+### New in 0.20: the old pirate games' scale (start a new world)
+
+The whole archipelago is rebuilt at the scale of the old pirate games, measured from their released world data.
+**Old worlds won't line up with the new map, so start a new world.**
+
+- **Distances:** islands are now about 3,600 blocks from their nearest neighbour (they were about 250). The map
+  is about 29,000 blocks across, and a hop between neighbours takes two to three minutes under full sail.
+  Driftwood stays at the centre as the starter isle, a short row (about 600 blocks) from Saltmarrow.
+- **Ships:** a sloop under full sail in a fair wind makes about 25 to 30 blocks a second, as fast as the old
+  game's ships. Heavier hulls are slower. At the helm, a line above your health bar names the nearest island,
+  how far it is and which way.
+- **Islands:** every island except the reefs and the atoll has gained a hinterland of hills, jungle and wilds
+  stretching away from its harbour, which brings it up to about 250 to 450 blocks across. Town hearts, harbours
+  and dungeons stay where they were on each island. The wilds are full of enemy camps (more islands, more camps).
+- **Towns:** Saltmarrow, Port Meridian and Saint Vesper grow to about 180 blocks across, with roads running
+  inland lined with houses, townhouses, shops, warehouses and markets, plus more jetties. Kingsport, Ironwatch and
+  Crownwatch get barracks, watchtowers, storehouses and drill yards. Raven's Landing, Blackthorn and Bloodwake
+  sprawl with shacks, tents and fire pits.
+- Quest directions, the chart, whirlpools, currents and fog banks have all moved to match.
 
 ### New in 0.19: fighting and levelling the old way
 
