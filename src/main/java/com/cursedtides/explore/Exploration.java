@@ -26,6 +26,7 @@ public final class Exploration {
 
     public static void register() {
         CursedTidesInit.touch(Collectibles.ITEM); // make sure the curio item registers during start-up
+        Cartography.register();
         Diving.register();
         SeaHazards.register();
         Encyclopedia.register();

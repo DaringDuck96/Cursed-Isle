@@ -103,8 +103,8 @@ public final class Emotes {
             }
             case DRINK, TOAST -> {
                 p.swingHand(Hand.MAIN_HAND, true);
-                sound(p, e == DRINK ? SoundEvents.ENTITY_GENERIC_DRINK : SoundEvents.BLOCK_GLASS_HIT, 1f);
-                if (e == DRINK) p.addStatusEffect(new StatusEffectInstance(StatusEffects.NAUSEA, 60, 0, false, false));
+                sound(p, e == Emote.DRINK ? SoundEvents.ENTITY_GENERIC_DRINK : SoundEvents.BLOCK_GLASS_HIT, 1f);
+                if (e == Emote.DRINK) p.addStatusEffect(new StatusEffectInstance(StatusEffects.NAUSEA, 60, 0, false, false));
             }
             case SPIT -> { particles(p, ParticleTypes.SPIT, 4); sound(p, SoundEvents.ENTITY_LLAMA_SPIT, 1f); }
             case SLEEP -> { particles(p, ParticleTypes.CLOUD, 3); sit(p); }

@@ -57,11 +57,6 @@ public class CrocodileEntity extends HostileEntity {
     }
 
     @Override
-    public boolean canBreatheInWater() {
-        return true;
-    }
-
-    @Override
     public void writeCustomDataToNbt(NbtCompound nbt) {
         super.writeCustomDataToNbt(nbt);
         nbt.putBoolean("Alligator", isAlligator());

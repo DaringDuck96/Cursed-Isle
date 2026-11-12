@@ -48,10 +48,48 @@ public class AccessoryItem extends Item {
         return TypedActionResult.success(stack, world.isClient);
     }
 
+    public static int quality(ItemStack stack) {
+        return stack.getOrDefault(net.minecraft.component.DataComponentTypes.CUSTOM_DATA, net.minecraft.component.type.NbtComponent.DEFAULT)
+                .copyNbt().getInt("Quality");
+    }
+
+    public static void setQuality(ItemStack stack, int q) {
+        var n = stack.getOrDefault(net.minecraft.component.DataComponentTypes.CUSTOM_DATA, net.minecraft.component.type.NbtComponent.DEFAULT).copyNbt();
+        n.putInt("Quality", q);
+        stack.set(net.minecraft.component.DataComponentTypes.CUSTOM_DATA, net.minecraft.component.type.NbtComponent.of(n));
+    }
+
+    /** Fine pieces are a quarter stronger, Masterwork half again. */
+    public static double factor(int quality) {
+        return 1.0 + 0.25 * quality;
+    }
+
+    /** Which trade makes this: cloth and leather are tailoring; metal and stones are jewelcrafting. */
+    public com.cursedtides.profession.Profession trade() {
+        return switch (slot) {
+            case HEAD, EYES, GLOVES, BELT, CLOAK -> com.cursedtides.profession.Profession.TAILORING;
+            default -> com.cursedtides.profession.Profession.JEWELCRAFTING;
+        };
+    }
+
+    @Override
+    public void onCraftByPlayer(ItemStack stack, World world, PlayerEntity player) {
+        if (world.isClient || !(player instanceof ServerPlayerEntity sp)) return;
+        int level = com.cursedtides.profession.ProfessionData.level(sp, trade());
+        float roll = sp.getRandom().nextFloat();
+        int q = level >= 20 && roll < 0.35f ? 2 : level >= 10 && roll < 0.6f ? 1 : 0;
+        if (q > 0) {
+            setQuality(stack, q);
+            sp.sendMessage(Text.literal(q == 2 ? "Masterwork!" : "Fine work.").formatted(Formatting.GOLD), true);
+        }
+        com.cursedtides.profession.ProfessionData.addXp(sp, trade(), 20 + 10 * stack.getRarity().ordinal());
+    }
+
     @Override
     public void appendTooltip(ItemStack stack, TooltipContext context, List<Text> tooltip, TooltipType type) {
-        tooltip.add(Text.literal("Accessory (" + slot.name().toLowerCase() + ")").formatted(Formatting.GOLD));
-        tooltip.add(Text.literal(effectText).formatted(Formatting.BLUE));
+        int q = quality(stack);
+        tooltip.add(Text.literal((q == 2 ? "Masterwork " : q == 1 ? "Fine " : "") + "Accessory (" + slot.name().toLowerCase() + ")").formatted(Formatting.GOLD));
+        tooltip.add(Text.literal(effectText + (q > 0 ? "  (x" + factor(q) + ")" : "")).formatted(Formatting.BLUE));
         tooltip.add(Text.literal("Use to wear it. See what you're wearing with /pirate accessories.").formatted(Formatting.DARK_GRAY));
     }
 }

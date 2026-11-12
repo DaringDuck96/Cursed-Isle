@@ -1097,7 +1097,7 @@ public final class Builds {
         // The shade that haunts the place (the Medium's quest)
         c.spawn(cx + 0.5, floor, cz + 0.5, 0, w -> EntityType.WITHER_SKELETON.create(w), e -> {
             if (!(e instanceof net.minecraft.entity.mob.MobEntity shade)) return;
-            shade.setCustomName(Text.literal("The Shade of Lady Morrow").formatted(Formatting.DARK_AQUA));
+            shade.setCustomName(Text.literal("The Shade of Lady Morrow").formatted(net.minecraft.util.Formatting.DARK_AQUA));
             shade.setCustomNameVisible(true);
             shade.addCommandTag("cursedtides_shade");
             var hp = shade.getAttributeInstance(net.minecraft.entity.attribute.EntityAttributes.GENERIC_MAX_HEALTH);

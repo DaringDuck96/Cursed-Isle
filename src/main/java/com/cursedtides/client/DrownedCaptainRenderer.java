@@ -8,7 +8,7 @@ import net.minecraft.entity.mob.AbstractSkeletonEntity;
 import net.minecraft.util.Identifier;
 
 /** The skeleton model, a quarter bigger, in the captain's own texture. */
-public class DrownedCaptainRenderer extends SkeletonEntityRenderer {
+public class DrownedCaptainRenderer extends SkeletonEntityRenderer<AbstractSkeletonEntity> {
     private static final Identifier TEXTURE = CursedTides.id("textures/entity/drowned_captain.png");
 
     public DrownedCaptainRenderer(EntityRendererFactory.Context context) {

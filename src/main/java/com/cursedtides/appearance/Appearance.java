@@ -112,7 +112,7 @@ public final class Appearance {
                     p.sendMessage(Text.literal("Accessories:").formatted(Formatting.GOLD), false);
                     for (AccessoryItem.Slot s : AccessoryItem.Slot.values()) {
                         String id = worn.get(s.ordinal());
-                        Item item = id.isEmpty() ? null : Registries.ITEM.get(Identifier.of(id));
+                        Item item = id.isEmpty() ? null : Registries.ITEM.get(Identifier.of(idOf(id)));
                         p.sendMessage(Text.literal("  " + s.name().toLowerCase() + ": ").formatted(Formatting.GRAY)
                                 .append(item == null ? Text.literal("-") : item.getName()), false);
                     }
@@ -148,11 +148,28 @@ public final class Appearance {
 
     // ------------------------------------------------------------------ looks
 
+    /** Worn entries are an item id, with "#quality" on the end for Fine (1) or Masterwork (2) pieces. */
+    static String idOf(String entry) {
+        int hash = entry.indexOf('#');
+        return hash < 0 ? entry : entry.substring(0, hash);
+    }
+
+    static int qualityOf(String entry) {
+        int hash = entry.indexOf('#');
+        try { return hash < 0 ? 0 : Integer.parseInt(entry.substring(hash + 1)); } catch (NumberFormatException e) { return 0; }
+    }
+
+    static ItemStack stackOf(String entry) {
+        ItemStack stack = new ItemStack(Registries.ITEM.get(Identifier.of(idOf(entry))));
+        if (qualityOf(entry) > 0) AccessoryItem.setQuality(stack, qualityOf(entry));
+        return stack;
+    }
+
     public static int code(ServerPlayerEntity p) {
         int acc = 0;
         for (String id : worn(p)) {
             if (id.isEmpty()) continue;
-            if (Registries.ITEM.get(Identifier.of(id)) instanceof AccessoryItem a) acc |= a.visual;
+            if (Registries.ITEM.get(Identifier.of(idOf(id))) instanceof AccessoryItem a) acc |= a.visual;
         }
         return Look.withAccessories(p.getAttachedOrElse(LOOK, 0), acc);
     }
@@ -189,7 +206,7 @@ public final class Appearance {
         double total = 0;
         for (String id : worn(p)) {
             if (id.isEmpty()) continue;
-            if (Registries.ITEM.get(Identifier.of(id)) instanceof AccessoryItem a && key.equals(a.special)) total += a.amount;
+            if (Registries.ITEM.get(Identifier.of(idOf(id))) instanceof AccessoryItem a && key.equals(a.special)) total += a.amount * AccessoryItem.factor(qualityOf(id));
         }
         return total;
     }
@@ -198,10 +215,11 @@ public final class Appearance {
         if (!(stack.getItem() instanceof AccessoryItem item)) return;
         List<String> worn = worn(p);
         String old = worn.get(item.slot.ordinal());
-        worn.set(item.slot.ordinal(), Registries.ITEM.getId(item).toString());
+        int q = AccessoryItem.quality(stack);
+        worn.set(item.slot.ordinal(), Registries.ITEM.getId(item).toString() + (q > 0 ? "#" + q : ""));
         stack.decrement(1);
         if (!old.isEmpty()) {
-            ItemStack back = new ItemStack(Registries.ITEM.get(Identifier.of(old)));
+            ItemStack back = stackOf(old);
             if (!p.getInventory().insertStack(back)) p.dropItem(back, false);
         }
         p.setAttached(WORN, worn);
@@ -221,7 +239,7 @@ public final class Appearance {
         }
         worn.set(slot.ordinal(), "");
         p.setAttached(WORN, worn);
-        ItemStack back = new ItemStack(Registries.ITEM.get(Identifier.of(old)));
+        ItemStack back = stackOf(old);
         if (!p.getInventory().insertStack(back)) p.dropItem(back, false);
         applyAccessories(p);
         broadcast(p);
@@ -240,9 +258,9 @@ public final class Appearance {
             }
             String id = worn.get(s.ordinal());
             if (id.isEmpty()) continue;
-            if (Registries.ITEM.get(Identifier.of(id)) instanceof AccessoryItem a && a.attribute != null) {
+            if (Registries.ITEM.get(Identifier.of(idOf(id))) instanceof AccessoryItem a && a.attribute != null) {
                 EntityAttributeInstance inst = p.getAttributeInstance(a.attribute);
-                if (inst != null) inst.addPersistentModifier(new EntityAttributeModifier(modId, a.amount,
+                if (inst != null) inst.addPersistentModifier(new EntityAttributeModifier(modId, a.amount * AccessoryItem.factor(qualityOf(id)),
                         a.amount < 1 && a.amount > 0 && a.special != null && a.special.equals("percent")
                                 ? EntityAttributeModifier.Operation.ADD_MULTIPLIED_BASE : EntityAttributeModifier.Operation.ADD_VALUE));
             }
