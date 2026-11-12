@@ -119,29 +119,41 @@ public final class Caverns {
         built = List.copyOf(list);
     }
 
+    /** The flattest open bit of the island that no building claims; failing that, the flattest bit of land at all. */
     private static int[] findMouth(Archipelago.Island is) {
-        for (int r = 10; r < is.radius() * 0.8; r += 3) {
-            for (int k = 0; k < 24; k++) {
-                double a = k * Math.PI * 2 / 24 + r * 0.37;
+        int[] best = null, fallback = null;
+        int bestSlope = Integer.MAX_VALUE, fallbackSlope = Integer.MAX_VALUE;
+        for (int r = 8; r < is.radius() * 0.9; r += 3) {
+            for (int k = 0; k < 32; k++) {
+                double a = k * Math.PI * 2 / 32 + r * 0.37;
                 int x = is.cx() + (int) (Math.cos(a) * r), z = is.cz() + (int) (Math.sin(a) * r);
-                if (goodMouth(x, z)) return new int[]{x, z};
+                int slope = slope(x, z);
+                if (slope < 0) continue;
+                boolean claimed = false;
+                for (int dx = -5; dx <= 5 && !claimed; dx += 5)
+                    for (int dz = -5; dz <= 5 && !claimed; dz += 5)
+                        if (Builds.blocksPlants(x + dx, z + dz)) claimed = true;
+                if (!claimed && slope < bestSlope) { best = new int[]{x, z}; bestSlope = slope; }
+                if (claimed && !Builds.blocksPlants(x, z) && slope < fallbackSlope) { fallback = new int[]{x, z}; fallbackSlope = slope; }
             }
         }
-        return new int[]{is.cx(), is.cz()};
+        if (best != null) return best;
+        if (fallback != null) return fallback;
+        return new int[]{is.cx() + is.radius() / 2, is.cz()};
     }
 
-    private static boolean goodMouth(int x, int z) {
+    /** Height spread of the ground round a spot, or -1 if any of it is sea, crater or too near the shore. */
+    private static int slope(int x, int z) {
         int lo = Integer.MAX_VALUE, hi = Integer.MIN_VALUE;
-        for (int dx = -6; dx <= 6; dx += 6) {
-            for (int dz = -6; dz <= 6; dz += 6) {
+        for (int dx = -5; dx <= 5; dx += 5) {
+            for (int dz = -5; dz <= 5; dz += 5) {
                 Archipelago.Column col = Archipelago.column(x + dx, z + dz);
-                if (!col.isLand() || col.crater() || col.lavaTop() > 0 || col.top() < Archipelago.WATER_TOP + 4) return false;
-                if (Builds.blocksPlants(x + dx, z + dz)) return false;
+                if (!col.isLand() || col.crater() || col.lavaTop() > 0 || col.top() < Archipelago.WATER_TOP + 3) return -1;
                 lo = Math.min(lo, col.top());
                 hi = Math.max(hi, col.top());
             }
         }
-        return hi - lo <= 4;
+        return hi - lo;
     }
 
     /** A ring of tumbled rock round a dark pit, a beam across it and the old rope going down. */
