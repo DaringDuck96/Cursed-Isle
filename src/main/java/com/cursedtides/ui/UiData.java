@@ -69,6 +69,18 @@ public final class UiData {
         lines.addAll(com.cursedtides.quest.LanternArc.journal(player));
         lines.add("");
 
+        lines.add("§e§lThe Black Muster");
+        lines.addAll(com.cursedtides.quest.MusterArc.journal(player));
+        lines.add("");
+
+        lines.add("§e§lErrands");
+        lines.addAll(com.cursedtides.quest.Errands.journal(player));
+        lines.add("");
+
+        lines.add("§e§lWrecks and Spires");
+        lines.addAll(com.cursedtides.dungeon.Delves.journal(player));
+        lines.add("");
+
         lines.add("§e§lContracts");
         lines.addAll(com.cursedtides.quest.Contracts.journal(player));
         lines.add("");

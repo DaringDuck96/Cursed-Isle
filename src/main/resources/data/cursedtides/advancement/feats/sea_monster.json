@@ -1,0 +1,19 @@
+{
+ "display": {
+  "icon": {
+   "id": "minecraft:prismarine_shard"
+  },
+  "title": "Here Be Monsters",
+  "description": "Kill a monster of the open sea",
+  "frame": "task",
+  "show_toast": true,
+  "announce_to_chat": true,
+  "hidden": false
+ },
+ "criteria": {
+  "done": {
+   "trigger": "minecraft:impossible"
+  }
+ },
+ "parent": "cursedtides:feats/first_vault"
+}

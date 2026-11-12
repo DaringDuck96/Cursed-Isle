@@ -75,6 +75,7 @@ public final class OuterDialogue {
     /** The head of the Tidewatch: contracts like the Commodore, and a commission for the loyal. */
     static void admiral(StoryNpcEntity npc, ServerPlayerEntity player) {
         if (HorizonArc.admiral(npc, player)) return;
+        if (MusterArc.admiral(npc, player)) return;
         int navy = FactionData.rep(player, Faction.NAVY);
         if (FactionData.isWanted(player)) {
             StoryDialogue.say(npc, player, "A wanted pirate in Crownwatch? Pay your bounty to Commodore Vey at Ironwatch, then we'll talk. Guards!");
@@ -122,6 +123,7 @@ public final class OuterDialogue {
 
     /** Raven's Landing's queen of contraband: smuggling contracts for those the Tidewatch doesn't own. */
     static void smugglerQueen(StoryNpcEntity npc, ServerPlayerEntity player) {
+        if (MusterArc.queen(npc, player)) return;
         int navy = FactionData.rep(player, Faction.NAVY);
         int smugglers = FactionData.rep(player, Faction.SMUGGLERS);
         if (navy >= 300) {

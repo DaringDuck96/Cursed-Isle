@@ -104,6 +104,7 @@ public class StoryNpcEntity extends WanderingTraderEntity {
     @Override
     public ActionResult interactMob(PlayerEntity player, Hand hand) {
         if (hand == Hand.MAIN_HAND && player instanceof ServerPlayerEntity serverPlayer) {
+            if (com.cursedtides.quest.Errands.interact(this, serverPlayer)) return ActionResult.SUCCESS;
             String file = getRole().name().toLowerCase();
             if (!com.cursedtides.dialogue.Dialogue.open(serverPlayer, this, file)) {
                 StoryDialogue.talk(this, serverPlayer);

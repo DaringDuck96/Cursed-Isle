@@ -37,6 +37,15 @@ public final class BossLooks {
             {"The Bone Abbot", "bone_abbot"},
             {"The Slag Beast", "slag_beast"},
             {"The Lantern Warden", "lantern_warden"},
+            {"Dread Admiral Corvin Hale", "corvin_hale"},
+            {"Captain Saltbones", "captain_saltbones"},
+            {"Bosun Grimmet Saltbones", "captain_saltbones"},
+            {"The Barnacle Bride", "barnacle_bride"},
+            {"The Hangman of Bloodwake", "hangman"},
+            {"The Witchlight Hag", "witchlight_hag"},
+            {"The Signal Keeper", "signal_keeper"},
+            {"Reach Serpent", "reach_serpent"},
+            {"Siren of the Shoals", "siren"},
     };
 
     private static final Map<String, EntityRenderer<? extends MobEntity>> RENDERERS = new LinkedHashMap<>();
@@ -51,7 +60,7 @@ public final class BossLooks {
             if (parts == null) {
                 r = WorkshopBipedRenderer.<MobEntity>single(ctx, id);
             } else {
-                float scale = id.equals("abyssal") ? 1.6f : 1.0f;
+                float scale = id.equals("abyssal") ? 1.6f : id.equals("reach_serpent") ? 0.55f : 1.0f;
                 r = new CreatureRenderer<MobEntity>(ctx, WorkshopModels.layer(id), parts, 1.0f, scale, e -> id, "workshop");
             }
             RENDERERS.put(n[0], r);

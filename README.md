@@ -1,4 +1,4 @@
-# Cursed Tides (Fabric 1.21.1), version 0.24.0
+# Cursed Tides (Fabric 1.21.1), version 0.25.0
 
 An original pirate adventure built around four pillars: **sailing, ship ownership,
 island exploration and character progression**. Everything in it (islands, characters,
@@ -11,7 +11,7 @@ You need **Java 21** (the JDK, e.g. from adoptium.net).
 1. Unzip this folder.
 2. Open a terminal in it and run `gradlew.bat build` (Windows) or `./gradlew build` (Mac/Linux).
 3. The first build downloads Minecraft and Fabric (a few minutes).
-4. Your mod is at `build/libs/cursed-tides-0.24.0.jar` (ignore the `-sources` jar).
+4. Your mod is at `build/libs/cursed-tides-0.25.0.jar` (ignore the `-sources` jar).
 
 Put that jar plus **Fabric API** for 1.21.1 into `.minecraft/mods`. To test without installing: `./gradlew runClient`.
 
@@ -152,6 +152,47 @@ and leather. The captain's attire comes with Brethren rank 300; the Tidewatch un
 | Boarding Axe | 2 iron, an iron block and 2 sticks |
 | Throwing Knives (x4) | Shapeless: iron ingot and 2 iron nuggets |
 | Sailor's garb | Wool (bandana, shirt, breeches with a leather belt) and leather (boots) in armour shapes |
+
+### New in 0.25: a fifth act, sea monsters, wrecks and spires, boarding, errands
+
+**Act five: The Black Muster** (after the Drowned Lights). Tidewatch patrols are vanishing, and turning up again
+crewed by the dead under a black pennant. Admiral Galloway at Crownwatch wants three of those pennants (board or
+sink the dead ships at sea); the seal on them belongs to Corvin Hale, the hanging admiral who sailed after Thorne
+thirty years ago. Isadora Vance on Raven's Landing (Hale hanged her father) knows where the dead muster: the
+Graveyard of Ships, out past Vesh Amaru. Sink his three escorts, then board his flagship, the Last Muster (the curse
+won't let her sink), and kill Dread Admiral Corvin Hale. Then choose who gets his commission: the Admiralty (a
+pardon, a commission, Navy standing) or the Brethren (a ghost galleon of your own).
+
+**Boarding.** Craft a Grappling Hook (three iron ingots over a lead; Galloway also gives you one). Batter an enemy
+ship's hull below half, come within 20 blocks, and use the hook: the ships are lashed together, timbers are laid
+between them, and you swing across. Her crew come at you with her captain at their head. Beat them and her colours
+come down: **take her as a prize** or **strip her hold and scuttle her** (her cargo, a sea or skull chest and coin).
+Rival pirates and the cursed will try the same on you if you let them come alongside.
+
+**Sea monsters** roam the open water, out of sight of land (more at night), levelled like the sea around them:
+- **Reach Serpent**: a great green sea serpent that rams your hull and spits at your deck.
+- **Siren of the Shoals**: her song turns your stomach, slows you, and drags your ship toward her.
+- **Bloodfin** packs: sharks that circle your ship and go for anyone in the water.
+
+**Two new kinds of dungeon** (seven in all), with crews that come back after a while:
+- **Wrecks**: great hulks on the sea floor with their weather decks just above the water. Climb the side, then go
+  down through the hatches deck by deck to the hold, where the dead captain waits: The Weeping Duchess (off the
+  Sunken Reach), The Gilded Gull (Mariner's Rest), The Corsair's Lament (Blackthorn Isle), The Mary Clare (Crooked Reef).
+- **Spires**: ruined towers on the islands' wild hinterlands. Fight up five floors to the roof: The Gallows Spire
+  (Bloodwake Cay, the Hangman), Witchlight Tower (Mirefen Bayou, the Witchlight Hag), The Old Signal Tower
+  (Ironwatch Isle, the Signal Keeper).
+
+**Errands: twenty hand-written side quests** for the people in the towns: Wren, Ysolde, Mags, Jory, Grista, Ned
+Flint, Bess, Abel Marsh, Deedes, Sergeant Kettle, Flossie, Moss, Fairweather, Lott, Odalys Quill, Mother Celestine,
+Marlowe Finch, Tobiah Sounding, Commodore Vey and Tamsin Coil. Talk to them once you've finished Wren's lessons
+and they'll ask (talk again for their usual business). Fetching, hunting, finding, settling scores and carrying
+letters, each with its own little story, tracked in the journal and on the radar.
+
+**New models:** Corvin Hale, Captain Saltbones, the Barnacle Bride, the Hangman, the Witchlight Hag, the Signal
+Keeper, the Reach Serpent and the Siren, all from the Mob Workshop. Eight new feats too.
+
+Note: wrecks and spires are placed when the world is generated, so they appear in a new world (or in parts of an
+old one you haven't visited yet).
 
 ### New in 0.24: boss models
 

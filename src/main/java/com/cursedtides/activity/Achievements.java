@@ -21,7 +21,8 @@ public final class Achievements {
             "fort_breaker", "hollow_crown", "hidden_isle", "storm_caller",
             "hundred_arms", "dread_sunk", "harbour_guard", "collector_of_sets", "privateer", "siege_breaker",
             "spelunker", "cavern_master", "deep_delver",
-            "first_contract", "contractor", "letter_reader", "postmaster", "drowned_lights");
+            "first_contract", "contractor", "letter_reader", "postmaster", "drowned_lights",
+            "boarder", "sea_monster", "black_muster", "wreck_diver", "spire_climber", "all_delves", "errand_runner", "pillar_of_the_reach");
 
     private static AdvancementEntry entry(ServerPlayerEntity p, String id) {
         if (p.getServer() == null) return null;

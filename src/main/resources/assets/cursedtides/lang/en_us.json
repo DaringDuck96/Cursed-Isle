@@ -312,5 +312,10 @@
   "tooltip.cursedtides.repeater": "Four quick shots from turning barrels, then a slow reload",
   "tooltip.cursedtides.bayonet_musket": "A long, hard-hitting gun with a blade on the end for close work",
   "block.cursedtides.notice_board": "Notice Board",
-  "item.cursedtides.weathered_letter": "Weathered Letter"
+  "item.cursedtides.weathered_letter": "Weathered Letter",
+  "item.cursedtides.grappling_hook": "Grappling Hook",
+  "item.cursedtides.black_pennant": "Black Pennant",
+  "tooltip.cursedtides.black_pennant": "Cut from a dead ship's masthead. A noose around an anchor, stitched in grey thread.",
+  "item.cursedtides.admirals_commission": "Admiral's Commission",
+  "tooltip.cursedtides.admirals_commission": "Corvin Hale's commission, sealed in blue wax. Signed by a king two kings ago."
 }

@@ -1,0 +1,19 @@
+{
+ "display": {
+  "icon": {
+   "id": "minecraft:wither_skeleton_skull"
+  },
+  "title": "The Black Muster",
+  "description": "End Dread Admiral Corvin Hale",
+  "frame": "challenge",
+  "show_toast": true,
+  "announce_to_chat": true,
+  "hidden": false
+ },
+ "criteria": {
+  "done": {
+   "trigger": "minecraft:impossible"
+  }
+ },
+ "parent": "cursedtides:feats/first_vault"
+}

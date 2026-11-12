@@ -469,6 +469,10 @@ public class ShipEntity extends BoatEntity {
     public Vec3d forcedDestination;
 
     private void hostileAi(ServerWorld world) {
+        if (com.cursedtides.ship.Boarding.isLashed(this)) {
+            this.setVelocity(this.getVelocity().multiply(0, 1, 0));
+            return; // lashed alongside: no sailing, no broadsides
+        }
         if (forcedDestination != null) {
             double dx = forcedDestination.x - getX(), dz = forcedDestination.z - getZ();
             float desired = (float) Math.toDegrees(Math.atan2(-dx, dz));
@@ -895,6 +899,12 @@ public class ShipEntity extends BoatEntity {
         this.setDamageWobbleTicks(10);
         this.setDamageWobbleStrength(this.getDamageWobbleStrength() + amount * 2.0f);
         float hullDamage = source.isIn(DamageTypeTags.IS_EXPLOSION) ? amount * 1.5f : amount;
+        if (com.cursedtides.quest.MusterArc.isFlagship(this) && getHull() - hullDamage < maxHull() * 0.2f) {
+            setHull(maxHull() * 0.2f);
+            if (attacker instanceof PlayerEntity pl) pl.sendMessage(Text.literal("The curse holds her timbers together. Grapple her and board!")
+                    .formatted(Formatting.DARK_AQUA), true);
+            return true;
+        }
         setHull(getHull() - hullDamage);
         this.getWorld().playSound(null, getX(), getY(), getZ(), SoundEvents.ENTITY_ZOMBIE_ATTACK_WOODEN_DOOR,
                 SoundCategory.NEUTRAL, 0.7f, 0.7f + this.random.nextFloat() * 0.3f);
@@ -932,6 +942,7 @@ public class ShipEntity extends BoatEntity {
                 com.cursedtides.quest.HorizonArc.onShipSunk(sinker, this);
                 com.cursedtides.quest.Contracts.onShipSunk(sinker, com.cursedtides.combat.Levels.levelOf(this));
                 com.cursedtides.sea.SeaEvents.onSunk(world, this, sinker);
+                com.cursedtides.quest.MusterArc.onSunk(sinker, this);
             }
             for (ServerPlayerEntity p : world.getPlayers(p -> p.squaredDistanceTo(this) < 80 * 80)) {
                 p.sendMessage(Text.literal("The ").append(shipName()).append(Text.literal(" slips beneath the waves!"))
@@ -1103,7 +1114,26 @@ public class ShipEntity extends BoatEntity {
         }, title));
     }
 
+    /** Take her as a prize (after a boarding action). */
+    public void captureBy(ServerPlayerEntity player) {
+        tryCapture(player);
+    }
+
+    /** Strip her and send her down, credited to whoever did it. */
+    public void scuttle(ServerWorld world, ServerPlayerEntity by) {
+        lastAttacker = by.getUuid();
+        sink(world);
+    }
+
     private void tryCapture(ServerPlayerEntity player) {
+        if (com.cursedtides.ship.Boarding.defending(this)) {
+            player.sendMessage(Text.literal("Her boarders still hold the deck!").formatted(Formatting.RED), true);
+            return;
+        }
+        if (com.cursedtides.quest.MusterArc.isFlagship(this)) {
+            player.sendMessage(Text.literal("Nobody can sail the Last Muster. Strip her and let her sink.").formatted(Formatting.GRAY), true);
+            return;
+        }
         if (hasLivingCrew()) {
             player.sendMessage(Text.literal("Her crew still holds the deck!").formatted(Formatting.RED), true);
             return;

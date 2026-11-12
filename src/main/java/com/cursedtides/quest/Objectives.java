@@ -79,10 +79,14 @@ public final class Objectives {
 
     /** With the main story done (or waiting), the next side thing: Act Four, a letter, then a contract. */
     private static Goal side(ServerPlayerEntity p) {
-        int[] t = LanternArc.target(p);
+        int[] t = MusterArc.target(p);
+        if (t != null) return new Goal(t[0], t[1], MusterArc.targetLabel(p), null);
+        t = LanternArc.target(p);
         if (t != null) return new Goal(t[0], t[1], LanternArc.targetLabel(p), null);
         t = Letters.target(p);
         if (t != null) return new Goal(t[0], t[1], Letters.targetLabel(p), null);
+        t = Errands.target(p);
+        if (t != null) return new Goal(t[0], t[1], Errands.targetLabel(p), null);
         t = Contracts.target(p);
         if (t != null) return new Goal(t[0], t[1], Contracts.targetLabel(p), null);
         return null;

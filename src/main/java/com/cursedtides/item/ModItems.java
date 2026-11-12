@@ -164,6 +164,13 @@ public final class ModItems {
             new com.cursedtides.quest.FleetLogItem(new Item.Settings().maxCount(1).rarity(Rarity.RARE)));
     public static final Item LAMPWRIGHT_SEAL = register("lampwright_seal",
             new LoreItem(new Item.Settings().maxCount(1).rarity(Rarity.RARE), "tooltip.cursedtides.lampwright_seal"));
+    // Act five, and boarding
+    public static final Item GRAPPLING_HOOK = register("grappling_hook",
+            new com.cursedtides.ship.Boarding.GrapplingHookItem(new Item.Settings().maxCount(1).maxDamage(64)));
+    public static final Item BLACK_PENNANT = register("black_pennant",
+            new LoreItem(new Item.Settings().maxCount(16).rarity(Rarity.UNCOMMON), "tooltip.cursedtides.black_pennant"));
+    public static final Item ADMIRALS_COMMISSION = register("admirals_commission",
+            new LoreItem(new Item.Settings().maxCount(1).rarity(Rarity.EPIC), "tooltip.cursedtides.admirals_commission"));
     public static final Item ACCORD_TOKEN = register("accord_token",
             new LoreItem(new Item.Settings().maxCount(1).rarity(Rarity.UNCOMMON), "tooltip.cursedtides.accord_token"));
 
@@ -261,6 +268,9 @@ public final class ModItems {
                         entries.add(FLEET_LOG);
                         entries.add(LAMPWRIGHT_SEAL);
                         entries.add(ACCORD_TOKEN);
+                        entries.add(GRAPPLING_HOOK);
+                        entries.add(BLACK_PENNANT);
+                        entries.add(ADMIRALS_COMMISSION);
                     })
                     .build());
 
