@@ -100,6 +100,10 @@ public class CursedTides implements ModInitializer {
         com.cursedtides.social.Guilds.register();
         com.cursedtides.social.Nameplates.register();
         com.cursedtides.combat.LockOn.register();
+        com.cursedtides.social.Friends.register();
+        com.cursedtides.social.Infamy.register();
+        com.cursedtides.social.Titles.register();
+        com.cursedtides.living.FestivalEvents.register();
         com.cursedtides.living.Gaols.registerKeepInventory();
         LOGGER.info("Cursed Tides: hoist the colours!");
     }

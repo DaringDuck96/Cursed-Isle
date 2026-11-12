@@ -83,7 +83,8 @@ public final class Nameplates {
         CrewState.Crew crew = CrewState.get(server).crewOf(p.getUuid());
         String guild = Guilds.nameOf(server, p.getUuid());
         int lv = PirateData.notoriety(p);
-        String key = (crew == null ? "" : crew.name + "|" + crew.color) + "|" + guild + "|" + lv;
+        String badges = Infamy.badges(p), title = Titles.worn(p);
+        String key = (crew == null ? "" : crew.name + "|" + crew.color) + "|" + guild + "|" + lv + "|" + badges + "|" + title;
         if (key.equals(LAST.get(p.getUuid()))) return;
         LAST.put(p.getUuid(), key);
         ServerScoreboard sb = server.getScoreboard();
@@ -92,6 +93,8 @@ public final class Nameplates {
         if (t == null) t = sb.addTeam(id);
         t.setPrefix(crew == null ? Text.empty() : Text.literal("[" + crew.name + "] ").formatted(crew.formatting()));
         MutableText suffix = Text.literal(" Lv " + lv).formatted(levelColor(lv));
+        if (!badges.isEmpty()) suffix.append(Text.literal(badges).formatted(Formatting.DARK_RED));
+        if (title != null) suffix.append(Text.literal(" ‹" + title + "›").formatted(Formatting.GRAY, Formatting.ITALIC));
         if (guild != null) suffix.append(Text.literal(" «" + guild + "»").formatted(Formatting.DARK_GREEN));
         t.setSuffix(suffix);
         t.setColor(crew == null ? Formatting.WHITE : crew.formatting());

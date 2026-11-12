@@ -220,7 +220,12 @@ public final class ShipEvents {
             default -> roll == 0 ? ShipClass.GALLEON : ShipClass.BRIGANTINE;
         };
         ship.setShipClass(cls);
-        ship.setHull(cls.maxHull());
+        // The old game's light and war ships: the Navy favours war ships, raiders light ones
+        float vr = world.random.nextFloat();
+        if (faction == ShipFaction.NAVY && vr < 0.3f) ship.setRefit(ShipEntity.WAR);
+        else if (faction == ShipFaction.PIRATE && vr < 0.35f) ship.setRefit(ShipEntity.LIGHT);
+        else if (faction == ShipFaction.DROWNED && vr < 0.2f) ship.setRefit(ShipEntity.WAR);
+        ship.setHull(ship.maxHull());
         ship.setFaction(faction);
         ship.setLook(faction == ShipFaction.NAVY ? ShipEntity.LOOK_NAVY : faction == ShipFaction.DROWNED ? ShipEntity.LOOK_GHOST : ShipEntity.LOOK_PLAIN);
         ship.setFlag(switch (faction) {

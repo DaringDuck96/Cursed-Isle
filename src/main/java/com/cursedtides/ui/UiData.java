@@ -81,6 +81,14 @@ public final class UiData {
         lines.addAll(com.cursedtides.dungeon.Delves.journal(player));
         lines.add("");
 
+        lines.add("§e§lInfamy");
+        lines.addAll(com.cursedtides.social.Infamy.journal(player));
+        lines.add("");
+
+        lines.add("§e§lThe Pirate Code");
+        lines.addAll(com.cursedtides.ui.Tips.code());
+        lines.add("");
+
         lines.add("§e§lContracts");
         lines.addAll(com.cursedtides.quest.Contracts.journal(player));
         lines.add("");

@@ -1,0 +1,22 @@
+{
+ "type": "minecraft:crafting_shapeless",
+ "category": "equipment",
+ "ingredients": [
+  {
+   "item": "cursedtides:cannonball"
+  },
+  {
+   "item": "cursedtides:cannonball"
+  },
+  {
+   "item": "minecraft:coal"
+  },
+  {
+   "item": "minecraft:blaze_powder"
+  }
+ ],
+ "result": {
+  "id": "cursedtides:firebrand_shot",
+  "count": 2
+ }
+}

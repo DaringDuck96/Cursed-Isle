@@ -27,6 +27,22 @@ public class CursedTidesClient implements ClientModInitializer {
                     for (int i = 0; i < payload.ids().size(); i++) WorkshopBipedRenderer.MARKERS.put(payload.ids().get(i), payload.kinds().get(i));
                 }));
         CutsceneClient.register();
+        // A pirate's tip on the loading screens, as the old game had
+        net.fabricmc.fabric.api.client.screen.v1.ScreenEvents.AFTER_INIT.register((client, screen, w, h) -> {
+            if (!(screen instanceof net.minecraft.client.gui.screen.world.LevelLoadingScreen
+                    || screen instanceof net.minecraft.client.gui.screen.DownloadingTerrainScreen
+                    || screen instanceof net.minecraft.client.gui.screen.MessageScreen
+                    || screen instanceof net.minecraft.client.gui.screen.ProgressScreen
+                    || screen instanceof net.minecraft.client.gui.screen.multiplayer.ConnectScreen)) return;
+            String tip = com.cursedtides.ui.Tips.random(new java.util.Random());
+            net.fabricmc.fabric.api.client.screen.v1.ScreenEvents.afterRender(screen).register((s, ctx, mx, my, delta) -> {
+                var tr = net.minecraft.client.MinecraftClient.getInstance().textRenderer;
+                int y = s.height - 40;
+                ctx.drawCenteredTextWithShadow(tr, "Pirate Tip", s.width / 2, y, 0xFFD24A);
+                var lines = tr.wrapLines(net.minecraft.text.Text.literal(tip), Math.min(360, s.width - 40));
+                for (int i = 0; i < lines.size(); i++) ctx.drawCenteredTextWithShadow(tr, lines.get(i), s.width / 2, y + 12 + i * 10, 0xE6DCC8);
+            });
+        });
         EntityRendererRegistry.register(ModEntities.CURSED_PIRATE, ctx -> BossLooks.rebuild(ctx, new WorkshopBipedRenderer<>(ctx,
                 new String[]{"cursed_grunt", "cursed_brute", "cursed_captain"},
                 e -> "cursed_" + e.rank().name().toLowerCase(),

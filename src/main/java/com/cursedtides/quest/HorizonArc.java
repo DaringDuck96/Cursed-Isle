@@ -453,6 +453,11 @@ public final class HorizonArc {
     public static String title(PlayerEntity p) {
         String crown = CrownArc.title(p);
         if (crown != null) return crown;
+        return horizonTitle(p);
+    }
+
+    /** The title from this act's ending alone. */
+    public static String horizonTitle(PlayerEntity p) {
         return switch (ending(p)) {
             case SEALED -> "Warden of the Horizon";
             case CLAIMED -> "Sovereign of the Seventh Tide";

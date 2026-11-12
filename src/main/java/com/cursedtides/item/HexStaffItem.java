@@ -89,9 +89,43 @@ public class HexStaffItem extends Item {
             return TypedActionResult.success(staff, world.isClient);
         }
 
+        // Hold to charge, as the old staffs did: a tap casts, half a second makes it Charged, a second and a half Fully Charged
+        user.setCurrentHand(hand);
+        return TypedActionResult.consume(staff);
+    }
+
+    @Override
+    public int getMaxUseTime(ItemStack stack, LivingEntity user) { return 72000; }
+
+    @Override
+    public net.minecraft.util.UseAction getUseAction(ItemStack stack) { return net.minecraft.util.UseAction.BOW; }
+
+    @Override
+    public void usageTick(World world, LivingEntity user, ItemStack stack, int remainingUseTicks) {
+        int held = getMaxUseTime(stack, user) - remainingUseTicks;
+        if (world.isClient && held > 8) {
+            Vec3d at = user.getEyePos().add(user.getRotationVec(1f).multiply(0.8));
+            world.addParticle(held >= 30 ? ParticleTypes.SOUL_FIRE_FLAME : ParticleTypes.WITCH, at.x, at.y - 0.2, at.z, 0, 0.02, 0);
+        }
+        if (!world.isClient && (held == 10 || held == 30)) {
+            world.playSound(null, user.getBlockPos(), SoundEvents.BLOCK_AMETHYST_BLOCK_CHIME, SoundCategory.PLAYERS, 1f, held == 30 ? 1.6f : 1.1f);
+            if (user instanceof PlayerEntity p) p.sendMessage(Text.literal(held == 30 ? "Fully charged!" : "Charged...").formatted(Formatting.DARK_AQUA), true);
+        }
+    }
+
+    @Override
+    public void onStoppedUsing(ItemStack stack, World world, LivingEntity user, int remainingUseTicks) {
+        if (!(user instanceof PlayerEntity p)) return;
+        int held = getMaxUseTime(stack, user) - remainingUseTicks;
+        float charge = held >= 30 ? 3.0f : held >= 10 ? 1.8f : 1.0f;
+        cast(world, p, p.getActiveHand(), stack, charge);
+    }
+
+    private TypedActionResult<ItemStack> cast(World world, PlayerEntity user, Hand hand, ItemStack staff, float charge) {
+        int level = PirateData.level(user, Weapon.HEX);
         Hex hex = selected(staff);
         if (hex.level > level) hex = Hex.BOLT;
-        int cost = (int) Math.round(hex.cost * (1.0 - com.cursedtides.pirate.PerkData.stat(user,
+        int cost = (int) Math.round(hex.cost * (charge >= 3 ? 2.0 : charge > 1 ? 1.4 : 1.0) * (1.0 - com.cursedtides.pirate.PerkData.stat(user,
                 com.cursedtides.pirate.Perk.Stat.HEX_COST)));
         if (!world.isClient && !PirateData.spendVoodoo(user, cost)) {
             user.sendMessage(Text.translatable("message.cursedtides.no_voodoo").formatted(Formatting.DARK_AQUA), true);
@@ -105,14 +139,20 @@ public class HexStaffItem extends Item {
                 SoundEvents.ENTITY_EVOKER_CAST_SPELL, SoundCategory.PLAYERS, 0.8f, 1.3f);
         if (world.isClient || !(world instanceof ServerWorld sw)) return TypedActionResult.success(staff, true);
 
-        float power = 1.0f + level * 0.03f + (float) com.cursedtides.pirate.PerkData.stat(user, com.cursedtides.pirate.Perk.Stat.HEX_DAMAGE);
+        float power = (1.0f + level * 0.03f + (float) com.cursedtides.pirate.PerkData.stat(user, com.cursedtides.pirate.Perk.Stat.HEX_DAMAGE)) * charge;
         switch (hex) {
             case BOLT -> {
                 Vec3d dir = user.getRotationVec(1.0f);
-                HexBoltEntity bolt = new HexBoltEntity(world, user, level);
-                bolt.setBonusDamage((float) com.cursedtides.pirate.PerkData.stat(user, com.cursedtides.pirate.Perk.Stat.HEX_DAMAGE));
-                bolt.setVelocity(dir.x, dir.y, dir.z, 1.6f, 0.0f);
-                world.spawnEntity(bolt);
+                int bolts = charge >= 3 ? 3 : 1;
+                for (int k = 0; k < bolts; k++) {
+                    HexBoltEntity bolt = new HexBoltEntity(world, user, level);
+                    bolt.setBonusDamage((float) com.cursedtides.pirate.PerkData.stat(user, com.cursedtides.pirate.Perk.Stat.HEX_DAMAGE)
+                            + (charge - 1) * 7f);
+                    Vec3d d = bolts == 1 ? dir : dir.rotateY((k - 1) * 0.12f);
+                    bolt.setVelocity(d.x, d.y, d.z, 1.6f + (charge - 1) * 0.2f, 0.0f);
+                    world.spawnEntity(bolt);
+                }
+                if (charge > 1) sw.spawnParticles(ParticleTypes.SOUL_FIRE_FLAME, user.getX(), user.getEyeY(), user.getZ(), 12, 0.3, 0.3, 0.3, 0.05);
             }
             case WITHER -> {
                 LivingEntity t = target(user, 24);

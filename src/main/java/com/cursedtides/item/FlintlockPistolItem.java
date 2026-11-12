@@ -81,10 +81,14 @@ public class FlintlockPistolItem extends Item {
         }
         if (user.isSneaking()) return TypedActionResult.success(gun, true);
 
+        // Special shot in the off hand is loaded first: venom, hot or silver; otherwise plain lead
+        net.minecraft.item.Item shot = ModItems.PISTOL_SHOT;
+        ItemStack off = user.getOffHandStack();
+        if (off.isOf(ModItems.VENOM_SHOT) || off.isOf(ModItems.HOT_SHOT) || off.isOf(ModItems.SILVER_SHOT)) shot = off.getItem();
         double save = com.cursedtides.pirate.PerkData.stat(user, com.cursedtides.pirate.Perk.Stat.AMMO_SAVE);
         boolean keepShot = !world.isClient && user.getRandom().nextDouble() < save
-                && user.getInventory().count(ModItems.PISTOL_SHOT) > 0;
-        if (!keepShot && !AmmoHelper.consume(user, ModItems.PISTOL_SHOT)) {
+                && user.getInventory().count(shot) > 0;
+        if (!keepShot && !AmmoHelper.consume(user, shot)) {
             world.playSound(null, user.getX(), user.getY(), user.getZ(),
                     SoundEvents.BLOCK_DISPENSER_FAIL, SoundCategory.PLAYERS, 0.8f, 1.4f);
             if (!world.isClient) {
@@ -169,7 +173,14 @@ public class FlintlockPistolItem extends Item {
             }
             for (Map.Entry<Entity, Float> hit : hits.entrySet()) {
                 Entity target = hit.getKey();
-                target.damage(world.getDamageSources().playerAttack(user), hit.getValue());
+                float dealt = hit.getValue();
+                if (shot == ModItems.SILVER_SHOT && target instanceof LivingEntity l && (l.getType().isIn(net.minecraft.registry.tag.EntityTypeTags.UNDEAD)
+                        || l instanceof com.cursedtides.entity.CursedPirateEntity)) dealt *= 1.75f;
+                if (shot == ModItems.HOT_SHOT) { dealt *= 1.15f; target.setOnFireFor(5); }
+                target.damage(world.getDamageSources().playerAttack(user), dealt);
+                if (shot == ModItems.VENOM_SHOT && target instanceof LivingEntity l) {
+                    l.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(net.minecraft.entity.effect.StatusEffects.POISON, 100, 1), user);
+                }
                 if (target instanceof LivingEntity living) {
                     living.takeKnockback(stats.pellets() > 1 ? 0.8 : 0.4, -aim.x, -aim.z);
                 }

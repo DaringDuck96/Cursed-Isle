@@ -328,5 +328,21 @@
   "item.cursedtides.cave_bat_spawn_egg": "Cave Bat Spawn Egg",
   "item.cursedtides.dune_scorpion_spawn_egg": "Dune Scorpion Spawn Egg",
   "item.cursedtides.snapjaw_spawn_egg": "Snapjaw Flytrap Spawn Egg",
-  "item.cursedtides.living_stump_spawn_egg": "Living Stump Spawn Egg"
+  "item.cursedtides.living_stump_spawn_egg": "Living Stump Spawn Egg",
+  "item.cursedtides.venom_shot": "Venom Shot",
+  "tooltip.cursedtides.venom_shot": "Pistol shot dipped in jungle poison. Hold in your off hand to load it.",
+  "item.cursedtides.hot_shot": "Hot Shot",
+  "tooltip.cursedtides.hot_shot": "Shot heated in the forge: hits harder and sets the target alight. Hold in your off hand to load it.",
+  "item.cursedtides.silver_shot": "Silver Shot",
+  "tooltip.cursedtides.silver_shot": "Cast with silver: nearly twice as hard against the cursed and the undead. Hold in your off hand to load it.",
+  "item.cursedtides.firebrand_shot": "Firebrand Shot",
+  "tooltip.cursedtides.firebrand_shot": "Pitch-soaked cannon shot: sets the hull and everyone on deck burning.",
+  "item.cursedtides.bane_shot": "Bane Shot",
+  "tooltip.cursedtides.bane_shot": "Cannon shot cast with salt and silver: tears through ghost ships.",
+  "item.cursedtides.light_refit": "Light Refit",
+  "tooltip.cursedtides.light_refit": "Use on your ship: stripped down for speed. Faster, thinner hull, a gun fewer a side.",
+  "item.cursedtides.war_refit": "War Refit",
+  "tooltip.cursedtides.war_refit": "Use on your ship: heavy timbers and an extra gun a side. Tougher, but slower.",
+  "item.cursedtides.festival_token": "Festival Token",
+  "tooltip.cursedtides.festival_token": "Dropped by festival visitors. Spend with /festival."
 }

@@ -1,0 +1,25 @@
+{
+ "type": "minecraft:crafting_shapeless",
+ "category": "equipment",
+ "ingredients": [
+  {
+   "item": "cursedtides:pistol_shot"
+  },
+  {
+   "item": "cursedtides:pistol_shot"
+  },
+  {
+   "item": "cursedtides:pistol_shot"
+  },
+  {
+   "item": "cursedtides:pistol_shot"
+  },
+  {
+   "item": "minecraft:spider_eye"
+  }
+ ],
+ "result": {
+  "id": "cursedtides:venom_shot",
+  "count": 4
+ }
+}

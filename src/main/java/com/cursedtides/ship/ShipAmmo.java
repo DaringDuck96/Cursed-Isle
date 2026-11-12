@@ -12,7 +12,11 @@ public enum ShipAmmo {
     /** A spray of small balls: shreds crews and anyone on deck, barely scratches hulls. */
     GRAPE("Grapeshot"),
     /** A shell that bursts on impact: the heaviest hull damage. */
-    EXPLOSIVE("Explosive shell");
+    EXPLOSIVE("Explosive shell"),
+    /** Pitch-soaked shot that sets the hull and everyone on deck alight; the fire keeps biting. */
+    FIREBRAND("Firebrand shot"),
+    /** Shot cast with salt and silver: tears through cursed hulls, ordinary against the living. */
+    BANE("Bane shot");
 
     private final String displayName;
 
@@ -30,6 +34,8 @@ public enum ShipAmmo {
             case CHAIN -> ModItems.CHAIN_SHOT;
             case GRAPE -> ModItems.GRAPESHOT;
             case EXPLOSIVE -> ModItems.EXPLOSIVE_SHELL;
+            case FIREBRAND -> ModItems.FIREBRAND_SHOT;
+            case BANE -> ModItems.BANE_SHOT;
         };
     }
 

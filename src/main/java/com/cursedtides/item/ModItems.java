@@ -94,6 +94,15 @@ public final class ModItems {
 
     // Ammunition
     public static final Item PISTOL_SHOT = register("pistol_shot", new Item(new Item.Settings()));
+    // Special shot: hold it in the off hand and your gun loads it first
+    public static final Item VENOM_SHOT = register("venom_shot", new LoreItem(new Item.Settings(), "tooltip.cursedtides.venom_shot"));
+    public static final Item HOT_SHOT = register("hot_shot", new LoreItem(new Item.Settings(), "tooltip.cursedtides.hot_shot"));
+    public static final Item SILVER_SHOT = register("silver_shot", new LoreItem(new Item.Settings(), "tooltip.cursedtides.silver_shot"));
+    public static final Item FIREBRAND_SHOT = register("firebrand_shot", new LoreItem(new Item.Settings().maxCount(16), "tooltip.cursedtides.firebrand_shot"));
+    public static final Item BANE_SHOT = register("bane_shot", new LoreItem(new Item.Settings().maxCount(16), "tooltip.cursedtides.bane_shot"));
+    public static final Item LIGHT_REFIT = register("light_refit", new LoreItem(new Item.Settings().maxCount(1).rarity(Rarity.UNCOMMON), "tooltip.cursedtides.light_refit"));
+    public static final Item WAR_REFIT = register("war_refit", new LoreItem(new Item.Settings().maxCount(1).rarity(Rarity.UNCOMMON), "tooltip.cursedtides.war_refit"));
+    public static final Item FESTIVAL_TOKEN = register("festival_token", new LoreItem(new Item.Settings().maxCount(64).rarity(Rarity.UNCOMMON), "tooltip.cursedtides.festival_token"));
     public static final Item CANNONBALL = register("cannonball", new Item(new Item.Settings().maxCount(16)));
 
     /** Visual only: what a flying hex bolt looks like. Not obtainable. */
@@ -223,6 +232,14 @@ public final class ModItems {
                         entries.add(MUSKET);
                         entries.add(BLUNDERBUSS);
                         entries.add(PISTOL_SHOT);
+                        entries.add(VENOM_SHOT);
+                        entries.add(HOT_SHOT);
+                        entries.add(SILVER_SHOT);
+                        entries.add(FIREBRAND_SHOT);
+                        entries.add(BANE_SHOT);
+                        entries.add(LIGHT_REFIT);
+                        entries.add(WAR_REFIT);
+                        entries.add(FESTIVAL_TOKEN);
                         entries.add(SHIPS_CANNON);
                         entries.add(CANNONBALL);
                         entries.add(HEX_STAFF);

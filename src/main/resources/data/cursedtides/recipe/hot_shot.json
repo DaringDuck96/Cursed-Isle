@@ -1,0 +1,25 @@
+{
+ "type": "minecraft:crafting_shapeless",
+ "category": "equipment",
+ "ingredients": [
+  {
+   "item": "cursedtides:pistol_shot"
+  },
+  {
+   "item": "cursedtides:pistol_shot"
+  },
+  {
+   "item": "cursedtides:pistol_shot"
+  },
+  {
+   "item": "cursedtides:pistol_shot"
+  },
+  {
+   "item": "minecraft:blaze_powder"
+  }
+ ],
+ "result": {
+  "id": "cursedtides:hot_shot",
+  "count": 4
+ }
+}

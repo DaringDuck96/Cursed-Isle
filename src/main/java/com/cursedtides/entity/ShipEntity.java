@@ -89,6 +89,9 @@ public class ShipEntity extends BoatEntity {
     /** Which flag flies from the masthead (0 = the plain pennant). */
     private static final TrackedData<Integer> FLAG = DataTracker.registerData(ShipEntity.class, TrackedDataHandlerRegistry.INTEGER);
     private static final TrackedData<Boolean> ANCHORED = DataTracker.registerData(ShipEntity.class, TrackedDataHandlerRegistry.BOOLEAN);
+    /** 0 regular, 1 light (fast, fragile, fewer guns), 2 war (slow, tough, more guns), as the old game's ships came. */
+    private static final TrackedData<Integer> VARIANT = DataTracker.registerData(ShipEntity.class, TrackedDataHandlerRegistry.INTEGER);
+    public static final int REGULAR = 0, LIGHT = 1, WAR = 2;
 
     public static final int LOOK_PLAIN = 0, LOOK_GHOST = 1, LOOK_NAVY = 2;
 
@@ -126,6 +129,7 @@ public class ShipEntity extends BoatEntity {
     protected void initDataTracker(DataTracker.Builder builder) {
         super.initDataTracker(builder);
         builder.add(HULL, (float) ShipClass.SLOOP.maxHull());
+        builder.add(VARIANT, 0);
         builder.add(SAIL, 0);
         builder.add(CLASS, 0);
         builder.add(FACTION, 0);
@@ -283,13 +287,23 @@ public class ShipEntity extends BoatEntity {
         this.dataTracker.set(UPGRADES, packed | ((level & 3) << shift));
     }
 
+    public int getRefit() { return this.dataTracker.get(VARIANT); }
+
+    public void setRefit(int v) {
+        float frac = getHull() / Math.max(1, maxHull());
+        this.dataTracker.set(VARIANT, Math.floorMod(v, 3));
+        setHull(frac * maxHull());
+    }
+
+    private float variantHull() { return getRefit() == LIGHT ? 0.8f : getRefit() == WAR ? 1.25f : 1.0f; }
+
     public int maxHull() {
-        return Math.round(shipClass().maxHull() * (1.0f + 0.3f * upgrade(ShipUpgradeItem.Kind.PLATING))
+        return Math.round(shipClass().maxHull() * variantHull() * (1.0f + 0.3f * upgrade(ShipUpgradeItem.Kind.PLATING))
                 * (getFigurehead() == com.cursedtides.ship.FigureheadItem.Kind.LION ? 1.15f : 1.0f));
     }
 
     public int guns() {
-        return shipClass().cannonsPerSide() + upgrade(ShipUpgradeItem.Kind.GUNS)
+        return Math.max(1, shipClass().cannonsPerSide() + (getRefit() == LIGHT ? -1 : getRefit() == WAR ? 1 : 0)) + upgrade(ShipUpgradeItem.Kind.GUNS)
                 + (getFigurehead() == com.cursedtides.ship.FigureheadItem.Kind.SKULL ? 1 : 0);
     }
 
@@ -298,7 +312,7 @@ public class ShipEntity extends BoatEntity {
     }
 
     private double speedFactor() {
-        return shipClass().speed() * (1.0 + getSailSkill() * 0.01) * (1.0 + 0.08 * upgrade(ShipUpgradeItem.Kind.CANVAS))
+        return shipClass().speed() * (getRefit() == LIGHT ? 1.2 : getRefit() == WAR ? 0.88 : 1.0) * (1.0 + getSailSkill() * 0.01) * (1.0 + 0.08 * upgrade(ShipUpgradeItem.Kind.CANVAS))
                 * (1.0 + 0.10 * this.dataTracker.get(NAVIGATORS))
                 * (getFigurehead() == com.cursedtides.ship.FigureheadItem.Kind.MERMAID ? 1.10 : 1.0);
     }
@@ -309,7 +323,11 @@ public class ShipEntity extends BoatEntity {
     }
 
     public Text shipName() {
-        return this.hasCustomName() ? this.getCustomName() : Text.literal("Unnamed " + shipClass().displayName());
+        return this.hasCustomName() ? this.getCustomName() : Text.literal("Unnamed " + variantName() + shipClass().displayName());
+    }
+
+    public String variantName() {
+        return getRefit() == LIGHT ? "Light " : getRefit() == WAR ? "War " : "";
     }
 
     // ================================================================== size and seats
@@ -556,7 +574,10 @@ public class ShipEntity extends BoatEntity {
     private int comeAboutTicks;
     private float comeAboutStep;
 
+    private long burningUntil;
+
     public void fullSail(long until) { fullSailUntil = until; }
+    public void setBurning(long until) { burningUntil = Math.max(burningUntil, until); }
     public void rammingSpeed(long until) { rammingUntil = until; }
     public void openFire(long until) { openFireUntil = until; }
     public void takeCover(long until) { coverUntil = until; }
@@ -564,6 +585,10 @@ public class ShipEntity extends BoatEntity {
     private boolean active(long until) { return this.getWorld().getTime() < until; }
 
     private void sailingSkills(ServerWorld world) {
+        if (active(burningUntil)) {
+            if (this.age % 5 == 0) world.spawnParticles(ParticleTypes.FLAME, getX(), getY() + 1, getZ(), 6, 1.2 * shipClass().scale(), 0.4, 1.2 * shipClass().scale(), 0.02);
+            if (this.age % 20 == 0) seaDamage(world, 3f, "Fire on deck!");
+        }
         if (comeAboutTicks > 0) {
             comeAboutTicks--;
             this.setYaw(this.getYaw() + comeAboutStep);
@@ -996,6 +1021,7 @@ public class ShipEntity extends BoatEntity {
                 com.cursedtides.quest.Contracts.onShipSunk(sinker, com.cursedtides.combat.Levels.levelOf(this));
                 com.cursedtides.sea.SeaEvents.onSunk(world, this, sinker);
                 com.cursedtides.quest.MusterArc.onSunk(sinker, this);
+                com.cursedtides.living.FestivalEvents.onShipSunk(sinker, this);
             }
             for (ServerPlayerEntity p : world.getPlayers(p -> p.squaredDistanceTo(this) < 80 * 80)) {
                 p.sendMessage(Text.literal("The ").append(shipName()).append(Text.literal(" slips beneath the waves!"))
@@ -1004,6 +1030,11 @@ public class ShipEntity extends BoatEntity {
             this.getPassengerList().forEach(Entity::discard);
         } else {
             UUID owner = getOwner();
+            // Sinking another pirate's ship: sea infamy
+            if (lastAttacker != null && !lastAttacker.equals(owner) && world.getPlayerByUuid(lastAttacker) instanceof ServerPlayerEntity raider
+                    && !com.cursedtides.social.CrewState.allied(world.getServer(), raider.getUuid(), owner == null ? raider.getUuid() : owner)) {
+                com.cursedtides.social.Infamy.sea(raider, 20 + shipClass().ordinal() * 5);
+            }
             if (owner != null && world.getPlayerByUuid(owner) instanceof ServerPlayerEntity captain) {
                 captain.sendMessage(Text.literal("Your ship ").append(shipName())
                         .append(Text.literal(" has gone down. Her cargo is adrift.")).formatted(Formatting.RED), false);
@@ -1091,6 +1122,21 @@ public class ShipEntity extends BoatEntity {
                 setFlag(flagItem.design().ordinal());
                 player.sendMessage(Text.literal("You run up the " + flagItem.design().displayName + ".").formatted(Formatting.GOLD), true);
                 this.getWorld().playSound(null, getX(), getY(), getZ(), SoundEvents.BLOCK_WOOL_PLACE, SoundCategory.PLAYERS, 1.0f, 1.0f);
+            }
+            return ActionResult.success(!server);
+        }
+        if (mine && (held.isOf(com.cursedtides.item.ModItems.LIGHT_REFIT) || held.isOf(com.cursedtides.item.ModItems.WAR_REFIT))) {
+            if (server) {
+                int v = held.isOf(com.cursedtides.item.ModItems.LIGHT_REFIT) ? LIGHT : WAR;
+                if (getRefit() == v) {
+                    player.sendMessage(Text.literal("She's already a " + variantName().trim().toLowerCase() + " ship.").formatted(Formatting.GRAY), true);
+                } else {
+                    setRefit(v);
+                    if (!player.getAbilities().creativeMode) held.decrement(1);
+                    player.sendMessage(Text.literal(v == LIGHT ? "Refitted light: stripped down for speed. Faster, but a thinner hull and fewer guns."
+                            : "Refitted for war: heavier timbers and an extra gun a side. Tougher, but slower.").formatted(Formatting.GOLD), false);
+                    this.getWorld().playSound(null, getX(), getY(), getZ(), SoundEvents.BLOCK_SMITHING_TABLE_USE, SoundCategory.PLAYERS, 1.0f, 0.8f);
+                }
             }
             return ActionResult.success(!server);
         }
@@ -1218,6 +1264,7 @@ public class ShipEntity extends BoatEntity {
         data.putInt("Emblem", this.dataTracker.get(EMBLEM));
         data.putBoolean("Anchored", isAnchored());
         data.putInt("Ammo", getAmmo().ordinal());
+        data.putInt("Variant", getRefit());
         data.put("Cargo", cargo.toNbtList(this.getRegistryManager()));
         return data;
     }
@@ -1225,6 +1272,7 @@ public class ShipEntity extends BoatEntity {
     private void loadShip(NbtCompound data) {
         insured = data.getBoolean(com.cursedtides.trade.Insurance.KEY);
         if (data.contains("Upgrades")) this.dataTracker.set(UPGRADES, data.getInt("Upgrades"));
+        this.dataTracker.set(VARIANT, data.getInt("Variant"));
         if (data.contains("Hull")) setHull(data.getFloat("Hull"));
         setLook(data.contains("Look") ? data.getInt("Look") : (data.getBoolean("Ghost") ? LOOK_GHOST : LOOK_PLAIN));
         if (data.contains("SailColor")) this.dataTracker.set(SAIL_COLOR, data.getInt("SailColor"));

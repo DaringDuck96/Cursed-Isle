@@ -1,0 +1,24 @@
+{
+ "type": "minecraft:crafting_shaped",
+ "category": "equipment",
+ "pattern": [
+  "FSF",
+  "PPP",
+  "FSF"
+ ],
+ "key": {
+  "F": {
+   "item": "minecraft:feather"
+  },
+  "S": {
+   "item": "minecraft:string"
+  },
+  "P": {
+   "item": "minecraft:oak_planks"
+  }
+ },
+ "result": {
+  "id": "cursedtides:light_refit",
+  "count": 1
+ }
+}

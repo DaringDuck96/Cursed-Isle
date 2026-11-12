@@ -176,6 +176,7 @@ public final class Duels {
                 .formatted(Formatting.GOLD), false);
         if (winner != null) {
             PirateData.addXp(winner, Weapon.CUTLASS, 25);
+            Infamy.land(winner, 20);
             com.cursedtides.activity.Achievements.grant(winner, "duel_won");
             com.cursedtides.activity.Challenges.progress(winner, "duel", 1);
             com.cursedtides.activity.Leaderboards.add(winner, "duels", 1);
@@ -183,6 +184,7 @@ public final class Duels {
         }
         if (loser != null) {
             PirateData.addXp(loser, Weapon.CUTLASS, 8);
+            Infamy.land(loser, 3);
         }
     }
 

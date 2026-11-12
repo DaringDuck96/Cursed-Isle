@@ -64,8 +64,16 @@ public class CannonballEntity extends ThrownItemEntity {
             case CHAIN -> target instanceof ShipEntity ? 4.0f : 8.0f;
             case GRAPE -> target instanceof ShipEntity ? 2.0f : 7.0f;
             case EXPLOSIVE -> 12.0f;
+            case FIREBRAND -> 7.0f;
+            case BANE -> target instanceof ShipEntity s && (s.isGhost() || s.getFaction() == com.cursedtides.ship.ShipFaction.DROWNED) ? 17.0f
+                    : target instanceof LivingEntity l && l.getType().isIn(net.minecraft.registry.tag.EntityTypeTags.UNDEAD) ? 14.0f : 9.0f;
         };
         target.damage(this.getDamageSources().thrown(this, this.getOwner()), damage);
+        if (ammo == ShipAmmo.FIREBRAND) {
+            target.setOnFireFor(6);
+            if (target instanceof ShipEntity ship) ship.setBurning(this.getWorld().getTime() + 120);
+            for (Entity e : target.getPassengerList()) e.setOnFireFor(6);
+        }
         if (ammo == ShipAmmo.CHAIN && target instanceof ShipEntity ship) {
             ship.tearRigging(400);
         }
@@ -80,6 +88,7 @@ public class CannonballEntity extends ThrownItemEntity {
         float power = switch (ammo) {
             case ROUND -> 1.8f;
             case EXPLOSIVE -> 3.0f;
+            case FIREBRAND -> 0.8f;
             default -> 0.0f;
         };
         if (this.getWorld() instanceof net.minecraft.server.world.ServerWorld sw) {

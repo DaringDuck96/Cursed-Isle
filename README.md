@@ -1,4 +1,4 @@
-# Cursed Tides (Fabric 1.21.1), version 0.26.0
+# Cursed Tides (Fabric 1.21.1), version 0.27.0
 
 An original pirate adventure built around four pillars: **sailing, ship ownership,
 island exploration and character progression**. Everything in it (islands, characters,
@@ -11,7 +11,7 @@ You need **Java 21** (the JDK, e.g. from adoptium.net).
 1. Unzip this folder.
 2. Open a terminal in it and run `gradlew.bat build` (Windows) or `./gradlew build` (Mac/Linux).
 3. The first build downloads Minecraft and Fabric (a few minutes).
-4. Your mod is at `build/libs/cursed-tides-0.26.0.jar` (ignore the `-sources` jar).
+4. Your mod is at `build/libs/cursed-tides-0.27.0.jar` (ignore the `-sources` jar).
 
 Put that jar plus **Fabric API** for 1.21.1 into `.minecraft/mods`. To test without installing: `./gradlew runClient`.
 
@@ -152,6 +152,38 @@ and leather. The captain's attire comes with Brethren rank 300; the Tidewatch un
 | Boarding Axe | 2 iron, an iron block and 2 sticks |
 | Throwing Knives (x4) | Shapeless: iron ingot and 2 iron nuggets |
 | Sailor's garb | Wool (bandana, shirt, breeches with a leather belt) and leather (boots) in armour shapes |
+
+### New in 0.27: friends, ship refits, special ammo, charged staffs, infamy, titles, festivals, tips
+
+**Friends.** `/friend add <player>` (they accept with a click), `/friends` to see who's aboard, their level and
+where they are, with [Whisper] and [Go to] buttons. `/w <name> <message>` whispers. Going to a friend works when
+they're ashore and you're not mid-fight or in the brig. Friends are told when you come aboard or leave.
+
+**Light and War ships.** Use a **Light Refit** on your ship (feathers, string and planks) for 20% more speed, a
+fifth less hull and a gun fewer a side; a **War Refit** (iron and dark oak) for a quarter more hull and an extra gun
+a side, but 12% slower. The Navy sails war ships, raiders light ones.
+
+**Special ammo.** Pistol shot: **Venom** (poisons), **Hot** (harder, sets alight), **Silver** (nearly double against
+the cursed and undead). Hold it in your off hand and the gun loads it first. Craft four from four plain shot and a
+spider eye, blaze powder or two iron nuggets. Cannon shot: **Firebrand** (sets the ship and her deck burning) and
+**Bane** (tears through ghost ships); cycle to them with C as usual.
+
+**Charged staffs.** Hold use with a hex staff: a tap casts as before, half a second makes it **Charged** (1.8x),
+a second and a half **Fully Charged** (3x, and a bolt becomes three). Costs a little more voodoo.
+
+**Infamy.** Land infamy from duels and fights with other pirates, sea infamy from sinking their ships, each with
+eight ranks (Landlubber to Legend of the Land; Bilge Rat to Dread of the Seven Tides) and a badge by your name
+(⚔ and ⚓). In the journal.
+
+**Titles.** `/title` lists every title you've earned (story endings, feats, infamy ranks, festival honours); click
+one to wear it under your name.
+
+**Festivals with events.** Each festival brings visitors to the towns who drop festival tokens: Golden Crabs (Spring
+Tide Fair), Penitent Shades (Saint Vesper's), Lantern Ghosts (Night of Lanterns), Salt Thieves (Salt Harvest), Frost
+Wraiths (Midwinter); Regatta Week pays tokens for every ship sunk. Fireworks over the towns at night for Regatta,
+Saint Vesper's and Midwinter. `/festival` spends tokens on a trinket, a sea chest or the festival's own title.
+
+**Tips** on the loading screens, and the Pirate Code in the journal.
 
 ### New in 0.26: sailing skills, lock-on, island creatures, cutscenes, quick chat, guilds
 
