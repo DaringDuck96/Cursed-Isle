@@ -45,7 +45,7 @@ public final class Forts {
             for (double f = 0.62; f >= 0.4; f -= 0.06) {
                 int x = is.cx() + (int) Math.round(Math.cos(a) * is.radius() * f);
                 int z = is.cz() + (int) Math.round(Math.sin(a) * is.radius() * f);
-                if (!Archipelago.column(x, z).isLand() || Builds.blocksPlants(x, z)) continue;
+                if (!Archipelago.column(x, z).isLand()) continue; // (must not touch Builds here: Builds reads FORTS while it loads)
                 boolean spaced = true;
                 for (int[] o : out) if (Math.abs(o[0] - x) + Math.abs(o[1] - z) < 18) spaced = false;
                 if (spaced) { out.add(new int[]{x, z}); break; }
