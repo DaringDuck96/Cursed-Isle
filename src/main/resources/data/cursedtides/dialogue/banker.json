@@ -18,7 +18,7 @@
     },
     {
      "if": [
-      "notoriety>=100"
+      "notoriety>=33"
      ],
      "text": [
       "A captain of means! The bank is honoured. Truly. Please don't rob us."

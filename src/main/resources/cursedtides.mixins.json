@@ -3,10 +3,14 @@
   "minVersion": "0.8",
   "package": "com.cursedtides.mixin",
   "compatibilityLevel": "JAVA_21",
-  "mixins": [],
+  "mixins": [
+    "LivingEntityMixin",
+    "MobEntityMixin"
+  ],
   "client": [
     "AbstractClientPlayerMixin",
-    "BackgroundRendererMixin"
+    "BackgroundRendererMixin",
+    "InGameHudMixin"
   ],
   "injectors": {
     "defaultRequire": 1

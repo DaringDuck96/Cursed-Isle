@@ -120,7 +120,7 @@ public final class Caverns {
     }
 
     /** The flattest open bit of the island that no building claims; failing that, the flattest bit of land at all. */
-    private static int[] findMouth(Archipelago.Island is) {
+    public static int[] findMouth(Archipelago.Island is) {
         int[] best = null, fallback = null;
         int bestSlope = Integer.MAX_VALUE, fallbackSlope = Integer.MAX_VALUE;
         for (int r = 8; r < is.radius() * 0.9; r += 3) {
@@ -197,6 +197,14 @@ public final class Caverns {
     }
 
     // ------------------------------------------------------------------ the rope
+
+    /** Like {@link #at}, but never forces the world layout to be worked out (null until it has been). */
+    public static Cavern atQuiet(BlockPos p) {
+        List<Cavern> b = built;
+        if (b == null) return null;
+        for (Cavern c : b) if (c.contains(p)) return c;
+        return null;
+    }
 
     public static Cavern at(BlockPos p) {
         for (Cavern c : all()) if (c.contains(p)) return c;

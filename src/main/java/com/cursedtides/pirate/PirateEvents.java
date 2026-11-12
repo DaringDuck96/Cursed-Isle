@@ -39,10 +39,6 @@ public final class PirateEvents {
             for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
                 PirateData.regenVoodoo(player, 2 + (int) PerkData.stat(player, Perk.Stat.VOODOO_REGEN)
                         + (int) com.cursedtides.appearance.Appearance.special(player, "voodoo"));
-                if (tick % 20 == 0 && (player.getMainHandStack().isOf(ModItems.HEX_STAFF)
-                        || player.getOffHandStack().isOf(ModItems.HEX_STAFF))) {
-                    player.sendMessage(voodooBar(player), true);
-                }
             }
         });
 
@@ -151,11 +147,10 @@ public final class PirateEvents {
         if (weapon == null) {
             return;
         }
-        int xp = Math.max(4, Math.round(victim.getMaxHealth() / 2f));
-        PirateData.addXp(player, weapon, xp);
+        PirateData.addXp(player, weapon, com.cursedtides.combat.Levels.killReputation(player, victim));
     }
 
-    private static Weapon weaponFor(ServerPlayerEntity player, Entity direct) {
+    public static Weapon weaponFor(ServerPlayerEntity player, Entity direct) {
         if (direct instanceof CannonballEntity) {
             return Weapon.CANNON;
         }

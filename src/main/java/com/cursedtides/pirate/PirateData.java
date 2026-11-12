@@ -12,7 +12,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
 /**
- * Pirate progression: per-weapon mastery (level 0-30), notoriety (sum of all mastery
+ * Pirate progression: per-weapon mastery (level 0-30), notoriety (overall level 1-50 from all reputation;
  * levels, 0-120) with a title, and a regenerating voodoo energy bar for hexes.
  */
 public final class PirateData {
@@ -35,7 +35,7 @@ public final class PirateData {
             "title.cursedtides.dread_captain",// 75
             "title.cursedtides.tide_legend"   // 100
     };
-    private static final int[] TITLE_THRESHOLDS = {0, 5, 15, 35, 60, 95, 140};
+    private static final int[] TITLE_THRESHOLDS = {1, 5, 10, 18, 26, 36, 46};
 
     /** Forces the attachment types to register during mod init. */
     public static void init() {
@@ -61,12 +61,24 @@ public final class PirateData {
         return levelForXp(xp(player, weapon));
     }
 
-    public static int notoriety(PlayerEntity player) {
+    public static final int MAX_NOTORIETY = 50;
+
+    /** All reputation earned, across every skill. */
+    public static int totalXp(PlayerEntity player) {
         int total = 0;
         for (Weapon w : Weapon.values()) {
-            total += level(player, w);
+            total += xp(player, w);
         }
         return total;
+    }
+
+    /** Notoriety: the pirate's overall level (1-50), set by all the reputation they've earned. */
+    public static int notoriety(PlayerEntity player) {
+        return Math.min(MAX_NOTORIETY, 1 + (int) Math.floor(Math.sqrt(totalXp(player) / 18.0)));
+    }
+
+    public static int totalXpForNotoriety(int level) {
+        return 18 * (level - 1) * (level - 1);
     }
 
     public static Text title(int notoriety) {
@@ -92,19 +104,27 @@ public final class PirateData {
         amount = (int) Math.round(amount * (1.0 + bonus));
         player.setAttached(weapon.xpType(), oldXp + amount);
 
+        int newNotoriety = notoriety(player);
+        if (newNotoriety > oldNotoriety) {
+            player.sendMessage(Text.literal("Notoriety " + newNotoriety + "! Your health rises.")
+                    .formatted(Formatting.GOLD, Formatting.BOLD), false);
+            player.getWorld().playSound(null, player.getX(), player.getY(), player.getZ(),
+                    SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundCategory.PLAYERS, 0.6f, 1.3f);
+            com.cursedtides.combat.Levels.refreshPlayer(player);
+            player.setHealth(player.getMaxHealth());
+            if (!title(oldNotoriety).equals(title(newNotoriety))) {
+                player.sendMessage(Text.translatable("message.cursedtides.new_title",
+                        title(newNotoriety).copy().formatted(Formatting.GOLD, Formatting.BOLD)), false);
+            }
+        }
         int newLevel = level(player, weapon);
         if (newLevel > oldLevel) {
-            int notoriety = notoriety(player);
             player.sendMessage(Text.translatable("message.cursedtides.mastery_up",
                     Text.translatable(weapon.translationKey()).formatted(weapon.color(), Formatting.BOLD),
                     newLevel).formatted(Formatting.YELLOW), false);
             player.getWorld().playSound(null, player.getX(), player.getY(), player.getZ(),
                     SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.8f, 1.2f);
 
-            if (!title(oldNotoriety).equals(title(notoriety))) {
-                player.sendMessage(Text.translatable("message.cursedtides.new_title",
-                        title(notoriety).copy().formatted(Formatting.GOLD, Formatting.BOLD)), false);
-            }
             if (weapon == Weapon.CUTLASS && oldLevel < 5 && newLevel >= 5) {
                 player.sendMessage(Text.translatable("message.cursedtides.unlock_whirl")
                         .formatted(Formatting.AQUA), false);

@@ -29,6 +29,8 @@ public class CursedTides implements ModInitializer {
         QuestData.init();
         FactionData.init();
         com.cursedtides.dungeon.Dungeons.init();
+        // Before anything else that moves a respawning pirate (the brig, sieges, wars), so those win.
+        com.cursedtides.living.Gaols.register();
         com.cursedtides.block.ModBlocks.register();
         com.cursedtides.ui.UiData.register();
         ModEntities.register();
@@ -77,6 +79,8 @@ public class CursedTides implements ModInitializer {
         com.cursedtides.trade.TradeEvents.register();
         com.cursedtides.activity.Regatta.register();
         com.cursedtides.dungeon.Caverns.register();
+        com.cursedtides.combat.Levels.register();
+        com.cursedtides.living.Camps.register();
         LOGGER.info("Cursed Tides: hoist the colours!");
     }
 }

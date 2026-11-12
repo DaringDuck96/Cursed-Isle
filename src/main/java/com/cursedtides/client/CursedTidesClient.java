@@ -43,6 +43,7 @@ public class CursedTidesClient implements ClientModInitializer {
         ShipKeys.registerReceivers();
         AppearanceClient.register();
         MiniGameScreens.register();
+        CombatHud.register();
         net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap.INSTANCE.putBlock(
                 com.cursedtides.block.ModBlocks.MOON_SEAL, net.minecraft.client.render.RenderLayer.getCutout());
         net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap.INSTANCE.putBlock(

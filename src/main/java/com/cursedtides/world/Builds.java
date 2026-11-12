@@ -153,6 +153,7 @@ public final class Builds {
 
         // ===== Grand caverns: last, so their mouths keep clear of everything above =====
         com.cursedtides.dungeon.Caverns.addBuilds(ALL);
+        com.cursedtides.living.Gaols.addBuilds(ALL);
     }
 
     /** Where each named character stands, so lost NPCs can be put back (/cursedtides restore_npcs). */

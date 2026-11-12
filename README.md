@@ -1,4 +1,4 @@
-# Cursed Tides (Fabric 1.21.1), version 0.18.0
+# Cursed Tides (Fabric 1.21.1), version 0.19.0
 
 An original pirate adventure built around four pillars: **sailing, ship ownership,
 island exploration and character progression**. Everything in it (islands, characters,
@@ -11,7 +11,7 @@ You need **Java 21** (the JDK, e.g. from adoptium.net).
 1. Unzip this folder.
 2. Open a terminal in it and run `gradlew.bat build` (Windows) or `./gradlew build` (Mac/Linux).
 3. The first build downloads Minecraft and Fabric (a few minutes).
-4. Your mod is at `build/libs/cursed-tides-0.18.0.jar` (ignore the `-sources` jar).
+4. Your mod is at `build/libs/cursed-tides-0.19.0.jar` (ignore the `-sources` jar).
 
 Put that jar plus **Fabric API** for 1.21.1 into `.minecraft/mods`. To test without installing: `./gradlew runClient`.
 
@@ -152,6 +152,27 @@ and leather. The captain's attire comes with Brethren rank 300; the Tidewatch un
 | Boarding Axe | 2 iron, an iron block and 2 sticks |
 | Throwing Knives (x4) | Shapeless: iron ingot and 2 iron nuggets |
 | Sailor's garb | Wool (bandana, shirt, breeches with a leather belt) and leather (boots) in armour shapes |
+
+### New in 0.19: fighting and levelling the old way
+
+- **Enemy levels:** every foe has a level after its name (`Cursed Pirate [Lv 7]`) set by where it lives. The
+  starting beaches are level 1 to 5, the far reaches 40 to 50, and the grand caverns run a few levels above
+  their island. Health and hits scale with level.
+- **Enemy camps instead of random spawns:** foes no longer spawn at random in the dark. Each island has fixed
+  camps out in the wilds (never in town) with two to four foes each. They come back to the same spot about half
+  a minute after you kill them, and if you drag them too far they give up and go home healed. The undead here
+  don't burn in daylight.
+- **Health in numbers:** the hearts are replaced by a health bar with numbers (you start at 100), a voodoo bar
+  beneath it, and your notoriety level beside it. The foe you're fighting shows its health in the top corner,
+  and damage numbers float up off whatever you hit.
+- **Reputation and notoriety:** you earn reputation in a weapon by dealing damage with it, not just by landing
+  the killing blow. Tough foes give more and foes far beneath you give almost nothing. All your reputation
+  together sets your notoriety (level 1 to 50), and each notoriety level raises your maximum health. Weapon
+  mastery also makes that weapon hit harder.
+- **Defeat:** you keep everything (the mod turns on `keepInventory`) and wake up in the nearest port's gaol at
+  full health, with the cell door hanging open. Gaols are at Driftwood, Saltmarrow, Port Meridian, Kingsport,
+  Saint Vesper, Ironwatch, Blackthorn, Goldwater, Raven's Landing and Crownwatch. Being arrested while wanted
+  still sends you to the Tidewatch brig.
 
 ### New in 0.18: the grand caverns
 
