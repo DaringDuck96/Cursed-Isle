@@ -11,6 +11,7 @@
   "client": [
     "AbstractClientPlayerMixin",
     "BackgroundRendererMixin",
+    "EntityRenderDispatcherMixin",
     "InGameHudMixin",
     "MinecraftClientMusicMixin"
   ],

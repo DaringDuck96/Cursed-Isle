@@ -21,10 +21,10 @@ public class CursedTidesClient implements ClientModInitializer {
 
         // Characters, crews and the cursed, drawn with the Mob Workshop's models (see WorkshopModels)
         WorkshopModels.registerLayers();
-        EntityRendererRegistry.register(ModEntities.CURSED_PIRATE, ctx -> new WorkshopBipedRenderer<>(ctx,
+        EntityRendererRegistry.register(ModEntities.CURSED_PIRATE, ctx -> BossLooks.rebuild(ctx, new WorkshopBipedRenderer<>(ctx,
                 new String[]{"cursed_grunt", "cursed_brute", "cursed_captain"},
                 e -> "cursed_" + e.rank().name().toLowerCase(),
-                e -> "cursed_" + e.rank().name().toLowerCase() + "_" + (e.kind() == com.cursedtides.entity.CursedPirateEntity.Kind.DECKHAND ? "cursed" : e.kind().name().toLowerCase()), 1.0f));
+                e -> "cursed_" + e.rank().name().toLowerCase() + "_" + (e.kind() == com.cursedtides.entity.CursedPirateEntity.Kind.DECKHAND ? "cursed" : e.kind().name().toLowerCase()), 1.0f)));
         EntityRendererRegistry.register(ModEntities.DROWNED_CAPTAIN, ctx -> new WorkshopBipedRenderer<>(ctx, new String[]{"thorne"}, e -> "thorne", e -> "thorne", 1.25f));
         EntityRendererRegistry.register(ModEntities.QUARTERMASTER, ctx -> WorkshopBipedRenderer.single(ctx, "quartermaster"));
         EntityRendererRegistry.register(ModEntities.SHIPWRIGHT, ctx -> WorkshopBipedRenderer.single(ctx, "shipwright"));

@@ -28,7 +28,7 @@ const ROSTER = [
   { id: "cursed_brute", name: "Cursed Brute", group: "Undead", tpl: "biped", opt: { kind: "skeleton", build: "brute", hat: "none" }, pal: P(UNDEAD_KINDS.Cursed), variants: UNDEAD_KINDS },
   { id: "cursed_captain", name: "Cursed Captain", group: "Undead", tpl: "biped", opt: { kind: "skeleton", hat: "tricorn", coat: true }, pal: P(Object.assign({}, UNDEAD_KINDS.Cursed, { coat: "#6e1f1c", hat: "#221c18" })), variants: UNDEAD_KINDS },
   { id: "thorne", name: "Captain Ashmere Thorne", group: "Undead", tpl: "biped", opt: { kind: "drowned", hat: "tricorn", coat: true, beard: true }, pal: P({ skin: "#7d9e94", hair: "#2a3a37", coat: "#24504c", hat: "#14201e", accent: "#9be0c8", glow: "#9dffd8" }) },
-  { id: "dread_captain", name: "The Dread Captain", group: "Undead", tpl: "biped", opt: { kind: "skeleton", build: "brute", hat: "bicorne", coat: true }, pal: P({ bone: "#cfc4a8", coat: "#1c1414", hat: "#0e0b0b", accent: "#c23a2a", glow: "#ff4a3a" }) },
+  { id: "dread_captain", name: "The Dread Captain", group: "Undead", tpl: "biped", opt: { kind: "skeleton", build: "brute", hat: "bicorne", coat: true, cape: true, epaulettes: true }, pal: P({ bone: "#cfc4a8", coat: "#1c1414", hat: "#0e0b0b", accent: "#c23a2a", glow: "#ff4a3a" }) },
   // Main characters
   ...[
     ["keeper_wren","Keeper Wren",{ hair: "long", hat: "none", coat: true, female: true },{ skin: "#e3b896", hair: "#c9c3b8", coat: "#c9a43a", shirt: "#e8e0cf" }],
@@ -79,24 +79,24 @@ const ROSTER = [
     ["bounty_hunter","Bounty Hunter",{ hat: "tricorn", coat: true, beard: true },{ coat: "#3a3028", hat: "#1a1714", accent: "#8c7a55" }]
   ].map(([id, name, opt, pal]) => ({ id, name, group: "Generic people", tpl: "biped", opt, pal: P(pal) })),
   // Bosses
-  { id: "tide_sovereign", name: "The Tide Sovereign", group: "Bosses", tpl: "biped", opt: { kind: "drowned", hat: "crown", robe: true, build: "brute" }, pal: P({ skin: "#5d8f9a", coat: "#1d4d5c", accent: "#9ee8ff", hat: "#c7b06a", glow: "#9ee8ff" }) },
-  { id: "lampwrights_hand", name: "The Lampwright's Hand", group: "Bosses", tpl: "biped", opt: { hat: "hood", robe: true }, pal: P({ coat: "#1c1a20", hat: "#141218", accent: "#f2c45a", glow: "#f2c45a" }) },
-  { id: "cinder_king", name: "The Cinder King", group: "Bosses", tpl: "biped", opt: { kind: "skeleton", build: "brute", hat: "crown", robe: true }, pal: P(Object.assign({}, UNDEAD_KINDS.Ember, { coat: "#3a1a10", hat: "#d4a53a" })) },
-  { id: "veil_witch", name: "The Veil Witch", group: "Bosses", tpl: "biped", opt: { hat: "hood", robe: true, female: true }, pal: P({ skin: "#b9c7bf", coat: "#3a4a4e", hat: "#2a383b", glow: "#c6f2e8" }) },
-  { id: "red_maddox", name: "Red Maddox, Pirate Warlord", group: "Bosses", tpl: "biped", opt: { hat: "tricorn", coat: true, beard: true, build: "brute" }, pal: P({ hair: "#a3301e", coat: "#6e1612", hat: "#1b1210", accent: "#d4a53a" }) },
-  { id: "ashen_herald", name: "The Ashen Herald", group: "Bosses", tpl: "biped", opt: { kind: "skeleton", hat: "hood", robe: true }, pal: P(Object.assign({}, UNDEAD_KINDS.Ember, { coat: "#4a4442", hat: "#3a3432" })) },
-  { id: "pretender", name: "The Pretender", group: "Bosses", tpl: "biped", opt: { kind: "drowned", hat: "crown", coat: true }, pal: P({ skin: "#9cb3ad", coat: "#2a3a5a", hat: "#9aa5b0", accent: "#c7d2dc", glow: "#c7d2dc" }) },
+  { id: "tide_sovereign", name: "The Tide Sovereign", group: "Bosses", tpl: "biped", opt: { kind: "drowned", hat: "crown", robe: true, build: "brute", spikes: true, cape: true, staff: "trident" }, pal: P({ skin: "#5d8f9a", coat: "#1d4d5c", accent: "#9ee8ff", hat: "#c7b06a", glow: "#9ee8ff" }) },
+  { id: "lampwrights_hand", name: "The Lampwright's Hand", group: "Bosses", tpl: "biped", opt: { hat: "hood", robe: true, lantern: true, cape: true }, pal: P({ coat: "#1c1a20", hat: "#141218", accent: "#f2c45a", glow: "#f2c45a" }) },
+  { id: "cinder_king", name: "The Cinder King", group: "Bosses", tpl: "biped", opt: { kind: "skeleton", build: "brute", hat: "crown", robe: true, spikes: true, cape: true }, pal: P(Object.assign({}, UNDEAD_KINDS.Ember, { coat: "#3a1a10", hat: "#d4a53a" })) },
+  { id: "veil_witch", name: "The Veil Witch", group: "Bosses", tpl: "biped", opt: { hat: "hood", robe: true, female: true, veil: true, staff: "crook" }, pal: P({ skin: "#b9c7bf", coat: "#3a4a4e", hat: "#2a383b", glow: "#c6f2e8" }) },
+  { id: "red_maddox", name: "Red Maddox, Pirate Warlord", group: "Bosses", tpl: "biped", opt: { hat: "tricorn", coat: true, beard: true, build: "brute", epaulettes: true, eyepatch: true, cape: true }, pal: P({ hair: "#a3301e", coat: "#6e1612", hat: "#1b1210", accent: "#d4a53a" }) },
+  { id: "ashen_herald", name: "The Ashen Herald", group: "Bosses", tpl: "biped", opt: { kind: "skeleton", hat: "hood", robe: true, censer: true, staff: "crook" }, pal: P(Object.assign({}, UNDEAD_KINDS.Ember, { coat: "#4a4442", hat: "#3a3432" })) },
+  { id: "pretender", name: "The Pretender", group: "Bosses", tpl: "biped", opt: { kind: "drowned", hat: "crown", coat: true, cape: true, epaulettes: true }, pal: P({ skin: "#9cb3ad", coat: "#2a3a5a", hat: "#9aa5b0", accent: "#c7d2dc", glow: "#c7d2dc" }) },
   { id: "abyssal", name: "The Abyssal", group: "Bosses", tpl: "serpent", pal: P({ skin: "#26343f", shirt: "#3e5a63", accent: "#7a2d3d", glow: "#7fe6ff", bone: "#d9d2bd" }) },
-  { id: "brannoch", name: "Brannoch, Who Drowned the Fire", group: "Bosses", tpl: "biped", opt: { kind: "drowned", beard: true, hat: "none", build: "brute" }, pal: P({ skin: "#6b8f86", hair: "#2a3d38", shirt: "#3a4f4a", glow: "#9dffd8" }) },
-  { id: "grey_lamplighter", name: "The Grey Lamplighter", group: "Bosses", tpl: "biped", opt: { kind: "skeleton", hat: "hood", robe: true }, pal: P({ bone: "#cfcabd", coat: "#6a6864", hat: "#5a5854", glow: "#ffd27a" }) },
-  { id: "mother_of_gulls", name: "Mother of Gulls", group: "Bosses", tpl: "biped", opt: { hat: "hood", robe: true, female: true }, pal: P({ coat: "#e6e2d8", hat: "#cfcabc", skin: "#c9a78a", accent: "#4a4a48" }) },
-  { id: "bone_abbot", name: "The Bone Abbot", group: "Bosses", tpl: "biped", opt: { kind: "skeleton", hat: "mitre", robe: true, build: "brute" }, pal: P({ bone: "#ece4cf", coat: "#2a2430", hat: "#e2d6b0", accent: "#b39a4a", glow: "#9fd0ff" }) },
-  { id: "cinder_matron", name: "The Cinder Matron", group: "Bosses", tpl: "biped", opt: { kind: "drowned", robe: true, female: true, hat: "hood" }, pal: P({ skin: "#5a3328", coat: "#3a1c14", hat: "#2a140e", glow: "#ff8a3a" }) },
+  { id: "brannoch", name: "Brannoch, Who Drowned the Fire", group: "Bosses", tpl: "biped", opt: { kind: "drowned", beard: true, hat: "none", build: "brute", seaweed: true }, pal: P({ skin: "#6b8f86", hair: "#2a3d38", shirt: "#3a4f4a", glow: "#9dffd8" }) },
+  { id: "grey_lamplighter", name: "The Grey Lamplighter", group: "Bosses", tpl: "biped", opt: { kind: "skeleton", hat: "hood", robe: true, lantern: true, staff: "pole" }, pal: P({ bone: "#cfcabd", coat: "#6a6864", hat: "#5a5854", glow: "#ffd27a" }) },
+  { id: "mother_of_gulls", name: "Mother of Gulls", group: "Bosses", tpl: "biped", opt: { hat: "hood", robe: true, female: true, wings: true }, pal: P({ coat: "#e6e2d8", hat: "#cfcabc", skin: "#c9a78a", accent: "#4a4a48" }) },
+  { id: "bone_abbot", name: "The Bone Abbot", group: "Bosses", tpl: "biped", opt: { kind: "skeleton", hat: "mitre", robe: true, build: "brute", staff: "crook", cape: true }, pal: P({ bone: "#ece4cf", coat: "#2a2430", hat: "#e2d6b0", accent: "#b39a4a", glow: "#9fd0ff" }) },
+  { id: "cinder_matron", name: "The Cinder Matron", group: "Bosses", tpl: "biped", opt: { kind: "drowned", robe: true, female: true, hat: "hood", spikes: true, censer: true }, pal: P({ skin: "#5a3328", coat: "#3a1c14", hat: "#2a140e", glow: "#ff8a3a" }) },
   { id: "old_gnasher", name: "Old Gnasher", group: "Bosses", tpl: "bigcroc", pal: P({ skin: "#4d5f3a", shirt: "#c8c49a", accent: "#2f3b24", bone: "#efe8d2" }) },
-  { id: "grubb", name: "Claim-Jumper Grubb", group: "Bosses", tpl: "biped", opt: { hat: "cap", beard: true, build: "brute", apron: true }, pal: P({ hat: "#6a5a44", shirt: "#7a5a3a", pants: "#3d3a36", hair: "#5a3a22", metal: "#a8a29a" }) },
-  { id: "mother_brine", name: "Mother Brine", group: "Bosses", tpl: "biped", opt: { kind: "drowned", robe: true, female: true, hair: "long" }, pal: P({ skin: "#6f9a92", hair: "#2c4f48", coat: "#2b4a46", glow: "#9dffd8" }) },
+  { id: "grubb", name: "Claim-Jumper Grubb", group: "Bosses", tpl: "biped", opt: { hat: "cap", lamp: true, beard: true, build: "brute", apron: true }, pal: P({ hat: "#6a5a44", shirt: "#7a5a3a", pants: "#3d3a36", hair: "#5a3a22", metal: "#a8a29a" }) },
+  { id: "mother_brine", name: "Mother Brine", group: "Bosses", tpl: "biped", opt: { kind: "drowned", robe: true, female: true, hair: "long", seaweed: true, staff: "trident" }, pal: P({ skin: "#6f9a92", hair: "#2c4f48", coat: "#2b4a46", glow: "#9dffd8" }) },
   { id: "slag_beast", name: "The Slag Beast", group: "Bosses", tpl: "beast", pal: P({ skin: "#3a3634", shirt: "#55504c", glow: "#ff7a2a", bone: "#8a827a" }) },
-  { id: "lantern_warden", name: "The Lantern Warden", group: "Bosses", tpl: "biped", opt: { hat: "hood", robe: true, build: "brute" }, pal: P({ coat: "#e8e2cf", hat: "#d8d0b8", skin: "#c9b49a", glow: "#fff1b0", accent: "#c9a33b" }) },
+  { id: "lantern_warden", name: "The Lantern Warden", group: "Bosses", tpl: "biped", opt: { hat: "hood", robe: true, build: "brute", chestlight: true, lantern: true }, pal: P({ coat: "#e8e2cf", hat: "#d8d0b8", skin: "#c9b49a", glow: "#fff1b0", accent: "#c9a33b" }) },
   // Wildlife
   ...[["crocodile","Crocodile",{ skin: "#4f6a3c", shirt: "#c9c499" }],["shark","Shark",{ skin: "#6a7f8c", shirt: "#e9ecea" }],["jaguar","Jaguar",{ skin: "#d39a3e", shirt: "#f1e2c2", accent: "#2a1e16" }],
       ["boar","Boar",{ skin: "#5d4433", shirt: "#3a2a1f", bone: "#efe6d0" }],["crab","Crab",{ skin: "#b9452e", shirt: "#e6b8a0" }],["snake","Snake",{ skin: "#4d7a34", shirt: "#d4cf82", accent: "#2a3f1d" }],
@@ -143,12 +143,14 @@ function biped(opt) {
   const hat = [];
   if (opt.hat === "tricorn") { hat.push(cube([-6, -9, -6], [12, 1, 12], "hat", "hat"), cube([-4.5, -11.5, -4.5], [9, 3, 9], "hat", "hat"), cube([-5.5, -10.5, -6.5], [11, 2, 1], "trim", "accent")); }
   else if (opt.hat === "bicorne") { hat.push(cube([-7, -12, -2], [14, 4, 4], "hat", "hat"), cube([-4.5, -9, -4.5], [9, 1, 9], "hat", "hat"), cube([-1, -13, -2.5], [2, 2, 1], "trim", "accent")); }
-  else if (opt.hat === "cap") { hat.push(cube([-4.5, -9.5, -4.5], [9, 2, 9], "hat", "hat"), cube([-4.5, -8, -6.5], [9, 1, 3], "hat", "hat")); }
+  else if (opt.hat === "cap") { hat.push(cube([-4.5, -9.5, -4.5], [9, 2, 9], "hat", "hat"), cube([-4.5, -8, -6.5], [9, 1, 3], "hat", "hat")); if (opt.lamp) hat.push(cube([-1, -10, -5.2], [2, 2, 1], "glow", "glow")); }
   else if (opt.hat === "bandana") { hat.push(cube([-4.5, -8.6, -4.5], [9, 3, 9], "cloth", "hat"), cube([-1, -6.5, 4.4], [2, 3, 1], "cloth", "hat")); }
   else if (opt.hat === "hood") { hat.push(cube([-4.6, -8.6, -4.6], [9.2, 9.2, 9.2], "hood", "hat")); }
   else if (opt.hat === "crown") { hat.push(cube([-4.5, -10, -4.5], [9, 2, 9], "metal", "hat"), ...[[-4.5, -4.5], [3.5, -4.5], [-4.5, 3.5], [3.5, 3.5], [-0.5, -4.5]].map(([x, z]) => cube([x, -12, z], [1, 2, 1], "glow", "glow"))); }
   else if (opt.hat === "mitre") { hat.push(cube([-3.5, -14, -3], [7, 6, 6], "hat", "hat"), cube([-0.5, -15, -3.2], [1, 6, 1], "trim", "accent")); }
   if (opt.hair === "long" && !sk && opt.hat !== "hood") hat.push(cube([-4.3, -8.3, 0.5], [8.6, 10, 4], "hair", "hair"));
+  if (opt.veil) hat.push(cube([-4.4, -6, -4.9], [8.8, 7, 0.4], "veil", "hat"));
+  if (opt.eyepatch) head.push(cube([1, -5, -4.3], [2, 2, 0.3], "plain", "hat"));
   if (hat.length) parts.push(part("hat", null, [0, 0, 0], [0, 0, 0], hat));
   const body = [cube([-4, 0, -2], [8, 12, 4], sk ? "ribs" : "torso", sk ? "bone" : "shirt")];
   if (brute) body[0] = cube([-5, 0, -3], [10, 12, 6], sk ? "ribs" : "torso", sk ? "bone" : "shirt");
@@ -157,6 +159,14 @@ function biped(opt) {
   if (opt.robe) body.push(cube([-bw - 0.6, 0, -bd - 0.6], [bw * 2 + 1.2, 12, bd * 2 + 1.2], "coat", "coat"), cube([-bw - 0.8, 12, -bd - 0.8], [bw * 2 + 1.6, 11, bd * 2 + 1.6], "robe", "coat"));
   if (opt.apron) body.push(cube([-bw + 0.5, 3, -bd - 0.6], [bw * 2 - 1, 13, 0.6], "cloth", "accent"));
   if (dr) body.push(cube([-bw, 9, -bd - 0.4], [bw * 2, 1, 0.4], "trim", "glow"));
+  // Boss dressings
+  if (opt.cape) body.push(cube([-bw - 0.5, 0, bd + 0.6], [bw * 2 + 1, 20, 1], "robe", "accent"));
+  if (opt.wings) for (const sd of [-1, 1]) body.push(cube(sd < 0 ? [-bw - 9, -2, bd] : [bw, -2, bd], [9, 14, 1], "feathers", "coat"));
+  if (opt.epaulettes) for (const sd of [-1, 1]) body.push(cube(sd < 0 ? [-bw - 2, -1, -bd - 0.5] : [bw - 1, -1, -bd - 0.5], [3, 1.5, bd * 2 + 1], "trim", "accent"));
+  if (opt.spikes) for (const sd of [-1, 1]) for (let k = 0; k < 3; k++) body.push(cube([sd < 0 ? -bw - 1 + k : bw - k, -3 - k * 1.5, -1 + (k % 2)], [1, 2 + k, 1], "glow", "glow"));
+  if (opt.seaweed) for (let k = 0; k < 5; k++) body.push(cube([-bw + k * (bw * 2 / 5), 2 + (k % 2) * 2, -bd - 0.7], [1, 9 + (k % 3) * 2, 0.5], "cloth", "accent"));
+  if (opt.chestlight) body.push(cube([-1.5, 3, -bd - 2.5], [3, 4, 2], "glow", "glow"));
+  if (opt.censer) body.push(cube([bw - 1, 10, -bd - 2], [2, 2, 2], "glow", "glow"));
   parts.push(part("body", null, [0, 0, 0], [0, 0, 0], body));
   const ax = brute ? 6 : 5, lx = brute ? 2.4 : 1.9, armPat = sk ? "bonelimb" : "arm", legPat = sk ? "bonelimb" : "leg";
   const half = limb / 2;
@@ -165,8 +175,12 @@ function biped(opt) {
     if ((opt.coat || opt.robe) && sk) c.push(cube(side < 0 ? [-limb + 0.5, -2.5, -half - 0.5] : [-1.5, -2.5, -half - 0.5], [limb + 1, 7, limb + 1], "coat", "coat"));
     return c;
   };
-  parts.push(part("right_arm", null, [-ax, 2, 0], [0, 0, 0], arm(-1)));
-  parts.push(part("left_arm", null, [ax, 2, 0], [0, 0, 0], arm(1)));
+  const ra = arm(-1), la = arm(1);
+  // A staff or crook held upright in the right hand, a lantern hanging from the left
+  if (opt.staff) ra.push(cube([-limb / 2 - 0.5, -8, -half - 3], [1, 26, 1], "wood", "pants"), cube([-limb / 2 - 1, -11, -half - 3.5], [2, 3, 2], opt.staff === "crook" ? "trim" : "glow", opt.staff === "crook" ? "accent" : "glow"));
+  if (opt.lantern) la.push(cube([-0.5, 10, -half - 1], [1, 2, 1], "metal", "metal"), cube([-1.5, 12, -half - 2], [3, 4, 3], "glow", "glow"));
+  parts.push(part("right_arm", null, [-ax, 2, 0], [0, 0, 0], ra));
+  parts.push(part("left_arm", null, [ax, 2, 0], [0, 0, 0], la));
   const leg = () => [cube([-half, 0, -half], [limb, 12, limb], legPat, sk ? "bone" : "pants")];
   parts.push(part("right_leg", null, [-lx, 12, 0], [0, 0, 0], leg()));
   parts.push(part("left_leg", null, [lx, 12, 0], [0, 0, 0], leg()));
@@ -317,6 +331,7 @@ function paintModel(proj, img) {
         const n = hash(x + fx, y + fy, seed) - 0.5;
         let col = shade(base, light + n * 0.09);
         const gy = y / Math.max(1, fh - 1);
+        let hole = false;
         switch (pat) {
           case "planks": case "hull": case "deck": if (y % 3 === 2) col = shade(col, -0.22); if ((x + Math.floor(y / 3) * 7) % 13 === 0) col = shade(col, -0.15); if (pat === "hull" && face !== "top" && face !== "bottom" && y === 1) col = shade(hex2rgb(pal.accent), -0.1); break;
           case "wood": if ((x + y) % 4 === 0) col = shade(col, -0.12); break;
@@ -334,7 +349,7 @@ function paintModel(proj, img) {
           case "hat": if (y === fh - 1 && face !== "top" && face !== "bottom") col = shade(col, -0.25); break;
           case "trim": col = shade(base, 0.1 + n * 0.05); break;
           case "cloth": if ((x + y) % 4 === 0) col = shade(col, -0.12); break;
-          case "hood": if (face === "north" && x > 0 && x < fw - 1 && y > 1) col = [18, 15, 14]; break;
+          case "hood": if (face === "north" && x > 0 && x < fw - 1 && y > 1) { col = [18, 15, 14]; if (y > 2) hole = true; } break;
           case "hair": case "beard": col = shade(base, n * 0.16 + (x % 2 ? -0.06 : 0)); break;
           case "scales": if ((x + (y % 2) * 2) % 4 === 0 || y % 3 === 0) col = shade(col, -0.16); if (face === "bottom") col = shade(hex2rgb(pal.shirt), n * 0.08); break;
           case "skinsmooth": if (face === "bottom" || (face !== "top" && gy > 0.62)) col = shade(hex2rgb(pal.shirt), n * 0.05); break;
@@ -346,8 +361,10 @@ function paintModel(proj, img) {
           case "maw": if (face === "top" && (x % 3 === 0)) col = hex2rgb(pal.bone); break;
           case "fin": col = shade(col, -0.05 * gy); break;
           case "glow": case "eyeglow": col = shade(hex2rgb(pal.glow), n * 0.1); break;
+          case "feathers": if ((x + y * 2) % 5 === 0) col = shade(col, -0.2); if (y % 4 === 3) col = shade(col, 0.1); break;
+          case "veil": if ((face === "north" || face === "south") && y > 0 && (x + y) % 2 === 0) hole = true; else col = shade(col, -0.15); break;
         }
-        put(fx + x, fy + y, col);
+        put(fx + x, fy + y, col, hole ? 0 : 255);
       }
     }
     // Faces: eyes, brows, mouth on the front of heads
@@ -382,6 +399,5 @@ function paintModel(proj, img) {
     }
   }
 }
-
 
 module.exports={ROSTER,UNDEAD_KINDS,buildTemplate,autoUV,paintModel,clone,part};

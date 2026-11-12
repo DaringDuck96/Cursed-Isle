@@ -1,4 +1,4 @@
-# Cursed Tides (Fabric 1.21.1), version 0.23.0
+# Cursed Tides (Fabric 1.21.1), version 0.24.0
 
 An original pirate adventure built around four pillars: **sailing, ship ownership,
 island exploration and character progression**. Everything in it (islands, characters,
@@ -11,7 +11,7 @@ You need **Java 21** (the JDK, e.g. from adoptium.net).
 1. Unzip this folder.
 2. Open a terminal in it and run `gradlew.bat build` (Windows) or `./gradlew build` (Mac/Linux).
 3. The first build downloads Minecraft and Fabric (a few minutes).
-4. Your mod is at `build/libs/cursed-tides-0.23.0.jar` (ignore the `-sources` jar).
+4. Your mod is at `build/libs/cursed-tides-0.24.0.jar` (ignore the `-sources` jar).
 
 Put that jar plus **Fabric API** for 1.21.1 into `.minecraft/mods`. To test without installing: `./gradlew runClient`.
 
@@ -152,6 +152,33 @@ and leather. The captain's attire comes with Brethren rank 300; the Tidewatch un
 | Boarding Axe | 2 iron, an iron block and 2 sticks |
 | Throwing Knives (x4) | Shapeless: iron ingot and 2 iron nuggets |
 | Sailor's garb | Wool (bandana, shirt, breeches with a leather belt) and leather (boots) in armour shapes |
+
+### New in 0.24: boss models
+
+All eighteen bosses now have their own Mob Workshop models instead of borrowing vanilla mobs' looks:
+
+| Boss | Look |
+|---|---|
+| The Tide Sovereign | Drowned giant in a robe and cape, a glowing crown and coral spikes, a trident |
+| The Lampwright's Hand | Black hood and cape, a lantern swinging from one hand |
+| The Cinder King | Burnt skeleton in a robe and cape, an ember crown and spikes |
+| The Veil Witch | Hood and a sheer veil you can just see her eyes through, a crook |
+| Red Maddox | Red coat, cape, gold epaulettes, eye patch, tricorn and beard |
+| The Ashen Herald | Hooded skeleton with a crook and a smoking censer |
+| The Pretender | Drowned noble in a crown, coat, cape and epaulettes |
+| The Abyssal | A great sea serpent with a glowing-eyed head, a working jaw and six rippling segments |
+| Brannoch | Hulking drowned man draped in seaweed |
+| The Grey Lamplighter | Hooded skeleton with a lamp pole and a lantern |
+| Mother of Gulls | Hooded woman with great feathered wings |
+| The Bone Abbot | Skeleton in a mitre and cape, carrying a crook |
+| The Cinder Matron | Drowned woman in a hood with ember spikes and a censer |
+| Old Gnasher | An oversized crocodile |
+| Claim-Jumper Grubb | Bearded miner with a lamp on his cap and an apron |
+| Mother Brine | Drowned woman with long hair, seaweed and a trident |
+| The Slag Beast | A molten four-legged beast |
+| The Lantern Warden | Hooded brute with a light in his chest and a lantern |
+
+Hoods are now open at the front, so you can see the face under them (characters included).
 
 ### New in 0.23: new models from the Mob Workshop
 

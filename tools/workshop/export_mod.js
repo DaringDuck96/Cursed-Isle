@@ -69,6 +69,18 @@ for (const rank of ["cursed_grunt", "cursed_brute", "cursed_captain"]) {
     paint(proj, rank + "_" + kind.toLowerCase());
   }
 }
+// Bosses: one model and texture each; creature-shaped ones also list their part paths for CreatureModel
+const BOSSES = L.ROSTER.filter(e => e.group === "Bosses").map(e => e.id);
+const creatureParts = {};
+for (const id of BOSSES) {
+  const proj = model(id);
+  paint(proj, id);
+  if (byId[id].tpl !== "biped") {
+    const ps = proj.model.parts, by = Object.fromEntries(ps.map(p => [p.name, p]));
+    const pathOf = (p) => p.parent ? pathOf(by[p.parent]) + "/" + p.name : p.name;
+    creatureParts[id] = ps.map(pathOf);
+  }
+}
 // Ships: each class in plain, navy and ghost colours
 const shipInfo = {};
 for (const cls of ["sloop","schooner","brigantine","brig","frigate","galleon","ship_of_the_line"]) {
@@ -97,6 +109,14 @@ public final class WorkshopModels {
         return new net.minecraft.client.render.entity.model.EntityModelLayer(com.cursedtides.CursedTides.id("workshop_" + id), "main");
     }
 
+    /** Part paths of the creature-shaped bosses, for CreatureModel; null for people. */
+    public static String[] parts(String id) {
+        return switch (id) {
+${Object.entries(creatureParts).map(([id, ps]) => `            case "${id}" -> new String[]{${ps.map(p => `"${p}"`).join(", ")}};`).join("\n")}
+            default -> null;
+        };
+    }
+
     public static void registerLayers() {
 ${info.map(([id, m]) => `        net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry.registerModelLayer(layer("${id}"), WorkshopModels::${m});`).join("\n")}
     }
@@ -104,6 +124,6 @@ ${info.map(([id, m]) => `        net.fabricmc.fabric.api.client.rendering.v1.Ent
 ${methods.map(m => m.code).join("\n")}}
 `;
 fs.writeFileSync(MOD + "java/com/cursedtides/client/WorkshopModels.java", out);
-fs.writeFileSync("export_info.json", JSON.stringify({ info, shipInfo }, null, 1));
+fs.writeFileSync("export_info.json", JSON.stringify({ info, shipInfo, creatureParts }, null, 1));
 console.log(info.length, "models;", fs.readdirSync(TEX).length, "textures;", Math.round(fs.readdirSync(TEX).reduce((a, x) => a + fs.statSync(TEX + x).size, 0) / 1024), "KB");
 console.log(JSON.stringify(shipInfo));
