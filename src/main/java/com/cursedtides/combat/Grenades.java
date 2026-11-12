@@ -172,7 +172,8 @@ public final class Grenades {
     public static final List<Item> ITEMS = new ArrayList<>();
 
     private static Item reg(Kind k) {
-        Item item = Registry.register(Registries.ITEM, CursedTides.id(k.name().toLowerCase()),
+        String id = switch (k) { case SMOKE -> "smoke_bomb"; case BLAST -> "blast_charge"; default -> k.name().toLowerCase(); };
+        Item item = Registry.register(Registries.ITEM, CursedTides.id(id),
                 new GrenadeItem(new Item.Settings().maxCount(16).rarity(k == Kind.BLAST ? Rarity.UNCOMMON : Rarity.COMMON), k));
         ITEMS.add(item);
         return item;
