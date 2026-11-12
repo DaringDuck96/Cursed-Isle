@@ -88,6 +88,7 @@ public final class Appearance {
         }));
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             ServerPlayerEntity joined = handler.getPlayer();
+            com.cursedtides.quest.CrownArc.applyEnding(joined);
             applyAccessories(joined);
             List<Entry> all = new ArrayList<>();
             for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) all.add(new Entry(p.getUuid(), code(p)));
@@ -95,6 +96,7 @@ public final class Appearance {
             broadcast(joined);
         });
         ServerPlayerEvents.AFTER_RESPAWN.register((oldP, newP, alive) -> {
+            com.cursedtides.quest.CrownArc.applyEnding(newP);
             applyAccessories(newP);
             broadcast(newP);
         });

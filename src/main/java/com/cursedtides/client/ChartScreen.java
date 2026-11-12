@@ -58,6 +58,7 @@ public class ChartScreen extends Screen {
         for (int i = 0; i < Archipelago.ISLANDS.size(); i++) {
             Archipelago.Island is = Archipelago.ISLANDS.get(i);
             boolean known = (chart.islands() & (1 << i)) != 0;
+            if (!known && Archipelago.isHidden(i)) continue; // off the charts until someone finds it
             int color = known ? colorFor(is.style()) : 0x553C5A6E;
             int r = Math.max(2, (int) (is.radius() * 0.75 * scale()));
             int cx = sx(is.cx()), cz = sz(is.cz());
@@ -78,6 +79,15 @@ public class ChartScreen extends Screen {
             context.fill(x - 1, z - 1, x + 2, z + 2, cleared ? 0xFF5BC85B : 0xFF1A1A1A);
         }
 
+        // Whirlpools and fog banks
+        for (var w : com.cursedtides.explore.SeaHazards.WHIRLPOOLS) {
+            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("§3@"), sx(w.x()), sz(w.z()) - 4, 0xFFFFFF);
+        }
+        for (var f : com.cursedtides.explore.SeaHazards.FOG) {
+            int r = Math.max(3, (int) (f.radius() * scale())), fx = sx(f.x()), fz = sz(f.z());
+            context.fill(fx - r, fz - r / 3, fx + r, fz + r / 3, 0x30FFFFFF);
+        }
+
         // Treasure X's
         for (int i = 0; i + 1 < chart.marks().size(); i += 2) {
             int x = sx(chart.marks().get(i)), z = sz(chart.marks().get(i + 1));
@@ -93,7 +103,7 @@ public class ChartScreen extends Screen {
         }
 
         context.drawCenteredTextWithShadow(this.textRenderer,
-                Text.literal("§fwhite/red: you   §8■§f dungeon   §a■§f vault opened   §cX§f treasure"),
+                Text.literal("§fwhite/red: you   §8■§f dungeon   §a■§f vault opened   §cX§f treasure   §3@§f whirlpool"),
                 this.width / 2, t + s + 8, 0xFFFFFF);
         super.render(context, mouseX, mouseY, delta);
     }

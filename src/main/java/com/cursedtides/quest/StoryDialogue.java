@@ -26,8 +26,8 @@ public final class StoryDialogue {
             case COMMODORE -> commodore(npc, player);
             case BROKER -> broker(npc, player);
             case DEALER -> {
-                say(npc, player, "Hold'em, blinds one and two. Sit down and buy in with what you're carrying.");
-                com.cursedtides.poker.PokerTables.join(player);
+                say(npc, player, "Hold'em, blinds one and two. Sit down and buy in with what you're carrying. Anyone else who sits at my table plays against you.");
+                com.cursedtides.poker.PokerTables.join(player, npc);
             }
             case GAMBLER -> gambler(npc, player);
             case GOVERNOR -> governor(npc, player);

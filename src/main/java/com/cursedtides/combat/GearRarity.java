@@ -42,6 +42,12 @@ public final class GearRarity {
     private static final List<Item> GUNS = List.of(ModItems.FLINTLOCK_PISTOL, ModItems.DOUBLE_BARREL_PISTOL, ModItems.MUSKET,
             ModItems.BLUNDERBUSS, ModItems.HAND_CANNON);
 
+    public static ItemStack legendaryOf(ServerWorld world, net.minecraft.item.Item item, Random r) {
+        ItemStack stack = new ItemStack(item);
+        apply(world, stack, Grade.LEGENDARY, r);
+        return stack;
+    }
+
     public static boolean isLegendary(ItemStack stack) {
         return stack.getOrDefault(DataComponentTypes.CUSTOM_DATA, net.minecraft.component.type.NbtComponent.DEFAULT)
                 .copyNbt().getString("Grade").equals("LEGENDARY");

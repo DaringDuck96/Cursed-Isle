@@ -82,6 +82,9 @@ public class CannonballEntity extends ThrownItemEntity {
             case EXPLOSIVE -> 3.0f;
             default -> 0.0f;
         };
+        if (this.getWorld() instanceof net.minecraft.server.world.ServerWorld sw) {
+            com.cursedtides.world.Forts.onImpact(sw, hit.getPos(), this.getOwner(), this);
+        }
         if (power > 0) {
             this.getWorld().createExplosion(this, this.getX(), this.getY(), this.getZ(), power, World.ExplosionSourceType.NONE);
         }

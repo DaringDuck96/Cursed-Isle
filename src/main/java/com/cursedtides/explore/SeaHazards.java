@@ -50,7 +50,9 @@ public final class SeaHazards {
             new FogBank("the Murk", -380, -360, 140),
             new FogBank("the Grey Veil", 900, -400, 120),
             new FogBank("the Shroud", -470, 860, 150),
-            new FogBank("Lanternless Water", 0, 1100, 160));
+            new FogBank("Lanternless Water", 0, 1100, 160),
+            new FogBank("the Nowhere Mist", -940, -720, 130),
+            new FogBank("the Crown's Veil", 1140, 320, 110));
 
     private static final Map<UUID, Vec3d> LAST_VEL = new HashMap<>();
     private static final Map<UUID, String> LAST_ZONE = new HashMap<>();

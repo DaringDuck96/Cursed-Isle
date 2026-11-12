@@ -137,6 +137,7 @@ public final class Builds {
         // ===== The outer reaches (0.9) =====
         OuterBuilds.addAll();
         SunkenCity.addAll();
+        HiddenBuilds.addAll();
 
         // ===== Dungeons: underground layouts, plus a plant-free plot around each entrance =====
         for (com.cursedtides.dungeon.Dungeon d : com.cursedtides.dungeon.Dungeons.ALL) {

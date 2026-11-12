@@ -69,6 +69,8 @@ public class CursedTides implements ModInitializer {
         com.cursedtides.activity.Activities.register();
         com.cursedtides.explore.Exploration.register();
         com.cursedtides.home.Homes.register();
+        com.cursedtides.world.Forts.register();
+        com.cursedtides.quest.CrownArc.register();
         com.cursedtides.activity.Regatta.register();
         LOGGER.info("Cursed Tides: hoist the colours!");
     }

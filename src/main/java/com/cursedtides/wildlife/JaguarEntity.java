@@ -2,7 +2,7 @@ package com.cursedtides.wildlife;
 
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ai.goal.ActiveTargetGoal;
-import net.minecraft.entity.ai.goal.LeapAtTargetGoal;
+import net.minecraft.entity.ai.goal.PounceAtTargetGoal;
 import net.minecraft.entity.ai.goal.LookAroundGoal;
 import net.minecraft.entity.ai.goal.LookAtEntityGoal;
 import net.minecraft.entity.ai.goal.MeleeAttackGoal;
@@ -32,7 +32,7 @@ public class JaguarEntity extends HostileEntity {
     @Override
     protected void initGoals() {
         this.goalSelector.add(0, new SwimGoal(this));
-        this.goalSelector.add(2, new LeapAtTargetGoal(this, 0.4f));
+        this.goalSelector.add(2, new PounceAtTargetGoal(this, 0.4f));
         this.goalSelector.add(3, new MeleeAttackGoal(this, 1.2, true));
         this.goalSelector.add(6, new WanderAroundFarGoal(this, 0.8));
         this.goalSelector.add(7, new LookAtEntityGoal(this, PlayerEntity.class, 10.0f));

@@ -24,6 +24,8 @@ public final class PokerGame {
     static final class Seat {
         String name;
         boolean human;
+        java.util.UUID owner;
+        boolean leaving;
         int stack;
         int bet;          // this street
         int contributed;  // this hand
@@ -93,6 +95,46 @@ public final class PokerGame {
         return seats[0].stack <= 0 && handOver;
     }
 
+    public int stack(int seat) {
+        return seats[seat].stack;
+    }
+
+    public java.util.UUID owner(int seat) {
+        return seats[seat].owner;
+    }
+
+    public boolean isHuman(int seat) {
+        return seats[seat].human && !seats[seat].leaving;
+    }
+
+    /** Puts a player in a seat held by a house player. Only between hands. Returns the seat, or -1 if none is free. */
+    public int seatHuman(java.util.UUID id, String name, int buyIn) {
+        if (!handOver) return -1;
+        for (int i = 0; i < SEATS; i++) {
+            if (!seats[i].human || seats[i].leaving) {
+                Seat st = seats[i];
+                st.human = true;
+                st.leaving = false;
+                st.owner = id;
+                st.name = name;
+                st.stack = buyIn;
+                say(name + " takes a seat at the table.");
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    void seatsOwner(int seat, java.util.UUID id) {
+        seats[seat].owner = id;
+    }
+
+    public int humans() {
+        int n = 0;
+        for (Seat st : seats) if (st.human && !st.leaving) n++;
+        return n;
+    }
+
     private void say(String line) {
         log.addLast(line);
         while (log.size() > 6) log.removeFirst();
@@ -101,9 +143,18 @@ public final class PokerGame {
     // ================================================================== hand flow
 
     public void startHand() {
-        if (!handOver || seats[0].stack <= 0) return;
-        for (int i = 1; i < SEATS; i++) {
-            if (seats[i].stack <= 0) {
+        if (!handOver || humans() == 0) return;
+        for (int i = 0; i < SEATS; i++) {
+            if (seats[i].leaving || (seats[i].human && seats[i].stack <= 0)) {
+                seats[i].human = false;
+                seats[i].leaving = false;
+                seats[i].owner = null;
+                seatNewOpponent(seats[i]);
+                say(seats[i].name + " takes the empty seat.");
+            }
+        }
+        for (int i = 0; i < SEATS; i++) {
+            if (!seats[i].human && seats[i].stack <= 0) {
                 String gone = seats[i].name;
                 seatNewOpponent(seats[i]);
                 say(gone + " is cleaned out. " + seats[i].name + " sits down.");
@@ -391,8 +442,22 @@ public final class PokerGame {
     // ================================================================== NPC play
 
     /** Called every server tick; lets the NPC whose turn it is think, then act. */
+    private int humanWait;
+    private int lastActing = -2;
+
     public boolean tick() {
-        if (handOver || acting <= 0) return false;
+        if (handOver || acting < 0) return false;
+        if (acting != lastActing) {
+            lastActing = acting;
+            humanWait = 0;
+        }
+        if (seats[acting].human && !seats[acting].leaving) {
+            // A real player gets 45 seconds before the table acts for them
+            if (++humanWait < 900) return false;
+            say(seats[acting].name + " took too long.");
+            act(acting, toCall(acting) == 0 ? CHECK_CALL : FOLD, 0);
+            return true;
+        }
         if (--npcDelay > 0) return false;
         npcDecide(acting);
         return true;
@@ -468,27 +533,42 @@ public final class PokerGame {
     // ================================================================== player leaves mid-hand
 
     public void playerLeaves() {
-        if (!handOver && !seats[0].folded) {
-            seats[0].folded = true;
-            if (acting == 0) acting = next(0, false);
+        playerLeaves(0);
+    }
+
+    /** A player gets up: folds if mid-hand; the seat goes back to the house at the next deal. */
+    public void playerLeaves(int seat) {
+        Seat st = seats[seat];
+        if (!handOver && !st.folded) {
+            if (acting == seat) act(seat, FOLD, 0);
+            else st.folded = true;
         }
+        st.stack = 0;
+        st.leaving = true;
+        say(st.name + " leaves the table.");
     }
 
     // ================================================================== state for the screen
 
     public NbtCompound toNbt() {
+        return toNbt(0);
+    }
+
+    /** The table as seen from one seat: that seat is drawn at the bottom (index 0) and only its cards show. */
+    public NbtCompound toNbt(int viewer) {
         NbtCompound nbt = new NbtCompound();
         NbtList names = new NbtList();
         int[] stacks = new int[SEATS], bets = new int[SEATS], flags = new int[SEATS], shown = new int[SEATS * 2];
-        for (int i = 0; i < SEATS; i++) {
+        for (int d = 0; d < SEATS; d++) {
+            int i = (viewer + d) % SEATS;
             Seat s = seats[i];
-            names.add(NbtString.of(s.name));
-            stacks[i] = s.stack;
-            bets[i] = s.bet;
-            flags[i] = (s.folded ? 1 : 0) | (s.allIn ? 2 : 0);
-            boolean visible = i == 0 || (revealAll && !s.folded);
-            shown[i * 2] = visible ? s.hole[0] : -1;
-            shown[i * 2 + 1] = visible ? s.hole[1] : -1;
+            names.add(NbtString.of(s.name + (s.human && i != viewer ? " ★" : "")));
+            stacks[d] = s.stack;
+            bets[d] = s.bet;
+            flags[d] = (s.folded ? 1 : 0) | (s.allIn ? 2 : 0);
+            boolean visible = i == viewer || (revealAll && !s.folded);
+            shown[d * 2] = visible ? s.hole[0] : -1;
+            shown[d * 2 + 1] = visible ? s.hole[1] : -1;
         }
         nbt.put("Names", names);
         nbt.putIntArray("Stacks", stacks);
@@ -497,11 +577,11 @@ public final class PokerGame {
         nbt.putIntArray("Cards", shown);
         nbt.putIntArray("Board", community.stream().mapToInt(Integer::intValue).toArray());
         nbt.putInt("Pot", pot());
-        nbt.putInt("ToCall", acting == 0 ? toCall(0) : 0);
+        nbt.putInt("ToCall", acting == viewer ? toCall(viewer) : 0);
         nbt.putInt("MinRaiseTo", currentBet + minRaise);
         nbt.putInt("CurrentBet", currentBet);
-        nbt.putInt("Acting", acting);
-        nbt.putInt("Dealer", dealer);
+        nbt.putInt("Acting", acting < 0 ? acting : (acting - viewer + SEATS) % SEATS);
+        nbt.putInt("Dealer", (dealer - viewer + SEATS) % SEATS);
         nbt.putBoolean("HandOver", handOver);
         nbt.putString("Log", String.join("\n", log));
         return nbt;

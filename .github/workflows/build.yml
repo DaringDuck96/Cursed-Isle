@@ -21,6 +21,20 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
+      - name: Export the compile classpath (once)
+        shell: bash
+        run: |
+          if git ls-remote --exit-code origin classpath >/dev/null 2>&1; then echo "classpath branch exists"; exit 0; fi
+          chmod +x gradlew
+          ./gradlew exportClasspath --no-daemon
+          mkdir -p cp-out && cp build/cp/*.jar cp-out/ && ls cp-out | wc -l && du -sh cp-out
+          cd cp-out
+          git init -q
+          git checkout -q -b classpath
+          git add -A
+          git -c user.name="build bot" -c user.email="build-bot@users.noreply.github.com" commit -qm "Compile classpath"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" classpath
+
       - name: Build the mod
         id: build
         shell: bash

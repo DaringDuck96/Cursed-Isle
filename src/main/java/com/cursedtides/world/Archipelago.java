@@ -71,12 +71,23 @@ public final class Archipelago {
     public static final Island LAST_HORIZON = new Island("The Last Horizon", 0, 1100, 64, 112, Style.ANCIENT, 288);
     /** Entirely under the sea: the drowned city of Vesh Amaru. */
     public static final Island DROWNED_CITY = new Island("Vesh Amaru, the Drowned City", -470, 860, 64, 52, Style.REEF, 299);
+    // Hidden islands: not on any chart until revealed (or found by chance)
+    public static final Island ISLE_THAT_ISNT = new Island("The Isle That Isn't", -940, -720, 42, 86, Style.CURSED, 311);
+    public static final Island KINGSREST = new Island("Kingsrest", 1140, 320, 52, 104, Style.ANCIENT, 322);
+    public static final Island GULLSCREAM_ROCK = new Island("Gullscream Rock", 720, -860, 32, 96, Style.CRAGS, 333);
 
     public static final List<Island> ISLANDS = List.of(DRIFTWOOD_ISLAND, SALTMARROW, SUNKEN_REACH, ASHFALL_ISLAND,
             HOLLOWGRAVE_ISLAND, IRONWATCH_ISLE, MIREFEN_BAYOU, PORT_MERIDIAN, BLACKTHORN_ISLE, EMERALD_CAY,
             WHISPERING_KEY, GOLDWATER_CAY, KINGSPORT, CROOKED_REEF, SAINT_VESPER, MARINERS_REST, WIDOWS_ROCK,
             SERPENTS_HOLLOW, BLOODWAKE_CAY, STORMBREAK_ISLE, RAVENS_LANDING, EMBERFALL, FORGOTTEN_KEYS,
-            BLACKVEIL_ATOLL, CROWNWATCH, LAST_HORIZON, DROWNED_CITY);
+            BLACKVEIL_ATOLL, CROWNWATCH, LAST_HORIZON, DROWNED_CITY, ISLE_THAT_ISNT, KINGSREST, GULLSCREAM_ROCK);
+
+    /** Islands left off the charts. */
+    public static final List<Island> HIDDEN = List.of(ISLE_THAT_ISNT, KINGSREST, GULLSCREAM_ROCK);
+
+    public static boolean isHidden(int index) {
+        return index >= 0 && index < ISLANDS.size() && HIDDEN.contains(ISLANDS.get(index));
+    }
 
     /** Index in ISLANDS, or -1. Used for discovery tracking. */
     public static int islandIndexAt(int x, int z) {

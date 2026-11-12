@@ -61,6 +61,10 @@ public final class UiData {
         lines.addAll(com.cursedtides.quest.HorizonArc.journal(player));
         lines.add("");
 
+        lines.add("§e§lThe Hollow Crown");
+        lines.addAll(com.cursedtides.quest.CrownArc.journal(player));
+        lines.add("");
+
         lines.add("§e§lSide quests");
         lines.addAll(com.cursedtides.quest.SideQuests.journal(player));
         lines.add("");
@@ -155,7 +159,7 @@ public final class UiData {
         }
         long cleared = Dungeons.mask(player);
         ServerPlayNetworking.send(player, new UiPayloads.Chart(ModWorld.isArchipelago(),
-                player.getAttachedOrElse(ModWorld.DISCOVERED, 0), cleared, marks));
+                player.getAttachedOrElse(ModWorld.DISCOVERED, 0) | com.cursedtides.explore.Cartography.revealedMask(player), cleared, marks));
     }
 
     private static String pad(String s, int width) {
