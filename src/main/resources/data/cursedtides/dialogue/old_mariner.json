@@ -10,6 +10,22 @@
    "text_if": [
     {
      "if": [
+      "crown==2"
+     ],
+     "text": [
+      "You're after the old crown's shards. I can hear them in your pack, singing to their sister. Mist comes out at night, child. So do I."
+     ]
+    },
+    {
+     "if": [
+      "crown==4"
+     ],
+     "text": [
+      "Kingsrest. I sailed there once, when it had a roof. Mind the throne; the last one who sat in it never got up."
+     ]
+    },
+    {
+     "if": [
       "night"
      ],
      "text": [

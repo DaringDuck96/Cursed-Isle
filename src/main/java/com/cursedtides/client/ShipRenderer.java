@@ -77,6 +77,21 @@ public class ShipRenderer extends EntityRenderer<ShipEntity> {
             this.model.renderFlag(matrices, flagVertices, light, OverlayTexture.DEFAULT_UV);
         }
         this.model.setCustomFlag(false);
+        var fig = ship.getFigurehead();
+        if (fig != com.cursedtides.ship.FigureheadItem.Kind.NONE) {
+            var item = com.cursedtides.ship.FigureheadItem.itemFor(fig);
+            if (item != null) {
+                matrices.push();
+                matrices.translate(0.0f, -4.0f / 16.0f, 37.5f / 16.0f); // just ahead of the bow tip
+                matrices.scale(-1.0f, -1.0f, 1.0f);
+                matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-20));
+                matrices.scale(1.4f, 1.4f, 1.4f);
+                net.minecraft.client.MinecraftClient.getInstance().getItemRenderer().renderItem(new net.minecraft.item.ItemStack(item),
+                        net.minecraft.client.render.model.json.ModelTransformationMode.FIXED, light, OverlayTexture.DEFAULT_UV,
+                        matrices, vertexConsumers, ship.getWorld(), ship.getId());
+                matrices.pop();
+            }
+        }
         matrices.pop();
 
         super.render(ship, yaw, tickDelta, matrices, vertexConsumers, light);

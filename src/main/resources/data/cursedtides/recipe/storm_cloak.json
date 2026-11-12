@@ -1,0 +1,21 @@
+{
+ "type": "minecraft:crafting_shaped",
+ "category": "misc",
+ "pattern": [
+  "S S",
+  "SPS",
+  "SSS"
+ ],
+ "key": {
+  "S": {
+   "item": "cursedtides:sailcloth"
+  },
+  "P": {
+   "item": "minecraft:phantom_membrane"
+  }
+ },
+ "result": {
+  "id": "cursedtides:storm_cloak",
+  "count": 1
+ }
+}

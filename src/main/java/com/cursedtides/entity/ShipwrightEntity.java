@@ -40,6 +40,10 @@ public class ShipwrightEntity extends QuartermasterEntity {
                 new ItemStack(ModItems.FRIGATE_DEED), UNLIMITED, 25, 0.0f));
         // Fittings
         offers.add(sell(24, ModItems.SWIVEL_GUN, 1));
+        offers.add(sell(35, com.cursedtides.ship.FigureheadItem.MERMAID, 1));
+        offers.add(sell(35, com.cursedtides.ship.FigureheadItem.LION, 1));
+        offers.add(sell(45, com.cursedtides.ship.FigureheadItem.SKULL, 1));
+        offers.add(sell(40, com.cursedtides.ship.FigureheadItem.EAGLE, 1));
         offers.add(sell(20, ModItems.HULL_PLATING, 1));
         offers.add(sell(30, ModItems.GUN_CARRIAGE, 1));
         offers.add(sell(16, ModItems.FINE_CANVAS, 1));

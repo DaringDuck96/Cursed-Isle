@@ -1,0 +1,27 @@
+{
+ "type": "minecraft:crafting_shaped",
+ "category": "misc",
+ "pattern": [
+  " S ",
+  "BXB",
+  " F "
+ ],
+ "key": {
+  "S": {
+   "item": "minecraft:string"
+  },
+  "B": {
+   "item": "minecraft:bone"
+  },
+  "X": {
+   "item": "cursedtides:cut_gem"
+  },
+  "F": {
+   "item": "minecraft:feather"
+  }
+ },
+ "result": {
+  "id": "cursedtides:voodoo_charm",
+  "count": 1
+ }
+}

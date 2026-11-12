@@ -10,6 +10,38 @@
    "text_if": [
     {
      "if": [
+      "crownending==1"
+     ],
+     "text": [
+      "Crownbreaker! Sit, sit. I still have a splinter of it in a jar, you know."
+     ]
+    },
+    {
+     "if": [
+      "crownending==2"
+     ],
+     "text": [
+      "Your Majesty. Sorry. Habit. Well, new habit."
+     ]
+    },
+    {
+     "if": [
+      "crownending==3"
+     ],
+     "text": [
+      "The Warden of the Drowned! The sea's been calmer since. I've charted it."
+     ]
+    },
+    {
+     "if": [
+      "crown==2"
+     ],
+     "text": [
+      "Any luck with the shards? Salt, Ash and Mist. I've been reading nothing else."
+     ]
+    },
+    {
+     "if": [
       "collected>=20"
      ],
      "text": [
@@ -78,8 +110,55 @@
    ],
    "options": [
     {
+     "label": "Look at this proclamation.",
+     "action": "special:crown_begin",
+     "if": [
+      "crown==1"
+     ],
+     "then": "root"
+    },
+    {
+     "label": "About the crown shards...",
+     "goto": "shards",
+     "if": [
+      "crown==2"
+     ]
+    },
+    {
+     "label": "I have all three shards.",
+     "action": "special:crown_seat",
+     "if": [
+      "crown==3"
+     ],
+     "then": "root"
+    },
+    {
+     "label": "Where's Kingsrest again?",
+     "goto": "kingsrest",
+     "if": [
+      "crown==4"
+     ]
+    },
+    {
+     "label": "The Hollow Crown. What should I do with it?",
+     "goto": "choice",
+     "if": [
+      "crown==5"
+     ]
+    },
+    {
      "label": "I've curios for the archive.",
      "action": "special:sell_curios",
+     "then": "root"
+    },
+    {
+     "label": "Buy my island surveys?",
+     "action": "special:sell_surveys",
+     "then": "root"
+    },
+    {
+     "label": "I'd like some blank charts. (2 doubloons)",
+     "action": "special:buy_charts",
      "then": "root"
     },
     {
@@ -109,6 +188,68 @@
    "options": [
     {
      "label": "Something else...",
+     "goto": "root"
+    }
+   ]
+  },
+  "shards": {
+   "text": [
+    "Salt sank with the city: beneath the temple floor, in the grotto. You'll want a diving helmet.",
+    "Ash went up the fire mountain on Emberfall with a herald of the old court. If he's still there, he won't be friendly.",
+    "Mist is on the Isle That Isn't. It's on your chart now. The shrine only gives up its shard at night."
+   ],
+   "text_if": [
+    {
+     "if": [
+      "crownshards>=2"
+     ],
+     "text": [
+      "Two of three! The last one should be calling to the others. Can you feel it?"
+     ]
+    }
+   ],
+   "options": [
+    {
+     "label": "Something else...",
+     "goto": "root"
+    }
+   ]
+  },
+  "kingsrest": {
+   "text": [
+    "Far to the east, past Stormbreak and well beyond. It should be on your chart.",
+    "The Pretender sits in the old throne hall. Bring friends, bring powder, and bring the shards."
+   ],
+   "options": [
+    {
+     "label": "Something else...",
+     "goto": "root"
+    }
+   ]
+  },
+  "choice": {
+   "text": [
+    "It's yours to decide. I'll tell you what I think each choice means, and then I'll keep my mouth shut.",
+    "Break it, and no one wears it again. Wear it, and the cursed will bow to you, and the Tidewatch will hate you. Give it back to the deep, and the drowned city will rest, and the sea will remember you kindly."
+   ],
+   "options": [
+    {
+     "label": "Shatter it.",
+     "action": "special:crown_shatter",
+     "then": "root"
+    },
+    {
+     "label": "I'll wear it.",
+     "action": "special:crown_wear",
+     "then": "root"
+    },
+    {
+     "label": "Return it to the drowned city.",
+     "action": "special:crown_return",
+     "then": "root"
+    },
+    {
+     "label": "I need more time.",
      "goto": "root"
     }
    ]

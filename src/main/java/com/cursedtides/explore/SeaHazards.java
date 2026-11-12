@@ -71,7 +71,15 @@ public final class SeaHazards {
                 continue;
             }
             Vec3d pos = ship.getPos();
+            var fig = ship.getFigurehead();
+            if (fig == com.cursedtides.ship.FigureheadItem.Kind.EAGLE && t % 200 == 0) {
+                for (ShipEntity other : world.getEntitiesByClass(ShipEntity.class, ship.getBoundingBox().expand(150), o -> o != ship && o.isHostile())) {
+                    other.addStatusEffectGlow();
+                }
+            }
+            boolean kraken = fig == com.cursedtides.ship.FigureheadItem.Kind.KRAKEN;
             for (Whirlpool w : WHIRLPOOLS) {
+                if (kraken) break;
                 double dx = w.x() - pos.x, dz = w.z() - pos.z;
                 double d = Math.sqrt(dx * dx + dz * dz);
                 if (d > w.radius() * 1.6) continue;
@@ -83,6 +91,7 @@ public final class SeaHazards {
                 if (d < 5 && t % 20 == 0) ship.seaDamage(world, 6f, "The whirlpool's heart grinds at the hull!");
             }
             for (Current c : CURRENTS) {
+                if (kraken) break;
                 Vec3d a = new Vec3d(c.x1(), 0, c.z1()), b = new Vec3d(c.x2(), 0, c.z2());
                 Vec3d ab = b.subtract(a);
                 double len = ab.length();

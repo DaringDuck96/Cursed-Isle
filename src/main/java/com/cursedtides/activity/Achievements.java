@@ -17,7 +17,8 @@ public final class Achievements {
             "first_blood", "sink_ship", "capture_ship", "first_catch", "golden_marlin", "first_vault", "ten_vaults", "all_islands",
             "wanted", "bounty_claimed", "duel_won", "crew_founded", "homeowner", "tavern_champion", "arena_champion", "sharpshooter",
             "stack_runner", "dressed_to_kill", "ultimate", "festival", "collector", "encyclopedist", "seven_relics", "horizon",
-            "sunken_city", "deep_diver", "legendary_find", "daily_grind", "weekly_legend", "delivery");
+            "sunken_city", "deep_diver", "legendary_find", "daily_grind", "weekly_legend", "delivery",
+            "fort_breaker", "hollow_crown", "hidden_isle", "storm_caller");
 
     private static AdvancementEntry entry(ServerPlayerEntity p, String id) {
         if (p.getServer() == null) return null;

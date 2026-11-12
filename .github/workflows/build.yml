@@ -46,6 +46,28 @@ jobs:
           tail -n 80 build.log
           echo "status=$code" >> "$GITHUB_OUTPUT"
 
+      - name: Start a server and let it run (smoke test)
+        if: steps.build.outputs.status == '0'
+        shell: bash
+        run: |
+          set +e
+          mkdir -p run
+          echo "eula=true" > run/eula.txt
+          printf 'online-mode=false\nlevel-type=cursedtides\\:archipelago\nlevel-seed=12345\nspawn-protection=0\nmax-tick-time=-1\n' > run/server.properties
+          (timeout 600 ./gradlew runServer --no-daemon > server-run.log 2>&1 &)
+          for i in $(seq 1 100); do
+            if grep -q "Done (" run/logs/latest.log 2>/dev/null; then echo "server is up"; break; fi
+            if grep -q "BUILD FAILED\|Crash report\|Exception in thread \"main\"" server-run.log 2>/dev/null; then echo "server failed"; break; fi
+            sleep 5
+          done
+          sleep 60
+          pkill -f KnotServer; pkill -f runServer; sleep 5; pkill -9 -f java
+          mkdir -p ci-out
+          cp server-run.log ci-out/ 2>/dev/null
+          cp run/logs/latest.log ci-out/server.log 2>/dev/null
+          cp -r run/crash-reports ci-out/ 2>/dev/null
+          if grep -q "Done (" run/logs/latest.log 2>/dev/null; then echo up > ci-out/SERVER; else echo down > ci-out/SERVER; fi
+
       - name: Publish the log and jar to the build-output branch
         if: always()
         shell: bash

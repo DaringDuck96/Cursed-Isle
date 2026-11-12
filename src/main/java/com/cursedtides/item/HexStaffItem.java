@@ -170,6 +170,7 @@ public class HexStaffItem extends Item {
                         world.spawnEntity(bolt);
                     }
                     t.damage(world.getDamageSources().indirectMagic(user, user), 6f * power);
+                    if (user instanceof net.minecraft.server.network.ServerPlayerEntity sp) com.cursedtides.activity.Achievements.grant(sp, "storm_caller");
                 }
             }
         }

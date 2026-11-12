@@ -1,0 +1,19 @@
+{
+ "type": "minecraft:crafting_shaped",
+ "category": "misc",
+ "pattern": [
+  "LGL"
+ ],
+ "key": {
+  "L": {
+   "item": "minecraft:leather"
+  },
+  "G": {
+   "item": "minecraft:gold_ingot"
+  }
+ },
+ "result": {
+  "id": "cursedtides:captains_belt",
+  "count": 1
+ }
+}

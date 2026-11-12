@@ -102,6 +102,10 @@ public final class Markets {
         Ports.Port port = Ports.at(merchant.getBlockX(), merchant.getBlockZ());
         MinecraftServer server = player.getServer();
         if (server == null) return;
+        if (TradeEvents.quarantined(port, player.getServerWorld())) {
+            player.sendMessage(Text.literal("The market's shut: the port is under quarantine. Come back when the fever's passed.").formatted(Formatting.RED), false);
+            return;
+        }
         NbtCompound data = new NbtCompound();
         data.putInt("Merchant", merchant.getId());
         data.putString("Port", port == Ports.NOWHERE ? "Open market" : port.island().name());
@@ -195,6 +199,7 @@ public final class Markets {
                     com.cursedtides.living.Prosperity.adjust(server, port.island().cx(), port.island().cz(), 1, "trade is brisk");
                 }
                 com.cursedtides.activity.Challenges.progress(player, "trade", sold);
+                TradeEvents.onSold(player, port, g, sold);
                 player.sendMessage(Text.literal("Sold " + sold + " " + g.displayName + " for " + Wallet.format(earned))
                         .formatted(Formatting.GOLD), true);
                 ding(player, 0.9f);
@@ -278,6 +283,7 @@ public final class Markets {
             boolean shortage = world.random.nextBoolean();
             s.events.add(new Event(portIndex, g.ordinal(), shortage ? 2.0 : 0.5, now + EVENT_LENGTH));
             s.markDirty();
+            if (shortage) TradeEvents.onShortage(server, portIndex, g, now + EVENT_LENGTH);
             server.getPlayerManager().broadcast(Text.literal(shortage
                     ? "Word from " + port.island().name() + ": they've run short of " + g.displayName.toLowerCase() + ". Prices have doubled."
                     : "Word from " + port.island().name() + ": the warehouses are overflowing with " + g.displayName.toLowerCase()
@@ -288,6 +294,7 @@ public final class Markets {
     // ------------------------------------------------------------------ saved state
 
     record Event(int port, int good, double mult, long expires) {}
+
 
     public static final class State extends PersistentState {
         final Map<String, Double> pressure = new HashMap<>();

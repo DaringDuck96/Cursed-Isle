@@ -159,6 +159,14 @@ public final class Cartography {
     }
 
     public static void register() {
+        net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents.modifyEntriesEvent(net.minecraft.registry.RegistryKey.of(
+                net.minecraft.registry.RegistryKeys.ITEM_GROUP, CursedTides.id("main"))).register(e -> {
+            e.add(BLANK_CHART);
+            e.add(HIDDEN_CHART);
+            e.add(ROUGH_GEM);
+            e.add(CUT_GEM);
+            e.add(SAILCLOTH);
+        });
         // Rough gems turn up in rock now and then
         PlayerBlockBreakEvents.AFTER.register((world, player, pos, state, be) -> {
             if (world.isClient || !stony(state) || world.random.nextFloat() > 0.006f) return;

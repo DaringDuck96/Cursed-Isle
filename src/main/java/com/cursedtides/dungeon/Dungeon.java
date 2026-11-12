@@ -296,6 +296,9 @@ public final class Dungeon {
 
     /** A glyph altar, three turning stones and a treasure chest walled in by rune seals. */
     private void puzzle(Canvas c, Room r, int i) {
+        int type = (int) (Noise.rand(i, index, 47, ex * 13L + ez) * 3);
+        if (type == 1) { chimePuzzle(c, r, i); return; }
+        if (type == 2) { moonPuzzle(c, r, i); return; }
         int y = floorY;
         int answer = (int) (Noise.rand(i, index, 41, ex * 31L + ez) * 4);
         c.set(r.cx(), y, r.z1(), ModBlocks.GLYPH_ALTAR.getDefaultState().with(com.cursedtides.block.GlyphBlock.GLYPH, answer));
@@ -307,6 +310,34 @@ public final class Dungeon {
         int chx = r.cx(), chz = r.cz();
         c.chest(chx, y, chz, Direction.SOUTH, LOOT, new ItemStack(Items.GOLD_INGOT, 3));
         BlockState seal = ModBlocks.RUNE_SEAL.getDefaultState();
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                if (dx == 0 && dz == 0) c.set(chx, y + 1, chz, seal);
+                else c.fill(chx + dx, y, chz + dz, chx + dx, y + 1, chz + dz, seal);
+            }
+        }
+    }
+
+    /** A song altar and four chime stones; play the altar's tune to break the seals around the chest. */
+    private void chimePuzzle(Canvas c, Room r, int i) {
+        int y = floorY;
+        c.set(r.cx(), y, r.z1(), ModBlocks.SONG_ALTAR.getDefaultState());
+        int[][] spots = {{r.x1(), r.cz() - 1}, {r.x1(), r.cz() + 1}, {r.x2(), r.cz() - 1}, {r.x2(), r.cz() + 1}};
+        for (int k = 0; k < 4; k++) {
+            c.set(spots[k][0], y, spots[k][1], ModBlocks.CHIME_STONE.getDefaultState().with(com.cursedtides.block.PuzzleBlocks.ChimeStoneBlock.NOTE, k));
+        }
+        sealedChest(c, r, ModBlocks.RUNE_SEAL.getDefaultState());
+    }
+
+    /** A chest behind moon seals: they only open at night. */
+    private void moonPuzzle(Canvas c, Room r, int i) {
+        sealedChest(c, r, ModBlocks.MOON_SEAL.getDefaultState());
+        guard(c, r.x1() + 0.5, floorY, r.z1() + 0.5, theme.mob(i));
+    }
+
+    private void sealedChest(Canvas c, Room r, BlockState seal) {
+        int y = floorY, chx = r.cx(), chz = r.cz();
+        c.chest(chx, y, chz, Direction.SOUTH, LOOT, new ItemStack(Items.GOLD_INGOT, 3), new ItemStack(com.cursedtides.explore.Cartography.ROUGH_GEM, 2));
         for (int dx = -1; dx <= 1; dx++) {
             for (int dz = -1; dz <= 1; dz++) {
                 if (dx == 0 && dz == 0) c.set(chx, y + 1, chz, seal);

@@ -1,4 +1,4 @@
-# Cursed Tides (Fabric 1.21.1), version 0.15.0
+# Cursed Tides (Fabric 1.21.1), version 0.16.0
 
 An original pirate adventure built around four pillars: **sailing, ship ownership,
 island exploration and character progression**. Everything in it (islands, characters,
@@ -11,9 +11,11 @@ You need **Java 21** (the JDK, e.g. from adoptium.net).
 1. Unzip this folder.
 2. Open a terminal in it and run `gradlew.bat build` (Windows) or `./gradlew build` (Mac/Linux).
 3. The first build downloads Minecraft and Fabric (a few minutes).
-4. Your mod is at `build/libs/cursed-tides-0.15.0.jar` (ignore the `-sources` jar).
+4. Your mod is at `build/libs/cursed-tides-0.16.0.jar` (ignore the `-sources` jar).
 
 Put that jar plus **Fabric API** for 1.21.1 into `.minecraft/mods`. To test without installing: `./gradlew runClient`.
+
+Every push to `main` is also built by GitHub Actions (`.github/workflows/build.yml`), which starts a test server in the archipelago for a minute. The finished jar and the logs land on the `build-output` branch.
 
 ## Playing the Cursed Archipelago
 
@@ -151,6 +153,30 @@ and leather. The captain's attire comes with Brethren rank 300; the Tidewatch un
 | Throwing Knives (x4) | Shapeless: iron ingot and 2 iron nuggets |
 | Sailor's garb | Wool (bandana, shirt, breeches with a leather belt) and leather (boots) in armour shapes |
 
+### New in 0.16
+
+- **Hexes:** the staff now holds seven: Hex Bolt, Withering Curse (Hex 5), Spirit Ward (10), Drowned Grasp (15),
+  Soul Siphon (20), Ghost Walk (25) and Storm Hex (30). Sneak and use to choose; use to cast.
+- **Hidden islands:** the Isle That Isn't, Kingsrest and Gullscream Rock aren't on any chart until revealed (by the
+  story, by a Hidden Chart, or by sailing into them). Fog banks hide two of them.
+- **Tailoring, Jewelcrafting and Cartography:** craft sailcloth, bandanas, gloves, belts, eyepatches and cloaks; cut
+  rough gems (found in rock while mining, and in puzzle chests) and set rings, earrings, pendants and charms. From
+  level 10 a crafted piece can come out Fine (+25%), from 20 Masterwork (+50%). Use Blank Charts on islands to draw
+  surveys the archivist buys; from Cartography 10, Hidden Charts reveal secret islands; from 15, surveys sometimes
+  turn up a treasure map.
+- **Figureheads:** the shipwright carves the Mermaid (+10% speed), Golden Lion (+15% hull), Grinning Skull (+1 gun
+  each side) and Sea Eagle (spots hostile ships); the Kraken (shrugs off whirlpools and currents) must be carved
+  yourself from an ancient relic. Use one on your ship to mount it at the bow.
+- **Fort bombardment:** Ironwatch and Crownwatch fire on wanted pirates' ships, Blackthorn on Tidewatch loyalists.
+  Three cannon hits silence a battery; silence them all and the fort stays quiet for a day, and you're paid for it.
+- **Trade events:** shortages become relief runs (bonus pay per crate until the need is met, a reward for whoever
+  brings the most); ports can fall under quarantine (markets shut, black markets pay double for spices); and goods
+  boom across the whole Reach.
+- **More puzzles:** song altars (play its four notes back on the chime stones) and moon seals (open only at night).
+- **Player-vs-player poker:** everyone who sits at the same dealer plays at the same table, with house players filling
+  empty seats. Players who join mid-hand are dealt in next hand; a slow player is acted for after 45 seconds.
+- **Feats:** Fort Breaker, The Hollow Crown, Off the Charts and Storm Caller.
+
 ### Fighting style
 
 - **Combos:** melee blows landed in quick succession grow stronger (+10% each). The **fourth** is a
@@ -257,6 +283,18 @@ is still out there, forty years under the water. Spoilers below.
    | **Give it to the Court** | Only if you bargained: hold the Lampwright's Seal and click | Navy and Brethren -150, Smugglers +150, 500 doubloons. The Tidewatch never searches you again. Title: Lantern-Bearer of the Court |
 
    The whole server hears which ending you chose. Your title shows in the journal.
+
+### Story, part three: "The Hollow Crown"
+
+Once the Seven Tides are settled, proclamations start appearing on posts across the Reach: a Pretender has found the
+crown of drowned Vesh Amaru and means to rule the cursed and the free alike. Show the proclamation to Odalys Quill,
+the archivist at Kingsport, then recover the crown's three shards: **Salt** from the grotto beneath the drowned
+city's temple, **Ash** from the Ashen Herald who climbs out of Emberfall's crater, and **Mist** from the shrine on
+the hidden Isle That Isn't (only at night). With all three, Quill points you east to **Kingsrest**, where the
+Pretender waits with a crown guard. Afterwards, choose: **shatter** the crown (a legendary blade and the thanks of
+both the Tidewatch and the Brethren; title *Crownbreaker*), **wear** it (two extra hearts for good, the Tidewatch's
+undying hostility; *the Uncrowned Sovereign*), or **return** it to the deep (the sea's own strength whenever you
+swim; *Warden of the Drowned*).
 
 ### Ships
 
@@ -701,14 +739,14 @@ center. Status after this version:
 
 | Phase | Focus | Done so far | Next |
 |---|---|---|---|
-| 1 | World, islands, ocean, sailing | Fixed archipelago world type, 27 islands (the full roster plus a drowned city, incl. a bayou, jungles, cliffs, a desert island, an atoll, sea stacks, a ship graveyard and scattered keys), reefs, volcano, black/white sand beaches, rocky coasts, discovery rewards, Sailing XP, wind, rain and storms, fog banks, whirlpools, currents, running aground, the drowned city | Hidden islands |
-| 2 | Character, combat, progression | Character creation, appearance editor, nine accessory slots, biographies, 6 proficiencies with skill trees (36 perks), notoriety titles, blades, sabers, dual blades, heavy swords, war hammers, firearms incl. double-barrel and hand cannon, hexes, parry and dodge, combos, crits, finishers, heavy attacks, stagger, six ultimates, gear grades | More hexes |
-| 3 | **Ships, naval combat, crew** | 6 ship classes (one-, two- and three-masted), walkable interiors below deck, anchors, swivel guns, ten flags, deeds, naming, stowing, upgrades, dyed sails, hired gunners/bosuns/navigators with wages, wind and sails, cargo holds, hull damage, repairs, sinking, four kinds of shot, broadsides, ghost ships, navy patrols, merchant convoys, rival pirates, boarding and capture | Figureheads, fort bombardment |
-| 4 | NPCs, settlements, economy | Saltmarrow freeport, Port Meridian, a mining camp, a pirate hideout, Kingsport, Raven's Landing, Saint Vesper, Mariner's Rest, Crownwatch; specialist vendors, a black market, a bank, healing; silver and doubloons; 13 trade goods with port supply and demand, moving prices, shortages and gluts; auction house; ship buy-back and insurance; opening hours, town prosperity, peddlers, bounty hunters, wanted posters, a secret wanderer, festivals | Commodity-driven world events |
-| 5 | Quests, factions, story | Main story "The Drowned Bell"; second arc "The Seven Tides" (seven relics, a secret society, a pirate coalition's betrayal, a ghost flagship, a final boss, three endings with lasting effects); Tidewatch Navy, Saltmarrow Brethren and Raven's Landing Smugglers with reputation, ranks, rewards, bounties, pardons and repeatable contracts; four side quests, one with a permanent choice | A third story arc |
-| 6 | Dungeons, bosses, supernatural | 53 themed multi-room dungeons with traps, spawners, mini-bosses, keys, sealed vaults and legendary loot; Captain Thorne; a haunted mansion; ghost ships; the Brinewyrm; four outer-reach bosses; wildlife (sharks, crocodiles, jaguars, snakes, boars, crabs, tameable monkeys); glyph puzzles | More puzzle types |
-| 7 | Crafting, professions, equipment | Weapon and ammo recipes, clothing sets, ship upgrades and crew articles; five professions (fishing with 7 local species and a contest, cooking, brewing, smithing upgrades, hunting) and Leadership; a diving helmet | Tailoring, jewelcrafting, cartography |
-| 8 | Multiplayer, guilds, social | Per-player progress, crews with shared holds and chat, duels, Texas Hold'em and dice, player trading with escrow, an auction house; crew ranks, a crew chest, alliances and rivalries, crew colours, houses, hideouts, taverns and crew headquarters with claims; emotes and sitting; a sword tournament, shooting range, foot race, drinking contests and parcels; leaderboards | Player-vs-player poker tables |
+| 1 | World, islands, ocean, sailing | Fixed archipelago world type, 30 islands (the full roster, a drowned city and three hidden islands, incl. a bayou, jungles, cliffs, a desert island, an atoll, sea stacks, a ship graveyard and scattered keys), reefs, volcano, black/white sand beaches, rocky coasts, discovery rewards, Sailing XP, wind, rain and storms, fog banks, whirlpools, currents, running aground, the drowned city | More hidden places |
+| 2 | Character, combat, progression | Character creation, appearance editor, nine accessory slots, biographies, 6 proficiencies with skill trees (36 perks), notoriety titles, blades, sabers, dual blades, heavy swords, war hammers, firearms incl. double-barrel and hand cannon, hexes, parry and dodge, combos, crits, finishers, heavy attacks, stagger, six ultimates, gear grades | |
+| 3 | **Ships, naval combat, crew** | 6 ship classes (one-, two- and three-masted), walkable interiors below deck, anchors, swivel guns, ten flags, deeds, naming, stowing, upgrades, dyed sails, hired gunners/bosuns/navigators with wages, wind and sails, cargo holds, hull damage, repairs, sinking, four kinds of shot, broadsides, ghost ships, navy patrols, merchant convoys, rival pirates, boarding and capture | Ship-to-ship boarding animations |
+| 4 | NPCs, settlements, economy | Saltmarrow freeport, Port Meridian, a mining camp, a pirate hideout, Kingsport, Raven's Landing, Saint Vesper, Mariner's Rest, Crownwatch; specialist vendors, a black market, a bank, healing; silver and doubloons; 13 trade goods with port supply and demand, moving prices, shortages and gluts; auction house; ship buy-back and insurance; opening hours, town prosperity, peddlers, bounty hunters, wanted posters, a secret wanderer, festivals | |
+| 5 | Quests, factions, story | Main story "The Drowned Bell"; second arc "The Seven Tides" (seven relics, a secret society, a pirate coalition's betrayal, a ghost flagship, a final boss, three endings with lasting effects); Tidewatch Navy, Saltmarrow Brethren and Raven's Landing Smugglers with reputation, ranks, rewards, bounties, pardons and repeatable contracts; four side quests, one with a permanent choice | A fourth story arc |
+| 6 | Dungeons, bosses, supernatural | 53 themed multi-room dungeons with traps, spawners, mini-bosses, keys, sealed vaults and legendary loot; Captain Thorne; a haunted mansion; ghost ships; the Brinewyrm; four outer-reach bosses; wildlife (sharks, crocodiles, jaguars, snakes, boars, crabs, tameable monkeys); glyph puzzles | |
+| 7 | Crafting, professions, equipment | Weapon and ammo recipes, clothing sets, ship upgrades and crew articles; five professions (fishing with 7 local species and a contest, cooking, brewing, smithing upgrades, hunting) and Leadership; a diving helmet | |
+| 8 | Multiplayer, guilds, social | Per-player progress, crews with shared holds and chat, duels, Texas Hold'em and dice, player trading with escrow, an auction house; crew ranks, a crew chest, alliances and rivalries, crew colours, houses, hideouts, taverns and crew headquarters with claims; emotes and sitting; a sword tournament, shooting range, foot race, drinking contests and parcels; leaderboards | |
 | 9 | Endgame, events, collectibles | Treasure maps, fragments and legendary maps; named legendary weapons; journal and chart screens; five world events; 32 curios and the Encyclopedia; seasonal festivals; daily and weekly challenges; 30 feats | More collections |
 | 10 | Polish | Four original shanties and music discs, sound effects, ambience, emote motions | Custom models and player animations |
 

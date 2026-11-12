@@ -1,0 +1,20 @@
+{
+ "type": "minecraft:crafting_shaped",
+ "category": "misc",
+ "pattern": [
+  "G",
+  "N"
+ ],
+ "key": {
+  "G": {
+   "item": "minecraft:gold_nugget"
+  },
+  "N": {
+   "item": "minecraft:gold_ingot"
+  }
+ },
+ "result": {
+  "id": "cursedtides:gold_earring",
+  "count": 1
+ }
+}

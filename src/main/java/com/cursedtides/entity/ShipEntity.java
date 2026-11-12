@@ -80,6 +80,7 @@ public class ShipEntity extends BoatEntity {
     private static final TrackedData<Integer> UPGRADES = DataTracker.registerData(ShipEntity.class, TrackedDataHandlerRegistry.INTEGER);
     /** RGB sail tint, or -1 for natural canvas. */
     private static final TrackedData<Integer> SAIL_COLOR = DataTracker.registerData(ShipEntity.class, TrackedDataHandlerRegistry.INTEGER);
+    private static final TrackedData<Integer> FIGUREHEAD = DataTracker.registerData(ShipEntity.class, TrackedDataHandlerRegistry.INTEGER);
     private static final TrackedData<Integer> AMMO = DataTracker.registerData(ShipEntity.class, TrackedDataHandlerRegistry.INTEGER);
     private static final TrackedData<Integer> NAVIGATORS = DataTracker.registerData(ShipEntity.class, TrackedDataHandlerRegistry.INTEGER);
     /** Ticks of torn rigging left (from chain shot or lightning). */
@@ -132,6 +133,7 @@ public class ShipEntity extends BoatEntity {
         builder.add(OWNER, Optional.empty());
         builder.add(UPGRADES, 0);
         builder.add(SAIL_COLOR, -1);
+        builder.add(FIGUREHEAD, 0);
         builder.add(AMMO, 0);
         builder.add(NAVIGATORS, 0);
         builder.add(TORN, 0);
@@ -139,7 +141,17 @@ public class ShipEntity extends BoatEntity {
         builder.add(ANCHORED, false);
     }
 
+    public com.cursedtides.ship.FigureheadItem.Kind getFigurehead() {
+        return com.cursedtides.ship.FigureheadItem.Kind.byIndex(this.dataTracker.get(FIGUREHEAD));
+    }
+    public void setFigurehead(com.cursedtides.ship.FigureheadItem.Kind kind) { this.dataTracker.set(FIGUREHEAD, kind.ordinal()); }
     public int getFlag() { return this.dataTracker.get(FLAG); }
+    /** Spotted by a sea eagle: glows for ten seconds. */
+    public void addStatusEffectGlow() {
+        this.setGlowing(true);
+        spottedUntil = this.age + 200;
+    }
+    private int spottedUntil = -1;
     public void setFlag(int flag) { this.dataTracker.set(FLAG, flag); }
     public boolean isAnchored() { return this.dataTracker.get(ANCHORED); }
     public void setAnchored(boolean anchored) { this.dataTracker.set(ANCHORED, anchored); }
@@ -268,11 +280,13 @@ public class ShipEntity extends BoatEntity {
     }
 
     public int maxHull() {
-        return Math.round(shipClass().maxHull() * (1.0f + 0.3f * upgrade(ShipUpgradeItem.Kind.PLATING)));
+        return Math.round(shipClass().maxHull() * (1.0f + 0.3f * upgrade(ShipUpgradeItem.Kind.PLATING))
+                * (getFigurehead() == com.cursedtides.ship.FigureheadItem.Kind.LION ? 1.15f : 1.0f));
     }
 
     public int guns() {
-        return shipClass().cannonsPerSide() + upgrade(ShipUpgradeItem.Kind.GUNS);
+        return shipClass().cannonsPerSide() + upgrade(ShipUpgradeItem.Kind.GUNS)
+                + (getFigurehead() == com.cursedtides.ship.FigureheadItem.Kind.SKULL ? 1 : 0);
     }
 
     public int cargoRows() {
@@ -281,7 +295,8 @@ public class ShipEntity extends BoatEntity {
 
     private double speedFactor() {
         return shipClass().speed() * (1.0 + getSailSkill() * 0.01) * (1.0 + 0.08 * upgrade(ShipUpgradeItem.Kind.CANVAS))
-                * (1.0 + 0.10 * this.dataTracker.get(NAVIGATORS));
+                * (1.0 + 0.10 * this.dataTracker.get(NAVIGATORS))
+                * (getFigurehead() == com.cursedtides.ship.FigureheadItem.Kind.MERMAID ? 1.10 : 1.0);
     }
 
     public boolean isOwner(PlayerEntity player) {
@@ -354,6 +369,10 @@ public class ShipEntity extends BoatEntity {
 
     @Override
     public void tick() {
+        if (spottedUntil > 0 && this.age > spottedUntil) {
+            spottedUntil = -1;
+            this.setGlowing(false);
+        }
         super.tick();
         World world = this.getWorld();
 
@@ -898,6 +917,7 @@ public class ShipEntity extends BoatEntity {
                 fittings.putInt("Upgrades", this.dataTracker.get(UPGRADES));
                 fittings.putInt("SailColor", getSailColor());
                 fittings.putInt("Flag", getFlag());
+                fittings.putInt("Figurehead", this.dataTracker.get(FIGUREHEAD));
                 replacement.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(fittings));
                 if (this.hasCustomName()) replacement.set(DataComponentTypes.CUSTOM_NAME, this.getCustomName());
                 com.cursedtides.trade.Insurance.payOut(world.getServer(), owner, replacement);
@@ -941,6 +961,21 @@ public class ShipEntity extends BoatEntity {
                 if (!player.getAbilities().creativeMode) held.decrement(1);
                 this.getWorld().playSound(null, getX(), getY(), getZ(), SoundEvents.BLOCK_WOOD_PLACE, SoundCategory.PLAYERS, 1.0f, 0.8f);
                 player.sendMessage(Text.literal("Hull patched: " + (int) getHull() + "/" + maxHull()).formatted(Formatting.GREEN), true);
+            }
+            return ActionResult.success(!server);
+        }
+        if (mine && held.getItem() instanceof com.cursedtides.ship.FigureheadItem fh) {
+            if (server) {
+                var old = getFigurehead();
+                setFigurehead(fh.kind);
+                if (!player.getAbilities().creativeMode) held.decrement(1);
+                if (old != com.cursedtides.ship.FigureheadItem.Kind.NONE) {
+                    var back = com.cursedtides.ship.FigureheadItem.itemFor(old);
+                    if (back != null) player.giveItemStack(new ItemStack(back));
+                }
+                if (getHull() > maxHull()) setHull(maxHull());
+                player.sendMessage(Text.literal("The " + fh.kind.title + " is fixed to the bow. " + fh.kind.effect + ".").formatted(Formatting.GOLD), true);
+                this.getWorld().playSound(null, getX(), getY(), getZ(), SoundEvents.BLOCK_WOOD_PLACE, SoundCategory.PLAYERS, 1.0f, 0.7f);
             }
             return ActionResult.success(!server);
         }
@@ -1053,6 +1088,7 @@ public class ShipEntity extends BoatEntity {
         data.putInt("Upgrades", this.dataTracker.get(UPGRADES));
         data.putInt("SailColor", getSailColor());
         data.putInt("Flag", getFlag());
+        data.putInt("Figurehead", this.dataTracker.get(FIGUREHEAD));
         data.putBoolean("Anchored", isAnchored());
         data.putInt("Ammo", getAmmo().ordinal());
         data.put("Cargo", cargo.toNbtList(this.getRegistryManager()));
@@ -1066,6 +1102,7 @@ public class ShipEntity extends BoatEntity {
         setLook(data.contains("Look") ? data.getInt("Look") : (data.getBoolean("Ghost") ? LOOK_GHOST : LOOK_PLAIN));
         if (data.contains("SailColor")) this.dataTracker.set(SAIL_COLOR, data.getInt("SailColor"));
         setFlag(data.getInt("Flag"));
+        this.dataTracker.set(FIGUREHEAD, data.getInt("Figurehead"));
         setAnchored(data.getBoolean("Anchored"));
         if (data.contains("Ammo")) this.dataTracker.set(AMMO, data.getInt("Ammo"));
         if (data.contains("Cargo", NbtElement.LIST_TYPE)) {

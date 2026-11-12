@@ -1,0 +1,17 @@
+{
+ "type": "minecraft:crafting_shaped",
+ "category": "misc",
+ "pattern": [
+  "WW",
+  "WW"
+ ],
+ "key": {
+  "W": {
+   "item": "minecraft:white_wool"
+  }
+ },
+ "result": {
+  "id": "cursedtides:sailcloth",
+  "count": 3
+ }
+}

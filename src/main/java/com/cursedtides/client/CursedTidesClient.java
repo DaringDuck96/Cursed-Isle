@@ -41,6 +41,8 @@ public class CursedTidesClient implements ClientModInitializer {
         ShipKeys.register();
         ShipKeys.registerReceivers();
         AppearanceClient.register();
+        net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap.INSTANCE.putBlock(
+                com.cursedtides.block.ModBlocks.MOON_SEAL, net.minecraft.client.render.RenderLayer.getCutout());
     }
 
     /** The trader model in the shipwright's own work clothes. */

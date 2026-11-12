@@ -1,0 +1,22 @@
+{
+ "type": "minecraft:crafting_shapeless",
+ "category": "misc",
+ "ingredients": [
+  {
+   "item": "cursedtides:blank_chart"
+  },
+  {
+   "item": "minecraft:compass"
+  },
+  {
+   "item": "cursedtides:ancient_coin"
+  },
+  {
+   "item": "cursedtides:cut_gem"
+  }
+ ],
+ "result": {
+  "id": "cursedtides:hidden_chart",
+  "count": 1
+ }
+}

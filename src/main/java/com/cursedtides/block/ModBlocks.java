@@ -34,7 +34,21 @@ public final class ModBlocks {
             new Block(AbstractBlock.Settings.create().mapColor(MapColor.PURPLE).strength(-1.0f, 3600000.0f)
                     .dropsNothing().sounds(BlockSoundGroup.DEEPSLATE_BRICKS).luminance(s -> 4).pistonBehavior(PistonBehavior.BLOCK)));
 
+    public static final Block SONG_ALTAR = Registry.register(Registries.BLOCK, CursedTides.id("song_altar"),
+            new PuzzleBlocks.SongAltarBlock(AbstractBlock.Settings.create().mapColor(MapColor.CYAN).strength(-1.0f, 3600000.0f)
+                    .dropsNothing().sounds(BlockSoundGroup.AMETHYST_BLOCK).luminance(s -> 6).pistonBehavior(PistonBehavior.BLOCK)));
+
+    public static final Block CHIME_STONE = Registry.register(Registries.BLOCK, CursedTides.id("chime_stone"),
+            new PuzzleBlocks.ChimeStoneBlock(AbstractBlock.Settings.create().mapColor(MapColor.LIGHT_BLUE).strength(-1.0f, 3600000.0f)
+                    .dropsNothing().sounds(BlockSoundGroup.AMETHYST_BLOCK).pistonBehavior(PistonBehavior.BLOCK)));
+
+    public static final Block MOON_SEAL = Registry.register(Registries.BLOCK, CursedTides.id("moon_seal"),
+            new PuzzleBlocks.MoonSealBlock(AbstractBlock.Settings.create().mapColor(MapColor.WHITE).strength(-1.0f, 3600000.0f)
+                    .dropsNothing().nonOpaque().ticksRandomly().sounds(BlockSoundGroup.DEEPSLATE_TILES).luminance(s -> s.get(PuzzleBlocks.MoonSealBlock.OPEN) ? 8 : 2)
+                    .pistonBehavior(PistonBehavior.BLOCK)));
+
     public static void register() {
+        PuzzleBlocks.register();
         CursedTides.LOGGER.debug("Registered Cursed Tides blocks");
     }
 }

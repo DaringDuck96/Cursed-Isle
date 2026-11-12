@@ -24,7 +24,12 @@
     "There's a tournament in Saltmarrow. Five waves, and the champion takes the purse.",
     "Mind the whirlpools. The Drain nearly had my cousin. He's still dizzy.",
     "A peddler's been seen in the ports. Sells rings that make you lucky. Or so she says.",
-    "There's an old man on the beaches at night. Hums a song. If you can see him, you're one of the lucky ones."
+    "There's an old man on the beaches at night. Hums a song. If you can see him, you're one of the lucky ones.",
+    "Somebody's nailing up proclamations. A 'Rightful Sovereign of the Reach'. The Tidewatch tears them down by day; they're back by night.",
+    "Ironwatch's guns can reach a mile out, they say. Somebody silenced Blackthorn's last week, and the smugglers are still furious.",
+    "The cartographers swear there are islands nobody's charted. They draw them on the hidden sheets and won't show anyone.",
+    "There's fever in one of the ports, I heard. If they close the market, the black markets will make a fortune on spices.",
+    "A ship with a kraken on her bow sailed straight through the Drain and came out the other side. I'd want that figurehead."
    ],
    "text_if": [
     {

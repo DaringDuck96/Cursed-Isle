@@ -1,0 +1,21 @@
+{
+ "type": "minecraft:crafting_shaped",
+ "category": "misc",
+ "pattern": [
+  " C ",
+  "G G",
+  " G "
+ ],
+ "key": {
+  "C": {
+   "item": "cursedtides:cut_gem"
+  },
+  "G": {
+   "item": "minecraft:gold_nugget"
+  }
+ },
+ "result": {
+  "id": "cursedtides:ruby_ring",
+  "count": 1
+ }
+}
