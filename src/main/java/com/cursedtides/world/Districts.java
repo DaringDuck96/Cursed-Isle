@@ -23,10 +23,10 @@ final class Districts {
     record Town(Archipelago.Island island, Kind kind, int reach) {}
 
     static final List<Town> TOWNS = List.of(
-            new Town(Archipelago.SALTMARROW, Kind.FREEPORT, 92),
-            new Town(Archipelago.PORT_MERIDIAN, Kind.PORT, 92),
-            new Town(Archipelago.KINGSPORT, Kind.NAVY, 96),
-            new Town(Archipelago.SAINT_VESPER, Kind.PORT, 80),
+            new Town(Archipelago.SALTMARROW, Kind.FREEPORT, 104),
+            new Town(Archipelago.PORT_MERIDIAN, Kind.PORT, 104),
+            new Town(Archipelago.KINGSPORT, Kind.NAVY, 100),
+            new Town(Archipelago.SAINT_VESPER, Kind.PORT, 92),
             new Town(Archipelago.IRONWATCH_ISLE, Kind.NAVY, 80),
             new Town(Archipelago.CROWNWATCH, Kind.NAVY, 86),
             new Town(Archipelago.RAVENS_LANDING, Kind.HIDEOUT, 76),
@@ -45,33 +45,44 @@ final class Districts {
     private static void grow(List<Builds.Build> out, Town t) {
         Archipelago.Island is = t.island();
         int cx = is.cx(), cz = is.cz();
-        // Roads fan out inland: west, north-west, north, north-east, east (the harbour is to the south)
-        double[] angles = {Math.PI, Math.PI * 1.25, Math.PI * 1.5, Math.PI * 1.75, 0};
-        List<int[]> roadCells = new ArrayList<>();
+        // Roads fan out inland across the northern half (the harbour is to the south), with plots along them:
+        // a front row facing the road and, in the ports and hideouts, a back row behind it
+        double[] angles = new double[9];
+        for (int k = 0; k < angles.length; k++) angles[k] = Math.PI + Math.PI * k / (angles.length - 1);
         int plot = 0;
-        for (double a : angles) {
-            double dx = Math.cos(a), dz = Math.sin(a);
-            for (int r = 12; r <= t.reach(); r++) {
-                int x = cx + (int) Math.round(dx * r), z = cz + (int) Math.round(dz * r);
-                if (!land(x, z) || Builds.blocksPlants(x, z)) continue;
-                roadCells.add(new int[]{x, z});
-            }
-            // Plots on both sides, every 13 blocks along
-            for (int r = 26; r <= t.reach() - 4; r += 13) {
-                for (int side = -1; side <= 1; side += 2) {
-                    int px = cx + (int) Math.round(dx * r - dz * side * 9);
-                    int pz = cz + (int) Math.round(dz * r + dx * side * 9);
-                    int rxp = cx + (int) Math.round(dx * r), rzp = cz + (int) Math.round(dz * r);
-                    int half = 6;
-                    if (!buildable(px, pz, half)) continue;
-                    final int bx = px, bz = pz, k = plot++;
-                    final Direction door = facing(rxp - px, rzp - pz);
-                    out.add(new Builds.Build(px - half, pz - half, px + half, pz + half, true,
-                            c -> building(c, t.kind(), k, bx, bz, door, cx, cz)));
+        int[] offsets = t.kind() == Kind.NAVY ? new int[]{9} : new int[]{9, 21};
+        for (int row : offsets) {
+            for (double a : angles) {
+                double dx = Math.cos(a), dz = Math.sin(a);
+                for (int r = 46; r <= t.reach() - 4; r += 12) {
+                    for (int side = -1; side <= 1; side += 2) {
+                        int px = cx + (int) Math.round(dx * r - dz * side * row);
+                        int pz = cz + (int) Math.round(dz * r + dx * side * row);
+                        int rxp = cx + (int) Math.round(dx * r), rzp = cz + (int) Math.round(dz * r);
+                        int half = 6;
+                        if (!buildable(px, pz, half)) continue;
+                        final int bx = px, bz = pz, k = plot++;
+                        final Direction door = facing(rxp - px, rzp - pz);
+                        out.add(new Builds.Build(px - half, pz - half, px + half, pz + half, true,
+                                c -> building(c, t.kind(), k, bx, bz, door, cx, cz)));
+                    }
                 }
             }
         }
-        com.cursedtides.CursedTides.LOGGER.info("Town of {}: {} new plots", is.name(), plot);
+        // Roads: the spokes, and two rings joining them, wherever nothing has been built
+        List<int[]> roadCells = new ArrayList<>();
+        java.util.Set<Long> seen = new java.util.HashSet<>();
+        for (double a : angles) {
+            for (int r = 12; r <= t.reach(); r++) {
+                road(roadCells, seen, cx + (int) Math.round(Math.cos(a) * r), cz + (int) Math.round(Math.sin(a) * r));
+            }
+        }
+        for (int ring : new int[]{40, 64, 88}) {
+            if (ring > t.reach()) continue;
+            for (double a = Math.PI; a <= Math.PI * 2; a += 0.5 / ring) {
+                road(roadCells, seen, cx + (int) Math.round(Math.cos(a) * ring), cz + (int) Math.round(Math.sin(a) * ring));
+            }
+        }
         // The roads themselves (after the plots are claimed, so a road never runs through a building)
         final List<int[]> cells = List.copyOf(roadCells);
         int minX = Integer.MAX_VALUE, minZ = Integer.MAX_VALUE, maxX = Integer.MIN_VALUE, maxZ = Integer.MIN_VALUE;
@@ -95,6 +106,12 @@ final class Districts {
                 out.add(new Builds.Build(x - 2, z0, x + 2, z1, true, c -> Builds.pier(c, x, z0, z1, 2)));
             }
         }
+    }
+
+    private static void road(List<int[]> cells, java.util.Set<Long> seen, int x, int z) {
+        long key = ((long) x << 32) ^ (z & 0xffffffffL);
+        if (!seen.add(key) || !land(x, z) || Builds.blocksPlants(x, z)) return;
+        cells.add(new int[]{x, z});
     }
 
     private static boolean land(int x, int z) {
