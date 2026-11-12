@@ -83,6 +83,7 @@ final class Districts {
                 road(roadCells, seen, cx + (int) Math.round(Math.cos(a) * ring), cz + (int) Math.round(Math.sin(a) * ring));
             }
         }
+        com.cursedtides.CursedTides.LOGGER.info("Town of {}: {} new plots, {} road cells", is.name(), plot, roadCells.size());
         // The roads themselves (after the plots are claimed, so a road never runs through a building)
         final List<int[]> cells = List.copyOf(roadCells);
         int minX = Integer.MAX_VALUE, minZ = Integer.MAX_VALUE, maxX = Integer.MIN_VALUE, maxZ = Integer.MIN_VALUE;
