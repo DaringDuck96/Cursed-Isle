@@ -54,7 +54,7 @@ public final class UiData {
         lines.add("");
 
         lines.add("§e§lThe Drowned Bell");
-        lines.add("§f" + QuestData.objective(QuestData.stage(player)).getString());
+        lines.add("§f" + QuestData.objective(player).getString());
         lines.add("");
 
         lines.add("§e§lThe Seven Tides");

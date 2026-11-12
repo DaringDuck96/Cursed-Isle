@@ -173,6 +173,24 @@ The whole archipelago is rebuilt at the scale of the old pirate games, measured 
   sprawl with shacks, tents and fire pits.
 - Quest directions, the chart, whirlpools, currents and fog banks have all moved to match.
 
+### New in 0.20: Keeper Wren's lessons (the tutorial)
+
+The story now opens the way the old pirate games did: the first quests teach you to play. Talk to Keeper Wren
+by the lighthouse, and before she sends you to Saltmarrow she takes you through, one lesson at a time:
+
+1. **Blade:** clear three crabs off the beach with the cutlass (swing again and again for combos and finishers).
+2. **Guard:** a cursed deckhand comes out of the surf. Parry with sneak + right-click, dodge-roll with Left Alt.
+3. **Pistol:** she hands you her flintlock; land three shots on the deckhands climbing the rocks.
+4. **Voodoo doll:** use it on a foe to attune, then use it in the air to hex.
+5. **Firebombs:** throw one into a knot of deckhands.
+6. **Your sloop:** she gives you a sloop deed. Launch it from the pier and take the helm.
+7. **Sailing:** raise sail (R) and round the striped marker buoy off the south shore.
+8. **Gunnery:** turn side-on and put three hits from your broadside (Z/X) into the old hulk by the buoy.
+
+Each lesson hands over the tool it teaches, shows the keys on screen and gives a little reputation. Then she
+points you east to Saltmarrow, and the main story carries on from there. Your journal and the goal line always show
+the current lesson, and talking to Wren again repeats it (and replaces anything you've lost).
+
 ### New in 0.19: fighting and levelling the old way
 
 - **Enemy levels:** every foe has a level after its name (`Cursed Pirate [Lv 7]`) set by where it lives. The

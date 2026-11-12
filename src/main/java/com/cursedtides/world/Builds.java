@@ -60,6 +60,13 @@ public final class Builds {
             c.spawn(3.5, 63, 44.5, 0, w -> new BoatEntity(w, 0, 0, 0));
         });
         add(-26, 10, -16, 22, c -> wreckedRaft(c, -21, 16));
+        // Wren's sailing and gunnery lessons: a marker buoy and an old hulk off the south shore
+        add(com.cursedtides.quest.Lessons.BUOY_X - 2, com.cursedtides.quest.Lessons.BUOY_Z - 2,
+                com.cursedtides.quest.Lessons.BUOY_X + 2, com.cursedtides.quest.Lessons.BUOY_Z + 2,
+                c -> markerBuoy(c, com.cursedtides.quest.Lessons.BUOY_X, com.cursedtides.quest.Lessons.BUOY_Z));
+        add(com.cursedtides.quest.Lessons.HULK_X - 9, com.cursedtides.quest.Lessons.HULK_Z - 4,
+                com.cursedtides.quest.Lessons.HULK_X + 9, com.cursedtides.quest.Lessons.HULK_Z + 4,
+                c -> targetHulk(c, com.cursedtides.quest.Lessons.HULK_X, com.cursedtides.quest.Lessons.HULK_Z));
 
         // ===== Saltmarrow: the freeport =====
         int sx = Archipelago.SALTMARROW.cx(), sz = Archipelago.SALTMARROW.cz();
@@ -370,6 +377,36 @@ public final class Builds {
     }
 
     /** Where the player "washed up": a broken raft and scattered cargo on the beach. */
+    /** A tall striped marker post standing in the sea, with a lantern on top. */
+    static void markerBuoy(Canvas c, int x, int z) {
+        int base = Archipelago.column(x, z).top() + 1;
+        for (int y = base; y <= Archipelago.WATER_TOP + 1; y++) c.set(x, y, z, s(Blocks.SPRUCE_LOG));
+        c.set(x, Archipelago.WATER_TOP + 2, z, s(Blocks.RED_WOOL));
+        c.set(x, Archipelago.WATER_TOP + 3, z, s(Blocks.WHITE_WOOL));
+        c.set(x, Archipelago.WATER_TOP + 4, z, s(Blocks.RED_WOOL));
+        c.set(x, Archipelago.WATER_TOP + 5, z, s(Blocks.LANTERN));
+        for (int[] k : new int[][]{{1, 0}, {-1, 0}, {0, 1}, {0, -1}}) c.set(x + k[0], Archipelago.WATER_TOP, z + k[1], s(Blocks.SPRUCE_SLAB));
+    }
+
+    /** A dismasted hulk riding low in the water: something to aim at. */
+    static void targetHulk(Canvas c, int cx, int cz) {
+        int deck = Archipelago.WATER_TOP + 1;
+        for (int dx = -8; dx <= 8; dx++) {
+            int half = Math.abs(dx) > 6 ? 1 : Math.abs(dx) > 4 ? 2 : 3;
+            for (int dz = -half; dz <= half; dz++) {
+                int x = cx + dx, z = cz + dz;
+                c.fill(x, Archipelago.WATER_TOP - 3, z, x, Archipelago.WATER_TOP - 2, z, s(Blocks.DARK_OAK_PLANKS));
+                if (Math.abs(dz) == half) c.fill(x, Archipelago.WATER_TOP - 1, z, x, deck + 1, z, s(Blocks.DARK_OAK_PLANKS));
+                else if (Noise.rand(x, z, 8181) > 0.2) c.set(x, deck - 1, z, s(Blocks.SPRUCE_PLANKS));
+            }
+        }
+        c.fill(cx, deck, cz, cx, deck + 4, cz, s(Blocks.STRIPPED_DARK_OAK_LOG));
+        c.set(cx, deck + 5, cz, s(Blocks.BLACK_WOOL));
+        c.set(cx + 1, deck + 5, cz, s(Blocks.WHITE_WOOL));
+        c.set(cx + 3, deck, cz, s(Blocks.HAY_BLOCK));
+        c.set(cx - 3, deck, cz, s(Blocks.HAY_BLOCK));
+    }
+
     static void wreckedRaft(Canvas c, int cx, int cz) {
         c.columns(cx - 3, cz - 2, cx + 3, cz + 2, (x, z) -> {
             int top = Archipelago.column(x, z).top();

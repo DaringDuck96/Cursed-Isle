@@ -209,6 +209,7 @@ public final class Levels {
         int shown = Math.max(1, Math.round(dealt * HP_SCALE));
         if (attacker instanceof ServerPlayerEntity p) {
             ServerPlayNetworking.send(p, new DamageNumber(victim.getId(), shown, crit ? 1 : 0));
+            com.cursedtides.quest.Lessons.onHit(p, com.cursedtides.pirate.PirateEvents.weaponFor(p, source.getSource()), victim);
             int lv = levelOf(victim);
             if (lv > 0) {
                 Weapon w = com.cursedtides.pirate.PirateEvents.weaponFor(p, source.getSource());

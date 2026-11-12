@@ -119,6 +119,7 @@ public class VoodooDollItem extends Item {
             p.sendMessage(Text.translatable("message.cursedtides.no_voodoo").formatted(Formatting.DARK_AQUA), true);
             return TypedActionResult.fail(doll);
         }
+        if (!friendly) com.cursedtides.quest.Lessons.onDollWorked(p);
         float power = 1f + level * 0.03f;
         for (LivingEntity t : targets) {
             switch (w) {

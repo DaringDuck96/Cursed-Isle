@@ -54,22 +54,10 @@ public final class StoryDialogue {
 
     private static void keeper(StoryNpcEntity npc, ServerPlayerEntity player, int stage) {
         if (stage == QuestData.START) {
-            say(npc, player,
-                    "Easy, easy. The tide spat you onto Driftwood Island, same as it did me forty years back.",
-                    "You hear that, after dark? That's the Drowned Bell, tolling out on Hollowgrave.",
-                    "Every toll pulls another dead crew up from the deep. They come ashore further each year.",
-                    "You'll want steel, a boat, and a chart. Take mine. I'm too old to sail them now.",
-                    "Go north-east to Saltmarrow. Ask for Ysolde Vane, the harbormistress. She'll know what to do.");
-            QuestData.give(player, new ItemStack(ModItems.SEA_CHART));
-            QuestData.give(player, new ItemStack(ModItems.CUTLASS));
-            QuestData.give(player, new ItemStack(ModItems.FLINTLOCK_PISTOL));
-            QuestData.give(player, new ItemStack(ModItems.PISTOL_SHOT, 12));
-            QuestData.give(player, new ItemStack(Items.OAK_BOAT));
-            QuestData.give(player, new ItemStack(Items.BREAD, 8));
-            QuestData.setStage(player, QuestData.FIND_YSOLDE);
-            advanced(player);
+            // The castaway's lessons (see Lessons): blade, guard, pistol, doll, firebomb, then a sloop of your own
+            Lessons.talk(player);
         } else if (stage < QuestData.DONE) {
-            say(npc, player, "Your chart shows the way. North-east for Saltmarrow, and mind the bell after dark.");
+            say(npc, player, "Your chart shows the way. East for Saltmarrow, and mind the bell after dark.");
             hint(player, stage);
         } else {
             say(npc, player, "Forty years I've listened for that bell. Tonight I'll sleep. Thank you, captain.");
@@ -87,10 +75,13 @@ public final class StoryDialogue {
                     "One shard sank with the belltower at The Sunken Reach, south of here. Smugglers on Ashfall Island hide the other in their forge.",
                     "Bring both to Tamsin Coil, the last bellfounder. She lives on Ashfall's east shore. She can cast a bell to answer his.",
                     "Here's coin for powder and shot. The Quartermasters in the square will take it.",
-                    "And you'll not reach Hollowgrave in a rowboat. Take this deed: the harbor sloop, old but sound. "
-                            + "Name her at an anvil if you like. Hollis Pike at the shipyard can trade you up to something bigger.");
+                    "Name that sloop of yours at an anvil if you like. Hollis Pike at the shipyard can trade you up to something bigger.",
+                    "Sell what you plunder to the Quartermasters, and the market buys trade goods. Bigger guns, better shot: it all costs doubloons.");
             QuestData.give(player, new ItemStack(ModItems.DOUBLOON, 15));
-            QuestData.give(player, new ItemStack(ModItems.SLOOP_DEED));
+            // Wren's lessons already gave you a sloop; anyone who skipped them gets the harbour's
+            if (Lessons.step(player) != Lessons.Step.DONE && player.getInventory().count(ModItems.SLOOP_DEED) == 0) {
+                QuestData.give(player, new ItemStack(ModItems.SLOOP_DEED));
+            }
             player.sendMessage(Text.literal("Ship controls: R/V raise or lower sails, Z/X fire port or starboard guns, "
                     + "B cargo hold. Sneak-punch your ship to stow her in the deed.").formatted(Formatting.AQUA), false);
             QuestData.setStage(player, QuestData.FIND_SHARDS);
@@ -413,7 +404,7 @@ public final class StoryDialogue {
 
     private static void hint(ServerPlayerEntity player, int stage) {
         player.sendMessage(Text.literal("Goal: ").formatted(Formatting.YELLOW)
-                .append(QuestData.objective(stage).copy().formatted(Formatting.GRAY)), false);
+                .append(QuestData.objective(player).copy().formatted(Formatting.GRAY)), false);
     }
 
     private static void advanced(ServerPlayerEntity player) {

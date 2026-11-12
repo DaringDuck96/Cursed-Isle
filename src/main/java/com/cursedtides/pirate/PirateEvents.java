@@ -84,7 +84,7 @@ public final class PirateEvents {
                                 + "/" + t.goal() + ")").formatted(Formatting.YELLOW), false);
                     }
                     player.sendMessage(Text.literal("  Goal: ").formatted(Formatting.YELLOW)
-                            .append(QuestData.objective(QuestData.stage(player)).copy().formatted(Formatting.GRAY)), false);
+                            .append(QuestData.objective(player).copy().formatted(Formatting.GRAY)), false);
                     return 1;
                 }).then(CommandManager.literal("respec").executes(ctx -> {
                     ServerPlayerEntity player = ctx.getSource().getPlayerOrThrow();
@@ -144,6 +144,7 @@ public final class PirateEvents {
             return;
         }
         Weapon weapon = weaponFor(player, source.getSource());
+        com.cursedtides.quest.Lessons.onKill(player, weapon, victim);
         if (weapon == null) {
             return;
         }

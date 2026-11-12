@@ -48,6 +48,14 @@ public final class QuestData {
         });
     }
 
+    /** The objective as this player sees it (during Wren's lessons, the current lesson). */
+    public static Text objective(PlayerEntity player) {
+        int stage = stage(player);
+        if (stage == START && player instanceof net.minecraft.server.network.ServerPlayerEntity sp
+                && Lessons.step(sp) != Lessons.Step.TALK) return Lessons.objective(sp);
+        return objective(stage);
+    }
+
     public static boolean has(PlayerEntity player, Item item) {
         return player.getInventory().count(item) > 0;
     }

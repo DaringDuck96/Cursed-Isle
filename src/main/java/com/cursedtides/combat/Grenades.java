@@ -69,6 +69,7 @@ public final class Grenades {
                 float speed = user.isSneaking() ? 1.5f : 1.0f;
                 g.setVelocity(user, user.getPitch() - (user.isSneaking() ? 12 : 4), user.getYaw(), 0f, speed, 1.0f);
                 world.spawnEntity(g);
+                if (user instanceof net.minecraft.server.network.ServerPlayerEntity sp) com.cursedtides.quest.Lessons.onThrow(sp);
                 if (!user.getAbilities().creativeMode) stack.decrement(1);
                 int level = PirateData.level(user, Weapon.CANNON);
                 user.getItemCooldownManager().set(this, Math.max(10, 30 - level));
