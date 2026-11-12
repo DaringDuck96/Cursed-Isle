@@ -1,4 +1,4 @@
-# Cursed Tides (Fabric 1.21.1), version 0.17.0
+# Cursed Tides (Fabric 1.21.1), version 0.18.0
 
 An original pirate adventure built around four pillars: **sailing, ship ownership,
 island exploration and character progression**. Everything in it (islands, characters,
@@ -11,7 +11,7 @@ You need **Java 21** (the JDK, e.g. from adoptium.net).
 1. Unzip this folder.
 2. Open a terminal in it and run `gradlew.bat build` (Windows) or `./gradlew build` (Mac/Linux).
 3. The first build downloads Minecraft and Fabric (a few minutes).
-4. Your mod is at `build/libs/cursed-tides-0.17.0.jar` (ignore the `-sources` jar).
+4. Your mod is at `build/libs/cursed-tides-0.18.0.jar` (ignore the `-sources` jar).
 
 Put that jar plus **Fabric API** for 1.21.1 into `.minecraft/mods`. To test without installing: `./gradlew runClient`.
 
@@ -152,6 +152,32 @@ and leather. The captain's attire comes with Brethren rank 300; the Tidewatch un
 | Boarding Axe | 2 iron, an iron block and 2 sticks |
 | Throwing Knives (x4) | Shapeless: iron ingot and 2 iron nuggets |
 | Sailor's garb | Wool (bandana, shirt, breeches with a leather belt) and leather (boots) in armour shapes |
+
+### New in 0.18: the grand caverns
+
+Seven islands have a vast cave system far below them, much bigger than the old dungeons: eight or so huge
+domed chambers (stalagmites, pillars, pools, a chasm with a rope bridge) joined by long winding tunnels,
+with a hidden treasure grotto off to one side and a great hall at the bottom.
+
+- **Getting in:** look for a ring of tumbled rock round a dark pit with a beam and an old rope. Use the rope
+  to climb down; use the rope in the camp at the bottom to climb back out.
+- **Inside:** the chambers wake as you enter them, and packs of whatever lives down there come out of the dark
+  (they return a few minutes later). Spawners and chests are scattered through the halls.
+- **The great hall:** step into it and its master rises, with a boss bar and a few guards. Beat it for
+  doubloons, a high-tier weapon, maybe a trinket, plus the vault behind the dais. It comes back after 15 minutes.
+
+| Cavern | Island | Master |
+|---|---|---|
+| The Weeping Catacombs | Hollowgrave Island | The Bone Abbot |
+| Cinderdeep | Ashfall Island | The Cinder Matron |
+| The Serpent's Throat | Serpent's Hollow | Old Gnasher |
+| The Motherlode | Goldwater Cay | Claim-Jumper Grubb |
+| The Drowned Grotto | Whispering Key | Mother Brine |
+| The Furnace Below | Emberfall | The Slag Beast |
+| Hall of the First Light | The Last Horizon | The Lantern Warden |
+
+New feats: Spelunker, Master of the Deep, Deep Delver. Ops can use `/cursedtides cavern <0-6> [arena]` to jump
+to a cave mouth or great hall. The server log lists each cavern's coordinates at startup.
 
 ### New in 0.17
 

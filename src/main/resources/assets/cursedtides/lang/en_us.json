@@ -301,5 +301,6 @@
   "item.cursedtides.treasure_piece": "Treasure",
   "item.cursedtides.ship_of_the_line_deed": "Ship of the Line Deed",
   "entity.cursedtides.tentacle": "Tentacle",
-  "entity.cursedtides.grenade": "Grenade"
+  "entity.cursedtides.grenade": "Grenade",
+  "block.cursedtides.cave_rope": "Cave Rope"
 }

@@ -1,0 +1,1 @@
+{"parent": "minecraft:block/cross", "textures": {"cross": "cursedtides:block/cave_rope", "particle": "cursedtides:block/cave_rope"}, "render_type": "cutout"}

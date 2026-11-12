@@ -35,7 +35,11 @@
     "There's a treasure fleet out there somewhere, gold to the gunwales, with Tidewatch frigates riding herd.",
     "Old Kettle at the harbour guns needs hands every time the pirates make a run at the docks.",
     "If you get pinched by the Tidewatch while you're wanted, you'll wake up in the Ironwatch brig. Keep a lockpick in your boot.",
-    "Fancy a new look? Flossie Snips in Saltmarrow cuts hair like she's sharpening a cutlass."
+    "Fancy a new look? Flossie Snips in Saltmarrow cuts hair like she's sharpening a cutlass.",
+    "There's an old rope down a hole on Hollowgrave. Folk who climb it come back pale, if they come back. Something down there wears a monk's habit.",
+    "The miners on Goldwater broke into a cavern bigger than Saltmarrow harbour. Then Grubb and his claim-jumpers moved in, and the miners moved out.",
+    "Old Gnasher's not in the bayou any more. They say he's gone down into the caves under Serpent's Hollow, and grown.",
+    "Under the Last Horizon there's a hall that glows with its own light. Something with a lantern guards it."
    ],
    "text_if": [
     {

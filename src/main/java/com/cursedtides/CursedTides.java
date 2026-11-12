@@ -76,6 +76,7 @@ public class CursedTides implements ModInitializer {
         com.cursedtides.ship.FigureheadItem.register();
         com.cursedtides.trade.TradeEvents.register();
         com.cursedtides.activity.Regatta.register();
+        com.cursedtides.dungeon.Caverns.register();
         LOGGER.info("Cursed Tides: hoist the colours!");
     }
 }

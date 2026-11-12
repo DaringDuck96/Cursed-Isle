@@ -150,6 +150,9 @@ public final class Builds {
                 c -> temple(c, Archipelago.ALTAR_X, Archipelago.ALTAR_Z));
         add(Archipelago.ALTAR_X + 14, Archipelago.ALTAR_Z - 8, Archipelago.ALTAR_X + 26, Archipelago.ALTAR_Z + 8,
                 c -> cemetery(c, Archipelago.ALTAR_X + 15, Archipelago.ALTAR_Z - 7, Archipelago.ALTAR_X + 25, Archipelago.ALTAR_Z + 7));
+
+        // ===== Grand caverns: last, so their mouths keep clear of everything above =====
+        com.cursedtides.dungeon.Caverns.addBuilds(ALL);
     }
 
     /** Where each named character stands, so lost NPCs can be put back (/cursedtides restore_npcs). */
