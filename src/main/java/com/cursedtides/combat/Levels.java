@@ -304,6 +304,11 @@ public final class Levels {
         PayloadTypeRegistry.playS2C().register(DamageNumber.ID, DamageNumber.CODEC);
         PayloadTypeRegistry.playS2C().register(Hud.ID, Hud.CODEC);
         ServerEntityEvents.ENTITY_LOAD.register(Levels::onLoad);
+        // Foes loaded while the world was starting (before it knew it was the archipelago) get their levels now
+        net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STARTED.register(server -> {
+            ServerWorld w = server.getOverworld();
+            for (Entity e : w.iterateEntities()) onLoad(e, w);
+        });
         ServerTickEvents.END_SERVER_TICK.register(Levels::tick);
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> server.execute(() -> refreshPlayer(handler.player)));
         ServerPlayerEvents.AFTER_RESPAWN.register((oldP, p, alive) -> refreshPlayer(p));
