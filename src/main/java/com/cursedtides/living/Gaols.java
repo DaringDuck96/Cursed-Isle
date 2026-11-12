@@ -103,13 +103,17 @@ public final class Gaols {
         return best;
     }
 
-    public static void register() {
+    /** Registered late (after the world type is known on start-up). */
+    public static void registerKeepInventory() {
         ServerLifecycleEvents.SERVER_STARTED.register(server -> {
             if (ModWorld.isArchipelago() && !server.getGameRules().getBoolean(GameRules.KEEP_INVENTORY)) {
                 server.getGameRules().get(GameRules.KEEP_INVENTORY).set(true, server);
                 com.cursedtides.CursedTides.LOGGER.info("Cursed Tides: defeated pirates keep their belongings (keepInventory on)");
             }
         });
+    }
+
+    public static void register() {
         ServerPlayerEvents.AFTER_RESPAWN.register((oldP, p, alive) -> {
             if (alive || !ModWorld.isArchipelago()) return;
             ServerWorld overworld = p.getServer().getOverworld();
