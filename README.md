@@ -1,4 +1,4 @@
-# Cursed Tides (Fabric 1.21.1), version 0.22.0
+# Cursed Tides (Fabric 1.21.1), version 0.23.0
 
 An original pirate adventure built around four pillars: **sailing, ship ownership,
 island exploration and character progression**. Everything in it (islands, characters,
@@ -11,7 +11,7 @@ You need **Java 21** (the JDK, e.g. from adoptium.net).
 1. Unzip this folder.
 2. Open a terminal in it and run `gradlew.bat build` (Windows) or `./gradlew build` (Mac/Linux).
 3. The first build downloads Minecraft and Fabric (a few minutes).
-4. Your mod is at `build/libs/cursed-tides-0.22.0.jar` (ignore the `-sources` jar).
+4. Your mod is at `build/libs/cursed-tides-0.23.0.jar` (ignore the `-sources` jar).
 
 Put that jar plus **Fabric API** for 1.21.1 into `.minecraft/mods`. To test without installing: `./gradlew runClient`.
 
@@ -152,6 +152,20 @@ and leather. The captain's attire comes with Brethren rank 300; the Tidewatch un
 | Boarding Axe | 2 iron, an iron block and 2 sticks |
 | Throwing Knives (x4) | Shapeless: iron ingot and 2 iron nuggets |
 | Sailor's garb | Wool (bandana, shirt, breeches with a leather belt) and leather (boots) in armour shapes |
+
+### New in 0.23: new models from the Mob Workshop
+
+- **Ships:** all seven classes have their own hulls now, instead of one hull stretched or shrunk to size. Each
+  has its own length, beam, mast count (one sail per mast), gun count (two gun decks on the galleon and the ship
+  of the line) and stern cabin, in plain, navy and ghost colours. Flags, emblems, sail colours and figureheads
+  work as before.
+- **The cursed:** Grunts, Brutes and Captains are three different models (the Brute broad and heavy, the
+  Captain in coat and tricorn), each with Cursed, Bone, Barnacle and Ember textures. Captain Ashmere Thorne has
+  his own model.
+- **People:** every named character, the quartermasters, shipwrights, Tidewatch marines and your crew have
+  their own models: tricorns, bicornes, caps, bandanas, hoods, coats, robes, aprons, beards and long hair.
+- The models come from the Mob Workshop's starting designs. Anything you improve in the workshop can be dropped
+  straight in; the tools are in `tools/workshop/`.
 
 ### New in 0.22: more to do
 

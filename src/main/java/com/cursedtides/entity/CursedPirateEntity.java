@@ -67,14 +67,7 @@ public class CursedPirateEntity extends SkeletonEntity {
             if (scale != null) scale.setBaseValue(1.1);
             if (hp != null) hp.setBaseValue(36);
             if (dmg != null) dmg.setBaseValue(4);
-            ItemStack hat = new ItemStack(net.minecraft.item.Items.LEATHER_HELMET);
-            hat.set(net.minecraft.component.DataComponentTypes.DYED_COLOR, new net.minecraft.component.type.DyedColorComponent(0x2A2018, false));
-            ItemStack coat = new ItemStack(net.minecraft.item.Items.LEATHER_CHESTPLATE);
-            coat.set(net.minecraft.component.DataComponentTypes.DYED_COLOR, new net.minecraft.component.type.DyedColorComponent(0x7A1E1E, false));
-            this.equipStack(EquipmentSlot.HEAD, hat);
-            this.equipStack(EquipmentSlot.CHEST, coat);
-            this.setEquipmentDropChance(EquipmentSlot.HEAD, 0f);
-            this.setEquipmentDropChance(EquipmentSlot.CHEST, 0f);
+            // (the captain's coat and tricorn are part of his model)
         }
         this.setEquipmentDropChance(EquipmentSlot.MAINHAND, 0.03f);
         this.setHealth(this.getMaxHealth());
@@ -84,6 +77,7 @@ public class CursedPirateEntity extends SkeletonEntity {
     public net.minecraft.entity.EntityData initialize(net.minecraft.world.ServerWorldAccess world, LocalDifficulty difficulty,
                                                      SpawnReason reason, net.minecraft.entity.EntityData data) {
         net.minecraft.entity.EntityData out = super.initialize(world, difficulty, reason, data);
+        if (this.getClass() != CursedPirateEntity.class) return out; // bosses built on this (Thorne) set themselves up
         // The island decides what they're made of; the dice decide their rank
         com.cursedtides.world.Archipelago.Column col = com.cursedtides.world.Archipelago.column(this.getBlockX(), this.getBlockZ());
         Kind kind = Kind.DECKHAND;

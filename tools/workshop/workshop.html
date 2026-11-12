@@ -1,0 +1,1115 @@
+<title>Cursed Tides Mob Workshop</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a shipwright's drafting table — roster rail | 3D stage | inspector, stacking on phones */
+:root {
+  --bg: #efe8da; --panel: #f8f3e8; --panel-2: #e7dfcd; --ink: #2b2620; --ink-2: #6b6152;
+  --line: #d3c8b2; --accent: #a66a1c; --accent-ink: #fff8ec; --sea: #2f5d6b; --stage: #d9d1bf;
+  --ok: #3f7a4a; --warn: #a8761e; --bad: #a3392e;
+  --display: "IM Fell English SC", Georgia, serif; --body: "Inter", system-ui, sans-serif; --mono: "JetBrains Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1719; --panel: #152024; --panel-2: #1c2a2f; --ink: #e8e1d2; --ink-2: #9aa59f;
+  --line: #2b3b40; --accent: #d39a46; --accent-ink: #1a1308; --sea: #6fb3c4; --stage: #0b1214;
+  --ok: #6fbf7d; --warn: #e0b04f; --bad: #e07a6c; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0f1719; --panel: #152024; --panel-2: #1c2a2f; --ink: #e8e1d2; --ink-2: #9aa59f;
+  --line: #2b3b40; --accent: #d39a46; --accent-ink: #1a1308; --sea: #6fb3c4; --stage: #0b1214;
+  --ok: #6fbf7d; --warn: #e0b04f; --bad: #e07a6c; color-scheme: dark }
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 13px; }
+.app { display: grid; grid-template-rows: auto 1fr; height: 100%; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 10px; gap: 10px; box-sizing: border-box; }
+header { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+header h1 { font-family: var(--display); font-weight: 400; font-size: 26px; margin: 0; letter-spacing: .02em; text-wrap: balance; }
+header .sub { color: var(--ink-2); }
+header .save { margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--ink-2); }
+.cols { display: grid; grid-template-columns: 250px minmax(0, 1fr) 350px; gap: 10px; min-height: 0; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.panel h2 { font-family: var(--display); font-weight: 400; font-size: 17px; margin: 0; padding: 10px 12px 6px; }
+/* Roster */
+.roster input[type=search] { margin: 0 10px 8px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 4px; background: var(--bg); color: var(--ink); font: inherit; }
+.roster .list { overflow: auto; padding: 0 6px 10px; }
+.group { margin-top: 8px; }
+.group > .gh { font-size: 10px; text-transform: uppercase; letter-spacing: .12em; color: var(--ink-2); padding: 4px 6px; display: flex; justify-content: space-between; }
+.mob { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; border: 0; background: none; color: var(--ink); font: inherit; padding: 5px 6px; border-radius: 4px; cursor: pointer; }
+.mob:hover { background: var(--panel-2); }
+.mob[aria-current="true"] { background: var(--accent); color: var(--accent-ink); }
+.dot { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--ink-2); flex: none; }
+.dot.started { background: var(--warn); border-color: var(--warn); }
+.dot.done { background: var(--ok); border-color: var(--ok); }
+/* Stage */
+.stage { position: relative; background: var(--stage); }
+.stage canvas.gl { width: 100%; height: 100%; display: block; touch-action: none; }
+.stagebar { position: absolute; left: 8px; right: 8px; top: 8px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; pointer-events: none; }
+.stagebar > * { pointer-events: auto; }
+.title { font-family: var(--display); font-size: 22px; margin-right: auto; color: var(--ink); text-shadow: 0 1px 0 var(--bg); }
+.hint { position: absolute; left: 10px; bottom: 8px; color: var(--ink-2); font-size: 11px; pointer-events: none; }
+.btn { border: 1px solid var(--line); background: var(--panel); color: var(--ink); font: inherit; font-size: 12px; padding: 5px 9px; border-radius: 4px; cursor: pointer; }
+.btn:hover { border-color: var(--accent); }
+.btn.on, .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.danger { color: var(--bad); }
+.btn:focus-visible, .mob:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--sea); outline-offset: 1px; }
+/* Inspector */
+.tabs { display: flex; border-bottom: 1px solid var(--line); }
+.tabs button { flex: 1; border: 0; background: none; color: var(--ink-2); font: inherit; padding: 9px 4px; cursor: pointer; border-bottom: 2px solid transparent; }
+.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); font-weight: 600; }
+.tabpane { overflow: auto; padding: 10px 12px 14px; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+.tabpane > * { flex: none; }
+[hidden] { display: none !important; }
+.row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+label.f { display: grid; gap: 3px; font-size: 11px; color: var(--ink-2); }
+label.f input, label.f select, .num { font: inherit; font-family: var(--mono); font-size: 12px; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 3px; padding: 4px 5px; min-width: 0; }
+.trio { display: grid; grid-template-columns: 52px repeat(3, minmax(0, 1fr)); gap: 4px; align-items: center; }
+.trio span { font-size: 11px; color: var(--ink-2); }
+.tree { border: 1px solid var(--line); border-radius: 4px; max-height: 210px; overflow: auto; background: var(--bg); }
+.node { display: block; width: 100%; text-align: left; border: 0; background: none; color: var(--ink); font-family: var(--mono); font-size: 12px; padding: 3px 6px; cursor: pointer; }
+.node:hover { background: var(--panel-2); }
+.node[aria-current="true"] { background: var(--sea); color: var(--bg); }
+.cube { border: 1px solid var(--line); border-radius: 4px; padding: 6px; display: grid; gap: 4px; }
+.cube.sel { border-color: var(--accent); }
+.cube header { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--ink-2); }
+.cube header .btn { padding: 2px 6px; font-size: 11px; }
+.sect { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); margin-top: 4px; }
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 6px; }
+.sw { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--ink-2); }
+.sw input[type=color] { width: 26px; height: 22px; border: 1px solid var(--line); padding: 0; background: none; }
+.texwrap { border: 1px solid var(--line); border-radius: 4px; overflow: auto; max-height: 360px; background:
+  repeating-conic-gradient(var(--panel-2) 0% 25%, var(--panel) 0% 50%) 50% / 12px 12px; }
+.texwrap canvas { display: block; image-rendering: pixelated; cursor: crosshair; touch-action: none; }
+textarea.code { width: 100%; box-sizing: border-box; min-height: 220px; font-family: var(--mono); font-size: 11px; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 6px; resize: vertical; }
+.note { color: var(--ink-2); font-size: 12px; line-height: 1.45; max-width: 60ch; }
+.kv { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; font-size: 12px; }
+.kv dt { color: var(--ink-2); } .kv dd { margin: 0; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.confirm { border: 1px solid var(--bad); border-radius: 4px; padding: 8px; display: grid; gap: 6px; }
+.toast { position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 8px 12px; border-radius: 4px; font-size: 12px; z-index: 20; }
+@media (max-width: 1100px) { .cols { grid-template-columns: 220px minmax(0, 1fr); } .inspector { grid-column: 1 / -1; max-height: 70vh; } }
+@media (max-width: 720px) { .app { height: auto; } .cols { grid-template-columns: minmax(0, 1fr); } .roster { max-height: 240px; } .stage { height: 60vh; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="app">
+  <header>
+    <h1>Cursed Tides Mob Workshop</h1>
+    <span class="sub">Build, paint and export every creature, character, boss and ship in the Reach.</span>
+    <span class="save" id="saveState">Not saved yet</span>
+  </header>
+  <div class="cols">
+    <section class="panel roster" aria-label="Mobs">
+      <h2>The roster</h2>
+      <input type="search" id="search" placeholder="Find a mob…" aria-label="Find a mob">
+      <div class="list" id="roster"></div>
+    </section>
+
+    <section class="panel stage" aria-label="Model preview">
+      <canvas class="gl" id="gl"></canvas>
+      <div class="stagebar">
+        <span class="title" id="mobTitle">—</span>
+        <button class="btn on" id="btnAnim" type="button">Animate</button>
+        <button class="btn" id="btnFront" type="button">Front</button>
+        <button class="btn" id="btnSide" type="button">Side</button>
+        <button class="btn" id="btnTop" type="button">Top</button>
+        <button class="btn" id="btnPaint3d" type="button" title="Click and drag on the model to paint">Paint on model</button>
+      </div>
+      <div class="hint" id="hint">Drag to turn · wheel or pinch to zoom · click a part to select it</div>
+    </section>
+
+    <section class="panel inspector" aria-label="Inspector">
+      <div class="tabs" role="tablist">
+        <button role="tab" aria-selected="true" data-tab="parts" type="button">Parts</button>
+        <button role="tab" aria-selected="false" data-tab="paint" type="button">Paint</button>
+        <button role="tab" aria-selected="false" data-tab="export" type="button">Export</button>
+      </div>
+      <div class="tabpane" id="pane-parts"></div>
+      <div class="tabpane" id="pane-paint" hidden></div>
+      <div class="tabpane" id="pane-export" hidden></div>
+    </section>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+"use strict";
+/* ======================================================================
+   Templates captured from the mod as it stands (wildlife and the sloop hull)
+   ====================================================================== */
+const MOD_MODELS = /*TEMPLATES*/null;
+
+/* ======================================================================
+   Palettes and roster
+   ====================================================================== */
+const P = (o) => Object.assign({ skin: "#d9a57c", hair: "#4a3324", coat: "#3d4a5c", shirt: "#e8dcc2", pants: "#5b4636",
+  boots: "#2e241c", hat: "#2a2522", accent: "#b8862e", metal: "#8f969c", bone: "#e3dccb", glow: "#7fe6ff", eye: "#1d1a17" }, o);
+
+const UNDEAD_KINDS = {
+  Cursed: { bone: "#d6cdb4", shirt: "#7a6a52", coat: "#4a4036", glow: "#7fe6ff" },
+  Bone: { bone: "#f1ebdc", shirt: "#8a8170", coat: "#5d5548", glow: "#bfe3ff" },
+  Barnacle: { bone: "#8fb2a4", shirt: "#3f5e55", coat: "#2f4740", glow: "#9dffd8" },
+  Ember: { bone: "#4a3530", shirt: "#3a2a24", coat: "#2a1f1b", glow: "#ffa040" }
+};
+
+// tpl: biped | wild:<name> | ship:<class> | serpent | beast | bigcroc
+const ROSTER = [
+  // Ships
+  ...[["sloop","Sloop"],["schooner","Schooner"],["brigantine","Brigantine"],["brig","Brig"],["frigate","Frigate"],["galleon","Galleon"],["ship_of_the_line","Ship of the Line"]]
+    .map(([id, name]) => ({ id: "ship_" + id, name, group: "Ships", tpl: "ship:" + id,
+      pal: P({ coat: "#5b3b22", shirt: "#efe4cb", pants: "#3a2616", hat: "#141414", accent: "#b8862e", metal: "#2d2f31" }),
+      variants: { Player: {}, Navy: { coat: "#2c3e5c", accent: "#d8c27a", shirt: "#f4f1e8" }, Merchant: { coat: "#6b5236", shirt: "#e6dcc6", accent: "#5f8f53" },
+        Pirate: { coat: "#2a2420", shirt: "#3b3631", accent: "#9c2a22" }, Ghost: { coat: "#3e5552", shirt: "#9fc9c0", accent: "#7fe6ff", metal: "#506663" } } })),
+  // Undead
+  { id: "cursed_grunt", name: "Cursed Grunt", group: "Undead", tpl: "biped", opt: { kind: "skeleton", hat: "bandana" }, pal: P(UNDEAD_KINDS.Cursed), variants: UNDEAD_KINDS },
+  { id: "cursed_brute", name: "Cursed Brute", group: "Undead", tpl: "biped", opt: { kind: "skeleton", build: "brute", hat: "none" }, pal: P(UNDEAD_KINDS.Cursed), variants: UNDEAD_KINDS },
+  { id: "cursed_captain", name: "Cursed Captain", group: "Undead", tpl: "biped", opt: { kind: "skeleton", hat: "tricorn", coat: true }, pal: P(Object.assign({}, UNDEAD_KINDS.Cursed, { coat: "#6e1f1c", hat: "#221c18" })), variants: UNDEAD_KINDS },
+  { id: "thorne", name: "Captain Ashmere Thorne", group: "Undead", tpl: "biped", opt: { kind: "drowned", hat: "tricorn", coat: true, beard: true }, pal: P({ skin: "#7d9e94", hair: "#2a3a37", coat: "#24504c", hat: "#14201e", accent: "#9be0c8", glow: "#9dffd8" }) },
+  { id: "dread_captain", name: "The Dread Captain", group: "Undead", tpl: "biped", opt: { kind: "skeleton", build: "brute", hat: "bicorne", coat: true }, pal: P({ bone: "#cfc4a8", coat: "#1c1414", hat: "#0e0b0b", accent: "#c23a2a", glow: "#ff4a3a" }) },
+  // Main characters
+  ...[
+    ["keeper_wren","Keeper Wren",{ hair: "long", hat: "none", coat: true, female: true },{ skin: "#e3b896", hair: "#c9c3b8", coat: "#c9a43a", shirt: "#e8e0cf" }],
+    ["ysolde","Harbormistress Ysolde Vane",{ hat: "tricorn", coat: true, female: true, hair: "long" },{ hair: "#2b1d16", coat: "#24405f", accent: "#d8c27a" }],
+    ["tamsin","Tamsin Coil, Bellfounder",{ hat: "bandana", female: true, apron: true },{ skin: "#c9926b", hair: "#7a3d1f", shirt: "#b9a98a", coat: "#5a3a22", hat: "#7b2b20" }],
+    ["vey","Commodore Aldous Vey",{ hat: "bicorne", coat: true, beard: true },{ hair: "#9a9a92", coat: "#1f3354", pants: "#e9e6dc", accent: "#d9b85a" }],
+    ["galloway","Admiral Hester Galloway",{ hat: "bicorne", coat: true, female: true },{ hair: "#d8d2c4", coat: "#17284a", pants: "#ecebe4", accent: "#e2c36a" }],
+    ["harrow","Governor Ottoline Harrow",{ robe: true, female: true, hair: "long" },{ skin: "#efcfb5", hair: "#5e3a24", coat: "#5a2a5e", shirt: "#e8d8ea", accent: "#c9a33b" }],
+    ["rook","Captain Rook Varga",{ hat: "tricorn", coat: true, beard: true },{ skin: "#b9805a", hair: "#151210", coat: "#1b1a1a", shirt: "#7d1e1e", accent: "#a52a24" }],
+    ["thwaite","Professor Ansel Thwaite",{ coat: true, beard: true, hat: "none" },{ hair: "#b7b0a4", coat: "#7a6243", shirt: "#ece3cf", pants: "#5d4e3d" }],
+    ["wayfarer","The Wayfarer",{ hat: "hood", robe: true },{ coat: "#6b6c66", hat: "#55564f", skin: "#c99a73" }],
+    ["quill","Odalys Quill, Archivist",{ robe: true, female: true, hair: "long" },{ skin: "#8a5a3e", hair: "#1f1612", coat: "#2f5241", accent: "#c8b46a" }],
+    ["isadora","Isadora Vance, Smugglers' Queen",{ hat: "tricorn", coat: true, female: true, hair: "long" },{ hair: "#4a1d14", coat: "#7a1b1f", accent: "#d4a53a" }],
+    ["celestine","Mother Celestine",{ hat: "hood", robe: true, female: true },{ coat: "#ece8de", hat: "#22222a", accent: "#b39a4a" }],
+    ["sorrel","Sorrel Vane-Ashby, Medium",{ hat: "hood", robe: true, female: true },{ coat: "#4b2a5c", hat: "#3a1f48", accent: "#c6a2e8", glow: "#c6a2e8" }],
+    ["ibbie","Ibbie Crane, Naturalist",{ hat: "cap", female: true, coat: true },{ coat: "#9b8a5e", hat: "#cdbd8f", shirt: "#efe7d4", pants: "#6e5d3f" }],
+    ["dagny","Foreman Dagny Bell",{ hat: "cap", female: true, apron: true },{ hat: "#5f5446", shirt: "#8a6c4c", pants: "#3d3a36", accent: "#e0b84a" }],
+    ["old_mariner","The Old Mariner",{ hat: "bandana", beard: true },{ skin: "#c48b62", hair: "#e8e4dc", hat: "#2c4a7a", shirt: "#ddd2bb", pants: "#45505c" }]
+  ].map(([id, name, opt, pal]) => ({ id, name, group: "Main characters", tpl: "biped", opt, pal: P(pal) })),
+  // Town folk
+  ...[
+    ["mags","Mags Tallow, Brethren Broker",{ hat: "bandana", female: true },{ hat: "#8c2a22", shirt: "#c9b28a", coat: "#4a3426" }],
+    ["jory","Lucky Jory Bones, Dice Man",{ hat: "none", coat: true },{ coat: "#3f6b3a", shirt: "#ece3d0", hair: "#704424" }],
+    ["dealer","Card Dealer",{ hat: "none", coat: true },{ coat: "#151515", shirt: "#f0ece4", accent: "#a52a24" }],
+    ["fairweather","Cornelius Fairweather, Banker",{ hat: "cap", coat: true, beard: true },{ coat: "#22201e", hat: "#1a1817", hair: "#8d8579", accent: "#c7a64a" }],
+    ["pip","Pip Halyard, Regatta Master",{ hat: "cap" },{ shirt: "#e9e4d8", coat: "#2b5b8a", hat: "#efefe8", accent: "#2b5b8a" }],
+    ["lott","Barnaby Lott, Auctioneer",{ hat: "none", coat: true },{ coat: "#6b4a2b", shirt: "#e8dcc2", hair: "#3a2a1c" }],
+    ["finch","Marlowe Finch, Contest Judge",{ hat: "cap", coat: true },{ coat: "#3a5a7a", hat: "#3a3632" }],
+    ["grista","Grista Vell, Arena Master",{ hat: "none", female: true, hair: "long", build: "brute" },{ shirt: "#5a3c26", coat: "#3a2c22", hair: "#9b2f1d", metal: "#9aa0a6" }],
+    ["ned_flint","Corporal Ned Flint, Range Master",{ hat: "tricorn", coat: true },{ coat: "#7a1f1f", hat: "#151515", pants: "#ecebe4" }],
+    ["bess","Bess Tankard, Tavern Keeper",{ robe: true, female: true, apron: true, hair: "long" },{ coat: "#8a3b2a", shirt: "#efe6d0", hair: "#b35c2a" }],
+    ["skip","Skip Lanyard, Course Master",{ hat: "bandana" },{ shirt: "#e9e2d2", hat: "#2c5a8a", pants: "#3a4652" }],
+    ["deedes","Percival Deedes, Land Agent",{ hat: "none", coat: true },{ coat: "#6a6a64", shirt: "#ecebe4", hair: "#b8a888" }],
+    ["marsh","Clerk Abel Marsh, Bounty Office",{ hat: "cap", coat: true },{ coat: "#26241f", hat: "#26241f", shirt: "#e9e5da" }],
+    ["sounding","Tobiah Sounding, Salvage Diver",{ hat: "cap", beard: true },{ shirt: "#3e4f56", pants: "#2c3a40", hat: "#b88a3a", metal: "#b88a3a" }],
+    ["kettle","Sergeant Maud Kettle, Harbour Guns",{ hat: "tricorn", coat: true, female: true },{ coat: "#25395e", hat: "#121212", accent: "#d9b85a" }],
+    ["flossie","Flossie Snips, Barber",{ robe: true, female: true, hair: "long", apron: true },{ coat: "#c97a8a", shirt: "#f5e9ec", hair: "#e0c060" }],
+    ["moss","Ink-Eyed Moss, Tattooist",{ hat: "none", hair: "bald", tattoo: true },{ skin: "#b88762", shirt: "#3b3a36", pants: "#2a2826", accent: "#2b4a7a" }]
+  ].map(([id, name, opt, pal]) => ({ id, name, group: "Town folk", tpl: "biped", opt, pal: P(pal) })),
+  // Generic people
+  ...[
+    ["quartermaster","Quartermaster",{ hat: "bandana", apron: true, beard: true },{ shirt: "#c9b28a", hat: "#3d5a3a" }],
+    ["shipwright","Shipwright",{ hat: "cap", apron: true },{ shirt: "#d8c9a8", hat: "#6b5a44", coat: "#6a4a2a" }],
+    ["marine","Tidewatch Marine",{ hat: "tricorn", coat: true },{ coat: "#23406a", hat: "#111", pants: "#efede6", accent: "#e4e0d2" }],
+    ["crew_gunner","Crew: Gunner",{ hat: "bandana" },{ hat: "#7a1f1f", shirt: "#cfc4ad" }],
+    ["crew_bosun","Crew: Bosun",{ hat: "cap", beard: true, build: "brute" },{ hat: "#2c3e50", shirt: "#e6e0d2" }],
+    ["crew_navigator","Crew: Navigator",{ hat: "tricorn", coat: true },{ coat: "#4a6a5a", hat: "#202020" }],
+    ["bounty_hunter","Bounty Hunter",{ hat: "tricorn", coat: true, beard: true },{ coat: "#3a3028", hat: "#1a1714", accent: "#8c7a55" }]
+  ].map(([id, name, opt, pal]) => ({ id, name, group: "Generic people", tpl: "biped", opt, pal: P(pal) })),
+  // Bosses
+  { id: "tide_sovereign", name: "The Tide Sovereign", group: "Bosses", tpl: "biped", opt: { kind: "drowned", hat: "crown", robe: true, build: "brute" }, pal: P({ skin: "#5d8f9a", coat: "#1d4d5c", accent: "#9ee8ff", hat: "#c7b06a", glow: "#9ee8ff" }) },
+  { id: "lampwrights_hand", name: "The Lampwright's Hand", group: "Bosses", tpl: "biped", opt: { hat: "hood", robe: true }, pal: P({ coat: "#1c1a20", hat: "#141218", accent: "#f2c45a", glow: "#f2c45a" }) },
+  { id: "cinder_king", name: "The Cinder King", group: "Bosses", tpl: "biped", opt: { kind: "skeleton", build: "brute", hat: "crown", robe: true }, pal: P(Object.assign({}, UNDEAD_KINDS.Ember, { coat: "#3a1a10", hat: "#d4a53a" })) },
+  { id: "veil_witch", name: "The Veil Witch", group: "Bosses", tpl: "biped", opt: { hat: "hood", robe: true, female: true }, pal: P({ skin: "#b9c7bf", coat: "#3a4a4e", hat: "#2a383b", glow: "#c6f2e8" }) },
+  { id: "red_maddox", name: "Red Maddox, Pirate Warlord", group: "Bosses", tpl: "biped", opt: { hat: "tricorn", coat: true, beard: true, build: "brute" }, pal: P({ hair: "#a3301e", coat: "#6e1612", hat: "#1b1210", accent: "#d4a53a" }) },
+  { id: "ashen_herald", name: "The Ashen Herald", group: "Bosses", tpl: "biped", opt: { kind: "skeleton", hat: "hood", robe: true }, pal: P(Object.assign({}, UNDEAD_KINDS.Ember, { coat: "#4a4442", hat: "#3a3432" })) },
+  { id: "pretender", name: "The Pretender", group: "Bosses", tpl: "biped", opt: { kind: "drowned", hat: "crown", coat: true }, pal: P({ skin: "#9cb3ad", coat: "#2a3a5a", hat: "#9aa5b0", accent: "#c7d2dc", glow: "#c7d2dc" }) },
+  { id: "abyssal", name: "The Abyssal", group: "Bosses", tpl: "serpent", pal: P({ skin: "#26343f", shirt: "#3e5a63", accent: "#7a2d3d", glow: "#7fe6ff", bone: "#d9d2bd" }) },
+  { id: "brannoch", name: "Brannoch, Who Drowned the Fire", group: "Bosses", tpl: "biped", opt: { kind: "drowned", beard: true, hat: "none", build: "brute" }, pal: P({ skin: "#6b8f86", hair: "#2a3d38", shirt: "#3a4f4a", glow: "#9dffd8" }) },
+  { id: "grey_lamplighter", name: "The Grey Lamplighter", group: "Bosses", tpl: "biped", opt: { kind: "skeleton", hat: "hood", robe: true }, pal: P({ bone: "#cfcabd", coat: "#6a6864", hat: "#5a5854", glow: "#ffd27a" }) },
+  { id: "mother_of_gulls", name: "Mother of Gulls", group: "Bosses", tpl: "biped", opt: { hat: "hood", robe: true, female: true }, pal: P({ coat: "#e6e2d8", hat: "#cfcabc", skin: "#c9a78a", accent: "#4a4a48" }) },
+  { id: "bone_abbot", name: "The Bone Abbot", group: "Bosses", tpl: "biped", opt: { kind: "skeleton", hat: "mitre", robe: true, build: "brute" }, pal: P({ bone: "#ece4cf", coat: "#2a2430", hat: "#e2d6b0", accent: "#b39a4a", glow: "#9fd0ff" }) },
+  { id: "cinder_matron", name: "The Cinder Matron", group: "Bosses", tpl: "biped", opt: { kind: "drowned", robe: true, female: true, hat: "hood" }, pal: P({ skin: "#5a3328", coat: "#3a1c14", hat: "#2a140e", glow: "#ff8a3a" }) },
+  { id: "old_gnasher", name: "Old Gnasher", group: "Bosses", tpl: "bigcroc", pal: P({ skin: "#4d5f3a", shirt: "#c8c49a", accent: "#2f3b24", bone: "#efe8d2" }) },
+  { id: "grubb", name: "Claim-Jumper Grubb", group: "Bosses", tpl: "biped", opt: { hat: "cap", beard: true, build: "brute", apron: true }, pal: P({ hat: "#6a5a44", shirt: "#7a5a3a", pants: "#3d3a36", hair: "#5a3a22", metal: "#a8a29a" }) },
+  { id: "mother_brine", name: "Mother Brine", group: "Bosses", tpl: "biped", opt: { kind: "drowned", robe: true, female: true, hair: "long" }, pal: P({ skin: "#6f9a92", hair: "#2c4f48", coat: "#2b4a46", glow: "#9dffd8" }) },
+  { id: "slag_beast", name: "The Slag Beast", group: "Bosses", tpl: "beast", pal: P({ skin: "#3a3634", shirt: "#55504c", glow: "#ff7a2a", bone: "#8a827a" }) },
+  { id: "lantern_warden", name: "The Lantern Warden", group: "Bosses", tpl: "biped", opt: { hat: "hood", robe: true, build: "brute" }, pal: P({ coat: "#e8e2cf", hat: "#d8d0b8", skin: "#c9b49a", glow: "#fff1b0", accent: "#c9a33b" }) },
+  // Wildlife
+  ...[["crocodile","Crocodile",{ skin: "#4f6a3c", shirt: "#c9c499" }],["shark","Shark",{ skin: "#6a7f8c", shirt: "#e9ecea" }],["jaguar","Jaguar",{ skin: "#d39a3e", shirt: "#f1e2c2", accent: "#2a1e16" }],
+      ["boar","Boar",{ skin: "#5d4433", shirt: "#3a2a1f", bone: "#efe6d0" }],["crab","Crab",{ skin: "#b9452e", shirt: "#e6b8a0" }],["snake","Snake",{ skin: "#4d7a34", shirt: "#d4cf82", accent: "#2a3f1d" }],
+      ["monkey","Monkey",{ skin: "#6a4a32", shirt: "#d9b894" }],["tentacle","Leviathan Tentacle",{ skin: "#4a2e52", shirt: "#d9a7c9" }]]
+    .map(([id, name, pal]) => ({ id: "wild_" + id, name, group: "Wildlife", tpl: "wild:" + id, pal: P(pal) }))
+];
+
+/* ======================================================================
+   Small helpers
+   ====================================================================== */
+const $ = (s, r = document) => r.querySelector(s);
+const el = (tag, attrs = {}, ...kids) => {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "class") e.className = v; else if (k === "text") e.textContent = v;
+    else if (k.startsWith("on")) e.addEventListener(k.slice(2), v); else if (v !== false && v != null) e.setAttribute(k, v);
+  }
+  for (const k of kids) if (k != null) e.append(k);
+  return e;
+};
+const clone = (o) => JSON.parse(JSON.stringify(o));
+const hex2rgb = (h) => { h = h.replace("#", ""); if (h.length === 3) h = h.split("").map(c => c + c).join(""); const n = parseInt(h, 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
+const shade = (rgb, f) => rgb.map(c => Math.max(0, Math.min(255, Math.round(f >= 0 ? c + (255 - c) * f : c * (1 + f)))));
+function hash(a, b, c) { let h = (a * 374761393 + b * 668265263 + c * 2147483647) | 0; h = (h ^ (h >>> 13)) * 1274126177 | 0; return ((h ^ (h >>> 16)) >>> 0) / 4294967296; }
+let toastTimer;
+function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => t.hidden = true, 2600); }
+
+/* ======================================================================
+   Model generators. Coordinates are Minecraft model pixels: y grows downward,
+   the feet stand at y 24, the front faces -z (ships: bow at +z).
+   Part names follow the mod's animation rules.
+   ====================================================================== */
+const part = (name, parent, pivot, rot, cubes) => ({ name, parent: parent || null, pivot: pivot || [0, 0, 0], rot: rot || [0, 0, 0], cubes });
+const cube = (o, s, pat, col, extra) => Object.assign({ o, s, uv: [0, 0], inflate: 0, mirror: false, pat, col }, extra || {});
+
+function biped(opt) {
+  const sk = opt.kind === "skeleton", dr = opt.kind === "drowned", brute = opt.build === "brute";
+  const flesh = sk ? "bone" : "skin";
+  const limb = sk ? 2 : brute ? 5 : opt.female ? 3 : 4;
+  const parts = [];
+  const head = [cube([-4, -8, -4], [8, 8, 8], sk ? "skull" : "head", flesh)];
+  if (opt.beard && !sk) head.push(cube([-4, -2, -4.6], [8, 3, 1], "beard", "hair"));
+  parts.push(part("head", null, [0, 0, 0], [0, 0, 0], head));
+  const hat = [];
+  if (opt.hat === "tricorn") { hat.push(cube([-6, -9, -6], [12, 1, 12], "hat", "hat"), cube([-4.5, -11.5, -4.5], [9, 3, 9], "hat", "hat"), cube([-5.5, -10.5, -6.5], [11, 2, 1], "trim", "accent")); }
+  else if (opt.hat === "bicorne") { hat.push(cube([-7, -12, -2], [14, 4, 4], "hat", "hat"), cube([-4.5, -9, -4.5], [9, 1, 9], "hat", "hat"), cube([-1, -13, -2.5], [2, 2, 1], "trim", "accent")); }
+  else if (opt.hat === "cap") { hat.push(cube([-4.5, -9.5, -4.5], [9, 2, 9], "hat", "hat"), cube([-4.5, -8, -6.5], [9, 1, 3], "hat", "hat")); }
+  else if (opt.hat === "bandana") { hat.push(cube([-4.5, -8.6, -4.5], [9, 3, 9], "cloth", "hat"), cube([-1, -6.5, 4.4], [2, 3, 1], "cloth", "hat")); }
+  else if (opt.hat === "hood") { hat.push(cube([-4.6, -8.6, -4.6], [9.2, 9.2, 9.2], "hood", "hat")); }
+  else if (opt.hat === "crown") { hat.push(cube([-4.5, -10, -4.5], [9, 2, 9], "metal", "hat"), ...[[-4.5, -4.5], [3.5, -4.5], [-4.5, 3.5], [3.5, 3.5], [-0.5, -4.5]].map(([x, z]) => cube([x, -12, z], [1, 2, 1], "glow", "glow"))); }
+  else if (opt.hat === "mitre") { hat.push(cube([-3.5, -14, -3], [7, 6, 6], "hat", "hat"), cube([-0.5, -15, -3.2], [1, 6, 1], "trim", "accent")); }
+  if (opt.hair === "long" && !sk && opt.hat !== "hood") hat.push(cube([-4.3, -8.3, 0.5], [8.6, 10, 4], "hair", "hair"));
+  if (hat.length) parts.push(part("hat", null, [0, 0, 0], [0, 0, 0], hat));
+  const body = [cube([-4, 0, -2], [8, 12, 4], sk ? "ribs" : "torso", sk ? "bone" : "shirt")];
+  if (brute) body[0] = cube([-5, 0, -3], [10, 12, 6], sk ? "ribs" : "torso", sk ? "bone" : "shirt");
+  const bw = brute ? 5 : 4, bd = brute ? 3 : 2;
+  if (opt.coat) body.push(cube([-bw - 0.5, 0, -bd - 0.5], [bw * 2 + 1, 12, bd * 2 + 1], "coat", "coat"), cube([-bw - 0.5, 12, bd - 0.5], [bw * 2 + 1, 6, 1.5], "coat", "coat"));
+  if (opt.robe) body.push(cube([-bw - 0.6, 0, -bd - 0.6], [bw * 2 + 1.2, 12, bd * 2 + 1.2], "coat", "coat"), cube([-bw - 0.8, 12, -bd - 0.8], [bw * 2 + 1.6, 11, bd * 2 + 1.6], "robe", "coat"));
+  if (opt.apron) body.push(cube([-bw + 0.5, 3, -bd - 0.6], [bw * 2 - 1, 13, 0.6], "cloth", "accent"));
+  if (dr) body.push(cube([-bw, 9, -bd - 0.4], [bw * 2, 1, 0.4], "trim", "glow"));
+  parts.push(part("body", null, [0, 0, 0], [0, 0, 0], body));
+  const ax = brute ? 6 : 5, lx = brute ? 2.4 : 1.9, armPat = sk ? "bonelimb" : "arm", legPat = sk ? "bonelimb" : "leg";
+  const half = limb / 2;
+  const arm = (side) => {
+    const c = [cube(side < 0 ? [-limb + 1, -2, -half] : [-1, -2, -half], [limb, 12, limb], armPat, sk ? "bone" : (opt.coat || opt.robe ? "coat" : "shirt"))];
+    if ((opt.coat || opt.robe) && sk) c.push(cube(side < 0 ? [-limb + 0.5, -2.5, -half - 0.5] : [-1.5, -2.5, -half - 0.5], [limb + 1, 7, limb + 1], "coat", "coat"));
+    return c;
+  };
+  parts.push(part("right_arm", null, [-ax, 2, 0], [0, 0, 0], arm(-1)));
+  parts.push(part("left_arm", null, [ax, 2, 0], [0, 0, 0], arm(1)));
+  const leg = () => [cube([-half, 0, -half], [limb, 12, limb], legPat, sk ? "bone" : "pants")];
+  parts.push(part("right_leg", null, [-lx, 12, 0], [0, 0, 0], leg()));
+  parts.push(part("left_leg", null, [lx, 12, 0], [0, 0, 0], leg()));
+  return { tex: [64, 64], parts, kind: opt.kind || "human", opt };
+}
+
+function shipModel(cls) {
+  const C = { sloop: [52, 20, 13, 1, 2, 0], schooner: [60, 20, 13, 2, 2, 0], brigantine: [66, 24, 15, 2, 3, 0], brig: [70, 24, 15, 2, 4, 0],
+    frigate: [80, 26, 17, 3, 5, 0], galleon: [84, 30, 20, 3, 4, 1], ship_of_the_line: [96, 32, 24, 3, 7, 1] }[cls];
+  const [L, B, H, masts, guns, castle] = C;
+  const p = [], h = L / 2, b = B / 2, top = -H + 3;
+  p.push(part("keel", null, [0, 0, 0], [0, 0, 0], [cube([-b, 0, -h], [B, 3, L], "planks", "coat")]));
+  p.push(part("side_left", null, [0, 0, 0], [0, 0, 0], [cube([-b - 2, top, -h], [2, H, L], "hull", "coat")]));
+  p.push(part("side_right", null, [0, 0, 0], [0, 0, 0], [cube([b, top, -h], [2, H, L], "hull", "coat")]));
+  p.push(part("stern", null, [0, 0, 0], [0, 0, 0], [cube([-b - 2, top, -h - 2], [B + 4, H, 2], "hull", "coat")]));
+  p.push(part("bow", null, [0, 0, 0], [0, 0, 0], [cube([-b + 2, top, h], [B - 4, H, 6], "hull", "coat")]));
+  p.push(part("bow_tip", null, [0, 0, 0], [0, 0, 0], [cube([-b / 2, top + 1, h + 6], [b, H - 2, 5], "hull", "coat")]));
+  p.push(part("deck", null, [0, 0, 0], [0, 0, 0], [cube([-b, -4, -h], [B, 1, L], "deck", "pants")]));
+  p.push(part("rail_left", null, [0, 0, 0], [0, 0, 0], [cube([-b - 2, top - 2, -h], [2, 2, L], "wood", "pants")]));
+  p.push(part("rail_right", null, [0, 0, 0], [0, 0, 0], [cube([b, top - 2, -h], [2, 2, L], "wood", "pants")]));
+  const cabH = castle ? 14 : 8, cabL = castle ? Math.round(L * 0.28) : 10;
+  p.push(part("cabin", null, [0, 0, 0], [0, 0, 0], [cube([-b + 1, top - cabH + 1, -h], [B - 2, cabH, cabL], "cabin", "coat"),
+    cube([-b, top - cabH, -h - 1], [B, 1, cabL + 2], "deck", "pants")]));
+  if (castle) p.push(part("forecastle", null, [0, 0, 0], [0, 0, 0], [cube([-b + 2, top - 6, h - 12], [B - 4, 6, 12], "cabin", "coat")]));
+  const mastZ = masts === 1 ? [4] : masts === 2 ? [-Math.round(L * 0.18), Math.round(L * 0.2)] : [-Math.round(L * 0.26), Math.round(L * 0.04), Math.round(L * 0.3)];
+  const mastH = Math.round(L * 1.35);
+  mastZ.forEach((z, i) => {
+    const mh = Math.round(mastH * (i === 1 || masts === 1 ? 1 : 0.85));
+    p.push(part("mast" + (i + 1), null, [0, 0, 0], [0, 0, 0], [cube([-1, -mh - 4, z], [2, mh, 2], "wood", "pants")]));
+    const yw = Math.round(B * 1.8 * (i === 1 || masts === 1 ? 1 : 0.85));
+    p.push(part("yard" + (i + 1), null, [0, 0, 0], [0, 0, 0], [cube([-yw / 2, -mh + 8, z - 1], [yw, 2, 2], "wood", "pants"),
+      cube([-yw / 2 + 2, -Math.round(mh * 0.55), z - 1], [yw - 4, 2, 2], "wood", "pants")]));
+    const sh = Math.round(mh * 0.55) - 12;
+    p.push(part("sail" + (i + 1), null, [0, -mh + 10, 0], [0, 0, 0], [cube([-yw / 2 + 1, 0, z + 2], [yw - 2, sh, 1], "sail", "shirt")]));
+  });
+  p.push(part("bowsprit", null, [0, 0, 0], [-14, 0, 0], [cube([-1, top - 2, h + 8], [2, 2, Math.round(L * 0.35)], "wood", "pants")]));
+  p.push(part("figurehead", null, [0, 0, 0], [0, 0, 0], [cube([-1.5, top + 2, h + 10], [3, 6, 3], "metal", "accent")]));
+  const mainMastTop = -Math.round(mastH) - 4;
+  p.push(part("flag", null, [0, 0, 0], [0, 0, 0], [cube([0, mainMastTop, mastZ[Math.min(1, mastZ.length - 1)] - 10], [1, 6, 10], "flag", "hat")]));
+  p.push(part("emblem", null, [0, -Math.round(mastH * 0.75), mastZ[Math.min(1, mastZ.length - 1)] + 3.6], [0, 90, 0], [cube([0, 0, -5], [1, 6, 10], "flag", "hat")]));
+  const decks = castle ? 2 : 1;
+  for (let d = 0; d < decks; d++) for (let g = 0; g < guns; g++) {
+    const z = Math.round(-h + 14 + g * ((L - 24) / Math.max(1, guns - 1 || 1))) - 2, y = top + 4 + d * 5;
+    const sfx = (d ? "b" : "") + (g + 1);
+    p.push(part("cannon_l" + sfx, null, [0, 0, 0], [0, 0, 0], [cube([-b - 4, y, z], [2, 2, 4], "metal", "metal")]));
+    p.push(part("cannon_r" + sfx, null, [0, 0, 0], [0, 0, 0], [cube([b + 2, y, z], [2, 2, 4], "metal", "metal")]));
+  }
+  return { tex: [256, 512], parts: p, kind: "ship" };
+}
+
+function serpent() {
+  const p = [];
+  p.push(part("head", null, [0, 8, -10], [0, 0, 0], [cube([-9, -8, -18], [18, 14, 18], "scales", "skin"), cube([-6, -4, -30], [12, 8, 12], "scales", "skin"),
+    cube([-9.5, -6, -15], [2, 3, 3], "eyeglow", "glow"), cube([7.5, -6, -15], [2, 3, 3], "eyeglow", "glow")]));
+  p.push(part("jaw", "head", [0, 6, -12], [0, 0, 0], [cube([-6, 0, -18], [12, 4, 18], "maw", "accent")]));
+  let parent = null, z = -10;
+  for (let i = 1; i <= 6; i++) {
+    const w = 16 - i * 1.6, hgt = 14 - i * 1.4;
+    p.push(part("seg" + i, parent, parent ? [0, 0, 16] : [0, 8, z], [0, 0, 0], [cube([-w / 2, -hgt / 2, 0], [w, hgt, 16], "scales", "skin"), cube([-0.5, -hgt / 2 - 4, 3], [1, 4, 10], "fin", "accent")]));
+    parent = "seg" + i;
+  }
+  return { tex: [256, 256], parts: p, kind: "serpent" };
+}
+
+function beast() {
+  const p = [];
+  p.push(part("body", null, [0, 8, 0], [0, 0, 0], [cube([-8, -7, -12], [16, 13, 24], "rock", "skin"), cube([-6, -11, -8], [12, 4, 14], "rock", "shirt")]));
+  p.push(part("head", null, [0, 6, -12], [0, 0, 0], [cube([-5, -5, -10], [10, 10, 10], "rockface", "skin"), cube([-6, -8, -6], [2, 4, 2], "glow", "glow"), cube([4, -8, -6], [2, 4, 2], "glow", "glow")]));
+  for (const [n, x, z] of [["leg_fl", -6, -8], ["leg_fr", 6, -8], ["leg_bl", -6, 8], ["leg_br", 6, 8]])
+    p.push(part(n, null, [x, 13, z], [0, 0, 0], [cube([-3, 0, -3], [6, 11, 6], "rock", "skin")]));
+  p.push(part("tail1", "body", [0, -2, 12], [0, 0, 0], [cube([-2.5, -2, 0], [5, 4, 10], "rock", "skin")]));
+  return { tex: [128, 128], parts: p, kind: "beast" };
+}
+
+const WILD_PATTERNS = { crocodile: "scales", shark: "skinsmooth", jaguar: "spots", boar: "fur", crab: "shell", snake: "scales", monkey: "fur", tentacle: "suckers" };
+function wild(name, scale) {
+  const m = clone(MOD_MODELS[name]);
+  const s = scale || 1;
+  for (const pt of m.parts) {
+    pt.pivot = pt.pivot.map((v, i) => i === 1 && !pt.parent ? 24 - (24 - v) * s : v * s);
+    for (const c of pt.cubes) {
+      c.o = c.o.map(v => v * s); c.s = c.s.map(v => v * s);
+      const n = pt.name;
+      c.pat = n === "head" || n === "jaw" && false ? "animalhead" : (WILD_PATTERNS[name] || "fur");
+      c.col = n.startsWith("claw") || n === "jaw" ? "shirt" : "skin";
+    }
+  }
+  m.kind = "wild";
+  return m;
+}
+function shipTemplateFromMod() { const m = clone(MOD_MODELS.ship); for (const pt of m.parts) for (const c of pt.cubes) { c.pat = pt.name.startsWith("sail") ? "sail" : pt.name.startsWith("cannon") ? "metal" : "hull"; c.col = pt.name.startsWith("sail") ? "shirt" : "coat"; } return m; }
+
+function buildTemplate(entry) {
+  let m;
+  if (entry.tpl === "biped") m = biped(entry.opt || {});
+  else if (entry.tpl.startsWith("ship:")) m = shipModel(entry.tpl.slice(5));
+  else if (entry.tpl.startsWith("wild:")) m = wild(entry.tpl.slice(5));
+  else if (entry.tpl === "serpent") m = serpent();
+  else if (entry.tpl === "beast") m = beast();
+  else if (entry.tpl === "bigcroc") { m = wild("crocodile", 1.7); m.tex = [128, 256]; }
+  return { id: entry.id, name: entry.name, model: m, palette: clone(entry.pal), status: "started", notes: "", texture: null, version: 1 };
+}
+
+/* ======================================================================
+   UV layout: Minecraft box UV, packed onto the smallest texture that fits
+   ====================================================================== */
+function boxSize(c) { const w = Math.ceil(c.s[0]), h = Math.ceil(c.s[1]), d = Math.ceil(c.s[2]); return [Math.max(1, 2 * (w + d)), Math.max(1, d + h)]; }
+function autoUV(model) {
+  const all = [];
+  for (const p of model.parts) for (const c of p.cubes) all.push(c);
+  const order = all.slice().sort((a, b) => boxSize(b)[1] - boxSize(a)[1] || boxSize(b)[0] - boxSize(a)[0]);
+  const widest = Math.max(16, ...all.map(c => boxSize(c)[0]));
+  let W = 32; while (W < widest) W *= 2;
+  for (let attempt = 0; attempt < 8; attempt++) {
+    let x = 0, y = 0, rowH = 0;
+    for (const c of order) {
+      const [bw, bh] = boxSize(c);
+      if (x + bw > W) { x = 0; y += rowH; rowH = 0; }
+      c.uv = [x, y]; x += bw; rowH = Math.max(rowH, bh);
+    }
+    const used = y + rowH;
+    let H = 32; while (H < used) H *= 2;
+    if (H <= W * 2) { model.tex = [W, H]; return; }
+    W *= 2;
+  }
+}
+
+/* ======================================================================
+   Painting: lay down a painted base from the palette, face by face
+   ====================================================================== */
+function faceRects(c) {
+  const [u, v] = c.uv, w = Math.ceil(c.s[0]), h = Math.ceil(c.s[1]), d = Math.ceil(c.s[2]);
+  return { top: [u + d, v, w, d], bottom: [u + d + w, v, w, d], west: [u, v + d, d, h], north: [u + d, v + d, w, h], east: [u + d + w, v + d, d, h], south: [u + d + w + d, v + d, w, h] };
+}
+function paintModel(proj, img) {
+  const [W, H] = proj.model.tex, pal = proj.palette, data = img.data;
+  data.fill(0);
+  const put = (x, y, rgb, a = 255) => { if (x < 0 || y < 0 || x >= W || y >= H) return; const i = (y * W + x) * 4; data[i] = rgb[0]; data[i + 1] = rgb[1]; data[i + 2] = rgb[2]; data[i + 3] = a; };
+  let seed = 1;
+  for (const p of proj.model.parts) for (const c of p.cubes) {
+    seed++;
+    const base = hex2rgb(pal[c.col] || c.col || "#888888");
+    const pat = c.pat || "plain";
+    const R = faceRects(c);
+    for (const [face, [fx, fy, fw, fh]] of Object.entries(R)) {
+      const light = face === "top" ? 0.12 : face === "bottom" ? -0.25 : face === "north" ? 0.02 : face === "south" ? -0.06 : -0.1;
+      for (let y = 0; y < fh; y++) for (let x = 0; x < fw; x++) {
+        const n = hash(x + fx, y + fy, seed) - 0.5;
+        let col = shade(base, light + n * 0.09);
+        const gy = y / Math.max(1, fh - 1);
+        switch (pat) {
+          case "planks": case "hull": case "deck": if (y % 3 === 2) col = shade(col, -0.22); if ((x + Math.floor(y / 3) * 7) % 13 === 0) col = shade(col, -0.15); if (pat === "hull" && face !== "top" && face !== "bottom" && y === 1) col = shade(hex2rgb(pal.accent), -0.1); break;
+          case "wood": if ((x + y) % 4 === 0) col = shade(col, -0.12); break;
+          case "sail": if (x % 6 === 0) col = shade(col, -0.08); col = shade(col, -0.08 * gy); break;
+          case "cabin": if (face !== "top" && face !== "bottom" && y > 2 && y < fh - 2 && x % 5 === 2) col = hex2rgb("#f3d58a"); break;
+          case "flag": col = shade(base, n * 0.04); break;
+          case "metal": col = shade(base, light + n * 0.05 + (y === 0 ? 0.2 : 0)); break;
+          case "torso": if (y === Math.round(fh * 0.72) && face !== "top" && face !== "bottom") col = shade(hex2rgb(pal.boots), 0.05); if (face === "north" && y === Math.round(fh * 0.72) && Math.abs(x - fw / 2) < 1) col = hex2rgb(pal.accent); break;
+          case "coat": if (face === "north" && Math.abs(x - (fw - 1) / 2) < 0.6) col = shade(col, -0.3); if (face === "north" && Math.abs(x - (fw - 1) / 2) < 1.6 && y % 3 === 1 && y < fh - 1) col = hex2rgb(pal.accent); if (y === fh - 1 && face !== "top") col = shade(col, -0.2); break;
+          case "robe": col = shade(col, -0.1 * gy); if (y === fh - 1) col = shade(hex2rgb(pal.accent), -0.1); break;
+          case "arm": if (face !== "top" && y >= fh - 3) col = shade(hex2rgb(pal.skin), light + n * 0.06); if (face === "bottom") col = shade(hex2rgb(pal.skin), -0.2); break;
+          case "leg": if (face !== "top" && y >= fh - 4) col = shade(hex2rgb(pal.boots), light + n * 0.05); if (face === "bottom") col = hex2rgb(pal.boots); break;
+          case "bonelimb": if (y % 6 === 5) col = shade(col, -0.25); break;
+          case "ribs": if (face === "north" || face === "south") { if (y > 1 && y < fh - 3 && y % 2 === 0 && x > 0 && x < fw - 1) col = shade(col, -0.45); if (Math.abs(x - (fw - 1) / 2) < 0.6) col = shade(base, 0.05); } break;
+          case "hat": if (y === fh - 1 && face !== "top" && face !== "bottom") col = shade(col, -0.25); break;
+          case "trim": col = shade(base, 0.1 + n * 0.05); break;
+          case "cloth": if ((x + y) % 4 === 0) col = shade(col, -0.12); break;
+          case "hood": if (face === "north" && x > 0 && x < fw - 1 && y > 1) col = [18, 15, 14]; break;
+          case "hair": case "beard": col = shade(base, n * 0.16 + (x % 2 ? -0.06 : 0)); break;
+          case "scales": if ((x + (y % 2) * 2) % 4 === 0 || y % 3 === 0) col = shade(col, -0.16); if (face === "bottom") col = shade(hex2rgb(pal.shirt), n * 0.08); break;
+          case "skinsmooth": if (face === "bottom" || (face !== "top" && gy > 0.62)) col = shade(hex2rgb(pal.shirt), n * 0.05); break;
+          case "spots": if (hash(Math.floor((x + fx) / 2), Math.floor((y + fy) / 2), 7) > 0.78) col = hex2rgb(pal.accent); if (face === "bottom") col = hex2rgb(pal.shirt); break;
+          case "fur": col = shade(col, (hash(x + fx, y + fy, 3) - 0.5) * 0.22); break;
+          case "shell": if (face === "top" && (x + y) % 5 === 0) col = shade(col, 0.18); if (face === "bottom") col = hex2rgb(pal.shirt); break;
+          case "suckers": if (face === "bottom" && y % 3 === 1 && x % 2 === 0) col = hex2rgb(pal.shirt); break;
+          case "rock": case "rockface": if (hash(x + fx, y + fy, 11) > 0.93) col = hex2rgb(pal.glow); break;
+          case "maw": if (face === "top" && (x % 3 === 0)) col = hex2rgb(pal.bone); break;
+          case "fin": col = shade(col, -0.05 * gy); break;
+          case "glow": case "eyeglow": col = shade(hex2rgb(pal.glow), n * 0.1); break;
+        }
+        put(fx + x, fy + y, col);
+      }
+    }
+    // Faces: eyes, brows, mouth on the front of heads
+    if (pat === "head" || pat === "skull" || pat === "animalhead" || pat === "rockface") {
+      const [fx, fy, fw, fh] = R.north;
+      const ey = fy + Math.round(fh * 0.5), lx = fx + Math.max(1, Math.round(fw / 8)), rx = fx + fw - 1 - Math.max(1, Math.round(fw / 8));
+      if (pat === "skull") {
+        const glow = hex2rgb(pal.glow);
+        for (const ex of [lx, rx]) { put(ex, ey, glow); put(ex - (ex === lx ? 1 : -1), ey, [20, 16, 14]); put(ex, ey - 1, [20, 16, 14]); }
+        put(fx + Math.round(fw / 2), ey + 1, [30, 24, 20]);
+        for (let x = fx + 2; x < fx + fw - 2; x++) put(x, fy + fh - 2, x % 2 ? [30, 24, 20] : shade(hex2rgb(pal.bone), 0.1));
+      } else if (pat === "head") {
+        const white = [240, 236, 228], eye = hex2rgb(pal.eye), hair = hex2rgb(pal.hair);
+        put(lx, ey, white); put(lx + 1, ey, eye); put(rx - 1, ey, eye); put(rx, ey, white);
+        for (let x = lx; x <= lx + 1; x++) put(x, ey - 1, shade(hair, -0.1));
+        for (let x = rx - 1; x <= rx; x++) put(x, ey - 1, shade(hair, -0.1));
+        put(fx + Math.round(fw / 2) - 1, ey + 2, shade(hex2rgb(pal.skin), -0.3)); put(fx + Math.round(fw / 2), ey + 2, shade(hex2rgb(pal.skin), -0.3));
+        // hair on top and back, a fringe at the front
+        const T = R.top, S = R.south;
+        if (proj.model.opt?.hair !== "bald") {
+          for (let y = 0; y < T[3]; y++) for (let x = 0; x < T[2]; x++) put(T[0] + x, T[1] + y, shade(hair, (hash(x, y, 5) - 0.5) * 0.15));
+          for (let y = 0; y < Math.round(S[3] * 0.7); y++) for (let x = 0; x < S[2]; x++) put(S[0] + x, S[1] + y, shade(hair, (hash(x, y, 6) - 0.5) * 0.15));
+          for (let x = 0; x < fw; x++) put(fx + x, fy, shade(hair, -0.05));
+          for (const [sx, sy, sw, sh] of [R.west, R.east]) for (let y = 0; y < Math.round(sh * 0.4); y++) for (let x = 0; x < sw; x++) put(sx + x, sy + y, shade(hair, (hash(x, y, 8) - 0.5) * 0.15));
+        }
+        if (proj.model.kind === "drowned") for (const ex of [lx, rx]) put(ex, ey, hex2rgb(pal.glow));
+        if (proj.model.opt?.tattoo) for (let y = 1; y < fh - 1; y += 2) put(fx + 1, fy + y, hex2rgb(pal.accent));
+      } else {
+        const g = pat === "rockface" ? hex2rgb(pal.glow) : [18, 14, 12];
+        put(lx, ey, g); put(rx, ey, g);
+      }
+    }
+  }
+}
+
+/* ======================================================================
+   Project state, undo, persistence
+   ====================================================================== */
+let proj = null, entry = null, selPart = null, selCube = -1;
+const texCanvas = document.createElement("canvas");
+const texCtx = texCanvas.getContext("2d", { willReadFrequently: true });
+const undo = [], redo = [];
+
+function snapshot() { return { model: clone(proj.model), palette: clone(proj.palette), tex: texCtx.getImageData(0, 0, texCanvas.width, texCanvas.height) }; }
+function pushUndo() { undo.push(snapshot()); if (undo.length > 40) undo.shift(); redo.length = 0; }
+function restore(s) { proj.model = s.model; proj.palette = s.palette; texCanvas.width = s.tex.width; texCanvas.height = s.tex.height; texCtx.putImageData(s.tex, 0, 0); afterChange(true); }
+function doUndo() { if (!undo.length) return; redo.push(snapshot()); restore(undo.pop()); toast("Undone"); }
+function doRedo() { if (!redo.length) return; undo.push(snapshot()); restore(redo.pop()); toast("Redone"); }
+
+function regenerateTexture() {
+  autoUV(proj.model);
+  const [W, H] = proj.model.tex;
+  texCanvas.width = W; texCanvas.height = H;
+  const img = texCtx.createImageData(W, H);
+  paintModel(proj, img);
+  texCtx.putImageData(img, 0, 0);
+}
+
+// Storage: the page's shared database when it's there (so the work is kept and can be read back into the mod),
+// otherwise this browser's own storage.
+let db = null, dlCap = null, statusMap = {};
+const LS = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); return true; } catch { return false; } } };
+const CHUNK = 180000;
+async function saveProject() {
+  if (!proj) return;
+  const payload = { id: proj.id, name: proj.name, model: proj.model, palette: proj.palette, status: proj.status, notes: proj.notes, version: proj.version, updated: Date.now() };
+  const png = texCanvas.toDataURL("image/png");
+  statusMap[proj.id] = proj.status; renderRosterDots();
+  setSave("Saving…");
+  if (db) {
+    try {
+      const chunks = []; for (let i = 0; i < png.length; i += CHUNK) chunks.push(png.slice(i, i + CHUNK));
+      for (let i = 0; i < chunks.length; i++) await db.doc("textures/" + proj.id + "/chunks/c" + i).set({ data: chunks[i] });
+      payload.textureChunks = chunks.length;
+      await db.doc("models/" + proj.id).set(payload);
+      setSave("Saved to this workshop · " + new Date().toLocaleTimeString());
+      return;
+    } catch (e) { setSave("Couldn't save to the workshop (" + (e.code || "error") + "); kept in this browser"); }
+  }
+  payload.texture = png;
+  setSave(LS.set("mobws:" + proj.id, JSON.stringify(payload)) ? "Saved in this browser · " + new Date().toLocaleTimeString() : "Not saved: this browser blocks storage. Use Export → Save project file.");
+  LS.set("mobws:status", JSON.stringify(statusMap));
+}
+async function loadProject(id) {
+  if (db) {
+    try {
+      const snap = await db.doc("models/" + id).get();
+      if (snap.exists) {
+        const d = snap.data();
+        let png = "";
+        for (let i = 0; i < (d.textureChunks || 0); i++) { const c = await db.doc("textures/" + id + "/chunks/c" + i).get(); if (c.exists) png += c.data().data; }
+        d.texture = png || null; return d;
+      }
+    } catch (e) { /* fall through to local */ }
+  }
+  const raw = LS.get("mobws:" + id);
+  if (raw) { try { return JSON.parse(raw); } catch { return null; } }
+  return null;
+}
+let saveTimer;
+function scheduleSave() { clearTimeout(saveTimer); setSave("Unsaved changes"); saveTimer = setTimeout(saveProject, 1200); }
+function setSave(t) { $("#saveState").textContent = t; }
+
+/* ======================================================================
+   3D stage
+   ====================================================================== */
+const glCanvas = $("#gl");
+const renderer = new THREE.WebGLRenderer({ canvas: glCanvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(40, 1, 0.05, 2000);
+scene.add(new THREE.AmbientLight(0xffffff, 0.62));
+const sun = new THREE.DirectionalLight(0xffffff, 0.55); sun.position.set(-3, 6, -4); scene.add(sun);
+const fill = new THREE.DirectionalLight(0xffffff, 0.22); fill.position.set(4, 2, 5); scene.add(fill);
+const grid = new THREE.GridHelper(4, 64, 0x8a7a5a, 0x8a7a5a); grid.material.opacity = 0.25; grid.material.transparent = true; scene.add(grid);
+const texture = new THREE.CanvasTexture(texCanvas);
+texture.magFilter = THREE.NearestFilter; texture.minFilter = THREE.NearestFilter; texture.flipY = false; texture.generateMipmaps = false;
+const material = new THREE.MeshLambertMaterial({ map: texture, side: THREE.DoubleSide, alphaTest: 0.5 });
+const modelRoot = new THREE.Group(); // Minecraft draws entities turned half round about z: (x, y) -> (-x, -y)
+modelRoot.scale.set(-1 / 16, -1 / 16, 1 / 16); modelRoot.position.y = 24 / 16;
+scene.add(modelRoot);
+let partGroups = {}, meshes = [], selHelper = null;
+let animOn = true, paint3d = false;
+
+function cubeGeometry(c, W, H) {
+  const inf = c.inflate || 0;
+  let x0 = c.o[0] - inf, y0 = c.o[1] - inf, z0 = c.o[2] - inf, x1 = c.o[0] + c.s[0] + inf, y1 = c.o[1] + c.s[1] + inf, z1 = c.o[2] + c.s[2] + inf;
+  if (c.mirror) [x0, x1] = [x1, x0];
+  const v1 = [x0, y0, z0], v2 = [x1, y0, z0], v3 = [x1, y1, z0], v4 = [x0, y1, z0], v5 = [x0, y0, z1], v6 = [x1, y0, z1], v7 = [x1, y1, z1], v8 = [x0, y1, z1];
+  const w = Math.ceil(c.s[0]), h = Math.ceil(c.s[1]), d = Math.ceil(c.s[2]), [u, v] = c.uv;
+  const l = u, m = u + d, n = u + d + w, o = u + d + w + w, pp = u + d + w + d, q = u + d + w + d + w, r = v, s = v + d, t = v + d + h;
+  const quads = [ // vertices, u1, v1, u2, v2 (as Minecraft lays them out)
+    [[v6, v5, v1, v2], m, r, n, s], [[v3, v4, v8, v7], n, s, o, r], [[v1, v5, v8, v4], l, s, m, t],
+    [[v2, v1, v4, v3], m, s, n, t], [[v6, v2, v3, v7], n, s, pp, t], [[v5, v6, v7, v8], pp, s, q, t]];
+  const pos = [], uvs = [];
+  for (let [vs, u1, vv1, u2, vv2] of quads) {
+    if (c.mirror) vs = vs.slice().reverse();
+    const uv = [[u2, vv1], [u1, vv1], [u1, vv2], [u2, vv2]];
+    for (const k of [0, 1, 2, 0, 2, 3]) { pos.push(...vs[k]); uvs.push(uv[k][0] / W, uv[k][1] / H); }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+  g.computeVertexNormals();
+  return g;
+}
+function buildScene() {
+  for (const m of meshes) m.geometry.dispose();
+  modelRoot.clear(); partGroups = {}; meshes = [];
+  const [W, H] = proj.model.tex;
+  const byName = {};
+  for (const p of proj.model.parts) {
+    const g = new THREE.Group();
+    g.position.set(...p.pivot);
+    g.rotation.order = "ZYX";
+    g.userData = { part: p };
+    p.cubes.forEach((c, i) => { const mesh = new THREE.Mesh(cubeGeometry(c, W, H), material); mesh.userData = { part: p, cube: i }; g.add(mesh); meshes.push(mesh); });
+    partGroups[p.name] = g; byName[p.name] = g;
+  }
+  for (const p of proj.model.parts) (p.parent && byName[p.parent] ? byName[p.parent] : modelRoot).add(byName[p.name]);
+  texture.needsUpdate = true;
+  updateHelper();
+}
+function updateHelper() {
+  if (selHelper) { scene.remove(selHelper); selHelper = null; }
+  const g = selPart && partGroups[selPart];
+  if (g) { selHelper = new THREE.BoxHelper(g, 0xd39a46); scene.add(selHelper); }
+}
+function bounds() { const b = new THREE.Box3().setFromObject(modelRoot); return b.isEmpty() ? new THREE.Box3(new THREE.Vector3(-1, 0, -1), new THREE.Vector3(1, 2, 1)) : b; }
+
+// Orbit
+const orbit = { yaw: Math.PI, pitch: 0.25, dist: 4, target: new THREE.Vector3(0, 1, 0) };
+function frame(yaw, pitch) {
+  const b = bounds(), size = b.getSize(new THREE.Vector3()), c = b.getCenter(new THREE.Vector3());
+  orbit.target.copy(c); orbit.dist = Math.max(size.x, size.y, size.z) * 1.9 + 0.5;
+  if (yaw != null) { orbit.yaw = yaw; orbit.pitch = pitch; }
+  grid.scale.setScalar(Math.max(1, Math.ceil(Math.max(size.x, size.z) / 3)));
+}
+function placeCamera() {
+  const cp = Math.cos(orbit.pitch);
+  camera.position.set(orbit.target.x + Math.sin(orbit.yaw) * cp * orbit.dist, orbit.target.y + Math.sin(orbit.pitch) * orbit.dist, orbit.target.z + Math.cos(orbit.yaw) * cp * orbit.dist);
+  camera.lookAt(orbit.target);
+}
+const pointers = new Map(); let dragged = false, pinch0 = 0, painting = false;
+glCanvas.addEventListener("pointerdown", (e) => {
+  glCanvas.setPointerCapture(e.pointerId); pointers.set(e.pointerId, [e.clientX, e.clientY]); dragged = false;
+  if (pointers.size === 2) { const [a, b] = [...pointers.values()]; pinch0 = Math.hypot(a[0] - b[0], a[1] - b[1]); }
+  if (paint3d && pointers.size === 1) { painting = true; pushUndo(); paintAt(e); }
+});
+glCanvas.addEventListener("pointermove", (e) => {
+  if (!pointers.has(e.pointerId)) return;
+  const prev = pointers.get(e.pointerId); pointers.set(e.pointerId, [e.clientX, e.clientY]);
+  if (painting) { paintAt(e); return; }
+  if (pointers.size === 2) { const [a, b] = [...pointers.values()]; const d = Math.hypot(a[0] - b[0], a[1] - b[1]); if (pinch0) orbit.dist *= pinch0 / d; pinch0 = d; dragged = true; return; }
+  const dx = e.clientX - prev[0], dy = e.clientY - prev[1];
+  if (Math.abs(dx) + Math.abs(dy) > 2) dragged = true;
+  orbit.yaw -= dx * 0.01; orbit.pitch = Math.max(-1.4, Math.min(1.4, orbit.pitch + dy * 0.01));
+});
+glCanvas.addEventListener("pointerup", (e) => {
+  pointers.delete(e.pointerId);
+  if (painting) { painting = false; afterTextureEdit(); return; }
+  if (!dragged && pointers.size === 0) pick(e);
+});
+glCanvas.addEventListener("wheel", (e) => { e.preventDefault(); orbit.dist *= Math.exp(e.deltaY * 0.0012); }, { passive: false });
+const ray = new THREE.Raycaster();
+function hit(e) {
+  const r = glCanvas.getBoundingClientRect();
+  ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera);
+  return ray.intersectObjects(meshes, false)[0];
+}
+function pick(e) { const h = hit(e); if (h) { selPart = h.object.userData.part.name; selCube = h.object.userData.cube; renderParts(); updateHelper(); } }
+function paintAt(e) {
+  const h = hit(e); if (!h || !h.uv) return;
+  const [W, H] = proj.model.tex;
+  setPixel(Math.floor(h.uv.x * W), Math.floor(h.uv.y * H), brush.color, brush.size);
+  texture.needsUpdate = true; drawTexEditor();
+}
+
+// Animation preview, following the mod's own rules for part names
+let t0 = performance.now();
+function animate() {
+  requestAnimationFrame(animate);
+  const t = (performance.now() - t0) / 1000;
+  if (proj) {
+    for (const p of proj.model.parts) {
+      const g = partGroups[p.name]; if (!g) continue;
+      const rad = Math.PI / 180;
+      let [rx, ry, rz] = p.rot.map(v => v * rad);
+      if (animOn) {
+        const n = p.name, sw = Math.sin(t * 4.2), walk = 0.75;
+        if (n === "right_arm" || n === "leg_fl" || n === "leg_br" || n === "arm_r" || n === "leg_mr" || n === "left_leg") rx += sw * walk;
+        else if (n === "left_arm" || n === "leg_fr" || n === "leg_bl" || n === "arm_l" || n === "leg_ml" || n === "right_leg") rx -= sw * walk;
+        else if (n === "head") { ry += Math.sin(t * 0.9) * 0.3; }
+        else if (n === "jaw") rx += 0.1 + Math.max(0, Math.sin(t * 2)) * 0.3;
+        else if (n === "claw_l") ry += Math.sin(t * 3) * 0.2; else if (n === "claw_r") ry -= Math.sin(t * 3) * 0.2;
+        else if (n.startsWith("tail")) { const k = parseInt(n.slice(4)) || 1; ry += Math.sin(t * 3 - k * 0.7) * 0.3; }
+        else if (n.startsWith("seg")) { const k = parseInt(n.slice(3)) || 1; ry += Math.sin(t * 3 - k * 0.9) * 0.35; }
+        else if (n.startsWith("tent")) { const k = parseInt(n.slice(4)) || 1; rx += Math.sin(t * 1.6 - k * 0.6) * 0.18; rz += Math.cos(t * 1.3 - k * 0.5) * 0.15; }
+        else if (n.startsWith("fin")) rz += Math.sin(t * 2.5) * 0.15 * (n.endsWith("l") ? 1 : -1);
+        else if (n.startsWith("sail")) rx += -0.06 + Math.sin(t * 1.2) * 0.03;
+      }
+      g.rotation.set(rx, ry, rz, "ZYX");
+    }
+    if (selHelper) selHelper.update();
+  }
+  const r = glCanvas.getBoundingClientRect();
+  if (r.width && (glCanvas.width !== Math.round(r.width * renderer.getPixelRatio()) || glCanvas.height !== Math.round(r.height * renderer.getPixelRatio()))) {
+    renderer.setSize(r.width, r.height, false); camera.aspect = r.width / r.height; camera.updateProjectionMatrix();
+  }
+  placeCamera();
+  renderer.render(scene, camera);
+}
+
+/* ======================================================================
+   Texture editing
+   ====================================================================== */
+const brush = { tool: "pencil", color: "#a66a1c", size: 1 };
+function setPixel(x, y, color, size) {
+  const [r, g, b] = hex2rgb(color);
+  const s = size || 1, off = Math.floor((s - 1) / 2);
+  const W = texCanvas.width, H = texCanvas.height;
+  const img = texCtx.getImageData(0, 0, W, H);
+  if (brush.tool === "fill") { flood(img, x, y, [r, g, b]); texCtx.putImageData(img, 0, 0); return; }
+  if (brush.tool === "pick") { const i = (y * W + x) * 4; brush.color = "#" + [img.data[i], img.data[i + 1], img.data[i + 2]].map(v => v.toString(16).padStart(2, "0")).join(""); const ci = $("#brushColor"); if (ci) ci.value = brush.color; brush.tool = "pencil"; renderPaintTools(); return; }
+  for (let dy = 0; dy < s; dy++) for (let dx = 0; dx < s; dx++) {
+    const px = x - off + dx, py = y - off + dy; if (px < 0 || py < 0 || px >= W || py >= H) continue;
+    const i = (py * W + px) * 4;
+    if (brush.tool === "erase") { img.data[i + 3] = 0; continue; }
+    img.data[i] = r; img.data[i + 1] = g; img.data[i + 2] = b; img.data[i + 3] = 255;
+  }
+  texCtx.putImageData(img, 0, 0);
+}
+function flood(img, x, y, rgb) {
+  const W = img.width, H = img.height, d = img.data, i0 = (y * W + x) * 4, tgt = [d[i0], d[i0 + 1], d[i0 + 2], d[i0 + 3]];
+  if (tgt[0] === rgb[0] && tgt[1] === rgb[1] && tgt[2] === rgb[2] && tgt[3] === 255) return;
+  const st = [[x, y]];
+  while (st.length) {
+    const [cx, cy] = st.pop(); if (cx < 0 || cy < 0 || cx >= W || cy >= H) continue;
+    const i = (cy * W + cx) * 4;
+    if (d[i] !== tgt[0] || d[i + 1] !== tgt[1] || d[i + 2] !== tgt[2] || d[i + 3] !== tgt[3]) continue;
+    d[i] = rgb[0]; d[i + 1] = rgb[1]; d[i + 2] = rgb[2]; d[i + 3] = 255;
+    st.push([cx + 1, cy], [cx - 1, cy], [cx, cy + 1], [cx, cy - 1]);
+  }
+}
+function afterTextureEdit() { texture.needsUpdate = true; drawTexEditor(); markStarted(); scheduleSave(); }
+
+/* ======================================================================
+   UI: roster
+   ====================================================================== */
+function renderRoster() {
+  const q = $("#search").value.trim().toLowerCase();
+  const root = $("#roster"); root.replaceChildren();
+  const groups = {};
+  for (const m of ROSTER) if (!q || m.name.toLowerCase().includes(q) || m.group.toLowerCase().includes(q)) (groups[m.group] ||= []).push(m);
+  for (const [g, list] of Object.entries(groups)) {
+    const done = list.filter(m => statusMap[m.id] === "done").length;
+    const box = el("div", { class: "group" }, el("div", { class: "gh" }, el("span", { text: g }), el("span", { text: done + "/" + list.length + " done" })));
+    for (const m of list) box.append(el("button", { class: "mob", type: "button", "data-id": m.id, "aria-current": entry && entry.id === m.id ? "true" : "false", onclick: () => openMob(m.id) },
+      el("span", { class: "dot " + (statusMap[m.id] || "") }), el("span", { text: m.name })));
+    root.append(box);
+  }
+}
+function renderRosterDots() { for (const b of document.querySelectorAll(".mob")) { const d = b.querySelector(".dot"); d.className = "dot " + (statusMap[b.dataset.id] || ""); } }
+$("#search").addEventListener("input", renderRoster);
+
+async function openMob(id) {
+  if (proj) { clearTimeout(saveTimer); await saveProject(); }
+  entry = ROSTER.find(m => m.id === id);
+  const saved = await loadProject(id);
+  undo.length = 0; redo.length = 0;
+  if (saved && saved.model) {
+    proj = { id, name: entry.name, model: saved.model, palette: Object.assign(clone(entry.pal), saved.palette || {}), status: saved.status || "started", notes: saved.notes || "", version: saved.version || 1 };
+    const [W, H] = proj.model.tex; texCanvas.width = W; texCanvas.height = H;
+    if (saved.texture) { const img = new Image(); await new Promise(res => { img.onload = res; img.onerror = res; img.src = saved.texture; }); texCtx.clearRect(0, 0, W, H); texCtx.drawImage(img, 0, 0); }
+    else regenerateTexture();
+  } else {
+    proj = buildTemplate(entry);
+    regenerateTexture();
+  }
+  selPart = proj.model.parts[0]?.name || null; selCube = 0;
+  $("#mobTitle").textContent = entry.name;
+  LS.set("mobws:last", id);
+  buildScene();
+  frame(Math.PI + 0.6, 0.3);
+  renderRoster(); renderAllPanes();
+}
+
+/* ======================================================================
+   UI: inspector panes
+   ====================================================================== */
+function markStarted() { if (proj.status !== "done") proj.status = "started"; }
+function afterChange(geometryChanged) { buildScene(); renderAllPanes(); markStarted(); scheduleSave(); }
+function renderAllPanes() { renderParts(); renderPaint(); renderExport(); }
+
+function numInput(val, onset, step = 0.5, label) {
+  const i = el("input", { class: "num", type: "number", step, value: String(+(+val).toFixed(3)), "aria-label": label || "value" });
+  i.addEventListener("change", () => { const v = parseFloat(i.value); if (!isNaN(v)) { pushUndo(); onset(v); afterChange(true); } });
+  return i;
+}
+function trio(label, arr, onset, step) {
+  return el("div", { class: "trio" }, el("span", { text: label }), ...[0, 1, 2].map(k => numInput(arr[k], v => onset(k, v), step, label + " " + "xyz"[k])));
+}
+function renderParts() {
+  const pane = $("#pane-parts"); pane.replaceChildren();
+  if (!proj) { pane.append(el("p", { class: "note", text: "Pick a mob from the roster to begin." })); return; }
+  const tree = el("div", { class: "tree", role: "list" });
+  const depth = (p) => { let d = 0, cur = p; while (cur.parent) { cur = proj.model.parts.find(x => x.name === cur.parent) || { parent: null }; d++; if (d > 20) break; } return d; };
+  const ordered = []; const visit = (parent) => { for (const p of proj.model.parts.filter(x => (x.parent || null) === parent)) { ordered.push(p); visit(p.name); } }; visit(null);
+  for (const p of proj.model.parts) if (!ordered.includes(p)) ordered.push(p);
+  for (const p of ordered) tree.append(el("button", { class: "node", type: "button", "aria-current": p.name === selPart ? "true" : "false",
+    onclick: () => { selPart = p.name; selCube = 0; renderParts(); updateHelper(); } }, "  ".repeat(depth(p)) + p.name + "  (" + p.cubes.length + ")"));
+  pane.append(el("div", { class: "sect", text: "Parts" }), tree);
+  pane.append(el("div", { class: "row" },
+    el("button", { class: "btn", type: "button", onclick: addPart }, "Add part"),
+    el("button", { class: "btn", type: "button", onclick: dupPart }, "Duplicate"),
+    el("button", { class: "btn danger", type: "button", onclick: () => askDelete() }, "Delete part")));
+  const p = proj.model.parts.find(x => x.name === selPart);
+  if (!p) return;
+  const parentSel = el("select", { "aria-label": "Parent" }, el("option", { value: "", text: "(none — attached to the root)" }),
+    ...proj.model.parts.filter(x => x.name !== p.name).map(x => el("option", { value: x.name, text: x.name, selected: x.name === p.parent ? "" : false })));
+  parentSel.addEventListener("change", () => { pushUndo(); p.parent = parentSel.value || null; afterChange(true); });
+  const nameIn = el("input", { type: "text", value: p.name, "aria-label": "Part name" });
+  nameIn.addEventListener("change", () => {
+    const nn = nameIn.value.trim().replace(/[^a-z0-9_]/gi, "_").toLowerCase();
+    if (!nn || proj.model.parts.some(x => x.name === nn)) { nameIn.value = p.name; toast("Part names must be unique"); return; }
+    pushUndo(); for (const x of proj.model.parts) if (x.parent === p.name) x.parent = nn; p.name = nn; selPart = nn; afterChange(true);
+  });
+  pane.append(el("div", { class: "sect", text: "Selected part" }),
+    el("div", { class: "row" }, el("label", { class: "f" }, "Name", nameIn), el("label", { class: "f" }, "Parent", parentSel)),
+    trio("Pivot", p.pivot, (k, v) => p.pivot[k] = v, 0.5),
+    trio("Rotate °", p.rot, (k, v) => p.rot[k] = v, 5));
+  pane.append(el("p", { class: "note", text: animHint(p.name) }));
+  pane.append(el("div", { class: "row" }, el("span", { class: "sect", text: "Cubes" }), el("button", { class: "btn", type: "button", onclick: () => { pushUndo(); p.cubes.push(cube([-2, -2, -2], [4, 4, 4], "plain", Object.keys(proj.palette)[0])); selCube = p.cubes.length - 1; regenerateKeepPaint(); } }, "Add cube")));
+  p.cubes.forEach((c, i) => {
+    const colSel = el("select", { "aria-label": "Colour" }, ...Object.keys(proj.palette).map(k => el("option", { value: k, text: k, selected: c.col === k ? "" : false })));
+    colSel.addEventListener("change", () => { pushUndo(); c.col = colSel.value; repaintAll(); });
+    const patSel = el("select", { "aria-label": "Pattern" }, ...PATTERNS.map(k => el("option", { value: k, text: k, selected: c.pat === k ? "" : false })));
+    patSel.addEventListener("change", () => { pushUndo(); c.pat = patSel.value; repaintAll(); });
+    const mir = el("input", { type: "checkbox", "aria-label": "Mirror" }); mir.checked = !!c.mirror;
+    mir.addEventListener("change", () => { pushUndo(); c.mirror = mir.checked; afterChange(true); });
+    pane.append(el("div", { class: "cube" + (i === selCube ? " sel" : ""), onclick: () => { selCube = i; drawTexEditor(); } },
+      el("header", {}, el("strong", { text: "Cube " + (i + 1) }), el("span", { text: "UV " + c.uv.join(", ") }),
+        el("button", { class: "btn danger", type: "button", style: "margin-left:auto", onclick: (ev) => { ev.stopPropagation(); pushUndo(); p.cubes.splice(i, 1); regenerateKeepPaint(); } }, "Remove")),
+      trio("From", c.o, (k, v) => c.o[k] = v, 0.5),
+      trio("Size", c.s, (k, v) => { c.s[k] = Math.max(0, v); regenerateKeepPaint(true); }, 1),
+      el("div", { class: "row" }, el("label", { class: "f" }, "Inflate", numInput(c.inflate || 0, v => c.inflate = v, 0.1, "Inflate")),
+        el("label", { class: "f" }, "Colour", colSel), el("label", { class: "f" }, "Pattern", patSel), el("label", { class: "f" }, "Mirror", mir))));
+  });
+}
+const PATTERNS = ["plain", "head", "skull", "hair", "beard", "torso", "ribs", "coat", "robe", "arm", "leg", "bonelimb", "hat", "hood", "trim", "cloth", "metal",
+  "glow", "eyeglow", "scales", "skinsmooth", "spots", "fur", "shell", "suckers", "rock", "rockface", "maw", "fin", "animalhead", "planks", "hull", "deck", "wood", "sail", "cabin", "flag"];
+function animHint(n) {
+  if (/^(right|left)_(arm|leg)$/.test(n) || /^(arm|leg)_/.test(n)) return "Swings when walking (the mod animates this by its name).";
+  if (n === "head") return "Turns to follow what it's looking at.";
+  if (n === "jaw") return "Opens and snaps.";
+  if (n.startsWith("tail")) return "Sways; number tail parts tail1, tail2… for a ripple.";
+  if (n.startsWith("seg")) return "Ripples like a snake; chain seg1 → seg2 → …";
+  if (n.startsWith("tent")) return "Writhes like a tentacle.";
+  if (n.startsWith("sail")) return "Billows; hidden or half-height by sail setting in game.";
+  if (n.startsWith("claw")) return "Pinches.";
+  if (n.startsWith("fin")) return "Flaps.";
+  return "Stays still unless the mod is given new rules for this name.";
+}
+function uniqueName(base) { let n = base, k = 2; while (proj.model.parts.some(p => p.name === n)) n = base + "_" + k++; return n; }
+function addPart() { pushUndo(); const n = uniqueName("part"); proj.model.parts.push(part(n, selPart, [0, 0, 0], [0, 0, 0], [cube([-2, -2, -2], [4, 4, 4], "plain", Object.keys(proj.palette)[0])])); selPart = n; regenerateKeepPaint(); }
+function dupPart() { const p = proj.model.parts.find(x => x.name === selPart); if (!p) return; pushUndo(); const c = clone(p); c.name = uniqueName(p.name); c.pivot = [-p.pivot[0], p.pivot[1], p.pivot[2]]; proj.model.parts.push(c); selPart = c.name; regenerateKeepPaint(); }
+function askDelete() {
+  const pane = $("#pane-parts"); if (pane.querySelector(".confirm")) return;
+  const box = el("div", { class: "confirm" }, el("span", { text: "Delete “" + selPart + "” and move its children up to its parent?" }),
+    el("div", { class: "row" }, el("button", { class: "btn danger", type: "button", onclick: () => {
+      pushUndo(); const p = proj.model.parts.find(x => x.name === selPart);
+      for (const x of proj.model.parts) if (x.parent === p.name) x.parent = p.parent;
+      proj.model.parts = proj.model.parts.filter(x => x !== p); selPart = proj.model.parts[0]?.name || null; regenerateKeepPaint();
+    } }, "Delete"), el("button", { class: "btn", type: "button", onclick: () => box.remove() }, "Keep it")));
+  pane.insertBefore(box, pane.children[3] || null);
+}
+// Geometry changes that move UVs: re-pack and repaint (hand painting is lost for re-packed boxes, so say so)
+function regenerateKeepPaint(quiet) { regenerateTexture(); afterChange(true); if (!quiet) toast("Texture re-laid out and repainted"); }
+function repaintAll() { const [W, H] = proj.model.tex; const img = texCtx.createImageData(W, H); paintModel(proj, img); texCtx.putImageData(img, 0, 0); afterChange(false); }
+
+/* Paint pane */
+let texZoom = 0;
+function renderPaint() {
+  const pane = $("#pane-paint"); pane.replaceChildren();
+  if (!proj) return;
+  if (entry.variants) {
+    const vs = el("div", { class: "row" }, el("span", { class: "sect", text: "Variant" }),
+      ...Object.keys(entry.variants).map(k => el("button", { class: "btn", type: "button", onclick: () => { pushUndo(); Object.assign(proj.palette, clone(entry.pal), entry.variants[k]); repaintAll(); toast(k + " colours applied"); } }, k)));
+    pane.append(vs);
+  }
+  pane.append(el("div", { class: "sect", text: "Palette" }));
+  const sw = el("div", { class: "swatches" });
+  for (const [k, v] of Object.entries(proj.palette)) {
+    const i = el("input", { type: "color", value: v, "aria-label": k + " colour" });
+    i.addEventListener("change", () => { pushUndo(); proj.palette[k] = i.value; repaintAll(); });
+    sw.append(el("label", { class: "sw" }, i, k));
+  }
+  pane.append(sw, el("div", { class: "row" },
+    el("button", { class: "btn primary", type: "button", onclick: () => { pushUndo(); repaintAll(); toast("Repainted from the palette"); } }, "Repaint from palette"),
+    el("button", { class: "btn", type: "button", onclick: () => { pushUndo(); regenerateKeepPaint(); } }, "Re-pack UVs")));
+  pane.append(el("p", { class: "note", text: "Repainting redraws every face from the palette and patterns, replacing hand painting. Undo with Ctrl+Z." }));
+  pane.append(el("div", { class: "sect", text: "Hand painting" }), el("div", { id: "paintTools", class: "row" }));
+  const wrap = el("div", { class: "texwrap" }, el("canvas", { id: "texEd" }));
+  pane.append(wrap, el("p", { class: "note", text: "Paint here or switch on “Paint on model” and paint the mob directly. The selected cube's faces are outlined." }));
+  renderPaintTools(); drawTexEditor(); hookTexEditor();
+}
+function renderPaintTools() {
+  const box = $("#paintTools"); if (!box) return; box.replaceChildren();
+  const colorIn = el("input", { type: "color", id: "brushColor", value: brush.color, "aria-label": "Brush colour" });
+  colorIn.addEventListener("input", () => brush.color = colorIn.value);
+  box.append(colorIn);
+  for (const [k, label] of [["pencil", "Pencil"], ["fill", "Fill"], ["pick", "Pick colour"], ["erase", "Erase"]])
+    box.append(el("button", { class: "btn" + (brush.tool === k ? " on" : ""), type: "button", onclick: () => { brush.tool = k; renderPaintTools(); } }, label));
+  const size = el("select", { "aria-label": "Brush size" }, ...[1, 2, 3].map(s => el("option", { value: s, text: s + " px", selected: brush.size === s ? "" : false })));
+  size.addEventListener("change", () => brush.size = +size.value);
+  box.append(size);
+  for (const k of Object.keys(proj.palette)) box.append(el("button", { class: "btn", type: "button", title: "Use " + k, style: "padding:0;width:20px;height:20px;background:" + proj.palette[k], "aria-label": "Use " + k + " colour", onclick: () => { brush.color = proj.palette[k]; colorIn.value = brush.color; } }));
+}
+function drawTexEditor() {
+  const c = $("#texEd"); if (!c || !proj) return;
+  const [W, H] = [texCanvas.width, texCanvas.height];
+  const wrapW = Math.max(200, (c.parentElement.clientWidth || 320) - 4);
+  const z = texZoom || Math.max(1, Math.floor(wrapW / W));
+  c.width = W * z; c.height = H * z;
+  const g = c.getContext("2d"); g.imageSmoothingEnabled = false;
+  g.clearRect(0, 0, c.width, c.height); g.drawImage(texCanvas, 0, 0, W * z, H * z);
+  if (z >= 6) { g.strokeStyle = "rgba(0,0,0,.08)"; g.lineWidth = 1; for (let x = 0; x <= W; x++) { g.beginPath(); g.moveTo(x * z + .5, 0); g.lineTo(x * z + .5, H * z); g.stroke(); } for (let y = 0; y <= H; y++) { g.beginPath(); g.moveTo(0, y * z + .5); g.lineTo(W * z, y * z + .5); g.stroke(); } }
+  const p = proj.model.parts.find(x => x.name === selPart);
+  if (p) p.cubes.forEach((cb, i) => {
+    g.strokeStyle = i === selCube ? "#d39a46" : "rgba(47,93,107,.8)"; g.lineWidth = i === selCube ? 2 : 1;
+    for (const [fx, fy, fw, fh] of Object.values(faceRects(cb))) g.strokeRect(fx * z + 1, fy * z + 1, fw * z - 2, fh * z - 2);
+  });
+}
+function hookTexEditor() {
+  const c = $("#texEd"); let down = false;
+  const at = (e) => { const r = c.getBoundingClientRect(); const z = c.width / texCanvas.width; return [Math.floor((e.clientX - r.left) * (c.width / r.width) / z), Math.floor((e.clientY - r.top) * (c.height / r.height) / z)]; };
+  c.addEventListener("pointerdown", (e) => { c.setPointerCapture(e.pointerId); down = true; pushUndo(); const [x, y] = at(e); setPixel(x, y, brush.color, brush.size); texture.needsUpdate = true; drawTexEditor(); });
+  c.addEventListener("pointermove", (e) => { if (!down || brush.tool === "fill" || brush.tool === "pick") return; const [x, y] = at(e); setPixel(x, y, brush.color, brush.size); texture.needsUpdate = true; drawTexEditor(); });
+  c.addEventListener("pointerup", () => { if (down) { down = false; afterTextureEdit(); } });
+}
+
+/* Export pane */
+function className() { return proj.id.split(/[_\s]+/).map(s => s[0].toUpperCase() + s.slice(1)).join("") + "Model"; }
+const f = (v) => { const r = Math.round(v * 1000) / 1000; return (Number.isInteger(r) ? r + ".0" : String(r)) + "f"; };
+function javaCode() {
+  const m = proj.model, lines = [];
+  const vars = {}; let k = 0;
+  const ordered = []; const visit = (parent) => { for (const p of m.parts.filter(x => (x.parent || null) === parent)) { ordered.push(p); visit(p.name); } }; visit(null);
+  for (const p of m.parts) if (!ordered.includes(p)) ordered.push(p);
+  for (const p of ordered) {
+    const v = p.name.replace(/[^a-zA-Z0-9]/g, "_") + "_" + (k++); vars[p.name] = v;
+    let chain = "ModelPartBuilder.create()", mirrored = false;
+    for (const c of p.cubes) {
+      if (!!c.mirror !== mirrored) { chain += c.mirror ? ".mirrored()" : ".mirrored(false)"; mirrored = !!c.mirror; }
+      chain += `.uv(${c.uv[0]}, ${c.uv[1]}).cuboid(${c.o.map(f).join(", ")}, ${c.s.map(f).join(", ")}${c.inflate ? `, new Dilation(${f(c.inflate)})` : ""})`;
+    }
+    const rad = p.rot.map(d => d * Math.PI / 180);
+    const tr = rad.every(r => r === 0) ? `ModelTransform.pivot(${p.pivot.map(f).join(", ")})` : `ModelTransform.of(${p.pivot.map(f).join(", ")}, ${rad.map(f).join(", ")})`;
+    const parentVar = p.parent && vars[p.parent] ? vars[p.parent] : "root";
+    lines.push(`        ModelPartData ${v} = ${parentVar}.addChild("${p.name}", ${chain}, ${tr});`);
+  }
+  return `// ${proj.name}: made in the Cursed Tides Mob Workshop
+// Texture: textures/entity/${proj.id}.png (${m.tex[0]} x ${m.tex[1]})
+package com.cursedtides.client.models;
+
+import net.minecraft.client.model.*;
+
+public final class ${className()} {
+    private ${className()}() {}
+
+    /** Part paths, for the mod's CreatureModel (which animates parts by name). */
+    public static final String[] PARTS = {${pathsList().map(s => `"${s}"`).join(", ")}};
+
+    public static TexturedModelData getTexturedModelData() {
+        ModelData data = new ModelData();
+        ModelPartData root = data.getRoot();
+${lines.join("\n")}
+        return TexturedModelData.of(data, ${m.tex[0]}, ${m.tex[1]});
+    }
+}
+`;
+}
+function pathsList() {
+  const byName = Object.fromEntries(proj.model.parts.map(p => [p.name, p]));
+  return proj.model.parts.map(p => { const path = [p.name]; let cur = p; let g = 0; while (cur.parent && byName[cur.parent] && g++ < 30) { cur = byName[cur.parent]; path.unshift(cur.name); } return path.join("/"); });
+}
+function projectJson() { return JSON.stringify({ id: proj.id, name: proj.name, model: proj.model, palette: proj.palette, notes: proj.notes, texture: texCanvas.toDataURL("image/png"), workshop: 1 }, null, 1); }
+function canvasBlob() { return new Promise(res => texCanvas.toBlob(res, "image/png")); }
+async function offer(filename, data) {
+  if (!dlCap) { toast("Saving files isn't available here. Use Copy instead."); return; }
+  try { const r = await dlCap.save({ filename, data }); if (r.status === "saved") toast("Saved " + filename); }
+  catch (e) { if (e.code !== "declined") toast(e.code === "rate_limited" ? "A save is already waiting for you" : "Couldn't save the file (" + e.code + ")"); }
+}
+async function copy(text, what) {
+  try { await navigator.clipboard.writeText(text); toast(what + " copied"); }
+  catch { const ta = $("#javaOut"); if (ta) { ta.focus(); ta.select(); } toast("Select the text and copy it"); }
+}
+function renderExport() {
+  const pane = $("#pane-export"); pane.replaceChildren();
+  if (!proj) return;
+  const cubes = proj.model.parts.reduce((a, p) => a + p.cubes.length, 0);
+  const status = el("select", { "aria-label": "Status" }, ...[["started", "In progress"], ["done", "Done"]].map(([v, t]) => el("option", { value: v, text: t, selected: proj.status === v ? "" : false })));
+  status.addEventListener("change", () => { proj.status = status.value; statusMap[proj.id] = proj.status; renderRoster(); scheduleSave(); });
+  const notes = el("textarea", { class: "code", style: "min-height:70px;font-family:var(--body)", "aria-label": "Notes", placeholder: "Notes for whoever finishes this model…" }); notes.value = proj.notes || "";
+  notes.addEventListener("change", () => { proj.notes = notes.value; scheduleSave(); });
+  pane.append(el("dl", { class: "kv" },
+    el("dt", { text: "Parts" }), el("dd", { text: String(proj.model.parts.length) }),
+    el("dt", { text: "Cubes" }), el("dd", { text: String(cubes) }),
+    el("dt", { text: "Texture" }), el("dd", { text: proj.model.tex.join(" × ") + " px" }),
+    el("dt", { text: "Class" }), el("dd", { text: className() })),
+    el("label", { class: "f" }, "Status", status), el("label", { class: "f" }, "Notes", notes));
+  pane.append(el("div", { class: "sect", text: "Files for the mod" }), el("div", { class: "row" },
+    el("button", { class: "btn primary", type: "button", onclick: async () => {
+      if (!window.JSZip) { toast("The zip library didn't load"); return; }
+      const z = new JSZip(); z.file(className() + ".java", javaCode()); z.file(proj.id + ".png", await canvasBlob()); z.file(proj.id + ".workshop.json", projectJson());
+      offer(proj.id + "-model.zip", await z.generateAsync({ type: "blob" }));
+    } }, "Download pack (.zip)"),
+    el("button", { class: "btn", type: "button", onclick: async () => offer(proj.id + ".png", await canvasBlob()) }, "Texture (.png)"),
+    el("button", { class: "btn", type: "button", onclick: () => offer(proj.id + ".workshop.json", projectJson()) }, "Project file (.json)")));
+  const imp = el("input", { type: "file", accept: ".json,application/json", "aria-label": "Open a project file" });
+  imp.addEventListener("change", async () => {
+    const file = imp.files[0]; if (!file) return;
+    try {
+      const d = JSON.parse(await file.text()); if (!d.model || !d.model.parts) throw new Error("not a project");
+      pushUndo(); proj.model = d.model; if (d.palette) proj.palette = Object.assign(proj.palette, d.palette); proj.notes = d.notes || proj.notes;
+      const [W, H] = proj.model.tex; texCanvas.width = W; texCanvas.height = H;
+      if (d.texture) { const img = new Image(); await new Promise(r => { img.onload = r; img.onerror = r; img.src = d.texture; }); texCtx.clearRect(0, 0, W, H); texCtx.drawImage(img, 0, 0); } else regenerateTexture();
+      afterChange(true); toast("Project opened into " + proj.name);
+    } catch { toast("That file isn't a workshop project"); }
+    imp.value = "";
+  });
+  pane.append(el("label", { class: "f" }, "Open a project file into this mob", imp));
+  const ta = el("textarea", { class: "code", id: "javaOut", readonly: "", "aria-label": "Java model code" }); ta.value = javaCode();
+  pane.append(el("div", { class: "row" }, el("span", { class: "sect", text: "Java model (Fabric 1.21, Yarn)" }),
+    el("button", { class: "btn", type: "button", onclick: () => copy(javaCode(), "Java model") }, "Copy")), ta);
+  const reset = el("button", { class: "btn danger", type: "button", onclick: () => {
+    if (pane.querySelector(".confirm")) return;
+    const box = el("div", { class: "confirm" }, el("span", { text: "Start this mob over from its template? Your changes to it are lost (Undo still works until you switch mobs)." }),
+      el("div", { class: "row" }, el("button", { class: "btn danger", type: "button", onclick: () => { pushUndo(); const fresh = buildTemplate(entry); proj.model = fresh.model; proj.palette = fresh.palette; regenerateTexture(); afterChange(true); } }, "Start over"),
+        el("button", { class: "btn", type: "button", onclick: () => box.remove() }, "Cancel")));
+    pane.append(box);
+  } }, "Start over from template");
+  pane.append(el("p", { class: "note", text: "Everything you build here is kept in this workshop, so Claude can read it straight back into the mod. The zip holds the Java model, the texture and this project." }), reset);
+}
+
+/* Tabs, toolbar, keys */
+for (const b of document.querySelectorAll(".tabs button")) b.addEventListener("click", () => {
+  for (const x of document.querySelectorAll(".tabs button")) x.setAttribute("aria-selected", x === b ? "true" : "false");
+  for (const k of ["parts", "paint", "export"]) $("#pane-" + k).hidden = k !== b.dataset.tab;
+  if (b.dataset.tab === "paint") drawTexEditor();
+  if (b.dataset.tab === "export") renderExport();
+});
+$("#btnAnim").addEventListener("click", (e) => { animOn = !animOn; e.target.classList.toggle("on", animOn); });
+$("#btnFront").addEventListener("click", () => frame(Math.PI, 0.05));
+$("#btnSide").addEventListener("click", () => frame(Math.PI / 2, 0.05));
+$("#btnTop").addEventListener("click", () => frame(Math.PI, 1.35));
+$("#btnPaint3d").addEventListener("click", (e) => { paint3d = !paint3d; e.target.classList.toggle("on", paint3d); $("#hint").textContent = paint3d ? "Painting on the model with the Paint tab's brush · two fingers or wheel to zoom" : "Drag to turn · wheel or pinch to zoom · click a part to select it"; });
+document.addEventListener("keydown", (e) => {
+  if (e.target.matches("input, textarea, select")) return;
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") { e.preventDefault(); e.shiftKey ? doRedo() : doUndo(); }
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") { e.preventDefault(); doRedo(); }
+});
+
+/* ======================================================================
+   Start
+   ====================================================================== */
+async function start() {
+  try { statusMap = JSON.parse(LS.get("mobws:status") || "{}"); } catch { statusMap = {}; }
+  renderRoster();
+  animate();
+  await openMob(LS.get("mobws:last") && ROSTER.some(m => m.id === LS.get("mobws:last")) ? LS.get("mobws:last") : "cursed_captain");
+  if (window.claude && window.claude.use) {
+    window.claude.use("downloads").then(d => { dlCap = d; }).catch(() => {});
+    window.claude.use("db").then(async d => {
+      if (!d) return;
+      db = d;
+      try {
+        const qs = await db.collection("models").get();
+        for (const doc of qs.docs) { const v = doc.data(); if (v && v.status) statusMap[doc.id] = v.status; }
+        renderRoster();
+        // If this mob already has work saved in the workshop, show that instead of the fresh template
+        const saved = await loadProject(proj.id);
+        if (saved && saved.model && (saved.updated || 0) > 0 && JSON.stringify(saved.model) !== JSON.stringify(proj.model)) await openMob(proj.id);
+      } catch { /* keep working locally */ }
+    }).catch(() => {});
+  }
+}
+start();
+</script>

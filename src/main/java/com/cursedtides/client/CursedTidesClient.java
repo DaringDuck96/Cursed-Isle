@@ -19,17 +19,24 @@ public class CursedTidesClient implements ClientModInitializer {
         EntityModelLayerRegistry.registerModelLayer(ShipRenderer.LAYER, ShipModel::getTexturedModelData);
         registerWildlife();
 
-        EntityRendererRegistry.register(ModEntities.CURSED_PIRATE, CursedPirateRenderer::new);
-        EntityRendererRegistry.register(ModEntities.DROWNED_CAPTAIN, DrownedCaptainRenderer::new);
-        EntityRendererRegistry.register(ModEntities.QUARTERMASTER, QuartermasterRenderer::new);
-        EntityRendererRegistry.register(ModEntities.SHIPWRIGHT, ShipwrightRenderer::new);
-        EntityRendererRegistry.register(ModEntities.STORY_NPC, StoryNpcRenderer::new);
+        // Characters, crews and the cursed, drawn with the Mob Workshop's models (see WorkshopModels)
+        WorkshopModels.registerLayers();
+        EntityRendererRegistry.register(ModEntities.CURSED_PIRATE, ctx -> new WorkshopBipedRenderer<>(ctx,
+                new String[]{"cursed_grunt", "cursed_brute", "cursed_captain"},
+                e -> "cursed_" + e.rank().name().toLowerCase(),
+                e -> "cursed_" + e.rank().name().toLowerCase() + "_" + (e.kind() == com.cursedtides.entity.CursedPirateEntity.Kind.DECKHAND ? "cursed" : e.kind().name().toLowerCase()), 1.0f));
+        EntityRendererRegistry.register(ModEntities.DROWNED_CAPTAIN, ctx -> new WorkshopBipedRenderer<>(ctx, new String[]{"thorne"}, e -> "thorne", e -> "thorne", 1.25f));
+        EntityRendererRegistry.register(ModEntities.QUARTERMASTER, ctx -> WorkshopBipedRenderer.single(ctx, "quartermaster"));
+        EntityRendererRegistry.register(ModEntities.SHIPWRIGHT, ctx -> WorkshopBipedRenderer.single(ctx, "shipwright"));
+        EntityRendererRegistry.register(ModEntities.STORY_NPC, ctx -> new WorkshopBipedRenderer<>(ctx, new String[]{"bess", "celestine", "dagny", "dealer", "deedes", "fairweather", "finch", "flossie", "galloway", "grista", "harrow", "ibbie", "isadora", "jory", "keeper_wren", "kettle", "lott", "mags", "marsh", "moss", "ned_flint", "old_mariner", "pip", "quill", "rook", "skip", "sorrel", "sounding", "tamsin", "thwaite", "vey", "wayfarer", "ysolde"},
+                CursedTidesClient::npcModel, CursedTidesClient::npcModel, 1.0f));
+        EntityRendererRegistry.register(ModEntities.MARINE, ctx -> WorkshopBipedRenderer.single(ctx, "marine"));
+        EntityRendererRegistry.register(ModEntities.CREWMATE, ctx -> new WorkshopBipedRenderer<>(ctx, new String[]{"crew_gunner", "crew_bosun", "crew_navigator"},
+                e -> CREW[Math.floorMod(e.getRole(), 3)], e -> CREW[Math.floorMod(e.getRole(), 3)], 1.0f));
         EntityRendererRegistry.register(ModEntities.SHIP, ShipRenderer::new);
-        EntityRendererRegistry.register(ModEntities.MARINE, MarineRenderer::new);
         EntityRendererRegistry.register(ModEntities.CANNONBALL, FlyingItemEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.HEX_BOLT, FlyingItemEntityRenderer::new);
 
-        EntityRendererRegistry.register(ModEntities.CREWMATE, CrewmateRenderer::new);
         EntityRendererRegistry.register(ModEntities.THROWING_KNIFE, FlyingItemEntityRenderer::new);
         EntityRendererRegistry.register(com.cursedtides.combat.Grenades.TYPE, FlyingItemEntityRenderer::new);
 
@@ -95,5 +102,47 @@ public class CursedTidesClient implements ClientModInitializer {
                 WildlifeModels.SNAKE_PARTS, 0.3f, 1.0f, e -> "snake"));
         EntityRendererRegistry.register(com.cursedtides.wildlife.Wildlife.MONKEY, ctx -> new CreatureRenderer<>(ctx, monkey,
                 WildlifeModels.MONKEY_PARTS, 0.35f, 1.0f, e -> "monkey"));
+    }
+
+    private static final String[] CREW = {"crew_gunner", "crew_bosun", "crew_navigator"};
+
+    /** Which workshop model (and texture) each story character wears. */
+    private static String npcModel(net.minecraft.entity.passive.WanderingTraderEntity e) {
+        if (!(e instanceof com.cursedtides.entity.StoryNpcEntity npc)) return "keeper_wren";
+        return switch (npc.getRole()) {
+            case KEEPER -> "keeper_wren";
+            case HARBORMASTER -> "ysolde";
+            case BELLWRIGHT -> "tamsin";
+            case COMMODORE -> "vey";
+            case BROKER -> "mags";
+            case GAMBLER -> "jory";
+            case GOVERNOR -> "harrow";
+            case ROOK -> "rook";
+            case NATURALIST -> "ibbie";
+            case MEDIUM -> "sorrel";
+            case FOREMAN -> "dagny";
+            case DEALER -> "dealer";
+            case BANKER -> "fairweather";
+            case ABBESS -> "celestine";
+            case ADMIRAL -> "galloway";
+            case RACEMASTER -> "pip";
+            case WAYFARER -> "wayfarer";
+            case SMUGGLER_QUEEN -> "isadora";
+            case AUCTIONEER -> "lott";
+            case CONTEST_JUDGE -> "finch";
+            case SCHOLAR -> "thwaite";
+            case OLD_MARINER -> "old_mariner";
+            case ARENA_MASTER -> "grista";
+            case RANGE_MASTER -> "ned_flint";
+            case TAVERN_KEEPER -> "bess";
+            case COURSE_MASTER -> "skip";
+            case LAND_AGENT -> "deedes";
+            case BOUNTY_CLERK -> "marsh";
+            case ARCHIVIST -> "quill";
+            case DIVER -> "sounding";
+            case GUNNERY_SERGEANT -> "kettle";
+            case BARBER -> "flossie";
+            case TATTOOIST -> "moss";
+        };
     }
 }
