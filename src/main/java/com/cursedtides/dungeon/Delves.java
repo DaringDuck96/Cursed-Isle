@@ -412,7 +412,9 @@ public final class Delves {
     }
 
     private static void tick(MinecraftServer server) {
-        if (server.getTicks() % 20 != 11 || !com.cursedtides.world.ModWorld.isArchipelago() || !placed) return;
+        if (server.getTicks() % 20 != 11 || !com.cursedtides.world.ModWorld.isArchipelago()) return;
+        if (!placed) Builds.groundY(0, 0); // makes sure the layout's been worked out, even with no new chunks
+        if (!placed) return;
         ServerWorld w = server.getOverworld();
         long now = w.getTime();
         for (ServerPlayerEntity p : w.getPlayers()) {
