@@ -112,7 +112,7 @@ final class Districts {
                 hi = Math.max(hi, top);
             }
         }
-        return hi - lo <= 5;
+        return hi - lo <= 7;
     }
 
     private static Direction facing(int dx, int dz) {

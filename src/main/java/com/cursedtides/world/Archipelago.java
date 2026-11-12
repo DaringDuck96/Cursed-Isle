@@ -114,7 +114,7 @@ public final class Archipelago {
         int l = (int) Math.min(200, Math.round(radius * 2.3));
         // Away from the harbour: nearly every harbour faces south, Stormbreak's faces north
         int dir = name.equals("Stormbreak Isle") ? 1 : -1;
-        int off = (int) Math.round(radius * 0.55 + l * 0.8);
+        int off = (int) Math.round(radius * 0.4 + l * 0.7);
         return new int[]{cx, cz + dir * off, l};
     }
 
@@ -225,7 +225,7 @@ public final class Archipelago {
             Column c = shape(is, x, z, is.cx(), is.cz(), is.radius(), is.peak(), is.seed(), true);
             if (c != null && (best == null || c.top() > best.top())) best = c;
             if (is.hasLobe()) {
-                c = shape(is, x, z, is.lobeX(), is.lobeZ(), is.lobeR(), Math.max(WATER_TOP + 10, is.peak() - 6), is.seed() + 101, false);
+                c = shape(is, x, z, is.lobeX(), is.lobeZ(), is.lobeR(), Math.max(WATER_TOP + 16, is.peak() - 4), is.seed() + 101, false);
                 if (c != null && (best == null || c.top() > best.top())) best = c;
             }
         }
@@ -260,11 +260,11 @@ public final class Archipelago {
             double t = 1.0 - d;
             double exponent = switch (is.style()) {
                 case SANDY -> 0.55;
-                case TOWN -> core ? 0.35 : 0.55;
+                case TOWN -> 0.35;
                 case REEF -> 0.5;
                 case VOLCANIC -> 1.0;
                 case CURSED -> 0.75;
-                case FORTRESS -> core ? 0.3 : 0.6;
+                case FORTRESS -> 0.3;
                 case BAYOU -> 0.2;
                 case JUNGLE -> 0.6;
                 case CLIFFS -> 0.12;
@@ -273,6 +273,8 @@ public final class Archipelago {
                 case KEYS, ATOLL -> 1.0;
                 case ANCIENT -> 0.5;
             };
+            if (!core) exponent = Math.min(exponent, is.style() == Style.TOWN || is.style() == Style.FORTRESS
+                    || is.style() == Style.SANDY || is.style() == Style.DESERT ? 0.3 : 0.6);
             double rough = switch (is.style()) {
                 case CURSED -> 6.0;
                 case VOLCANIC -> 4.0;
