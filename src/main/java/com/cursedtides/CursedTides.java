@@ -86,6 +86,9 @@ public class CursedTides implements ModInitializer {
         com.cursedtides.quest.Objectives.register();
         com.cursedtides.combat.SkillBar.register();
         com.cursedtides.combat.Loot.register();
+        com.cursedtides.quest.Contracts.register();
+        com.cursedtides.quest.LanternArc.register();
+        com.cursedtides.quest.Letters.register();
         com.cursedtides.living.Gaols.registerKeepInventory();
         LOGGER.info("Cursed Tides: hoist the colours!");
     }

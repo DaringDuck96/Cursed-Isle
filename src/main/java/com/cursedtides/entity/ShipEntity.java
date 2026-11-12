@@ -930,6 +930,7 @@ public class ShipEntity extends BoatEntity {
                 PirateData.addXp(sinker, Weapon.CANNON, 60);
                 FactionEvents.onShipSunk(sinker, getFaction());
                 com.cursedtides.quest.HorizonArc.onShipSunk(sinker, this);
+                com.cursedtides.quest.Contracts.onShipSunk(sinker, com.cursedtides.combat.Levels.levelOf(this));
                 com.cursedtides.sea.SeaEvents.onSunk(world, this, sinker);
             }
             for (ServerPlayerEntity p : world.getPlayers(p -> p.squaredDistanceTo(this) < 80 * 80)) {

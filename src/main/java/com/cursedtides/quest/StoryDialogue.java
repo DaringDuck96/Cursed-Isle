@@ -59,7 +59,7 @@ public final class StoryDialogue {
         } else if (stage < QuestData.DONE) {
             say(npc, player, "Your chart shows the way. East for Saltmarrow, and mind the bell after dark.");
             hint(player, stage);
-        } else {
+        } else if (!LanternArc.wren(npc, player)) {
             say(npc, player, "Forty years I've listened for that bell. Tonight I'll sleep. Thank you, captain.");
         }
     }

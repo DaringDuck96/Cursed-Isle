@@ -165,6 +165,7 @@ public final class Builds {
 
         com.cursedtides.dungeon.Caverns.addBuilds(ALL);
         com.cursedtides.living.Gaols.addBuilds(ALL);
+        com.cursedtides.quest.LanternArc.addBuilds(ALL);
     }
 
     /** Where each named character stands, so lost NPCs can be put back (/cursedtides restore_npcs). */

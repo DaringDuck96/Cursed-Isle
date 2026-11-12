@@ -105,6 +105,11 @@ public final class Gaols {
             c.set(x + dx, y, z - 1, s(Blocks.SPRUCE_FENCE));
             c.set(x + dx, y + 1, z - 1, s(Blocks.SOUL_LANTERN));
         }
+        // The notice board, papered with contracts
+        net.minecraft.util.math.BlockPos b = com.cursedtides.quest.Contracts.boardPos(g);
+        c.set(b.getX(), b.getY() - 1, b.getZ(), s(Blocks.COBBLESTONE));
+        c.set(b.getX(), b.getY(), b.getZ(), com.cursedtides.block.ModBlocks.NOTICE_BOARD.getDefaultState());
+        c.set(b.getX(), b.getY() + 1, b.getZ(), s(Blocks.SPRUCE_SLAB));
     }
 
     public static Gaol nearest(double x, double z) {

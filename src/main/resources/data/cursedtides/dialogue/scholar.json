@@ -69,6 +69,13 @@
    ],
    "options": [
     {
+     "label": "Keeper Wren sent me about the red lights.",
+     "action": "quest",
+     "if": [
+      "lights==2"
+     ]
+    },
+    {
      "label": "I have something for you to read.",
      "action": "quest",
      "if": [

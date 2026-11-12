@@ -1,0 +1,19 @@
+{
+ "display": {
+  "icon": {
+   "id": "minecraft:written_book"
+  },
+  "title": "Dead Letters",
+  "description": "Finish one of the tales from a found letter",
+  "frame": "task",
+  "show_toast": true,
+  "announce_to_chat": true,
+  "hidden": false
+ },
+ "criteria": {
+  "done": {
+   "trigger": "minecraft:impossible"
+  }
+ },
+ "parent": "cursedtides:feats/first_vault"
+}

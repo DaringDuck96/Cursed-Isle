@@ -1,4 +1,4 @@
-# Cursed Tides (Fabric 1.21.1), version 0.21.0
+# Cursed Tides (Fabric 1.21.1), version 0.22.0
 
 An original pirate adventure built around four pillars: **sailing, ship ownership,
 island exploration and character progression**. Everything in it (islands, characters,
@@ -11,7 +11,7 @@ You need **Java 21** (the JDK, e.g. from adoptium.net).
 1. Unzip this folder.
 2. Open a terminal in it and run `gradlew.bat build` (Windows) or `./gradlew build` (Mac/Linux).
 3. The first build downloads Minecraft and Fabric (a few minutes).
-4. Your mod is at `build/libs/cursed-tides-0.21.0.jar` (ignore the `-sources` jar).
+4. Your mod is at `build/libs/cursed-tides-0.22.0.jar` (ignore the `-sources` jar).
 
 Put that jar plus **Fabric API** for 1.21.1 into `.minecraft/mods`. To test without installing: `./gradlew runClient`.
 
@@ -152,6 +152,37 @@ and leather. The captain's attire comes with Brethren rank 300; the Tidewatch un
 | Boarding Axe | 2 iron, an iron block and 2 sticks |
 | Throwing Knives (x4) | Shapeless: iron ingot and 2 iron nuggets |
 | Sailor's garb | Wool (bandana, shirt, breeches with a leather belt) and leather (boots) in armour shapes |
+
+### New in 0.22: more to do
+
+- **Contract boards.** Every port has a notice board beside its warp stone, posting four contracts a day for the
+  wilds and waters nearby. A contract asks you to:
+  - hunt the foes of a named area;
+  - slay that area's elite;
+  - sink hostile ships of a given level;
+  - or survey an area's landmark.
+
+  You can hold three at once (`/contract` lists them, with a drop button). Each pays the moment it's done:
+  doubloons, a loot container and reputation. With the main story finished, the radar points at your first contract.
+- **Act four, "The Drowned Lights"** (after the Hollow Crown). One night every lighthouse in the Reach flares red at
+  once. Keeper Wren remembers an old tale and sends you to Professor Thwaite.
+  - Relight the three Drowned Lights: ruined beacon towers on Stormbreak Isle, Widow's Rock and Gullscream Rock.
+    Each has a keeper who wants it to stay dark.
+  - Follow their crossing beams far out to sea and face the Abyssal and its tentacles.
+  - Then choose: return its heart to the deep and become Lightkeeper of the Reach, or keep it.
+- **Found letters.** Eight short tales that start with a Weathered Letter found in plunder (mostly sea chests and
+  skull chests). Read a letter to see where it leads; the radar marks the place. There you'll find something hidden,
+  or someone waiting for you, and the next letter, until the tale pays out. The tales are:
+  - The Cooper's Debt
+  - The Gull Queen
+  - The Fourth Shard
+  - The Admiralty Cipher
+  - The Jaguar King
+  - A Smuggler's Will
+  - Salt in the Wound
+  - Last Orders
+- New feats: Hired Hand, Contractor, Dead Letters, Postmaster of the Reach, The Drowned Lights.
+- The journal (J) has new sections for act four, contracts and letters.
 
 ### New in 0.21: the rest of the old games' feel
 

@@ -65,6 +65,18 @@ public final class UiData {
         lines.addAll(com.cursedtides.quest.CrownArc.journal(player));
         lines.add("");
 
+        lines.add("§e§lThe Drowned Lights");
+        lines.addAll(com.cursedtides.quest.LanternArc.journal(player));
+        lines.add("");
+
+        lines.add("§e§lContracts");
+        lines.addAll(com.cursedtides.quest.Contracts.journal(player));
+        lines.add("");
+
+        lines.add("§e§lLetters");
+        lines.addAll(com.cursedtides.quest.Letters.journal(player));
+        lines.add("");
+
         lines.add("§e§lSide quests");
         lines.addAll(com.cursedtides.quest.SideQuests.journal(player));
         lines.add("");

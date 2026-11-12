@@ -123,6 +123,8 @@ public final class Conditions {
             case "discovered": return Integer.bitCount(p.getAttachedOrElse(ModWorld.DISCOVERED, 0));
             case "bounty": return FactionData.bounty(p);
             case "crown": return com.cursedtides.quest.CrownArc.stage(p);
+            case "lights": return com.cursedtides.quest.LanternArc.stage(p);
+            case "contracts": return p.getAttachedOrElse(com.cursedtides.quest.Contracts.DONE, 0);
             case "crownshards": return com.cursedtides.quest.CrownArc.shardCount(p);
             case "crownending": return com.cursedtides.quest.CrownArc.ending(p);
             case "prosperity": return com.cursedtides.living.Prosperity.at(p.getServer(), p.getBlockX(), p.getBlockZ());

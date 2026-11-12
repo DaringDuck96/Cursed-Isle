@@ -78,6 +78,14 @@
    ],
    "options": [
     {
+     "label": "About the red lights...",
+     "action": "quest",
+     "if": [
+      "lights>=1",
+      "story>=4"
+     ]
+    },
+    {
      "label": "What should I be doing?",
      "action": "quest",
      "if": [

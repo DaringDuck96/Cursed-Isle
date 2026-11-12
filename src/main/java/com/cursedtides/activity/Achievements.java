@@ -20,7 +20,8 @@ public final class Achievements {
             "sunken_city", "deep_diver", "legendary_find", "daily_grind", "weekly_legend", "delivery",
             "fort_breaker", "hollow_crown", "hidden_isle", "storm_caller",
             "hundred_arms", "dread_sunk", "harbour_guard", "collector_of_sets", "privateer", "siege_breaker",
-            "spelunker", "cavern_master", "deep_delver");
+            "spelunker", "cavern_master", "deep_delver",
+            "first_contract", "contractor", "letter_reader", "postmaster", "drowned_lights");
 
     private static AdvancementEntry entry(ServerPlayerEntity p, String id) {
         if (p.getServer() == null) return null;

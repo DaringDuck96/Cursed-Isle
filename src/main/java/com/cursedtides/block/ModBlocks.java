@@ -55,6 +55,10 @@ public final class ModBlocks {
             new WarpTotemBlock(AbstractBlock.Settings.create().mapColor(MapColor.STONE_GRAY).strength(-1.0f, 3600000.0f)
                     .dropsNothing().luminance(s -> 10).sounds(BlockSoundGroup.LODESTONE).pistonBehavior(PistonBehavior.BLOCK)));
 
+    public static final Block NOTICE_BOARD = Registry.register(Registries.BLOCK, CursedTides.id("notice_board"),
+            new NoticeBoardBlock(AbstractBlock.Settings.create().mapColor(MapColor.OAK_TAN).strength(-1.0f, 3600000.0f)
+                    .dropsNothing().sounds(BlockSoundGroup.WOOD).pistonBehavior(PistonBehavior.BLOCK)));
+
     public static void register() {
         PuzzleBlocks.register();
         CursedTides.LOGGER.debug("Registered Cursed Tides blocks");

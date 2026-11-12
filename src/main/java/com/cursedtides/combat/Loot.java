@@ -142,6 +142,11 @@ public final class Loot {
             else s = new ItemStack(ModItems.DOUBLOON, 1 + r.nextInt(4));
             if (s != null && !s.isEmpty()) inv.addStack(s);
         }
+        // Now and then, a letter: the start of one of the found tales
+        if (r.nextFloat() < (tier == Tier.POUCH ? 0.03f : 0.2f)) {
+            ItemStack letter = com.cursedtides.quest.Letters.forLoot(p);
+            if (!letter.isEmpty()) inv.addStack(letter);
+        }
         p.getWorld().playSound(null, p.getBlockPos(), SoundEvents.BLOCK_CHEST_OPEN, SoundCategory.PLAYERS, 0.6f, 1.2f);
         p.openHandledScreen(new SimpleNamedScreenHandlerFactory((syncId, playerInv, player) ->
                 new GenericContainerScreenHandler(ScreenHandlerType.GENERIC_9X1, syncId, playerInv, inv, 1) {

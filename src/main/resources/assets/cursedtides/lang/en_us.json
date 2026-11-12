@@ -310,5 +310,7 @@
   "item.cursedtides.repeater_pistol": "Repeater Pistol",
   "item.cursedtides.bayonet_musket": "Bayonet Musket",
   "tooltip.cursedtides.repeater": "Four quick shots from turning barrels, then a slow reload",
-  "tooltip.cursedtides.bayonet_musket": "A long, hard-hitting gun with a blade on the end for close work"
+  "tooltip.cursedtides.bayonet_musket": "A long, hard-hitting gun with a blade on the end for close work",
+  "block.cursedtides.notice_board": "Notice Board",
+  "item.cursedtides.weathered_letter": "Weathered Letter"
 }

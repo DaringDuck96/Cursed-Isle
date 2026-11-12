@@ -459,6 +459,7 @@ public final class HorizonArc {
 
     /** The scholar on the Forgotten Keys reads the relics and sends you after the rest. */
     public static void scholar(StoryNpcEntity npc, ServerPlayerEntity p) {
+        if (LanternArc.scholar(npc, p)) return;
         int s = stage(p);
         if (s == NONE) {
             StoryDialogue.say(npc, p, "The First Tide built these ruins before the sea rose. Fascinating people. Terrible taste in gods.");
