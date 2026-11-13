@@ -50,7 +50,7 @@ jobs:
           cd fem
           cat >> build.gradle <<'GRADLE'
 
-          tasks.register('exportClasspath', Copy) {
+          tasks.register('ctExportCp', Copy) {
               from sourceSets.main.compileClasspath
               from sourceSets.client.compileClasspath
               into layout.buildDirectory.dir('cp')
@@ -58,7 +58,7 @@ jobs:
           GRADLE
           sed -i 's/org.gradle.configuration-cache=true/org.gradle.configuration-cache=false/' gradle.properties
           chmod +x gradlew
-          ./gradlew exportClasspath --no-daemon > ../cp.log 2>&1
+          ./gradlew ctExportCp --no-daemon > ../cp.log 2>&1
           echo "exit $?"
           tail -n 30 ../cp.log
           mkdir -p ../cpout && cp build/cp/*.jar ../cpout/ 2>/dev/null; cp ../cp.log ../cpout/
