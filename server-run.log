@@ -1,0 +1,218 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.8.2/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+
+> Configure project :
+Fabric Loom: 1.19.4
+
+> Task :compileJava UP-TO-DATE
+> Task :processResources UP-TO-DATE
+> Task :classes UP-TO-DATE
+> Task :generateLog4jConfig
+> Task :generateDLIConfig
+> Task :configureLaunch
+
+> Task :runServer
+[02:34:21] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.3 with Fabric Loader 0.20.1
+[02:34:21] [main/INFO] (FabricLoader/Mappings) Mappings not present!
+[02:34:21] [main/INFO] (FabricLoader) Loading 44 mods:
+	- cursedtides 0.28.0
+	- fabric-advancement-api-v1 1.0.1+38c7a2d55d
+	- fabric-api 0.165.2+26.3
+	- fabric-api-base 2.0.6+fcdff87f5d
+	- fabric-api-lookup-api-v1 2.0.24+3434d6d95d
+	- fabric-biome-api-v1 20.1.1+85210bca5d
+	- fabric-block-api-v1 3.1.0+0ae6f9115d
+	- fabric-block-getter-api-v2 2.0.9+3434d6d95d
+	- fabric-command-api-v2 3.1.2+fcdff87f5d
+	- fabric-content-registries-v0 15.0.7+74ed1ea55d
+	- fabric-convention-tags-v2 4.10.5+187b64905d
+	- fabric-crash-report-info-v1 1.0.7+fcdff87f5d
+	- fabric-creative-tab-api-v1 5.0.22+fcdff87f5d
+	- fabric-data-attachment-api-v1 2.2.34+99fb1a765d
+	- fabric-data-generation-api-v1 27.4.3+187b64905d
+	- fabric-debug-api-v1 1.0.5+5af7744b5d
+	- fabric-dimensions-v1 5.1.20+5af7744b5d
+	- fabric-entity-events-v1 6.0.4+3434d6d95d
+	- fabric-events-interaction-v0 5.3.10+b9b88df45d
+	- fabric-game-rule-api-v1 4.0.10+3434d6d95d
+	- fabric-gametest-api-v1 4.0.36+3434d6d95d
+	- fabric-item-api-v1 14.8.1+8f511c9f5d
+	- fabric-lifecycle-events-v1 4.1.9+ffef5f675d
+	- fabric-loot-api-v3 4.0.9+4068fd645d
+	- fabric-menu-api-v1 2.0.31+ed66f0a35d
+	- fabric-message-api-v1 7.0.10+3434d6d95d
+	- fabric-networking-api-v1 6.4.1+c58129785d
+	- fabric-object-builder-api-v1 24.1.13+e2f63d3e5d
+	- fabric-particles-v1 5.0.28+3434d6d95d
+	- fabric-permission-api-v1 1.0.8+fcdff87f5d
+	- fabric-recipe-api-v1 10.0.12+b9b88df45d
+	- fabric-registry-sync-v0 8.0.5+1ca9f6365d
+	- fabric-rendering-fluids-v1 6.0.6+3434d6d95d
+	- fabric-resource-conditions-api-v1 6.2.1+fd3b1d565d
+	- fabric-resource-loader-v0 3.3.27+4fc5413f5d
+	- fabric-resource-loader-v1 3.1.0+5af7744b5d
+	- fabric-serialization-api-v1 2.0.7+74ed1ea55d
+	- fabric-tag-api-v1 2.1.11+fcdff87f5d
+	- fabric-transfer-api-v1 8.0.26+140095665d
+	- fabric-transitive-access-wideners-v1 8.1.17+e2f63d3e5d
+	- fabricloader 0.20.1
+	- java 25
+	- minecraft 26.3
+	- mixinextras 0.5.5
+[02:34:21] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/home/runner/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.5+mixin.0.8.7/cef8519a91129d0c21fa03bb9378f0e8ca810e5/sponge-mixin-0.17.5+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
+[02:34:22] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.5).
+[02:34:28] [main/INFO] (cursedtides) Cursed Tides: hoist the colours!
+[02:34:28] [main/INFO] (Minecraft) Environment: Environment[discoveryUrl=https://discovery.minecraftservices.com/minecraft/client, name=PROD]
+[02:34:29] [Worker-Main-3/INFO] (Minecraft) No existing world data, creating new world
+[02:34:30] [Worker-Main-2/INFO] (Minecraft) Loaded 1923 advancements
+[02:34:30] [main/INFO] (cursedtides) Loaded 54 dialogue files
+[02:34:30] [main/INFO] (BiomeModificationImpl) Applied 4 biome modifications to 2 of 68 new biomes in 6.026 ms
+[02:34:30] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.3
+[02:34:30] [Server thread/INFO] (Minecraft) Loading properties
+[02:34:30] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
+[02:34:30] [Server thread/INFO] (Minecraft) Generating keypair
+[02:34:30] [Server thread/INFO] (Minecraft) Starting Minecraft server on *:25565
+[02:34:30] [Server thread/WARN] (Minecraft) **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
+[02:34:30] [Server thread/WARN] (Minecraft) The server will make no attempt to authenticate usernames. Beware.
+[02:34:30] [Server thread/WARN] (Minecraft) While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
+[02:34:30] [Server thread/WARN] (Minecraft) To change this, set "online-mode" to "true" in the server.properties file.
+[02:34:30] [Server thread/INFO] (Minecraft) Preparing level "world"
+[02:34:31] [Server thread/INFO] (Minecraft) Selecting global world spawn...
+[02:34:31] [Worker-Main-1/INFO] (cursedtides) Town of Saltmarrow: 15 new plots, 348 road cells
+[02:34:31] [Worker-Main-1/INFO] (cursedtides) Town of Port Meridian: 17 new plots, 319 road cells
+[02:34:31] [Worker-Main-1/INFO] (cursedtides) Town of Kingsport: 15 new plots, 251 road cells
+[02:34:31] [Worker-Main-1/INFO] (cursedtides) Town of Saint Vesper: 12 new plots, 543 road cells
+[02:34:31] [Worker-Main-1/INFO] (cursedtides) Town of Ironwatch Isle: 8 new plots, 338 road cells
+[02:34:31] [Worker-Main-1/INFO] (cursedtides) Town of Crownwatch: 11 new plots, 388 road cells
+[02:34:31] [Worker-Main-1/INFO] (cursedtides) Town of Raven's Landing: 7 new plots, 129 road cells
+[02:34:31] [Worker-Main-1/INFO] (cursedtides) Town of Blackthorn Isle: 7 new plots, 334 road cells
+[02:34:31] [Worker-Main-1/INFO] (cursedtides) Town of Bloodwake Cay: 6 new plots, 277 road cells
+[02:34:31] [Worker-Main-1/INFO] (cursedtides) Grand cavern The Weeping Catacombs: mouth -4160 71 -3136, great hall -4087 -35 -3302
+[02:34:31] [Worker-Main-1/INFO] (cursedtides) Grand cavern Cinderdeep: mouth -5519 69 2412, great hall -5408 -46 2302
+[02:34:31] [Worker-Main-1/INFO] (cursedtides) Grand cavern The Serpent's Throat: mouth -7234 67 6192, great hall -7083 -31 6100
+[02:34:31] [Worker-Main-1/INFO] (cursedtides) Grand cavern The Motherlode: mouth 1595 71 5905, great hall 1532 -43 5737
+[02:34:31] [Worker-Main-1/INFO] (cursedtides) Grand cavern The Drowned Grotto: mouth -8500 76 -3568, great hall -8697 -38 -3538
+[02:34:31] [Worker-Main-1/INFO] (cursedtides) Grand cavern The Furnace Below: mouth -12379 79 8982, great hall -12537 -38 9052
+[02:34:31] [Worker-Main-1/INFO] (cursedtides) Grand cavern Hall of the First Light: mouth -2638 92 15715, great hall -2541 -40 15723
+[02:34:31] [Worker-Main-1/INFO] (cursedtides) Delve The Weeping Duchess: WRECK at -1642 39 3772
+[02:34:31] [Worker-Main-1/INFO] (cursedtides) Delve The Gilded Gull: WRECK at -2062 39 -7420
+[02:34:31] [Worker-Main-1/INFO] (cursedtides) Delve The Corsair's Lament: WRECK at -522 39 -4206
+[02:34:31] [Worker-Main-1/INFO] (cursedtides) Delve The Mary Clare: WRECK at -102 39 8258
+[02:34:31] [Worker-Main-1/INFO] (cursedtides) Delve The Gallows Spire: SPIRE at -3196 82 -9839
+[02:34:31] [Worker-Main-1/INFO] (cursedtides) Delve Witchlight Tower: SPIRE at -7102 64 -339
+[02:34:31] [Worker-Main-1/INFO] (cursedtides) Delve The Old Signal Tower: SPIRE at 3384 76 2633
+[02:34:31] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
+[02:34:31] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
+[02:34:31] [Server thread/INFO] (Minecraft) Time elapsed: 657 ms
+[02:34:31] [Server thread/INFO] (Minecraft) Done (0.780s)! For help, type "help"
+[02:34:31] [Server thread/INFO] (Minecraft) Starting remote control listener
+[02:34:31] [Server thread/INFO] (Minecraft) Thread RCON Listener started
+[02:34:31] [Server thread/INFO] (Minecraft) RCON running on 0.0.0.0:25575
+[02:34:31] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[02:34:31] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[02:34:31] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/cursedtides:below_deck
+[02:34:31] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[02:34:31] [Server thread/WARN] (TranslationConventionLogWarnings) 
+	Dev warning - Untranslated Item Tags detected. Please translate your item tags so other mods such as recipe viewers can properly display your tag's name.
+	The format desired is tag.item.<namespace>.<path> for the translation key with slashes in path turned into periods.
+	To disable this message, set this system property in your runs: `-Dfabric-tag-conventions-v2.missingTagTranslationWarning=SILENCED`.
+	To see individual untranslated item tags found, set the system property to `-Dfabric-tag-conventions-v2.missingTagTranslationWarning=VERBOSE`.
+	Default is `SHORT`.
+
+[02:34:31] [Server thread/INFO] (cursedtides) Cursed Archipelago detected; spawn set to Driftwood Island
+[02:34:31] [Server thread/INFO] (cursedtides) Cursed Tides: defeated pirates keep their belongings (keepInventory on)
+[02:34:34] [RCON Listener #1/INFO] (Minecraft) Thread RCON Client /127.0.0.1 started
+[02:34:36] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 64 chunks in minecraft:overworld from [-4, -4] to [3, 3] to be force loaded]
+[02:34:36] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 9 chunks in minecraft:overworld from [-1, -7] to [1, -5] to be force loaded]
+[02:34:39] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 182 chunks in minecraft:overworld from [31, -12] to [43, 1] to be force loaded]
+[02:34:39] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 9 chunks in minecraft:overworld from [36, -16] to [38, -14] to be force loaded]
+[02:34:41] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 64 chunks in minecraft:overworld from [-107, 227] to [-100, 234] to be force loaded]
+[02:34:42] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 64 chunks in minecraft:overworld from [-352, 149] to [-345, 156] to be force loaded]
+[02:34:43] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 9 chunks in minecraft:overworld from [-349, 142] to [-347, 144] to be force loaded]
+[02:34:45] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 64 chunks in minecraft:overworld from [-264, -201] to [-257, -194] to be force loaded]
+[02:34:45] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 9 chunks in minecraft:overworld from [-262, -207] to [-260, -205] to be force loaded]
+[02:34:48] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 182 chunks in minecraft:overworld from [206, 163] to [218, 176] to be force loaded]
+[02:34:48] [Server thread/INFO] (Minecraft) Named entity Spider['Spider [Lv 5]'/59, l='ServerLevel[world]', x=604.50, y=6.00, z=-7.50] died: Spider [Lv 5] suffocated in a wall
+[02:34:48] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 3 chunks in minecraft:overworld from [211, 162] to [213, 164] to be force loaded]
+[02:34:50] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 64 chunks in minecraft:overworld from [-448, -18] to [-441, -11] to be force loaded]
+[02:34:51] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 9 chunks in minecraft:overworld from [-445, -24] to [-443, -22] to be force loaded]
+[02:34:53] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 169 chunks in minecraft:overworld from [197, -160] to [209, -148] to be force loaded]
+[02:34:53] [Server thread/INFO] (Minecraft) Named entity Slime['Slime [Lv 5]'/248, l='ServerLevel[world]', x=-7117.40, y=6.00, z=-180.53] died: Slime [Lv 5] suffocated in a wall
+[02:34:53] [Server thread/INFO] (Minecraft) Named entity Slime['Slime [Lv 5]'/299, l='ServerLevel[world]', x=-7117.66, y=6.50, z=-180.79] died: Slime [Lv 5] suffocated in a wall
+[02:34:53] [Server thread/INFO] (Minecraft) Named entity Slime['Slime [Lv 5]'/300, l='ServerLevel[world]', x=-7117.14, y=6.50, z=-180.79] died: Slime [Lv 5] suffocated in a wall
+[02:34:53] [Server thread/INFO] (Minecraft) Named entity Slime['Slime [Lv 5]'/301, l='ServerLevel[world]', x=-7117.66, y=6.50, z=-180.27] died: Slime [Lv 5] suffocated in a wall
+[02:34:53] [Server thread/INFO] (Minecraft) Named entity Slime['Slime [Lv 5]'/302, l='ServerLevel[world]', x=-7117.14, y=6.50, z=-180.27] died: Slime [Lv 5] suffocated in a wall
+[02:34:54] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 9 chunks in minecraft:overworld from [202, -164] to [204, -162] to be force loaded]
+[02:34:56] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 169 chunks in minecraft:overworld from [-39, -274] to [-27, -262] to be force loaded]
+[02:34:57] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 3 chunks in minecraft:overworld from [-34, -275] to [-32, -273] to be force loaded]
+[02:34:58] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 64 chunks in minecraft:overworld from [-220, 385] to [-213, 392] to be force loaded]
+[02:34:59] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 9 chunks in minecraft:overworld from [-218, 379] to [-216, 381] to be force loaded]
+[02:35:00] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 64 chunks in minecraft:overworld from [-535, -228] to [-528, -221] to be force loaded]
+[02:35:01] [Server thread/INFO] (Minecraft) Named entity Spider['Spider [Lv 8]'/232, l='ServerLevel[world]', x=-7121.50, y=24.00, z=-230.50] died: Spider [Lv 8] suffocated in a wall
+[02:35:01] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 9 chunks in minecraft:overworld from [-533, -232] to [-531, -230] to be force loaded]
+[02:35:03] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 64 chunks in minecraft:overworld from [95, 367] to [102, 374] to be force loaded]
+[02:35:03] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 9 chunks in minecraft:overworld from [97, 363] to [99, 365] to be force loaded]
+[02:35:06] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 196 chunks in minecraft:overworld from [354, -3] to [367, 10] to be force loaded]
+[02:35:06] [Server thread/WARN] (Minecraft) Can't keep up! Is the server overloaded? Running 2187ms or 43 ticks behind
+[02:35:07] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 9 chunks in minecraft:overworld from [360, -7] to [362, -5] to be force loaded]
+[02:35:08] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 64 chunks in minecraft:overworld from [-10, 507] to [-3, 514] to be force loaded]
+[02:35:11] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 182 chunks in minecraft:overworld from [-661, 120] to [-648, 132] to be force loaded]
+[02:35:11] [Server thread/INFO] (Minecraft) Named entity Slime['Slime [Lv 8]'/259, l='ServerLevel[world]', x=-7081.96, y=15.00, z=-221.04] died: Slime [Lv 8] suffocated in a wall
+[02:35:11] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 9 chunks in minecraft:overworld from [-655, 117] to [-653, 119] to be force loaded]
+[02:35:13] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 64 chunks in minecraft:overworld from [-133, -473] to [-126, -466] to be force loaded]
+[02:35:13] [Server thread/INFO] (Minecraft) Named entity Slime['Slime [Lv 8]'/542, l='ServerLevel[world]', x=-7082.48, y=15.00, z=-221.52] died: Slime [Lv 8] suffocated in a wall
+[02:35:13] [Server thread/INFO] (Minecraft) Named entity Slime['Slime [Lv 8]'/543, l='ServerLevel[world]', x=-7081.07, y=15.00, z=-222.19] died: Slime [Lv 8] suffocated in a wall
+[02:35:13] [Server thread/INFO] (Minecraft) Named entity Spider['Spider [Lv 11]'/357, l='ServerLevel[world]', x=-3476.50, y=15.00, z=6245.50] died: Spider [Lv 11] suffocated in a wall
+[02:35:13] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 9 chunks in minecraft:overworld from [-130, -477] to [-128, -475] to be force loaded]
+[02:35:13] [Server thread/INFO] (Minecraft) Named entity Slime['Slime [Lv 8]'/565, l='ServerLevel[world]', x=-7082.74, y=15.50, z=-221.78] died: Slime [Lv 8] suffocated in a wall
+[02:35:13] [Server thread/INFO] (Minecraft) Named entity Slime['Slime [Lv 8]'/566, l='ServerLevel[world]', x=-7082.22, y=15.50, z=-221.78] died: Slime [Lv 8] suffocated in a wall
+[02:35:13] [Server thread/INFO] (Minecraft) Named entity Slime['Slime [Lv 8]'/567, l='ServerLevel[world]', x=-7082.74, y=15.50, z=-221.26] died: Slime [Lv 8] suffocated in a wall
+[02:35:14] [Server thread/INFO] (Minecraft) Named entity Slime['Slime [Lv 8]'/570, l='ServerLevel[world]', x=-7081.33, y=15.50, z=-222.45] died: Slime [Lv 8] suffocated in a wall
+[02:35:14] [Server thread/INFO] (Minecraft) Named entity Slime['Slime [Lv 8]'/571, l='ServerLevel[world]', x=-7080.81, y=15.50, z=-222.45] died: Slime [Lv 8] suffocated in a wall
+[02:35:14] [Server thread/INFO] (Minecraft) Named entity Slime['Slime [Lv 8]'/572, l='ServerLevel[world]', x=-7081.33, y=15.50, z=-221.93] died: Slime [Lv 8] suffocated in a wall
+[02:35:14] [Server thread/INFO] (Minecraft) Named entity Slime['Slime [Lv 8]'/573, l='ServerLevel[world]', x=-7080.81, y=15.50, z=-221.93] died: Slime [Lv 8] suffocated in a wall
+[02:35:15] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 64 chunks in minecraft:overworld from [-387, -420] to [-380, -413] to be force loaded]
+[02:35:15] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 9 chunks in minecraft:overworld from [-384, -423] to [-382, -421] to be force loaded]
+[02:35:17] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 64 chunks in minecraft:overworld from [-457, 385] to [-450, 392] to be force loaded]
+[02:35:18] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 9 chunks in minecraft:overworld from [-454, 379] to [-452, 381] to be force loaded]
+[02:35:20] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 182 chunks in minecraft:overworld from [-206, -615] to [-193, -603] to be force loaded]
+[02:35:21] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 9 chunks in minecraft:overworld from [-200, -618] to [-198, -616] to be force loaded]
+[02:35:22] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 64 chunks in minecraft:overworld from [497, 306] to [504, 313] to be force loaded]
+[02:35:23] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 9 chunks in minecraft:overworld from [500, 315] to [502, 317] to be force loaded]
+[02:35:25] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 169 chunks in minecraft:overworld from [-713, -125] to [-701, -113] to be force loaded]
+[02:35:26] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 6 chunks in minecraft:overworld from [-708, -127] to [-706, -125] to be force loaded]
+[02:35:27] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 64 chunks in minecraft:overworld from [-780, 560] to [-773, 567] to be force loaded]
+[02:35:28] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 9 chunks in minecraft:overworld from [-778, 552] to [-776, 554] to be force loaded]
+[02:35:30] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 64 chunks in minecraft:overworld from [252, 630] to [259, 637] to be force loaded]
+[02:35:31] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 9 chunks in minecraft:overworld from [255, 620] to [257, 622] to be force loaded]
+[02:35:32] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 64 chunks in minecraft:overworld from [620, -333] to [627, -326] to be force loaded]
+[02:35:32] [Server thread/INFO] (Minecraft) Named entity MagmaCube['Magma Cube [Lv 33]'/760, l='ServerLevel[world]', x=-12461.62, y=24.62, z=9055.89] died: Magma Cube [Lv 33] suffocated in a wall
+[02:35:35] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 182 chunks in minecraft:overworld from [547, -38] to [559, -25] to be force loaded]
+[02:35:35] [Server thread/WARN] (Minecraft) Can't keep up! Is the server overloaded? Running 2182ms or 43 ticks behind
+[02:35:35] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 9 chunks in minecraft:overworld from [552, -41] to [554, -39] to be force loaded]
+[02:35:36] [Server thread/INFO] (Minecraft) Server empty for 60 seconds, pausing
+[02:35:38] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 64 chunks in minecraft:overworld from [-168, 980] to [-161, 987] to be force loaded]
+[02:35:39] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 9 chunks in minecraft:overworld from [-165, 973] to [-163, 975] to be force loaded]
+[02:35:41] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 64 chunks in minecraft:overworld from [-579, 770] to [-572, 777] to be force loaded]
+[02:35:43] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 64 chunks in minecraft:overworld from [-990, -613] to [-983, -606] to be force loaded]
+[02:35:43] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 9 chunks in minecraft:overworld from [-988, -616] to [-986, -614] to be force loaded]
+[02:35:45] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 64 chunks in minecraft:overworld from [830, 297] to [837, 304] to be force loaded]
+[02:35:46] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 9 chunks in minecraft:overworld from [832, 292] to [834, 294] to be force loaded]
+[02:35:48] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 64 chunks in minecraft:overworld from [462, -735] to [469, -728] to be force loaded]
+[02:35:49] [Server thread/INFO] (Minecraft) System chat: [Rcon: Marked 6 chunks in minecraft:overworld from [465, -737] to [467, -735] to be force loaded]
+[02:35:49] [RCON Client /127.0.0.1 #2/INFO] (Minecraft) Thread RCON Client /127.0.0.1 shutting down
+[02:35:49] [RCON Listener #1/INFO] (Minecraft) Thread RCON Client /127.0.0.1 started
+[02:35:49] [Server thread/INFO] (Minecraft) System chat: [Rcon: Set minecraft:overworld to time marker minecraft:midnight]
+[02:35:50] [Server thread/INFO] (Minecraft) System chat: [Rcon: Set the weather to rain and thunder]
+[02:35:50] [Server thread/INFO] (Minecraft) System chat: [Rcon: Summoned new Tentacle]
+[02:35:51] [Server thread/INFO] (Minecraft) System chat: [Rcon: Summoned new Grenade]
+[02:35:51] [Server thread/INFO] (Minecraft) System chat: [Rcon: Summoned new Islander]
+[02:35:52] [Server thread/INFO] (Minecraft) System chat: [Rcon: Summoned new Zombie [Lv 7]]
+[02:35:52] [Server thread/INFO] (Minecraft) System chat: [Rcon: Summoned new Skeleton [Lv 48]]
+[02:35:53] [Server thread/INFO] (Minecraft) System chat: [Rcon: Applied 3.0 damage to Zombie [Lv 11]]
+[02:35:55] [Server thread/INFO] (Minecraft) System chat: [Rcon: Summoned new Cursed Grunt [Lv 5]]
+[02:35:57] [RCON Client /127.0.0.1 #3/INFO] (Minecraft) Thread RCON Client /127.0.0.1 shutting down
+[02:38:27] [RCON Listener #1/INFO] (Minecraft) Thread RCON Client /127.0.0.1 started
+[02:38:28] [Server thread/INFO] (Minecraft) System chat: [Rcon: Unmarked all force loaded chunks in minecraft:overworld]
+[02:38:28] [Server thread/INFO] (Minecraft) System chat: [Rcon: Saved the game]
+[02:38:29] [RCON Client /127.0.0.1 #4/INFO] (Minecraft) Thread RCON Client /127.0.0.1 shutting down
