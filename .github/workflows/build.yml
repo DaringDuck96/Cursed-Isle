@@ -60,6 +60,32 @@ jobs:
           cp -r run/crash-reports ci-out/ 2>/dev/null
           if grep -q "Done (" run/logs/latest.log 2>/dev/null; then echo up > ci-out/SERVER; else echo down > ci-out/SERVER; fi
 
+      - name: Start the client in the smoke-test world and take a look
+        if: steps.build.outputs.status == '0'
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          sudo apt-get update -q > /dev/null 2>&1
+          sudo apt-get install -y -q xvfb libgl1-mesa-dri libegl1 imagemagick > /dev/null 2>&1
+          mkdir -p ci-out run/saves && rm -rf run/saves/smoke && cp -r run/world run/saves/smoke
+          printf 'onboardAccessibility:false\nnarrator:0\ntutorialStep:none\nskipMultiplayerWarning:true\nrenderDistance:6\n' > run/options.txt
+          export LIBGL_ALWAYS_SOFTWARE=1
+          (xvfb-run -n 99 -s "-screen 0 1280x720x24" timeout 480 ./gradlew runClient --no-daemon --args="--quickPlaySingleplayer smoke" > client-run.log 2>&1 &)
+          for i in $(seq 1 90); do
+            if grep -q "joined the game\|Crash report\|BUILD FAILED" client-run.log run/logs/latest.log 2>/dev/null; then break; fi
+            sleep 5
+          done
+          sleep 45
+          DISPLAY=:99 import -window root ci-out/client.png
+          sleep 25
+          DISPLAY=:99 import -window root ci-out/client2.png
+          pkill -f KnotClient; pkill -f runClient; sleep 5; pkill -9 -f java
+          cp client-run.log ci-out/ 2>/dev/null
+          cp run/logs/latest.log ci-out/client.log 2>/dev/null
+          cp -r run/crash-reports ci-out/ 2>/dev/null
+          ls ci-out
+
       - name: Publish the log and jar to the build-output branch
         if: always()
         shell: bash

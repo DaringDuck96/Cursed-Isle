@@ -1,4 +1,4 @@
-# Cursed Tides (Fabric 1.21.1), version 0.27.0
+# Cursed Tides (Fabric, Minecraft 26.3), version 0.28.0
 
 An original pirate adventure built around four pillars: **sailing, ship ownership,
 island exploration and character progression**. Everything in it (islands, characters,
@@ -6,14 +6,14 @@ story, art) is original.
 
 ## Build it
 
-You need **Java 21** (the JDK, e.g. from adoptium.net).
+You need **Java 25** (the JDK, e.g. from adoptium.net).
 
 1. Unzip this folder.
 2. Open a terminal in it and run `gradlew.bat build` (Windows) or `./gradlew build` (Mac/Linux).
 3. The first build downloads Minecraft and Fabric (a few minutes).
-4. Your mod is at `build/libs/cursed-tides-0.27.0.jar` (ignore the `-sources` jar).
+4. Your mod is at `build/libs/cursed-tides-0.28.0.jar` (ignore the `-sources` jar).
 
-Put that jar plus **Fabric API** for 1.21.1 into `.minecraft/mods`. To test without installing: `./gradlew runClient`.
+Put that jar plus **Fabric API** for 26.3 (0.165.2 or later, with Fabric Loader 0.19+) into `.minecraft/mods`. To test without installing: `./gradlew runClient`.
 
 Every push to `main` is also built by GitHub Actions (`.github/workflows/build.yml`), which starts a test server in the archipelago for a minute. The finished jar and the logs land on the `build-output` branch.
 
@@ -152,6 +152,16 @@ and leather. The captain's attire comes with Brethren rank 300; the Tidewatch un
 | Boarding Axe | 2 iron, an iron block and 2 sticks |
 | Throwing Knives (x4) | Shapeless: iron ingot and 2 iron nuggets |
 | Sailor's garb | Wool (bandana, shirt, breeches with a leather belt) and leather (boots) in armour shapes |
+
+### New in 0.28: runs on Minecraft 26.3
+
+The whole mod now runs on Minecraft 26.3 with the current Fabric Loader and Fabric API (it no longer loads on
+1.21.1). Nothing about play has changed: same islands, ships, story, people and fights. A few details moved with
+the game:
+
+- Spawn eggs have their own speckled icons now that the game no longer tints a shared egg.
+- Quick-chat speech bubbles are text displays riding over your head, as before.
+- Fog banks, the health bar, damage numbers and objective markers are hooked into the new renderer.
 
 ### New in 0.27: friends, ship refits, special ammo, charged staffs, infamy, titles, festivals, tips
 
@@ -1088,6 +1098,6 @@ center. Status after this version:
 ## Notes
 
 - Cannonball blasts hurt mobs but don't break blocks. To change that, edit `CannonballEntity.java`
-  (`World.ExplosionSourceType.NONE` to `TNT`).
+  (`Level.ExplosionInteraction.NONE` to `TNT`).
 - Version numbers live in `gradle.properties`. If Gradle can't find one, check https://fabricmc.net/develop
-  for current 1.21.1 values.
+  for current 26.3 values.
