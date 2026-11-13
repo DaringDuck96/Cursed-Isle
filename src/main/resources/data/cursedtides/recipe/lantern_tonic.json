@@ -1,19 +1,13 @@
 {
-  "type": "minecraft:crafting_shapeless",
-  "category": "misc",
-  "ingredients": [
-    {
-      "item": "minecraft:glass_bottle"
-    },
-    {
-      "item": "minecraft:glow_berries"
-    },
-    {
-      "item": "cursedtides:lantern_eel"
-    }
-  ],
-  "result": {
-    "id": "cursedtides:lantern_tonic",
-    "count": 1
-  }
+ "type": "minecraft:crafting_shapeless",
+ "category": "misc",
+ "ingredients": [
+  "minecraft:glass_bottle",
+  "minecraft:glow_berries",
+  "cursedtides:lantern_eel"
+ ],
+ "result": {
+  "id": "cursedtides:lantern_tonic",
+  "count": 1
+ }
 }

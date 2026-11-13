@@ -6,12 +6,8 @@
   "TTT"
  ],
  "key": {
-  "S": {
-   "item": "minecraft:string"
-  },
-  "T": {
-   "item": "cursedtides:shark_tooth"
-  }
+  "S": "minecraft:string",
+  "T": "cursedtides:shark_tooth"
  },
  "result": {
   "id": "cursedtides:shark_tooth_necklace",

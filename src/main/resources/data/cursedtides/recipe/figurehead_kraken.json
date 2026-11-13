@@ -7,15 +7,9 @@
   "PIP"
  ],
  "key": {
-  "P": {
-   "item": "minecraft:dark_oak_planks"
-  },
-  "I": {
-   "item": "minecraft:ink_sac"
-  },
-  "X": {
-   "item": "cursedtides:ancient_relic"
-  }
+  "P": "minecraft:dark_oak_planks",
+  "I": "minecraft:ink_sac",
+  "X": "cursedtides:ancient_relic"
  },
  "result": {
   "id": "cursedtides:figurehead_kraken",

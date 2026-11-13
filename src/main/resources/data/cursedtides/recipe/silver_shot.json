@@ -2,24 +2,12 @@
  "type": "minecraft:crafting_shapeless",
  "category": "equipment",
  "ingredients": [
-  {
-   "item": "cursedtides:pistol_shot"
-  },
-  {
-   "item": "cursedtides:pistol_shot"
-  },
-  {
-   "item": "cursedtides:pistol_shot"
-  },
-  {
-   "item": "cursedtides:pistol_shot"
-  },
-  {
-   "item": "minecraft:iron_nugget"
-  },
-  {
-   "item": "minecraft:iron_nugget"
-  }
+  "cursedtides:pistol_shot",
+  "cursedtides:pistol_shot",
+  "cursedtides:pistol_shot",
+  "cursedtides:pistol_shot",
+  "minecraft:iron_nugget",
+  "minecraft:iron_nugget"
  ],
  "result": {
   "id": "cursedtides:silver_shot",

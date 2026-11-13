@@ -7,12 +7,8 @@
   " S"
  ],
  "key": {
-  "P": {
-   "item": "minecraft:oak_planks"
-  },
-  "S": {
-   "item": "minecraft:stick"
-  }
+  "P": "minecraft:oak_planks",
+  "S": "minecraft:stick"
  },
  "result": {
   "id": "cursedtides:carpenters_mallet",

@@ -6,15 +6,9 @@
   "PCP"
  ],
  "key": {
-  "G": {
-   "item": "minecraft:glass_bottle"
-  },
-  "P": {
-   "item": "minecraft:oak_planks"
-  },
-  "C": {
-   "item": "minecraft:cauldron"
-  }
+  "G": "minecraft:glass_bottle",
+  "P": "minecraft:oak_planks",
+  "C": "minecraft:cauldron"
  },
  "result": {
   "id": "cursedtides:brewers_kit",

@@ -2,12 +2,8 @@
  "type": "minecraft:crafting_shapeless",
  "category": "misc",
  "ingredients": [
-  {
-   "item": "cursedtides:rough_gem"
-  },
-  {
-   "item": "minecraft:flint"
-  }
+  "cursedtides:rough_gem",
+  "minecraft:flint"
  ],
  "result": {
   "id": "cursedtides:cut_gem",

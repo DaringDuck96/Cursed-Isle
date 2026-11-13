@@ -32,12 +32,6 @@ tasks.withType(JavaCompile).configureEach {
     it.options.compilerArgs += ['-Xmaxerrs', '2000']
 }
 
-// Copies everything the mod compiles against into build/cp (used to check the code outside Gradle)
-tasks.register('exportClasspath', Copy) {
-    from sourceSets.main.compileClasspath
-    into layout.buildDirectory.dir('cp')
-}
-
 java {
     withSourcesJar()
     sourceCompatibility = JavaVersion.VERSION_25

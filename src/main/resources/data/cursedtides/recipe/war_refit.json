@@ -7,15 +7,9 @@
   "IPI"
  ],
  "key": {
-  "I": {
-   "item": "minecraft:iron_ingot"
-  },
-  "P": {
-   "item": "minecraft:dark_oak_planks"
-  },
-  "B": {
-   "item": "minecraft:iron_block"
-  }
+  "I": "minecraft:iron_ingot",
+  "P": "minecraft:dark_oak_planks",
+  "B": "minecraft:iron_block"
  },
  "result": {
   "id": "cursedtides:war_refit",

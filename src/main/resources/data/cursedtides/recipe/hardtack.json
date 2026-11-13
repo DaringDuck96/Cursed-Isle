@@ -1,19 +1,13 @@
 {
-  "type": "minecraft:crafting_shapeless",
-  "category": "misc",
-  "ingredients": [
-    {
-      "item": "minecraft:wheat"
-    },
-    {
-      "item": "minecraft:wheat"
-    },
-    {
-      "item": "minecraft:sugar"
-    }
-  ],
-  "result": {
-    "id": "cursedtides:hardtack",
-    "count": 2
-  }
+ "type": "minecraft:crafting_shapeless",
+ "category": "misc",
+ "ingredients": [
+  "minecraft:wheat",
+  "minecraft:wheat",
+  "minecraft:sugar"
+ ],
+ "result": {
+  "id": "cursedtides:hardtack",
+  "count": 2
+ }
 }

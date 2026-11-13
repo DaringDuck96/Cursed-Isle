@@ -2,15 +2,9 @@
  "type": "minecraft:crafting_shapeless",
  "category": "misc",
  "ingredients": [
-  {
-   "item": "minecraft:paper"
-  },
-  {
-   "item": "minecraft:paper"
-  },
-  {
-   "item": "minecraft:ink_sac"
-  }
+  "minecraft:paper",
+  "minecraft:paper",
+  "minecraft:ink_sac"
  ],
  "result": {
   "id": "cursedtides:blank_chart",

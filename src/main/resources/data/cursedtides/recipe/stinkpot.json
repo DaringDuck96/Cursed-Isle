@@ -2,15 +2,9 @@
  "type": "minecraft:crafting_shapeless",
  "category": "equipment",
  "ingredients": [
-  {
-   "item": "minecraft:gunpowder"
-  },
-  {
-   "item": "minecraft:spider_eye"
-  },
-  {
-   "item": "minecraft:string"
-  }
+  "minecraft:gunpowder",
+  "minecraft:spider_eye",
+  "minecraft:string"
  ],
  "result": {
   "id": "cursedtides:stinkpot",

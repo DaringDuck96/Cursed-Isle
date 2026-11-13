@@ -7,15 +7,9 @@
   "FSF"
  ],
  "key": {
-  "F": {
-   "item": "minecraft:feather"
-  },
-  "S": {
-   "item": "minecraft:string"
-  },
-  "P": {
-   "item": "minecraft:oak_planks"
-  }
+  "F": "minecraft:feather",
+  "S": "minecraft:string",
+  "P": "minecraft:oak_planks"
  },
  "result": {
   "id": "cursedtides:light_refit",

@@ -1,19 +1,13 @@
 {
-  "type": "minecraft:crafting_shapeless",
-  "category": "equipment",
-  "ingredients": [
-    {
-      "item": "minecraft:iron_ingot"
-    },
-    {
-      "item": "minecraft:iron_nugget"
-    },
-    {
-      "item": "minecraft:iron_nugget"
-    }
-  ],
-  "result": {
-    "id": "cursedtides:throwing_knife",
-    "count": 4
-  }
+ "type": "minecraft:crafting_shapeless",
+ "category": "equipment",
+ "ingredients": [
+  "minecraft:iron_ingot",
+  "minecraft:iron_nugget",
+  "minecraft:iron_nugget"
+ ],
+ "result": {
+  "id": "cursedtides:throwing_knife",
+  "count": 4
+ }
 }

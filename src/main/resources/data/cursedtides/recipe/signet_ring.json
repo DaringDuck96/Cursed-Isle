@@ -7,12 +7,8 @@
   " G "
  ],
  "key": {
-  "I": {
-   "item": "minecraft:gold_ingot"
-  },
-  "G": {
-   "item": "minecraft:gold_nugget"
-  }
+  "I": "minecraft:gold_ingot",
+  "G": "minecraft:gold_nugget"
  },
  "result": {
   "id": "cursedtides:signet_ring",

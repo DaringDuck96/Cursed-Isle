@@ -6,9 +6,7 @@
   "WW"
  ],
  "key": {
-  "W": {
-   "item": "minecraft:white_wool"
-  }
+  "W": "minecraft:white_wool"
  },
  "result": {
   "id": "cursedtides:sailcloth",

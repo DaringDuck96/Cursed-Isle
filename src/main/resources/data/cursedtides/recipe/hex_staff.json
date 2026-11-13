@@ -1,11 +1,18 @@
 {
-  "type": "minecraft:crafting_shaped",
-  "category": "equipment",
-  "pattern": [ " BE", " /B", "/  " ],
-  "key": {
-    "E": { "item": "minecraft:ender_eye" },
-    "B": { "item": "minecraft:bone" },
-    "/": { "item": "minecraft:stick" }
-  },
-  "result": { "id": "cursedtides:hex_staff", "count": 1 }
+ "type": "minecraft:crafting_shaped",
+ "category": "equipment",
+ "pattern": [
+  " BE",
+  " /B",
+  "/  "
+ ],
+ "key": {
+  "E": "minecraft:ender_eye",
+  "B": "minecraft:bone",
+  "/": "minecraft:stick"
+ },
+ "result": {
+  "id": "cursedtides:hex_staff",
+  "count": 1
+ }
 }

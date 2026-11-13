@@ -2,18 +2,10 @@
  "type": "minecraft:crafting_shapeless",
  "category": "equipment",
  "ingredients": [
-  {
-   "item": "cursedtides:cannonball"
-  },
-  {
-   "item": "cursedtides:cannonball"
-  },
-  {
-   "item": "minecraft:iron_ingot"
-  },
-  {
-   "item": "minecraft:bone_meal"
-  }
+  "cursedtides:cannonball",
+  "cursedtides:cannonball",
+  "minecraft:iron_ingot",
+  "minecraft:bone_meal"
  ],
  "result": {
   "id": "cursedtides:bane_shot",

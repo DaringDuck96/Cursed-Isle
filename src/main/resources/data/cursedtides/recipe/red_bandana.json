@@ -2,12 +2,8 @@
  "type": "minecraft:crafting_shapeless",
  "category": "misc",
  "ingredients": [
-  {
-   "item": "cursedtides:sailcloth"
-  },
-  {
-   "item": "minecraft:red_dye"
-  }
+  "cursedtides:sailcloth",
+  "minecraft:red_dye"
  ],
  "result": {
   "id": "cursedtides:red_bandana",

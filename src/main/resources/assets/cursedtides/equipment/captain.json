@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "cursedtides:captain"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "cursedtides:captain"
+      }
+    ]
+  }
+}

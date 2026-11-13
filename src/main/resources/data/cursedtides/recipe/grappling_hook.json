@@ -7,12 +7,8 @@
   "S  "
  ],
  "key": {
-  "I": {
-   "item": "minecraft:iron_ingot"
-  },
-  "S": {
-   "item": "minecraft:lead"
-  }
+  "I": "minecraft:iron_ingot",
+  "S": "minecraft:lead"
  },
  "result": {
   "id": "cursedtides:grappling_hook",

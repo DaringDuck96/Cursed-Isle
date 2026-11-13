@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "cursedtides:navy_uniform"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "cursedtides:navy_uniform"
+      }
+    ]
+  }
+}

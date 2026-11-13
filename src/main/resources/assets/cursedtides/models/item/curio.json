@@ -1,1 +1,1 @@
-{"parent": "minecraft:item/generated", "textures": {"layer0": "cursedtides:item/curio_bottle"}, "overrides": [{"predicate": {"custom_model_data": 1}, "model": "cursedtides:item/curio_bottle"}, {"predicate": {"custom_model_data": 2}, "model": "cursedtides:item/curio_log"}, {"predicate": {"custom_model_data": 3}, "model": "cursedtides:item/curio_painting"}, {"predicate": {"custom_model_data": 4}, "model": "cursedtides:item/curio_instrument"}]}
+{"parent": "minecraft:item/generated", "textures": {"layer0": "cursedtides:item/curio_bottle"}}

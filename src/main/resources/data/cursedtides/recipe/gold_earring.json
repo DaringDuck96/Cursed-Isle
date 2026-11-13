@@ -6,12 +6,8 @@
   "N"
  ],
  "key": {
-  "G": {
-   "item": "minecraft:gold_nugget"
-  },
-  "N": {
-   "item": "minecraft:gold_ingot"
-  }
+  "G": "minecraft:gold_nugget",
+  "N": "minecraft:gold_ingot"
  },
  "result": {
   "id": "cursedtides:gold_earring",

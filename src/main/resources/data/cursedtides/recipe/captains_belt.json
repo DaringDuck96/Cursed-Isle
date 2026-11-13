@@ -5,12 +5,8 @@
   "LGL"
  ],
  "key": {
-  "L": {
-   "item": "minecraft:leather"
-  },
-  "G": {
-   "item": "minecraft:gold_ingot"
-  }
+  "L": "minecraft:leather",
+  "G": "minecraft:gold_ingot"
  },
  "result": {
   "id": "cursedtides:captains_belt",

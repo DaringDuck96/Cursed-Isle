@@ -7,18 +7,10 @@
   "GXG"
  ],
  "key": {
-  "S": {
-   "item": "minecraft:string"
-  },
-  "C": {
-   "item": "minecraft:compass"
-  },
-  "G": {
-   "item": "minecraft:gold_ingot"
-  },
-  "X": {
-   "item": "cursedtides:cut_gem"
-  }
+  "S": "minecraft:string",
+  "C": "minecraft:compass",
+  "G": "minecraft:gold_ingot",
+  "X": "cursedtides:cut_gem"
  },
  "result": {
   "id": "cursedtides:compass_pendant",

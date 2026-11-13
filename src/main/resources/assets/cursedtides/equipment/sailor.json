@@ -1,0 +1,26 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "dyeable": {
+          "color_when_undyed": -5199728
+        },
+        "texture": "cursedtides:sailor"
+      },
+      {
+        "texture": "cursedtides:sailor_overlay"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "dyeable": {
+          "color_when_undyed": -5199728
+        },
+        "texture": "cursedtides:sailor"
+      },
+      {
+        "texture": "cursedtides:sailor_overlay"
+      }
+    ]
+  }
+}

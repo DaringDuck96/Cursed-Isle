@@ -1,22 +1,14 @@
 {
-  "type": "minecraft:crafting_shapeless",
-  "category": "equipment",
-  "ingredients": [
-    {
-      "item": "minecraft:iron_ingot"
-    },
-    {
-      "item": "minecraft:iron_ingot"
-    },
-    {
-      "item": "minecraft:leather"
-    },
-    {
-      "item": "minecraft:string"
-    }
-  ],
-  "result": {
-    "id": "cursedtides:reinforcing_kit",
-    "count": 1
-  }
+ "type": "minecraft:crafting_shapeless",
+ "category": "equipment",
+ "ingredients": [
+  "minecraft:iron_ingot",
+  "minecraft:iron_ingot",
+  "minecraft:leather",
+  "minecraft:string"
+ ],
+ "result": {
+  "id": "cursedtides:reinforcing_kit",
+  "count": 1
+ }
 }

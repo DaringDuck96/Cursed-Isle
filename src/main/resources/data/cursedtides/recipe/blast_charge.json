@@ -2,21 +2,11 @@
  "type": "minecraft:crafting_shapeless",
  "category": "equipment",
  "ingredients": [
-  {
-   "item": "minecraft:gunpowder"
-  },
-  {
-   "item": "minecraft:gunpowder"
-  },
-  {
-   "item": "minecraft:gunpowder"
-  },
-  {
-   "item": "minecraft:iron_nugget"
-  },
-  {
-   "item": "minecraft:string"
-  }
+  "minecraft:gunpowder",
+  "minecraft:gunpowder",
+  "minecraft:gunpowder",
+  "minecraft:iron_nugget",
+  "minecraft:string"
  ],
  "result": {
   "id": "cursedtides:blast_charge",

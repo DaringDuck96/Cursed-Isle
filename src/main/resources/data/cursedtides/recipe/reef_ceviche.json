@@ -1,19 +1,13 @@
 {
-  "type": "minecraft:crafting_shapeless",
-  "category": "misc",
-  "ingredients": [
-    {
-      "item": "cursedtides:reef_parrotfish"
-    },
-    {
-      "item": "minecraft:sweet_berries"
-    },
-    {
-      "item": "minecraft:kelp"
-    }
-  ],
-  "result": {
-    "id": "cursedtides:reef_ceviche",
-    "count": 2
-  }
+ "type": "minecraft:crafting_shapeless",
+ "category": "misc",
+ "ingredients": [
+  "cursedtides:reef_parrotfish",
+  "minecraft:sweet_berries",
+  "minecraft:kelp"
+ ],
+ "result": {
+  "id": "cursedtides:reef_ceviche",
+  "count": 2
+ }
 }

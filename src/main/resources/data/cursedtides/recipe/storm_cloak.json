@@ -7,12 +7,8 @@
   "SSS"
  ],
  "key": {
-  "S": {
-   "item": "cursedtides:sailcloth"
-  },
-  "P": {
-   "item": "minecraft:phantom_membrane"
-  }
+  "S": "cursedtides:sailcloth",
+  "P": "minecraft:phantom_membrane"
  },
  "result": {
   "id": "cursedtides:storm_cloak",
