@@ -1,0 +1,184 @@
+package com.cursedtides.explore;
+
+import com.cursedtides.world.Archipelago;
+
+import com.cursedtides.entity.ShipEntity;
+import com.cursedtides.world.ModWorld;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+/**
+ * What the sea does to ships: whirlpools that drag and spin, currents that carry you (or fight you),
+ * fog banks that swallow the horizon, and rocks that tear the bottom out of a ship sailed too fast into shallows.
+ */
+public final class SeaHazards {
+    private SeaHazards() {}
+
+    public record Whirlpool(String name, int x, int z, int radius) {}
+    /** A current: a band from (x1,z1) to (x2,z2), so wide, pushing that way. */
+    public record Current(String name, int x1, int z1, int x2, int z2, int width, double strength) {}
+    /** A fog bank: thick fog within the radius (the client draws it; see FogZones). */
+    public record FogBank(String name, int x, int z, int radius) {}
+
+    public static final List<Whirlpool> WHIRLPOOLS = List.of(
+            new Whirlpool("the Drain", Archipelago.rx(330, 180), Archipelago.rz(330, 180), 41),
+            new Whirlpool("Widow's Gullet", Archipelago.rx(-180, -420), Archipelago.rz(-180, -420), 38),
+            new Whirlpool("the Churn", Archipelago.rx(620, 520), Archipelago.rz(620, 520), 48),
+            new Whirlpool("Old Mother's Eye", Archipelago.rx(-560, 360), Archipelago.rz(-560, 360), 44),
+            new Whirlpool("the Throat", Archipelago.rx(-330, 980), Archipelago.rz(-330, 980), 51));
+
+    public static final List<Current> CURRENTS = List.of(
+            new Current("the Trade Wind Run", Archipelago.seaX(-200), Archipelago.seaZ(-60), Archipelago.seaX(520), Archipelago.seaZ(-60), 120, 0.035),
+            new Current("the Southern Drift", Archipelago.seaX(100), Archipelago.seaZ(300), Archipelago.seaX(100), Archipelago.seaZ(900), 108, 0.03),
+            new Current("the Cold Reach", Archipelago.seaX(700), Archipelago.seaZ(-400), Archipelago.seaX(300), Archipelago.seaZ(-700), 102, 0.03),
+            new Current("the Bloodwake Rip", Archipelago.seaX(-500), Archipelago.seaZ(-400), Archipelago.seaX(-100), Archipelago.seaZ(-760), 90, 0.04));
+
+    public static final List<FogBank> FOG = List.of(
+            new FogBank("the Murk", Archipelago.rx(-380, -360), Archipelago.rz(-380, -360), 364),
+            new FogBank("the Grey Veil", Archipelago.rx(900, -400), Archipelago.rz(900, -400), 312),
+            new FogBank("the Shroud", Archipelago.rx(-470, 860), Archipelago.rz(-470, 860), 390),
+            new FogBank("Lanternless Water", Archipelago.rx(0, 1100), Archipelago.rz(0, 1100), 416),
+            new FogBank("the Nowhere Mist", Archipelago.rx(-940, -720), Archipelago.rz(-940, -720), 338),
+            new FogBank("the Crown's Veil", Archipelago.rx(1140, 320), Archipelago.rz(1140, 320), 286));
+
+    private static final Map<UUID, Vec3> LAST_VEL = new HashMap<>();
+    private static final Map<UUID, String> LAST_ZONE = new HashMap<>();
+    private static final Map<UUID, Long> RAM_READY = new HashMap<>();
+
+    public static void register() {
+        ServerTickEvents.END_SERVER_TICK.register(SeaHazards::tick);
+    }
+
+    private static void tick(MinecraftServer server) {
+        if (!ModWorld.isArchipelago()) return;
+        ServerLevel world = server.overworld();
+        int t = server.getTickCount();
+        for (ServerPlayer p : world.players()) {
+            if (!(p.getVehicle() instanceof ShipEntity ship) || ship.getControllingPassenger() != p) {
+                if (t % 40 == 0) announce(p);
+                continue;
+            }
+            Vec3 pos = ship.position();
+            var fig = ship.getFigurehead();
+            if (fig == com.cursedtides.ship.FigureheadItem.Kind.EAGLE && t % 200 == 0) {
+                for (ShipEntity other : world.getEntitiesOfClass(ShipEntity.class, ship.getBoundingBox().inflate(150), o -> o != ship && o.isHostile())) {
+                    other.addStatusEffectGlow();
+                }
+            }
+            boolean kraken = fig == com.cursedtides.ship.FigureheadItem.Kind.KRAKEN;
+            for (Whirlpool w : WHIRLPOOLS) {
+                if (kraken) break;
+                double dx = w.x() - pos.x, dz = w.z() - pos.z;
+                double d = Math.sqrt(dx * dx + dz * dz);
+                if (d > w.radius() * 1.6) continue;
+                double pull = 0.02 * (1 - d / (w.radius() * 1.6)) + 0.004;
+                Vec3 in = new Vec3(dx, 0, dz).normalize();
+                Vec3 spin = new Vec3(-in.z, 0, in.x);
+                ship.push(in.x * pull + spin.x * pull * 1.4, 0, in.z * pull + spin.z * pull * 1.4);
+                ship.setYRot(ship.getYRot() + 0.8f);
+                if (d < 5 && t % 20 == 0) ship.seaDamage(world, 6f, "The whirlpool's heart grinds at the hull!");
+            }
+            for (Current c : CURRENTS) {
+                if (kraken) break;
+                Vec3 a = new Vec3(c.x1(), 0, c.z1()), b = new Vec3(c.x2(), 0, c.z2());
+                Vec3 ab = b.subtract(a);
+                double len = ab.length();
+                Vec3 dir = ab.scale(1 / len);
+                Vec3 ap = new Vec3(pos.x, 0, pos.z).subtract(a);
+                double along = ap.dot(dir);
+                if (along < 0 || along > len) continue;
+                double off = ap.subtract(dir.scale(along)).length();
+                if (off > c.width()) continue;
+                ship.push(dir.x * c.strength(), 0, dir.z * c.strength());
+            }
+            // Running aground: a sudden stop against land at speed
+            Vec3 before = LAST_VEL.getOrDefault(ship.getUUID(), Vec3.ZERO);
+            double speed = before.horizontalDistance();
+            // Ramming: drive your bow into another ship at speed
+            if (speed > 0.3 && RAM_READY.getOrDefault(ship.getUUID(), 0L) < world.getGameTime()) {
+                Vec3 fwd = Vec3.directionFromRotation(0, ship.getYRot());
+                net.minecraft.world.phys.AABB bow = ship.getBoundingBox().move(fwd.scale(2 * ship.shipClass().scale())).inflate(1.5, 1, 1.5);
+                for (ShipEntity other : world.getEntitiesOfClass(ShipEntity.class, bow, o -> o != ship && o.isAlive())) {
+                    float hit = (float) (speed * 60 * ship.shipClass().scale());
+                    other.hurt(world.damageSources().playerAttack(p), hit);
+                    ship.seaDamage(world, hit * 0.25f, "Ramming speed! You stove in her side.");
+                    other.setDeltaMovement(other.getDeltaMovement().add(fwd.scale(speed * 0.8)));
+                    ship.setDeltaMovement(ship.getDeltaMovement().scale(0.2));
+                    world.playSound(null, other.blockPosition(), net.minecraft.sounds.SoundEvents.ZOMBIE_BREAK_WOODEN_DOOR, SoundSource.NEUTRAL, 2f, 0.4f);
+                    world.sendParticles(ParticleTypes.EXPLOSION, other.getX(), other.getY() + 1, other.getZ(), 2, 1, 0.5, 1, 0);
+                    com.cursedtides.pirate.PirateData.addXp(p, com.cursedtides.pirate.Weapon.SAILING, 20);
+                    RAM_READY.put(ship.getUUID(), world.getGameTime() + 60);
+                    break;
+                }
+            }
+            if (ship.horizontalCollision && speed > 0.35 && t % 5 == 0) {
+                ship.seaDamage(world, (float) (speed * 30), "You've run aground! Timbers crack below the waterline.");
+                ship.setDeltaMovement(before.scale(-0.3));
+            }
+            LAST_VEL.put(ship.getUUID(), ship.getDeltaMovement());
+            if (t % 40 == 0) announce(p);
+        }
+        if (t % 10 == 0) {
+            for (Whirlpool w : WHIRLPOOLS) {
+                if (world.getNearestPlayer(w.x(), 62, w.z(), 96, false) == null) continue;
+                for (int i = 0; i < 6; i++) {
+                    double a = (t / 10.0 + i) * 0.9, r = 3 + (i * 4) % w.radius();
+                    world.sendParticles(ParticleTypes.SPLASH, w.x() + Math.cos(a) * r, 63, w.z() + Math.sin(a) * r, 6, 0.6, 0, 0.6, 0.1);
+                    world.sendParticles(ParticleTypes.BUBBLE_COLUMN_UP, w.x() + Math.cos(a) * r * 0.5, 62, w.z() + Math.sin(a) * r * 0.5, 3, 0.3, 0.2, 0.3, 0.05);
+                }
+                if (t % 60 == 0) world.playSound(null, w.x(), 62, w.z(), com.cursedtides.sound.ModSounds.WHIRLPOOL.value(), SoundSource.AMBIENT, 4f, 1f);
+            }
+        }
+    }
+
+    private static void announce(ServerPlayer p) {
+        String zone = null;
+        for (Whirlpool w : WHIRLPOOLS) if (near(p, w.x(), w.z(), w.radius() * 2)) zone = "whirlpool:" + w.name();
+        for (FogBank f : FOG) if (zone == null && near(p, f.x(), f.z(), f.radius())) zone = "fog:" + f.name();
+        String last = LAST_ZONE.get(p.getUUID());
+        if (zone != null && !zone.equals(last)) {
+            String name = zone.substring(zone.indexOf(':') + 1);
+            p.displayClientMessage(Component.literal(zone.startsWith("fog") ? "Fog closes in: " + name + "." : "The sea is turning! " + capital(name) + " is close.")
+                    .withStyle(zone.startsWith("fog") ? ChatFormatting.GRAY : ChatFormatting.DARK_AQUA, ChatFormatting.ITALIC), true);
+        }
+        if (zone == null) LAST_ZONE.remove(p.getUUID());
+        else LAST_ZONE.put(p.getUUID(), zone);
+    }
+
+    private static String capital(String s) {
+        return s.isEmpty() ? s : Character.toUpperCase(s.charAt(0)) + s.substring(1);
+    }
+
+    private static boolean near(Entity e, int x, int z, int r) {
+        double dx = e.getX() - x, dz = e.getZ() - z;
+        return dx * dx + dz * dz < (double) r * r;
+    }
+
+    /** How thick the fog is here, 0 (none) to 1 (a wall of white). Shared with the client renderer. */
+    public static float fogDensity(double x, double z) {
+        float best = 0;
+        for (FogBank f : FOG) {
+            double d = Math.sqrt((x - f.x()) * (x - f.x()) + (z - f.z()) * (z - f.z())) / f.radius();
+            if (d < 1) best = Math.max(best, (float) Math.min(1, (1 - d) * 2.5));
+        }
+        return best;
+    }
+
+    @SuppressWarnings("unused")
+    private static AABB box(int x, int z, int r) {
+        return new AABB(x - r, 0, z - r, x + r, 256, z + r);
+    }
+}
