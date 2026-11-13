@@ -1,20 +1,21 @@
 package com.cursedtides.world;
 
+import net.minecraft.world.item.DyeColor;
 import com.cursedtides.world.Archipelago.Column;
 import com.cursedtides.world.Archipelago.Style;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.LeavesBlock;
-import net.minecraft.block.PillarBlock;
-import net.minecraft.util.math.Direction;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LeavesBlock;
+import net.minecraft.world.level.block.RotatedPillarBlock;
+import net.minecraft.world.level.block.state.BlockState;
 
 /** Island terrain, ore veins and vegetation for one chunk. */
 final class Terrain {
     private Terrain() {}
 
     private static BlockState s(Block b) {
-        return b.getDefaultState();
+        return b.defaultBlockState();
     }
 
     // ---------------- Land ----------------
@@ -54,7 +55,7 @@ final class Terrain {
             case VOLCANIC -> {
                 if (shore) {
                     // Black sand beaches
-                    return depth <= 2 ? s(Blocks.BLACK_CONCRETE_POWDER) : s(Blocks.BLACKSTONE);
+                    return depth <= 2 ? s(Blocks.CONCRETE_POWDER.pick(DyeColor.BLACK)) : s(Blocks.BLACKSTONE);
                 }
                 if (depth == 0) {
                     if (col.dist() < 0.32 && r < 0.2) return s(Blocks.MAGMA_BLOCK);
@@ -100,7 +101,7 @@ final class Terrain {
                 if (depth <= 3) return s(depth == 0 && r < 0.12 && !shore ? Blocks.RED_SAND : Blocks.SAND);
                 double band = Noise.rand(0, y, 0, 13);
                 if (depth <= 8) return s(Blocks.SANDSTONE);
-                return s(band < 0.3 ? Blocks.TERRACOTTA : band < 0.55 ? Blocks.ORANGE_TERRACOTTA : band < 0.7 ? Blocks.RED_SANDSTONE : Blocks.SANDSTONE);
+                return s(band < 0.3 ? Blocks.TERRACOTTA : band < 0.55 ? Blocks.DYED_TERRACOTTA.pick(DyeColor.ORANGE) : band < 0.7 ? Blocks.RED_SANDSTONE : Blocks.SANDSTONE);
             }
             case KEYS -> { // white sand shallows, grassy islets, old stone beneath
                 if (top <= Archipelago.WATER_TOP) return depth <= 2 ? s(Blocks.SAND) : s(Blocks.SANDSTONE);
@@ -166,8 +167,8 @@ final class Terrain {
             int px = x, py = y, pz = z;
             for (int n = 0; n < size; n++) {
                 BlockState here = c.get(px, py, pz);
-                if (here.isOf(Blocks.STONE) || here.isOf(Blocks.DEEPSLATE) || here.isOf(Blocks.BLACKSTONE)
-                        || here.isOf(Blocks.TUFF) || here.isOf(Blocks.SANDSTONE)) {
+                if (here.is(Blocks.STONE) || here.is(Blocks.DEEPSLATE) || here.is(Blocks.BLACKSTONE)
+                        || here.is(Blocks.TUFF) || here.is(Blocks.SANDSTONE)) {
                     c.set(px, py, pz, ore);
                 }
                 long step = Noise.hash(px, py, pz, 779 + n);
@@ -198,7 +199,7 @@ final class Terrain {
                 if (col.isLand()) {
                     BlockState ground = c.get(x, col.top(), z);
                     if (r < 0.12) c.set(x, col.top() + 1, z, s(Blocks.MOSS_CARPET));
-                    else if (r < 0.2 && ground.isOf(Blocks.GRASS_BLOCK)) c.set(x, col.top() + 1, z, s(Blocks.SHORT_GRASS));
+                    else if (r < 0.2 && ground.is(Blocks.GRASS_BLOCK)) c.set(x, col.top() + 1, z, s(Blocks.SHORT_GRASS));
                     else if (r < 0.215) c.set(x, col.top() + 1, z, s(Blocks.BLUE_ORCHID));
                 }
                 return;
@@ -209,15 +210,15 @@ final class Terrain {
             int top = col.top();
             BlockState ground = c.get(x, top, z);
             double r = Noise.rand(x, z, 31);
-            if (ground.isOf(Blocks.GRASS_BLOCK) && r < 0.14) {
+            if (ground.is(Blocks.GRASS_BLOCK) && r < 0.14) {
                 c.set(x, top + 1, z, s(r < 0.02 ? Blocks.FERN : Blocks.SHORT_GRASS));
-            } else if ((ground.isOf(Blocks.COARSE_DIRT) || ground.isOf(Blocks.PODZOL)) && r < 0.04) {
+            } else if ((ground.is(Blocks.COARSE_DIRT) || ground.is(Blocks.PODZOL)) && r < 0.04) {
                 c.set(x, top + 1, z, s(Blocks.DEAD_BUSH));
-            } else if (col.island().style() == Style.JUNGLE && ground.isOf(Blocks.GRASS_BLOCK) && r < 0.3) {
+            } else if (col.island().style() == Style.JUNGLE && ground.is(Blocks.GRASS_BLOCK) && r < 0.3) {
                 c.set(x, top + 1, z, s(r < 0.04 ? Blocks.BAMBOO : r < 0.08 ? Blocks.MELON : r < 0.2 ? Blocks.FERN : Blocks.SHORT_GRASS));
-            } else if (ground.isOf(Blocks.SAND) && col.island().style() == Style.SANDY && r < 0.01) {
+            } else if (ground.is(Blocks.SAND) && col.island().style() == Style.SANDY && r < 0.01) {
                 c.set(x, top + 1, z, s(Blocks.SUGAR_CANE));
-            } else if (col.island().style() == Style.DESERT && (ground.isOf(Blocks.SAND) || ground.isOf(Blocks.RED_SAND))
+            } else if (col.island().style() == Style.DESERT && (ground.is(Blocks.SAND) || ground.is(Blocks.RED_SAND))
                     && top > Archipelago.WATER_TOP + 2) {
                 if (r < 0.012) {
                     int tall = 1 + (int) (Noise.rand(x, z, 32) * 3);
@@ -225,7 +226,7 @@ final class Terrain {
                 } else if (r < 0.04) {
                     c.set(x, top + 1, z, s(Blocks.DEAD_BUSH));
                 }
-            } else if (col.island().style() == Style.ATOLL && ground.isOf(Blocks.SOUL_SAND) && r < 0.06) {
+            } else if (col.island().style() == Style.ATOLL && ground.is(Blocks.SOUL_SAND) && r < 0.06) {
                 c.set(x, top + 1, z, s(Blocks.WITHER_ROSE));
             }
         });
@@ -262,43 +263,43 @@ final class Terrain {
 
     private static void palm(Canvas c, int x, int y, int z, long h) {
         int height = 5 + (int) ((h >>> 20) & 3);
-        Direction lean = Direction.Type.HORIZONTAL.stream().toList().get((int) ((h >>> 24) & 3));
+        Direction lean = Direction.Plane.HORIZONTAL.stream().toList().get((int) ((h >>> 24) & 3));
         BlockState log = s(Blocks.JUNGLE_LOG);
-        BlockState leaves = s(Blocks.JUNGLE_LEAVES).with(LeavesBlock.PERSISTENT, true);
+        BlockState leaves = s(Blocks.JUNGLE_LEAVES).setValue(LeavesBlock.PERSISTENT, true);
         int tx = x, tz = z;
         for (int i = 0; i < height; i++) {
             if (i == height / 2 + 1) {
-                tx += lean.getOffsetX();
-                tz += lean.getOffsetZ();
+                tx += lean.getStepX();
+                tz += lean.getStepZ();
             }
             c.set(tx, y + i, tz, log);
         }
         int ty = y + height;
         c.set(tx, ty, tz, leaves);
-        for (Direction d : Direction.Type.HORIZONTAL) {
+        for (Direction d : Direction.Plane.HORIZONTAL) {
             for (int k = 1; k <= 3; k++) {
                 int yy = k == 3 ? ty - 1 : ty;
-                c.set(tx + d.getOffsetX() * k, yy, tz + d.getOffsetZ() * k, leaves);
+                c.set(tx + d.getStepX() * k, yy, tz + d.getStepZ() * k, leaves);
             }
-            Direction side = d.rotateYClockwise();
-            c.set(tx + d.getOffsetX() + side.getOffsetX(), ty, tz + d.getOffsetZ() + side.getOffsetZ(), leaves);
+            Direction side = d.getClockWise();
+            c.set(tx + d.getStepX() + side.getStepX(), ty, tz + d.getStepZ() + side.getStepZ(), leaves);
         }
         c.set(tx, ty + 1, tz, leaves);
         // A coconut or two
         if (((h >>> 30) & 1) == 0) {
-            c.set(tx + 1, ty - 1, tz, s(Blocks.COCOA).with(net.minecraft.block.CocoaBlock.FACING, Direction.WEST)
-                    .with(net.minecraft.block.CocoaBlock.AGE, 2));
+            c.set(tx + 1, ty - 1, tz, s(Blocks.COCOA).setValue(net.minecraft.world.level.block.CocoaBlock.FACING, Direction.WEST)
+                    .setValue(net.minecraft.world.level.block.CocoaBlock.AGE, 2));
         }
     }
 
     /** A tall jungle tree with buttressed roots, a layered canopy and hanging vines. */
     private static void jungleTree(Canvas c, int x, int y, int z, long h) {
         BlockState log = s(Blocks.JUNGLE_LOG);
-        BlockState leaves = s(Blocks.JUNGLE_LEAVES).with(LeavesBlock.PERSISTENT, true);
+        BlockState leaves = s(Blocks.JUNGLE_LEAVES).setValue(LeavesBlock.PERSISTENT, true);
         int height = 9 + (int) ((h >>> 20) & 7);
         c.fill(x, y, z, x, y + height, z, log);
-        for (Direction d : Direction.Type.HORIZONTAL) {
-            c.set(x + d.getOffsetX(), y, z + d.getOffsetZ(), log); // buttress roots
+        for (Direction d : Direction.Plane.HORIZONTAL) {
+            c.set(x + d.getStepX(), y, z + d.getStepZ(), log); // buttress roots
         }
         for (int layer = 0; layer < 2; layer++) {
             int ly = y + height - layer * 4;
@@ -314,11 +315,11 @@ final class Terrain {
         }
         // a few vines and a cocoa pod
         if (((h >>> 26) & 1) == 0) {
-            c.set(x + 1, y + 3, z, s(Blocks.COCOA).with(net.minecraft.block.CocoaBlock.FACING, Direction.WEST)
-                    .with(net.minecraft.block.CocoaBlock.AGE, 2));
+            c.set(x + 1, y + 3, z, s(Blocks.COCOA).setValue(net.minecraft.world.level.block.CocoaBlock.FACING, Direction.WEST)
+                    .setValue(net.minecraft.world.level.block.CocoaBlock.AGE, 2));
         }
         for (int i = 1; i <= 3; i++) {
-            c.set(x - 3, y + height - i, z, s(Blocks.VINE).with(net.minecraft.block.VineBlock.EAST, true));
+            c.set(x - 3, y + height - i, z, s(Blocks.VINE).setValue(net.minecraft.world.level.block.VineBlock.EAST, true));
         }
     }
 
@@ -327,12 +328,12 @@ final class Terrain {
         BlockState roots = s(Blocks.MANGROVE_ROOTS);
         BlockState muddy = s(Blocks.MUDDY_MANGROVE_ROOTS);
         BlockState log = s(Blocks.MANGROVE_LOG);
-        BlockState leaves = s(Blocks.MANGROVE_LEAVES).with(LeavesBlock.PERSISTENT, true);
+        BlockState leaves = s(Blocks.MANGROVE_LEAVES).setValue(LeavesBlock.PERSISTENT, true);
         c.set(x, y - 1, z, muddy);
-        for (Direction d : Direction.Type.HORIZONTAL) {
-            c.set(x + d.getOffsetX(), y, z + d.getOffsetZ(), roots);
-            if (((h >>> (d.getHorizontal() * 3)) & 1) == 0) {
-                c.set(x + d.getOffsetX() * 2, y, z + d.getOffsetZ() * 2, roots);
+        for (Direction d : Direction.Plane.HORIZONTAL) {
+            c.set(x + d.getStepX(), y, z + d.getStepZ(), roots);
+            if (((h >>> (d.get2DDataValue() * 3)) & 1) == 0) {
+                c.set(x + d.getStepX() * 2, y, z + d.getStepZ() * 2, roots);
             }
         }
         int height = 4 + (int) ((h >>> 20) & 3);
@@ -357,14 +358,14 @@ final class Terrain {
         for (int i = 0; i < height; i++) {
             c.set(x, y + i, z, log);
         }
-        Direction a = Direction.Type.HORIZONTAL.stream().toList().get((int) ((h >>> 24) & 3));
+        Direction a = Direction.Plane.HORIZONTAL.stream().toList().get((int) ((h >>> 24) & 3));
         Direction b = a.getOpposite();
         int by = y + height - 2;
-        c.set(x + a.getOffsetX(), by, z + a.getOffsetZ(), log.with(PillarBlock.AXIS, a.getAxis()));
-        c.set(x + a.getOffsetX() * 2, by + 1, z + a.getOffsetZ() * 2, log);
-        c.set(x + b.getOffsetX(), by + 1, z + b.getOffsetZ(), log.with(PillarBlock.AXIS, b.getAxis()));
+        c.set(x + a.getStepX(), by, z + a.getStepZ(), log.setValue(RotatedPillarBlock.AXIS, a.getAxis()));
+        c.set(x + a.getStepX() * 2, by + 1, z + a.getStepZ() * 2, log);
+        c.set(x + b.getStepX(), by + 1, z + b.getStepZ(), log.setValue(RotatedPillarBlock.AXIS, b.getAxis()));
         if (((h >>> 28) & 3) == 0) {
-            c.set(x + b.getOffsetX(), by, z + b.getOffsetZ(), s(Blocks.COBWEB));
+            c.set(x + b.getStepX(), by, z + b.getStepZ(), s(Blocks.COBWEB));
         }
     }
 }

@@ -1,14 +1,14 @@
 package com.cursedtides.living;
 
 import com.cursedtides.entity.QuartermasterEntity;
-import net.minecraft.entity.Entity;
+import net.minecraft.world.entity.Entity;
 
 /** Opening hours. Honest shops keep daylight hours; fences and smugglers only deal after dark. Peddlers keep their own. */
 public final class Hours {
     private Hours() {}
 
     public static boolean night(Entity e) {
-        long t = e.getWorld().getTimeOfDay() % 24000;
+        long t = e.level().getOverworldClockTime() % 24000;
         return t >= 13000 && t < 23000;
     }
 

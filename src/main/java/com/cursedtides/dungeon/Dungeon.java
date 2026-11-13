@@ -1,39 +1,39 @@
 package com.cursedtides.dungeon;
 
+import net.minecraft.world.entity.EntitySpawnReason;
 import com.cursedtides.CursedTides;
 import com.cursedtides.block.ModBlocks;
 import com.cursedtides.item.ModItems;
 import com.cursedtides.world.Archipelago;
 import com.cursedtides.world.Canvas;
 import com.cursedtides.world.Noise;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.DispenserBlock;
-import net.minecraft.block.LadderBlock;
-import net.minecraft.block.LanternBlock;
-import net.minecraft.block.entity.DispenserBlockEntity;
-import net.minecraft.block.entity.MobSpawnerBlockEntity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.loot.LootTable;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.state.property.Properties;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.random.Random;
-import net.minecraft.world.StructureWorldAccess;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.WorldGenLevel;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.DispenserBlock;
+import net.minecraft.world.level.block.LadderBlock;
+import net.minecraft.world.level.block.LanternBlock;
+import net.minecraft.world.level.block.entity.DispenserBlockEntity;
+import net.minecraft.world.level.block.entity.SpawnerBlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.storage.loot.LootTable;
 
 /**
  * One dungeon: a ladder shaft from a small surface entrance down to a web of rooms carved
@@ -59,8 +59,8 @@ public final class Dungeon {
         boolean sealed() { return gateX != Integer.MIN_VALUE; }
     }
 
-    static final RegistryKey<LootTable> LOOT = RegistryKey.of(RegistryKeys.LOOT_TABLE, CursedTides.id("chests/dungeon"));
-    static final RegistryKey<LootTable> VAULT_LOOT = RegistryKey.of(RegistryKeys.LOOT_TABLE, CursedTides.id("chests/dungeon_vault"));
+    static final ResourceKey<LootTable> LOOT = ResourceKey.create(Registries.LOOT_TABLE, CursedTides.id("chests/dungeon"));
+    static final ResourceKey<LootTable> VAULT_LOOT = ResourceKey.create(Registries.LOOT_TABLE, CursedTides.id("chests/dungeon_vault"));
 
     public final int index;
     public final String name;
@@ -183,7 +183,7 @@ public final class Dungeon {
         if (!c.intersects(minX, minZ, maxX, maxZ)) {
             return;
         }
-        BlockState open = theme.flooded() ? Blocks.WATER.getDefaultState() : Blocks.AIR.getDefaultState();
+        BlockState open = theme.flooded() ? Blocks.WATER.defaultBlockState() : Blocks.AIR.defaultBlockState();
         int top = floorY + ROOM_H;
 
         // 1. Shells: everything solid theme wall first
@@ -207,8 +207,8 @@ public final class Dungeon {
 
         // 3. Entrance hut, then the shaft: one ladder column, backed by a pillar, from the start room up
         entrance(c);
-        BlockState ladder = Blocks.LADDER.getDefaultState().with(LadderBlock.FACING, Direction.SOUTH)
-                .with(Properties.WATERLOGGED, theme.flooded());
+        BlockState ladder = Blocks.LADDER.defaultBlockState().setValue(LadderBlock.FACING, Direction.SOUTH)
+                .setValue(BlockStateProperties.WATERLOGGED, theme.flooded());
         for (int y = floorY; y <= surfaceTop + 1; y++) {
             c.set(ex, y, ez, ladder);
             c.set(ex, y, ez - 1, theme.wall(ex, y, ez - 1));
@@ -239,7 +239,7 @@ public final class Dungeon {
                 for (int yy = y; yy <= y + 3; yy++) {
                     if (!ring) {
                         if (!(x == ex && z == ez) && !(x == ex && z == ez - 1)) {
-                            c.set(x, yy, z, yy <= Archipelago.WATER_TOP ? Blocks.WATER.getDefaultState() : Blocks.AIR.getDefaultState());
+                            c.set(x, yy, z, yy <= Archipelago.WATER_TOP ? Blocks.WATER.defaultBlockState() : Blocks.AIR.defaultBlockState());
                         }
                     } else if (yy <= y + 2 && Noise.rand(x, yy, z, 311) < 0.8) {
                         c.set(x, yy, z, theme.wall(x, yy, z));
@@ -247,11 +247,11 @@ public final class Dungeon {
                 }
             }
         }
-        c.set(ex, y + 2, ez + 2, Blocks.AIR.getDefaultState()); // doorway
-        c.set(ex, y + 1, ez + 2, Blocks.AIR.getDefaultState());
-        c.set(ex, y, ez + 2, Blocks.AIR.getDefaultState());
+        c.set(ex, y + 2, ez + 2, Blocks.AIR.defaultBlockState()); // doorway
+        c.set(ex, y + 1, ez + 2, Blocks.AIR.defaultBlockState());
+        c.set(ex, y, ez + 2, Blocks.AIR.defaultBlockState());
         c.fillFn(ex - 2, y + 3, ez - 2, ex + 2, y + 3, ez + 2, theme::wall);
-        c.set(ex, y + 4, ez, theme.lantern().getDefaultState());
+        c.set(ex, y + 4, ez, theme.lantern().defaultBlockState());
         c.set(ex + 1, surfaceTop, ez + 1, theme.ceilingLight());
     }
 
@@ -262,8 +262,8 @@ public final class Dungeon {
             c.set(r.cx(), top, r.cz(), theme.ceilingLight()); // (the start room's ceiling is the shaft)
         }
         if (!theme.flooded()) {
-            c.set(r.x1(), top - 1, r.z1(), theme.lantern().getDefaultState().with(LanternBlock.HANGING, true));
-            c.set(r.x2(), top - 1, r.z2(), theme.lantern().getDefaultState().with(LanternBlock.HANGING, true));
+            c.set(r.x1(), top - 1, r.z1(), theme.lantern().defaultBlockState().setValue(LanternBlock.HANGING, true));
+            c.set(r.x2(), top - 1, r.z2(), theme.lantern().defaultBlockState().setValue(LanternBlock.HANGING, true));
         }
         switch (r.kind()) {
             case START -> { }
@@ -288,8 +288,8 @@ public final class Dungeon {
                 if (tier >= 2) {
                     c.chest(r.cx(), y, r.z2(), Direction.NORTH, VAULT_LOOT, new ItemStack(ModItems.MAP_FRAGMENT));
                 }
-                c.set(r.x1(), y, r.z2(), Blocks.GOLD_BLOCK.getDefaultState());
-                c.set(r.x2(), y, r.z2(), Blocks.GOLD_BLOCK.getDefaultState());
+                c.set(r.x1(), y, r.z2(), Blocks.GOLD_BLOCK.defaultBlockState());
+                c.set(r.x2(), y, r.z2(), Blocks.GOLD_BLOCK.defaultBlockState());
             }
         }
     }
@@ -301,15 +301,15 @@ public final class Dungeon {
         if (type == 2) { moonPuzzle(c, r, i); return; }
         int y = floorY;
         int answer = (int) (Noise.rand(i, index, 41, ex * 31L + ez) * 4);
-        c.set(r.cx(), y, r.z1(), ModBlocks.GLYPH_ALTAR.getDefaultState().with(com.cursedtides.block.GlyphBlock.GLYPH, answer));
+        c.set(r.cx(), y, r.z1(), ModBlocks.GLYPH_ALTAR.defaultBlockState().setValue(com.cursedtides.block.GlyphBlock.GLYPH, answer));
         int[][] spots = {{r.x1(), r.cz()}, {r.x2(), r.cz()}, {r.cx(), r.z2()}};
         for (int k = 0; k < spots.length; k++) {
             int start = (answer + 1 + (int) (Noise.rand(k, i, 43, ex * 17L + ez) * 3)) % 4; // never already solved
-            c.set(spots[k][0], y, spots[k][1], ModBlocks.GLYPH_STONE.getDefaultState().with(com.cursedtides.block.GlyphBlock.GLYPH, start));
+            c.set(spots[k][0], y, spots[k][1], ModBlocks.GLYPH_STONE.defaultBlockState().setValue(com.cursedtides.block.GlyphBlock.GLYPH, start));
         }
         int chx = r.cx(), chz = r.cz();
         c.chest(chx, y, chz, Direction.SOUTH, LOOT, new ItemStack(Items.GOLD_INGOT, 3));
-        BlockState seal = ModBlocks.RUNE_SEAL.getDefaultState();
+        BlockState seal = ModBlocks.RUNE_SEAL.defaultBlockState();
         for (int dx = -1; dx <= 1; dx++) {
             for (int dz = -1; dz <= 1; dz++) {
                 if (dx == 0 && dz == 0) c.set(chx, y + 1, chz, seal);
@@ -321,17 +321,17 @@ public final class Dungeon {
     /** A song altar and four chime stones; play the altar's tune to break the seals around the chest. */
     private void chimePuzzle(Canvas c, Room r, int i) {
         int y = floorY;
-        c.set(r.cx(), y, r.z1(), ModBlocks.SONG_ALTAR.getDefaultState());
+        c.set(r.cx(), y, r.z1(), ModBlocks.SONG_ALTAR.defaultBlockState());
         int[][] spots = {{r.x1(), r.cz() - 1}, {r.x1(), r.cz() + 1}, {r.x2(), r.cz() - 1}, {r.x2(), r.cz() + 1}};
         for (int k = 0; k < 4; k++) {
-            c.set(spots[k][0], y, spots[k][1], ModBlocks.CHIME_STONE.getDefaultState().with(com.cursedtides.block.PuzzleBlocks.ChimeStoneBlock.NOTE, k));
+            c.set(spots[k][0], y, spots[k][1], ModBlocks.CHIME_STONE.defaultBlockState().setValue(com.cursedtides.block.PuzzleBlocks.ChimeStoneBlock.NOTE, k));
         }
-        sealedChest(c, r, ModBlocks.RUNE_SEAL.getDefaultState());
+        sealedChest(c, r, ModBlocks.RUNE_SEAL.defaultBlockState());
     }
 
     /** A chest behind moon seals: they only open at night. */
     private void moonPuzzle(Canvas c, Room r, int i) {
-        sealedChest(c, r, ModBlocks.MOON_SEAL.getDefaultState());
+        sealedChest(c, r, ModBlocks.MOON_SEAL.defaultBlockState());
         guard(c, r.x1() + 0.5, floorY, r.z1() + 0.5, theme.mob(i));
     }
 
@@ -353,16 +353,16 @@ public final class Dungeon {
             double n = Noise.rand(x, z, index * 7 + 331);
             switch (theme) {
                 case VOLCANIC -> {
-                    if (z == r.cz() && x != r.x1() && x != r.x2()) c.set(x, y - 1, z, Blocks.LAVA.getDefaultState());
-                    else if (n < 0.3) c.set(x, y - 1, z, Blocks.MAGMA_BLOCK.getDefaultState());
+                    if (z == r.cz() && x != r.x1() && x != r.x2()) c.set(x, y - 1, z, Blocks.LAVA.defaultBlockState());
+                    else if (n < 0.3) c.set(x, y - 1, z, Blocks.MAGMA_BLOCK.defaultBlockState());
                 }
-                case CRYPT, FORT, JUNGLE -> { if (n < 0.18) c.set(x, y + (n < 0.09 ? 0 : 3), z, Blocks.COBWEB.getDefaultState()); }
+                case CRYPT, FORT, JUNGLE -> { if (n < 0.18) c.set(x, y + (n < 0.09 ? 0 : 3), z, Blocks.COBWEB.defaultBlockState()); }
                 case BAYOU -> {
-                    if (n < 0.35) c.set(x, y - 1, z, Blocks.WATER.getDefaultState());
-                    else if (n < 0.5) c.set(x, y, z, Blocks.COBWEB.getDefaultState());
+                    if (n < 0.35) c.set(x, y - 1, z, Blocks.WATER.defaultBlockState());
+                    else if (n < 0.5) c.set(x, y, z, Blocks.COBWEB.defaultBlockState());
                 }
-                case SMUGGLER -> { if (n < 0.08) c.set(x, y, z, Blocks.TNT.getDefaultState()); }
-                default -> { if (n < 0.2) c.set(x, y - 1, z, Blocks.MAGMA_BLOCK.getDefaultState()); }
+                case SMUGGLER -> { if (n < 0.08) c.set(x, y, z, Blocks.TNT.defaultBlockState()); }
+                default -> { if (n < 0.2) c.set(x, y - 1, z, Blocks.MAGMA_BLOCK.defaultBlockState()); }
             }
         });
         spawner(c, r.cx(), y, r.cz(), theme.mob(i + 2));
@@ -370,15 +370,15 @@ public final class Dungeon {
 
     private void spawner(Canvas c, int x, int y, int z, EntityType<?> type) {
         if (!c.contains(x, z)) return;
-        c.set(x, y, z, Blocks.SPAWNER.getDefaultState());
-        StructureWorldAccess world = c.world();
-        if (world.getBlockEntity(new BlockPos(x, y, z)) instanceof MobSpawnerBlockEntity spawner) {
-            spawner.setEntityType(type, Random.create(Noise.hash(x, y, z, 401)));
+        c.set(x, y, z, Blocks.SPAWNER.defaultBlockState());
+        WorldGenLevel world = c.world();
+        if (world.getBlockEntity(new BlockPos(x, y, z)) instanceof SpawnerBlockEntity spawner) {
+            spawner.setEntityId(type, RandomSource.create(Noise.hash(x, y, z, 401)));
         }
     }
 
     private void guard(Canvas c, double x, int y, double z, EntityType<?> type) {
-        c.spawn(x, y, z, 0, w -> type.create(w));
+        c.spawn(x, y, z, 0, w -> type.create(w, EntitySpawnReason.EVENT));
     }
 
     /** A plate in the floor and a dispenser in the wall beside it. */
@@ -390,16 +390,16 @@ public final class Dungeon {
         int dz = k.alongX() ? mz + 2 : mz;
         Direction facing = k.alongX() ? Direction.NORTH : Direction.WEST;
         if (theme.flooded()) return; // no plates under water
-        c.set(px, floorY, pz, Blocks.STONE_PRESSURE_PLATE.getDefaultState());
-        c.set(dx, floorY, dz, Blocks.DISPENSER.getDefaultState().with(DispenserBlock.FACING, facing));
+        c.set(px, floorY, pz, Blocks.STONE_PRESSURE_PLATE.defaultBlockState());
+        c.set(dx, floorY, dz, Blocks.DISPENSER.defaultBlockState().setValue(DispenserBlock.FACING, facing));
         if (c.contains(dx, dz) && c.world().getBlockEntity(new BlockPos(dx, floorY, dz)) instanceof DispenserBlockEntity d) {
-            d.setStack(0, new ItemStack(Items.ARROW, 24));
+            d.setItem(0, new ItemStack(Items.ARROW, 24));
         }
     }
 
     /** Fill the corridor's cross-section next to the vault with Sealed Gate. */
     private void gate(Canvas c, Corridor k) {
-        BlockState gate = ModBlocks.SEALED_GATE.getDefaultState();
+        BlockState gate = ModBlocks.SEALED_GATE.defaultBlockState();
         if (k.alongX()) {
             c.fill(k.gateX(), floorY, k.gateZ() - 1, k.gateX(), floorY + 2, k.gateZ() + 1, gate);
         } else {
@@ -409,21 +409,21 @@ public final class Dungeon {
 
     private void miniBoss(Canvas c, Room r) {
         float health = 50 + tier * 30;
-        c.spawn(r.cx() + 0.5, floorY, r.cz() + 0.5, 0, w -> theme.bossType().create(w), entity -> {
-            if (!(entity instanceof MobEntity boss)) return;
-            boss.setCustomName(Text.literal(theme.bossName()).formatted(Formatting.GOLD));
+        c.spawn(r.cx() + 0.5, floorY, r.cz() + 0.5, 0, w -> theme.bossType().create(w, EntitySpawnReason.EVENT), entity -> {
+            if (!(entity instanceof Mob boss)) return;
+            boss.setCustomName(Component.literal(theme.bossName()).withStyle(ChatFormatting.GOLD));
             boss.setCustomNameVisible(true);
-            var maxHealth = boss.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
+            var maxHealth = boss.getAttribute(Attributes.MAX_HEALTH);
             if (maxHealth != null) {
                 maxHealth.setBaseValue(health);
                 boss.setHealth(health);
             }
-            var armor = boss.getAttributeInstance(EntityAttributes.GENERIC_ARMOR);
+            var armor = boss.getAttribute(Attributes.ARMOR);
             if (armor != null) {
                 armor.setBaseValue(4 + tier * 2);
             }
-            boss.equipStack(EquipmentSlot.HEAD, new ItemStack(Items.IRON_HELMET));
-            boss.setEquipmentDropChance(EquipmentSlot.HEAD, 0.0f);
+            boss.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.IRON_HELMET));
+            boss.setDropChance(EquipmentSlot.HEAD, 0.0f);
         });
     }
 }

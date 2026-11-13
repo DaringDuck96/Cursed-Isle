@@ -1,12 +1,11 @@
 package com.cursedtides.item;
 
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.tooltip.TooltipType;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-
 import java.util.List;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 
 /** Signed articles for one hand. Right-click your ship and they come aboard. */
 public class CrewArticlesItem extends Item {
@@ -19,7 +18,7 @@ public class CrewArticlesItem extends Item {
 
     private final int role;
 
-    public CrewArticlesItem(int role, Settings settings) {
+    public CrewArticlesItem(int role, Properties settings) {
         super(settings);
         this.role = role;
     }
@@ -29,9 +28,11 @@ public class CrewArticlesItem extends Item {
     }
 
     @Override
-    public void appendTooltip(ItemStack stack, TooltipContext context, List<Text> tooltip, TooltipType type) {
-        tooltip.add(Text.literal("Hires a " + ROLES[role] + ". " + DUTIES[role]).formatted(Formatting.GRAY));
-        tooltip.add(Text.literal("Wages: 2 doubloons a day from the cargo hold.").formatted(Formatting.DARK_GRAY));
-        tooltip.add(Text.literal("Right-click your ship to sign them on.").formatted(Formatting.DARK_GRAY));
+    public void appendHoverText(ItemStack stack, TooltipContext context, net.minecraft.world.item.component.TooltipDisplay display__, java.util.function.Consumer<Component> adder__, TooltipFlag type) {
+        java.util.List<Component> tooltip = new java.util.ArrayList<>();
+        tooltip.add(Component.literal("Hires a " + ROLES[role] + ". " + DUTIES[role]).withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.literal("Wages: 2 doubloons a day from the cargo hold.").withStyle(ChatFormatting.DARK_GRAY));
+        tooltip.add(Component.literal("Right-click your ship to sign them on.").withStyle(ChatFormatting.DARK_GRAY));
+        tooltip.forEach(adder__);
     }
 }

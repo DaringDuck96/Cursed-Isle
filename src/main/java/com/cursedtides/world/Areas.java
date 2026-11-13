@@ -1,11 +1,11 @@
 package com.cursedtides.world;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.CampfireBlock;
-
+import net.minecraft.world.item.DyeColor;
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.CampfireBlock;
+import net.minecraft.world.level.block.state.BlockState;
 
 /**
  * The named wilds. Each island's hinterland is divided into three areas with names of their own (the Weeping
@@ -83,8 +83,8 @@ public final class Areas {
         }
     }
 
-    private static BlockState s(net.minecraft.block.Block b) {
-        return b.getDefaultState();
+    private static BlockState s(net.minecraft.world.level.block.Block b) {
+        return b.defaultBlockState();
     }
 
     private static void landmark(Canvas c, Area a) {
@@ -102,7 +102,7 @@ public final class Areas {
                 }
                 c.set(x, y + 1, z + 3, s(Blocks.AIR));
                 c.set(x, y, z + 3, s(Blocks.AIR));
-                c.chest(x - 2, y, z - 2, net.minecraft.util.math.Direction.SOUTH, Builds.TREASURE);
+                c.chest(x - 2, y, z - 2, net.minecraft.core.Direction.SOUTH, Builds.TREASURE);
             }
             case 1 -> { // standing stones
                 for (int k = 0; k < 7; k++) {
@@ -113,20 +113,20 @@ public final class Areas {
                     c.fill(px, py, pz, px, py + h - 1, pz, s(Blocks.MOSSY_COBBLESTONE));
                 }
                 c.set(x, y - 1, z, s(Blocks.CHISELED_STONE_BRICKS));
-                c.set(x, y, z, s(Blocks.SOUL_CAMPFIRE).with(CampfireBlock.LIT, true));
+                c.set(x, y, z, s(Blocks.SOUL_CAMPFIRE).setValue(CampfireBlock.LIT, true));
             }
             case 2 -> { // an abandoned camp
                 for (int[] k : new int[][]{{-3, -2}, {3, 2}}) {
                     int tx = x + k[0], tz = z + k[1], ty = Builds.floorAt(tx, tz);
-                    c.fill(tx - 1, ty, tz - 1, tx + 1, ty, tz + 1, s(Blocks.BROWN_WOOL));
+                    c.fill(tx - 1, ty, tz - 1, tx + 1, ty, tz + 1, s(Blocks.WOOL.pick(DyeColor.BROWN)));
                     c.fill(tx - 1, ty, tz, tx + 1, ty, tz, s(Blocks.AIR));
-                    c.set(tx, ty + 1, tz - 1, s(Blocks.BROWN_WOOL));
-                    c.set(tx, ty + 1, tz + 1, s(Blocks.BROWN_WOOL));
+                    c.set(tx, ty + 1, tz - 1, s(Blocks.WOOL.pick(DyeColor.BROWN)));
+                    c.set(tx, ty + 1, tz + 1, s(Blocks.WOOL.pick(DyeColor.BROWN)));
                     c.set(tx, ty + 1, tz, s(Blocks.AIR));
                 }
-                c.set(x, y, z, s(Blocks.CAMPFIRE).with(CampfireBlock.LIT, false));
+                c.set(x, y, z, s(Blocks.CAMPFIRE).setValue(CampfireBlock.LIT, false));
                 c.set(x + 2, y, z - 2, s(Blocks.BARREL));
-                c.chest(x - 2, y, z + 2, net.minecraft.util.math.Direction.NORTH, Builds.TREASURE);
+                c.chest(x - 2, y, z + 2, net.minecraft.core.Direction.NORTH, Builds.TREASURE);
             }
             default -> { // a forgotten shrine
                 c.foundation(x - 2, z - 2, x + 2, z + 2, y, s(Blocks.COBBLESTONE));

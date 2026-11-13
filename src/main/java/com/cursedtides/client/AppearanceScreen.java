@@ -3,11 +3,11 @@ package com.cursedtides.client;
 import com.cursedtides.appearance.Appearance;
 import com.cursedtides.appearance.Look;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.ingame.InventoryScreen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.network.chat.Component;
 
 /** The looking glass: build your pirate's face, hair and clothes, and see them turn in the mirror. */
 public class AppearanceScreen extends Screen {
@@ -18,7 +18,7 @@ public class AppearanceScreen extends Screen {
     private final int accessories;
 
     public AppearanceScreen(int code) {
-        super(Text.literal("The Looking Glass"));
+        super(Component.literal("The Looking Glass"));
         this.enabled = true;
         this.slim = Look.slim(code);
         values[0] = Look.tone(code);
@@ -44,22 +44,22 @@ public class AppearanceScreen extends Screen {
         int x = width / 2 + 10, y = height / 2 - 92;
         for (int i = 0; i < 6; i++) {
             final int idx = i;
-            addDrawableChild(ButtonWidget.builder(Text.literal("<"), b -> cycle(idx, -1)).dimensions(x, y + i * 24, 20, 20).build());
-            addDrawableChild(ButtonWidget.builder(Text.literal(">"), b -> cycle(idx, 1)).dimensions(x + 140, y + i * 24, 20, 20).build());
+            addRenderableWidget(Button.builder(Component.literal("<"), b -> cycle(idx, -1)).bounds(x, y + i * 24, 20, 20).build());
+            addRenderableWidget(Button.builder(Component.literal(">"), b -> cycle(idx, 1)).bounds(x + 140, y + i * 24, 20, 20).build());
         }
-        addDrawableChild(ButtonWidget.builder(Text.literal(slim ? "Build: slight" : "Build: broad"), b -> {
+        addRenderableWidget(Button.builder(Component.literal(slim ? "Build: slight" : "Build: broad"), b -> {
             slim = !slim;
             updatePreview();
-            clearAndInit();
-        }).dimensions(x, y + 6 * 24, 160, 20).build());
-        addDrawableChild(ButtonWidget.builder(Text.literal("Use my own skin"), b -> {
+            rebuildWidgets();
+        }).bounds(x, y + 6 * 24, 160, 20).build());
+        addRenderableWidget(Button.builder(Component.literal("Use my own skin"), b -> {
             ClientPlayNetworking.send(new Appearance.Set(0));
-            close();
-        }).dimensions(x, y + 7 * 24, 78, 20).build());
-        addDrawableChild(ButtonWidget.builder(Text.literal("§6Done"), b -> {
+            onClose();
+        }).bounds(x, y + 7 * 24, 78, 20).build());
+        addRenderableWidget(Button.builder(Component.literal("§6Done"), b -> {
             ClientPlayNetworking.send(new Appearance.Set(pack()));
-            close();
-        }).dimensions(x + 82, y + 7 * 24, 78, 20).build());
+            onClose();
+        }).bounds(x + 82, y + 7 * 24, 78, 20).build());
     }
 
     private void cycle(int idx, int dir) {
@@ -69,26 +69,26 @@ public class AppearanceScreen extends Screen {
     }
 
     @Override
-    public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
-        super.renderBackground(ctx, mouseX, mouseY, delta);
-        super.render(ctx, mouseX, mouseY, delta);
-        ctx.drawCenteredTextWithShadow(textRenderer, Text.literal("§6§lThe Looking Glass"), width / 2, height / 2 - 112, 0xFFFFFF);
+    public void extractRenderState(GuiGraphicsExtractor ctx, int mouseX, int mouseY, float delta) {
+        super.extractBackground(ctx, mouseX, mouseY, delta);
+        super.extractRenderState(ctx, mouseX, mouseY, delta);
+        ctx.centeredText(font, Component.literal("§6§lThe Looking Glass"), width / 2, height / 2 - 112, 0xFFFFFFFF);
         int x = width / 2 + 10, y = height / 2 - 92;
         for (int i = 0; i < 6; i++) {
-            ctx.drawCenteredTextWithShadow(textRenderer, Text.literal("§7" + LABELS[i] + ": §f" + OPTIONS[i][values[i]]),
-                    x + 80, y + i * 24 + 6, 0xFFFFFF);
+            ctx.centeredText(font, Component.literal("§7" + LABELS[i] + ": §f" + OPTIONS[i][values[i]]),
+                    x + 80, y + i * 24 + 6, 0xFFFFFFFF);
         }
-        if (client != null && client.player != null) {
+        if (minecraft != null && minecraft.player != null) {
             int px = width / 2 - 140, py = height / 2 - 100;
             ctx.fill(px, py, px + 120, py + 190, 0x88202020);
-            InventoryScreen.drawEntity(ctx, px, py, px + 120, py + 190, 70, 0.0625f, mouseX, mouseY, client.player);
+            InventoryScreen.extractEntityInInventoryFollowsMouse(ctx, px, py, px + 120, py + 190, 70, 0.0625f, mouseX, mouseY, minecraft.player);
         }
-        ctx.drawCenteredTextWithShadow(textRenderer, Text.literal("§8Rings, patches and bandanas show once worn."),
-                width / 2, height / 2 + 104, 0xFFFFFF);
+        ctx.centeredText(font, Component.literal("§8Rings, patches and bandanas show once worn."),
+                width / 2, height / 2 + 104, 0xFFFFFFFF);
     }
 
     @Override
-    public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void extractBackground(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
     }
 
     @Override
@@ -98,7 +98,7 @@ public class AppearanceScreen extends Screen {
     }
 
     @Override
-    public boolean shouldPause() {
+    public boolean isPauseScreen() {
         return false;
     }
 }

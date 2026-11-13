@@ -1,23 +1,24 @@
 package com.cursedtides.activity;
 
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntityTypes;
 import com.cursedtides.living.Residents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.decoration.ArmorStandEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.particle.ParticleTypes;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.phys.Vec3;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -32,17 +33,17 @@ public final class ShootingRange {
     private static final int LENGTH = 20 * 60;
 
     private static final class Round {
-        final UUID player; final Vec3d spot; int ticks; int score; int hits; UUID target; int targetAge;
-        Round(UUID player, Vec3d spot) { this.player = player; this.spot = spot; }
+        final UUID player; final Vec3 spot; int ticks; int score; int hits; UUID target; int targetAge;
+        Round(UUID player, Vec3 spot) { this.player = player; this.spot = spot; }
     }
     private static final Map<UUID, Round> ROUNDS = new HashMap<>();
 
-    public static List<String> start(ServerPlayerEntity p, Entity master) {
-        if (ROUNDS.containsKey(p.getUuid())) return List.of("You're mid-round. Shoot!");
-        if (p.getInventory().count(com.cursedtides.item.ModItems.PISTOL_SHOT) < 10) {
-            p.giveItemStack(new ItemStack(com.cursedtides.item.ModItems.PISTOL_SHOT, 16));
+    public static List<String> start(ServerPlayer p, Entity master) {
+        if (ROUNDS.containsKey(p.getUUID())) return List.of("You're mid-round. Shoot!");
+        if (p.getInventory().countItem(com.cursedtides.item.ModItems.PISTOL_SHOT) < 10) {
+            p.addItem(new ItemStack(com.cursedtides.item.ModItems.PISTOL_SHOT, 16));
         }
-        ROUNDS.put(p.getUuid(), new Round(p.getUuid(), p.getPos()));
+        ROUNDS.put(p.getUUID(), new Round(p.getUUID(), p.position()));
         return List.of("Sixty seconds on the clock. Targets pop up downrange; the farther they stand and the faster you drop them, the more they're worth.",
                 "Any firearm will do. I've put some shot in your pouch. Go!");
     }
@@ -52,20 +53,20 @@ public final class ShootingRange {
     }
 
     /** Called by firearms with everything a shot struck. */
-    public static void onShot(ServerPlayerEntity p, Collection<Entity> struck) {
-        Round r = ROUNDS.get(p.getUuid());
+    public static void onShot(ServerPlayer p, Collection<Entity> struck) {
+        Round r = ROUNDS.get(p.getUUID());
         if (r == null || r.target == null) return;
         for (Entity e : struck) {
-            if (!e.getUuid().equals(r.target)) continue;
+            if (!e.getUUID().equals(r.target)) continue;
             double dist = p.distanceTo(e);
             int points = (int) Math.round(dist / 2.0) + Math.max(0, 6 - r.targetAge / 10);
             r.score += points;
             r.hits++;
             Challenges.progress(p, "range", 1);
-            ServerWorld w = p.getServerWorld();
-            w.spawnParticles(ParticleTypes.CRIT, e.getX(), e.getY() + 1.4, e.getZ(), 20, 0.2, 0.3, 0.2, 0.3);
-            w.playSound(null, p.getBlockPos(), SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), SoundCategory.PLAYERS, 1f, 1.6f);
-            p.sendMessage(Text.literal("+" + points + "  (" + r.score + ")").formatted(Formatting.GOLD), true);
+            ServerLevel w = p.level();
+            w.sendParticles(ParticleTypes.CRIT, e.getX(), e.getY() + 1.4, e.getZ(), 20, 0.2, 0.3, 0.2, 0.3);
+            w.playSound(null, p.blockPosition(), SoundEvents.NOTE_BLOCK_BELL.value(), SoundSource.PLAYERS, 1f, 1.6f);
+            p.sendSystemMessage(Component.literal("+" + points + "  (" + r.score + ")").withStyle(ChatFormatting.GOLD), true);
             e.discard();
             r.target = null;
             return;
@@ -75,11 +76,11 @@ public final class ShootingRange {
     private static void tick(MinecraftServer server) {
         if (ROUNDS.isEmpty()) return;
         for (Round r : List.copyOf(ROUNDS.values())) {
-            ServerPlayerEntity p = server.getPlayerManager().getPlayer(r.player);
-            ServerWorld w = p == null ? server.getOverworld() : p.getServerWorld();
+            ServerPlayer p = server.getPlayerList().getPlayer(r.player);
+            ServerLevel w = p == null ? server.overworld() : p.level();
             r.ticks++;
             r.targetAge++;
-            if (p == null || r.ticks >= LENGTH || p.getPos().squaredDistanceTo(r.spot) > 16 * 16) {
+            if (p == null || r.ticks >= LENGTH || p.position().distanceToSqr(r.spot) > 16 * 16) {
                 removeTarget(w, r);
                 ROUNDS.remove(r.player);
                 if (p != null) end(p, r);
@@ -89,42 +90,42 @@ public final class ShootingRange {
                 removeTarget(w, r);
                 spawnTarget(w, p, r);
             }
-            if (r.ticks % 200 == 0) p.sendMessage(Text.literal((LENGTH - r.ticks) / 20 + "s left, " + r.score + " points").formatted(Formatting.GRAY), true);
+            if (r.ticks % 200 == 0) p.sendSystemMessage(Component.literal((LENGTH - r.ticks) / 20 + "s left, " + r.score + " points").withStyle(ChatFormatting.GRAY), true);
         }
     }
 
-    private static void spawnTarget(ServerWorld w, ServerPlayerEntity p, Round r) {
-        Vec3d look = p.getRotationVec(1f).multiply(1, 0, 1).normalize();
-        double dist = 10 + w.random.nextInt(18);
-        double side = (w.random.nextDouble() - 0.5) * 16;
-        Vec3d aim = r.spot.add(look.multiply(dist)).add(look.z * side, 0, -look.x * side);
+    private static void spawnTarget(ServerLevel w, ServerPlayer p, Round r) {
+        Vec3 look = p.getViewVector(1f).multiply(1, 0, 1).normalize();
+        double dist = 10 + w.getRandom().nextInt(18);
+        double side = (w.getRandom().nextDouble() - 0.5) * 16;
+        Vec3 aim = r.spot.add(look.scale(dist)).add(look.z * side, 0, -look.x * side);
         BlockPos at = Residents.openGround(w, (int) aim.x, (int) aim.z, 4);
         if (at == null) return;
-        ArmorStandEntity stand = EntityType.ARMOR_STAND.create(w);
+        ArmorStand stand = EntityTypes.ARMOR_STAND.create(w, EntitySpawnReason.EVENT);
         if (stand == null) return;
-        stand.refreshPositionAndAngles(at.getX() + 0.5, at.getY(), at.getZ() + 0.5, p.getYaw() + 180, 0);
-        stand.equipStack(net.minecraft.entity.EquipmentSlot.HEAD, new ItemStack(Items.HAY_BLOCK));
-        stand.setInvulnerable(true);
-        stand.addCommandTag(TAG);
-        Residents.markTransient(stand, w.getTime() + 400);
-        w.spawnEntity(stand);
-        w.spawnParticles(ParticleTypes.POOF, stand.getX(), stand.getY() + 1, stand.getZ(), 8, 0.2, 0.5, 0.2, 0.01);
-        r.target = stand.getUuid();
+        stand.snapTo(at.getX() + 0.5, at.getY(), at.getZ() + 0.5, p.getYRot() + 180, 0);
+        stand.setItemSlot(net.minecraft.world.entity.EquipmentSlot.HEAD, new ItemStack(Items.HAY_BLOCK));
+        stand.setPermanentlyInvulnerable(true);
+        stand.addTag(TAG);
+        Residents.markTransient(stand, w.getGameTime() + 400);
+        w.addFreshEntity(stand);
+        w.sendParticles(ParticleTypes.POOF, stand.getX(), stand.getY() + 1, stand.getZ(), 8, 0.2, 0.5, 0.2, 0.01);
+        r.target = stand.getUUID();
         r.targetAge = 0;
     }
 
-    private static void removeTarget(ServerWorld w, Round r) {
+    private static void removeTarget(ServerLevel w, Round r) {
         if (r.target == null) return;
         Entity e = w.getEntity(r.target);
         if (e != null) e.discard();
         r.target = null;
     }
 
-    private static void end(ServerPlayerEntity p, Round r) {
-        p.sendMessage(Text.literal("Cease fire! " + r.hits + " hits, " + r.score + " points.").formatted(Formatting.GOLD, Formatting.BOLD), false);
-        if (Leaderboards.submit(p, "range", r.score) && r.score > 0) p.sendMessage(Text.literal("A personal best!").formatted(Formatting.YELLOW), false);
+    private static void end(ServerPlayer p, Round r) {
+        p.sendSystemMessage(Component.literal("Cease fire! " + r.hits + " hits, " + r.score + " points.").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), false);
+        if (Leaderboards.submit(p, "range", r.score) && r.score > 0) p.sendSystemMessage(Component.literal("A personal best!").withStyle(ChatFormatting.YELLOW), false);
         if (r.score >= 100) Achievements.grant(p, "sharpshooter");
-        if (r.score > 0) p.giveItemStack(new ItemStack(com.cursedtides.item.ModItems.DOUBLOON, Math.min(20, r.score / 10)));
+        if (r.score > 0) p.addItem(new ItemStack(com.cursedtides.item.ModItems.DOUBLOON, Math.min(20, r.score / 10)));
         com.cursedtides.pirate.PirateData.addXp(p, com.cursedtides.pirate.Weapon.PISTOL, r.score);
     }
 }

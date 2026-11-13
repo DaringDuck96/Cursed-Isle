@@ -1,13 +1,12 @@
 package com.cursedtides.client;
 
-import net.minecraft.client.render.entity.EntityRenderer;
-import net.minecraft.client.render.entity.EntityRendererFactory;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.text.Text;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
+import net.minecraft.client.renderer.entity.EntityRenderer;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.Mob;
 
 /**
  * The bosses are vanilla creatures under a name (a drowned called the Tide Sovereign, a ravager called the Slag
@@ -48,20 +47,23 @@ public final class BossLooks {
             {"Siren of the Shoals", "siren"},
     };
 
-    private static final Map<String, EntityRenderer<? extends MobEntity>> RENDERERS = new LinkedHashMap<>();
+    public static final net.fabricmc.fabric.api.client.rendering.v1.RenderStateDataKey<EntityRenderer<?, ?>> RENDERER =
+            net.fabricmc.fabric.api.client.rendering.v1.RenderStateDataKey.create(() -> "cursedtides:boss_renderer");
+
+    private static final Map<String, EntityRenderer<?, ?>> RENDERERS = new LinkedHashMap<>();
 
     /** Called from a renderer factory, so it runs on every resource reload with a live context. */
-    public static <R> R rebuild(EntityRendererFactory.Context ctx, R passThrough) {
+    public static <R> R rebuild(EntityRendererProvider.Context ctx, R passThrough) {
         RENDERERS.clear();
         for (String[] n : NAMES) {
             String id = n[1];
             String[] parts = WorkshopModels.parts(id);
-            EntityRenderer<? extends MobEntity> r;
+            EntityRenderer<?, ?> r;
             if (parts == null) {
-                r = WorkshopBipedRenderer.<MobEntity>single(ctx, id);
+                r = WorkshopBipedRenderer.<Mob>single(ctx, id);
             } else {
                 float scale = id.equals("abyssal") ? 1.6f : id.equals("reach_serpent") ? 0.55f : 1.0f;
-                r = new CreatureRenderer<MobEntity>(ctx, WorkshopModels.layer(id), parts, 1.0f, scale, e -> id, "workshop");
+                r = new CreatureRenderer<Mob>(ctx, WorkshopModels.layer(id), parts, 1.0f, scale, e -> id, "workshop");
             }
             RENDERERS.put(n[0], r);
         }
@@ -69,9 +71,9 @@ public final class BossLooks {
     }
 
     /** The boss renderer for this entity, or null to draw it as usual. */
-    public static EntityRenderer<?> forEntity(Entity entity) {
-        if (!(entity instanceof MobEntity) || !entity.hasCustomName() || RENDERERS.isEmpty()) return null;
-        Text name = entity.getCustomName();
+    public static EntityRenderer<?, ?> forEntity(Entity entity) {
+        if (!(entity instanceof Mob) || !entity.hasCustomName() || RENDERERS.isEmpty()) return null;
+        Component name = entity.getCustomName();
         if (name == null) return null;
         String s = name.getString();
         for (String[] n : NAMES) {

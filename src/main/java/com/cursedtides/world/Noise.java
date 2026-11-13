@@ -1,6 +1,6 @@
 package com.cursedtides.world;
 
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.Mth;
 
 /**
  * Fixed-seed hash noise. The archipelago does not use the world seed, so every
@@ -30,8 +30,8 @@ public final class Noise {
 
     /** Smooth value noise, 0..1. */
     public static double value(double x, double z, long seed) {
-        int x0 = MathHelper.floor(x);
-        int z0 = MathHelper.floor(z);
+        int x0 = Mth.floor(x);
+        int z0 = Mth.floor(z);
         double fx = x - x0;
         double fz = z - z0;
         fx = fx * fx * (3 - 2 * fx);
@@ -40,6 +40,6 @@ public final class Noise {
         double b = rand(x0 + 1, z0, seed);
         double c = rand(x0, z0 + 1, seed);
         double d = rand(x0 + 1, z0 + 1, seed);
-        return MathHelper.lerp(fz, MathHelper.lerp(fx, a, b), MathHelper.lerp(fx, c, d));
+        return Mth.lerp(fz, Mth.lerp(fx, a, b), Mth.lerp(fx, c, d));
     }
 }

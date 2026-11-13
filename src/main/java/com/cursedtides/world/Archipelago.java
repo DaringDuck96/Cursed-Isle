@@ -1,12 +1,11 @@
 package com.cursedtides.world;
 
 import com.cursedtides.CursedTides;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.world.biome.Biome;
-
 import java.util.List;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.biome.Biome;
 
 /**
  * The fixed layout of the Shattered Reach: thirty islands at set coordinates, at the old pirate games' scale.
@@ -15,7 +14,7 @@ import java.util.List;
 public final class Archipelago {
     private Archipelago() {}
 
-    public static final RegistryKey<Biome> BIOME = RegistryKey.of(RegistryKeys.BIOME, CursedTides.id("cursed_sea"));
+    public static final ResourceKey<Biome> BIOME = ResourceKey.create(Registries.BIOME, CursedTides.id("cursed_sea"));
 
     public static final int SEA_FLOOR = 38;
     public static final int WATER_TOP = 62;
@@ -293,14 +292,14 @@ public final class Archipelago {
                 // Low, flat mud flats broken by shallow black-water pools, dropping off at the edges.
                 double n = Noise.value(x / 9.0, z / 9.0, seed + 11);
                 double land = n > 0.42 ? (n > 0.74 ? 64 : 63) : 60;
-                double edge = MathHelper.clamp((d - 0.8) / 0.2, 0.0, 1.0);
+                double edge = Mth.clamp((d - 0.8) / 0.2, 0.0, 1.0);
                 h = land * (1.0 - edge) + SEA_FLOOR * edge;
             }
 
             if (is.style() == Style.KEYS) {
                 // Islets wherever the noise rises, over shallows of white sand
                 double n = Noise.value(x / 13.0, z / 13.0, seed + 13);
-                double edge = MathHelper.clamp((d - 0.85) / 0.15, 0.0, 1.0);
+                double edge = Mth.clamp((d - 0.85) / 0.15, 0.0, 1.0);
                 double land = n > 0.56 ? WATER_TOP + 1 + Math.min(7, (n - 0.56) * 45) : 57 + n * 3;
                 h = land * (1.0 - edge) + SEA_FLOOR * edge;
             } else if (is.style() == Style.ATOLL) {

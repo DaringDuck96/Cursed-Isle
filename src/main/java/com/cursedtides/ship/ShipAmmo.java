@@ -1,7 +1,7 @@
 package com.cursedtides.ship;
 
 import com.cursedtides.item.ModItems;
-import net.minecraft.item.Item;
+import net.minecraft.world.item.Item;
 
 /** What the ship's guns are loaded with. Cycle with C while aboard. */
 public enum ShipAmmo {

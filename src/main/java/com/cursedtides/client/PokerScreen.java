@@ -2,26 +2,26 @@ package com.cursedtides.client;
 
 import com.cursedtides.poker.PokerTables;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
 
 /** A Hold'em table seen from your chair: you at the bottom, three opponents around the felt. */
 public class PokerScreen extends Screen {
     private static final int FELT = 0xFF1E5B35, FELT_EDGE = 0xFF5A3A1E, CARD = 0xFFF4EFE2, CARD_BACK = 0xFF7A1F25;
 
-    private NbtCompound state;
-    private ButtonWidget fold, call, raiseSmall, raisePot, allIn, deal, leave;
+    private CompoundTag state;
+    private Button fold, call, raiseSmall, raisePot, allIn, deal, leave;
 
-    public PokerScreen(NbtCompound state) {
-        super(Text.literal("Hold'em"));
+    public PokerScreen(CompoundTag state) {
+        super(Component.literal("Hold'em"));
         this.state = state;
     }
 
-    public void update(NbtCompound state) {
+    public void update(CompoundTag state) {
         this.state = state;
         refreshButtons();
     }
@@ -34,38 +34,38 @@ public class PokerScreen extends Screen {
     protected void init() {
         int y = this.height - 28;
         int x = this.width / 2 - 215;
-        fold = addDrawableChild(ButtonWidget.builder(Text.literal("Fold"), b -> send(0, 0)).dimensions(x, y, 60, 20).build());
-        call = addDrawableChild(ButtonWidget.builder(Text.literal("Check"), b -> send(1, 0)).dimensions(x + 64, y, 80, 20).build());
-        raiseSmall = addDrawableChild(ButtonWidget.builder(Text.literal("Raise"), b -> send(2, state.getInt("MinRaiseTo")))
-                .dimensions(x + 148, y, 80, 20).build());
-        raisePot = addDrawableChild(ButtonWidget.builder(Text.literal("Raise pot"),
-                b -> send(2, state.getInt("CurrentBet") + Math.max(state.getInt("Pot"), state.getInt("MinRaiseTo") - state.getInt("CurrentBet"))))
-                .dimensions(x + 232, y, 70, 20).build());
-        allIn = addDrawableChild(ButtonWidget.builder(Text.literal("All-in"), b -> send(3, 0)).dimensions(x + 306, y, 54, 20).build());
-        deal = addDrawableChild(ButtonWidget.builder(Text.literal("Deal"), b -> send(PokerTables.DEAL, 0)).dimensions(x + 364, y, 66, 20).build());
-        leave = addDrawableChild(ButtonWidget.builder(Text.literal("Cash out"), b -> send(PokerTables.LEAVE, 0))
-                .dimensions(this.width - 70, 6, 64, 20).build());
+        fold = addRenderableWidget(Button.builder(Component.literal("Fold"), b -> send(0, 0)).bounds(x, y, 60, 20).build());
+        call = addRenderableWidget(Button.builder(Component.literal("Check"), b -> send(1, 0)).bounds(x + 64, y, 80, 20).build());
+        raiseSmall = addRenderableWidget(Button.builder(Component.literal("Raise"), b -> send(2, state.getIntOr("MinRaiseTo", 0)))
+                .bounds(x + 148, y, 80, 20).build());
+        raisePot = addRenderableWidget(Button.builder(Component.literal("Raise pot"),
+                b -> send(2, state.getIntOr("CurrentBet", 0) + Math.max(state.getIntOr("Pot", 0), state.getIntOr("MinRaiseTo", 0) - state.getIntOr("CurrentBet", 0))))
+                .bounds(x + 232, y, 70, 20).build());
+        allIn = addRenderableWidget(Button.builder(Component.literal("All-in"), b -> send(3, 0)).bounds(x + 306, y, 54, 20).build());
+        deal = addRenderableWidget(Button.builder(Component.literal("Deal"), b -> send(PokerTables.DEAL, 0)).bounds(x + 364, y, 66, 20).build());
+        leave = addRenderableWidget(Button.builder(Component.literal("Cash out"), b -> send(PokerTables.LEAVE, 0))
+                .bounds(this.width - 70, 6, 64, 20).build());
         refreshButtons();
     }
 
     private void refreshButtons() {
         if (fold == null) return;
-        boolean myTurn = state.getInt("Acting") == 0 && !state.getBoolean("HandOver");
-        int toCall = state.getInt("ToCall");
-        int myStack = state.getIntArray("Stacks").length > 0 ? state.getIntArray("Stacks")[0] : 0;
+        boolean myTurn = state.getIntOr("Acting", 0) == 0 && !state.getBooleanOr("HandOver", false);
+        int toCall = state.getIntOr("ToCall", 0);
+        int myStack = state.getIntArray("Stacks").orElse(new int[0]).length > 0 ? state.getIntArray("Stacks").orElse(new int[0])[0] : 0;
         fold.active = myTurn && toCall > 0;
         call.active = myTurn;
-        call.setMessage(Text.literal(toCall == 0 ? "Check" : "Call " + Math.min(toCall, myStack)));
+        call.setMessage(Component.literal(toCall == 0 ? "Check" : "Call " + Math.min(toCall, myStack)));
         raiseSmall.active = myTurn && myStack > toCall;
-        raiseSmall.setMessage(Text.literal((state.getInt("CurrentBet") == 0 ? "Bet " : "Raise to ") + state.getInt("MinRaiseTo")));
+        raiseSmall.setMessage(Component.literal((state.getIntOr("CurrentBet", 0) == 0 ? "Bet " : "Raise to ") + state.getIntOr("MinRaiseTo", 0)));
         raisePot.active = myTurn && myStack > toCall;
         allIn.active = myTurn && myStack > 0;
-        deal.active = state.getBoolean("HandOver");
+        deal.active = state.getBooleanOr("HandOver", false);
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        super.renderBackground(context, mouseX, mouseY, delta);
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+        super.extractBackground(context, mouseX, mouseY, delta);
         int cx = this.width / 2, cy = this.height / 2 - 14;
         int w = Math.min(380, this.width - 40), h = Math.min(170, this.height - 90);
 
@@ -74,54 +74,54 @@ public class PokerScreen extends Screen {
         roundRect(context, cx - w / 2, cy - h / 2, w, h, FELT);
 
         String[] names = names();
-        int[] stacks = state.getIntArray("Stacks"), bets = state.getIntArray("Bets"), flags = state.getIntArray("Flags");
-        int[] cards = state.getIntArray("Cards");
-        int acting = state.getInt("Acting"), dealer = state.getInt("Dealer");
+        int[] stacks = state.getIntArray("Stacks").orElse(new int[0]), bets = state.getIntArray("Bets").orElse(new int[0]), flags = state.getIntArray("Flags").orElse(new int[0]);
+        int[] cards = state.getIntArray("Cards").orElse(new int[0]);
+        int acting = state.getIntOr("Acting", 0), dealer = state.getIntOr("Dealer", 0);
         // seat positions: 0 bottom, 1 left, 2 top, 3 right
         int[][] pos = {{cx, cy + h / 2 - 22}, {cx - w / 2 + 50, cy}, {cx, cy - h / 2 + 22}, {cx + w / 2 - 50, cy}};
         for (int i = 0; i < names.length && i < 4; i++) {
             boolean folded = (flags[i] & 1) != 0, allIn = (flags[i] & 2) != 0;
             int px = pos[i][0], py = pos[i][1];
             String label = (i == dealer ? "§e(D) §r" : "") + (i == acting ? "§a▶ §r" : "") + names[i];
-            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(label), px, py - 26, folded ? 0x888888 : 0xFFFFFF);
-            context.drawCenteredTextWithShadow(this.textRenderer,
-                    Text.literal("§6" + stacks[i] + "§7 chips" + (allIn ? " §c(all-in)" : folded ? " §8(folded)" : "")), px, py - 16, 0xFFFFFF);
+            context.centeredText(this.font, Component.literal(label), px, py - 26, folded ? 0xFF888888 : 0xFFFFFFFF);
+            context.centeredText(this.font,
+                    Component.literal("§6" + stacks[i] + "§7 chips" + (allIn ? " §c(all-in)" : folded ? " §8(folded)" : "")), px, py - 16, 0xFFFFFFFF);
             drawCard(context, px - 17, py - 6, cards[i * 2], folded && i != 0);
             drawCard(context, px + 1, py - 6, cards[i * 2 + 1], folded && i != 0);
             if (bets[i] > 0) {
                 int bx = px + (cx - px) / 3, by = py + (cy - py) / 3 + 14;
-                context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("§f● " + bets[i]), bx, by, 0xFFFFFF);
+                context.centeredText(this.font, Component.literal("§f● " + bets[i]), bx, by, 0xFFFFFFFF);
             }
         }
 
         // Board and pot
-        int[] board = state.getIntArray("Board");
+        int[] board = state.getIntArray("Board").orElse(new int[0]);
         for (int i = 0; i < 5; i++) {
             int x = cx - 46 + i * 19;
             if (i < board.length) drawCard(context, x, cy - 12, board[i], false);
             else context.fill(x, cy - 12, x + 16, cy + 10, 0x40FFFFFF);
         }
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("§ePot " + state.getInt("Pot")), cx, cy + 14, 0xFFFFFF);
+        context.centeredText(this.font, Component.literal("§ePot " + state.getIntOr("Pot", 0)), cx, cy + 14, 0xFFFFFFFF);
 
         // Table talk
-        String[] log = state.getString("Log").split("\n");
+        String[] log = state.getStringOr("Log", "").split("\n");
         int ly = cy + h / 2 + 10;
         for (int i = Math.max(0, log.length - 3); i < log.length; i++) {
-            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("§7" + log[i]), cx, ly, 0xFFFFFF);
+            context.centeredText(this.font, Component.literal("§7" + log[i]), cx, ly, 0xFFFFFFFF);
             ly += 10;
         }
-        context.drawTextWithShadow(this.textRenderer, Text.literal("§6§lHold'em §r§7 blinds 1/2"), 8, 10, 0xFFFFFF);
-        super.render(context, mouseX, mouseY, delta);
+        context.text(this.font, Component.literal("§6§lHold'em §r§7 blinds 1/2"), 8, 10, 0xFFFFFFFF);
+        super.extractRenderState(context, mouseX, mouseY, delta);
     }
 
     private String[] names() {
-        var list = state.getList("Names", NbtElement.STRING_TYPE);
+        var list = state.getListOrEmpty("Names");
         String[] out = new String[list.size()];
-        for (int i = 0; i < out.length; i++) out[i] = list.getString(i);
+        for (int i = 0; i < out.length; i++) out[i] = list.getStringOr(i, "");
         return out;
     }
 
-    private void drawCard(DrawContext context, int x, int y, int card, boolean dim) {
+    private void drawCard(GuiGraphicsExtractor context, int x, int y, int card, boolean dim) {
         if (card < 0) {
             context.fill(x, y, x + 16, y + 22, 0xFF000000);
             context.fill(x + 1, y + 1, x + 15, y + 21, dim ? 0xFF3A2020 : CARD_BACK);
@@ -132,12 +132,12 @@ public class PokerScreen extends Screen {
         String[] ranks = {"2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"};
         String[] suits = {"♠", "♥", "♦", "♣"};
         int suit = card % 4;
-        int color = suit == 1 || suit == 2 ? 0xC0202A : 0x1A1A1A;
-        context.drawText(this.textRenderer, Text.literal(ranks[card / 4]), x + 2, y + 2, color, false);
-        context.drawText(this.textRenderer, Text.literal(suits[suit]), x + 5, y + 12, color, false);
+        int color = suit == 1 || suit == 2 ? 0xFFC0202A : 0xFF1A1A1A;
+        context.text(this.font, Component.literal(ranks[card / 4]), x + 2, y + 2, color, false);
+        context.text(this.font, Component.literal(suits[suit]), x + 5, y + 12, color, false);
     }
 
-    private static void roundRect(DrawContext context, int x, int y, int w, int h, int color) {
+    private static void roundRect(GuiGraphicsExtractor context, int x, int y, int w, int h, int color) {
         int r = Math.min(24, h / 3);
         context.fill(x + r, y, x + w - r, y + h, color);
         for (int i = 0; i < r; i++) {
@@ -153,18 +153,18 @@ public class PokerScreen extends Screen {
     }
 
     @Override
-    public boolean shouldPause() {
+    public boolean isPauseScreen() {
         return false;
     }
 
     @Override
-    public void close() {
+    public void onClose() {
         // Closing the screen doesn't leave the table; use Cash out. Talk to the dealer to come back.
-        super.close();
+        super.onClose();
     }
 
     /** Screen.render() draws the background itself, and 1.21 allows only one blur per frame: we draw it first, by hand. */
     @Override
-    public void renderBackground(net.minecraft.client.gui.DrawContext context, int mouseX, int mouseY, float delta) {
+    public void extractBackground(net.minecraft.client.gui.GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
     }
 }

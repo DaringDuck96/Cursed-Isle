@@ -6,44 +6,43 @@ import com.cursedtides.world.ModWorld;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.network.RegistryByteBuf;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.codec.PacketCodecs;
-import net.minecraft.network.packet.CustomPayload;
-import net.minecraft.server.network.ServerPlayerEntity;
-
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.server.level.ServerPlayer;
 import java.util.List;
 
-import static net.minecraft.server.command.CommandManager.literal;
+import static net.minecraft.commands.Commands.literal;
 
 /** The Encyclopedia of the Reach: every curio you've studied, plus the islands you've charted. */
 public final class Encyclopedia {
     private Encyclopedia() {}
 
-    public record Open(NbtCompound data) implements CustomPayload {
-        public static final Id<Open> ID = new Id<>(CursedTides.id("encyclopedia"));
-        public static final PacketCodec<RegistryByteBuf, Open> CODEC = PacketCodec.tuple(PacketCodecs.NBT_COMPOUND, Open::data, Open::new);
-        @Override public Id<? extends CustomPayload> getId() { return ID; }
+    public record Open(CompoundTag data) implements CustomPacketPayload {
+        public static final Type<Open> ID = new Type<>(CursedTides.id("encyclopedia"));
+        public static final StreamCodec<RegistryFriendlyByteBuf, Open> CODEC = StreamCodec.composite(ByteBufCodecs.COMPOUND_TAG, Open::data, Open::new);
+        @Override public Type<? extends CustomPacketPayload> type() { return ID; }
     }
 
     public static void register() {
-        PayloadTypeRegistry.playS2C().register(Open.ID, Open.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(Open.ID, Open.CODEC);
         CommandRegistrationCallback.EVENT.register((dispatcher, access, env) -> dispatcher.register(literal("encyclopedia").executes(ctx -> {
-            open(ctx.getSource().getPlayerOrThrow());
+            open(ctx.getSource().getPlayerOrException());
             return 1;
         })));
     }
 
-    public static void open(ServerPlayerEntity p) {
-        NbtCompound data = new NbtCompound();
-        NbtList pages = new NbtList();
+    public static void open(ServerPlayer p) {
+        CompoundTag data = new CompoundTag();
+        ListTag pages = new ListTag();
         List<String> found = p.getAttachedOrElse(Collectibles.FOUND, List.of());
         for (Collectibles.Kind kind : Collectibles.Kind.values()) {
             for (Collectibles.Entry e : Collectibles.ALL) {
                 if (e.kind() != kind) continue;
-                NbtCompound page = new NbtCompound();
+                CompoundTag page = new CompoundTag();
                 boolean have = found.contains(e.id());
                 page.putString("Section", kind.title + "s");
                 page.putString("Title", have ? e.title() : "???");
@@ -54,7 +53,7 @@ public final class Encyclopedia {
         }
         int mask = p.getAttachedOrElse(ModWorld.DISCOVERED, 0);
         for (int i = 0; i < Archipelago.ISLANDS.size(); i++) {
-            NbtCompound page = new NbtCompound();
+            CompoundTag page = new CompoundTag();
             boolean have = (mask & (1 << i)) != 0;
             var isle = Archipelago.ISLANDS.get(i);
             page.putString("Section", "Islands");

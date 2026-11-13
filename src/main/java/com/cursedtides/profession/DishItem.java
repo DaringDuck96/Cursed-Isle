@@ -1,37 +1,26 @@
 package com.cursedtides.profession;
 
+import net.minecraft.world.InteractionResult;
 import com.cursedtides.CursedTides;
 import com.cursedtides.pirate.PirateData;
-import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.FoodComponent;
-import net.minecraft.component.type.NbtComponent;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.effect.StatusEffect;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.item.tooltip.TooltipType;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Hand;
-import net.minecraft.util.Rarity;
-import net.minecraft.util.TypedActionResult;
-import net.minecraft.util.UseAction;
-import net.minecraft.world.World;
-
+import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.food.FoodProperties;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.ItemUseAnimation;
+import net.minecraft.world.level.Level;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,8 +32,8 @@ public class DishItem extends Item {
     private boolean drink;
     private int voodoo;
 
-    DishItem(Profession trade, FoodComponent food, int xp, ProfessionItems.Effect[] effects) {
-        super(new Item.Settings().maxCount(16).food(food));
+    DishItem(Profession trade, FoodProperties food, int xp, ProfessionItems.Effect[] effects) {
+        super(com.cursedtides.util.Reg.props().stacksTo(16).food(food));
         this.trade = trade;
         this.xp = xp;
         this.effects = effects;
@@ -54,47 +43,44 @@ public class DishItem extends Item {
     DishItem voodoo(int amount) { this.voodoo = amount; return this; }
 
     @Override
-    public UseAction getUseAction(ItemStack stack) {
-        return drink ? UseAction.DRINK : UseAction.EAT;
+    public ItemUseAnimation getUseAnimation(ItemStack stack) {
+        return drink ? ItemUseAnimation.DRINK : ItemUseAnimation.EAT;
     }
 
-    @Override
-    public SoundEvent getEatSound() {
-        return drink ? SoundEvents.ENTITY_GENERIC_DRINK : super.getEatSound();
-    }
 
     @Override
-    public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+    public InteractionResult use(Level world, Player user, InteractionHand hand) {
         // Drinks and tonics can be taken any time, even on a full stomach
-        user.setCurrentHand(hand);
-        return TypedActionResult.consume(user.getStackInHand(hand));
+        user.startUsingItem(hand);
+        return InteractionResult.CONSUME;
     }
 
     @Override
-    public ItemStack finishUsing(ItemStack stack, World world, LivingEntity user) {
-        if (!world.isClient) {
+    public ItemStack finishUsingItem(ItemStack stack, Level world, LivingEntity user) {
+        if (!world.isClientSide()) {
             double scale = switch (ProfessionItems.quality(stack)) { case 2 -> 2.0; case 1 -> 1.5; default -> 1.0; };
             for (ProfessionItems.Effect e : effects) {
-                boolean harmful = e.effect() == StatusEffects.NAUSEA;
+                boolean harmful = e.effect() == MobEffects.NAUSEA;
                 int ticks = harmful ? e.ticks() : (int) (e.ticks() * scale);
-                user.addStatusEffect(new StatusEffectInstance(e.effect(), ticks, e.amplifier()));
+                user.addEffect(new MobEffectInstance(e.effect(), ticks, e.amplifier()));
             }
-            if (voodoo > 0 && user instanceof PlayerEntity p) {
+            if (voodoo > 0 && user instanceof Player p) {
                 PirateData.regenVoodoo(p, (int) (voodoo * scale));
             }
         }
-        ItemStack rest = super.finishUsing(stack, world, user);
-        if (drink && user instanceof PlayerEntity p && !p.getAbilities().creativeMode) {
+        ItemStack rest = super.finishUsingItem(stack, world, user);
+        if (drink && user instanceof Player p && !p.getAbilities().instabuild) {
             ItemStack bottle = new ItemStack(Items.GLASS_BOTTLE);
             if (rest.isEmpty()) return bottle;
-            if (!p.getInventory().insertStack(bottle)) p.dropItem(bottle, false);
+            if (!p.getInventory().add(bottle)) p.drop(bottle, false, net.minecraft.util.Prediction.SERVER_ONLY);
         }
         return rest;
     }
 
     @Override
-    public void onCraftByPlayer(ItemStack stack, World world, PlayerEntity player) {
-        if (world.isClient || !(player instanceof ServerPlayerEntity sp)) return;
+    public void onCraftedBy(ItemStack stack, Player player) {
+        Level world = player.level();
+        if (world.isClientSide() || !(player instanceof ServerPlayer sp)) return;
         int level = ProfessionData.level(sp, trade);
         float roll = sp.getRandom().nextFloat();
         int q = roll < Math.max(0, level - 15) * 0.03f ? 2 : roll < level * 0.03f ? 1 : 0;
@@ -104,25 +90,27 @@ public class DishItem extends Item {
     }
 
     @Override
-    public Text getName(ItemStack stack) {
-        Text base = super.getName(stack);
+    public Component getName(ItemStack stack) {
+        Component base = super.getName(stack);
         return switch (ProfessionItems.quality(stack)) {
-            case 2 -> Text.literal("Masterwork ").append(base).formatted(Formatting.LIGHT_PURPLE);
-            case 1 -> Text.literal("Fine ").append(base).formatted(Formatting.AQUA);
+            case 2 -> Component.literal("Masterwork ").append(base).withStyle(ChatFormatting.LIGHT_PURPLE);
+            case 1 -> Component.literal("Fine ").append(base).withStyle(ChatFormatting.AQUA);
             default -> base;
         };
     }
 
     @Override
-    public void appendTooltip(ItemStack stack, TooltipContext context, List<Text> tooltip, TooltipType type) {
+    public void appendHoverText(ItemStack stack, TooltipContext context, net.minecraft.world.item.component.TooltipDisplay display__, java.util.function.Consumer<Component> adder__, TooltipFlag type) {
+        java.util.List<Component> tooltip = new java.util.ArrayList<>();
         double scale = switch (ProfessionItems.quality(stack)) { case 2 -> 2.0; case 1 -> 1.5; default -> 1.0; };
         for (ProfessionItems.Effect e : effects) {
-            int secs = (int) (e.ticks() * (e.effect() == StatusEffects.NAUSEA ? 1.0 : scale) / 20);
-            tooltip.add(Text.translatable(e.effect().value().getTranslationKey())
-                    .append(Text.literal((e.amplifier() > 0 ? " II" : "") + " (" + secs / 60 + ":" + String.format("%02d", secs % 60) + ")"))
-                    .formatted(e.effect().value().isBeneficial() ? Formatting.BLUE : Formatting.RED));
+            int secs = (int) (e.ticks() * (e.effect() == MobEffects.NAUSEA ? 1.0 : scale) / 20);
+            tooltip.add(Component.translatable(e.effect().value().getDescriptionId())
+                    .append(Component.literal((e.amplifier() > 0 ? " II" : "") + " (" + secs / 60 + ":" + String.format("%02d", secs % 60) + ")"))
+                    .withStyle(e.effect().value().isBeneficial() ? ChatFormatting.BLUE : ChatFormatting.RED));
         }
-        if (voodoo > 0) tooltip.add(Text.literal("Restores " + (int) (voodoo * scale) + " voodoo energy").formatted(Formatting.DARK_AQUA));
-        tooltip.add(Text.literal((trade == Profession.COOKING ? "Cooked" : "Brewed") + " at a crafting table").formatted(Formatting.DARK_GRAY));
+        if (voodoo > 0) tooltip.add(Component.literal("Restores " + (int) (voodoo * scale) + " voodoo energy").withStyle(ChatFormatting.DARK_AQUA));
+        tooltip.add(Component.literal((trade == Profession.COOKING ? "Cooked" : "Brewed") + " at a crafting table").withStyle(ChatFormatting.DARK_GRAY));
+        tooltip.forEach(adder__);
     }
 }

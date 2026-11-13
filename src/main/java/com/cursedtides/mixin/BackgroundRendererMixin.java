@@ -1,27 +1,32 @@
 package com.cursedtides.mixin;
 
 import com.cursedtides.explore.SeaHazards;
-import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.BackgroundRenderer;
-import net.minecraft.client.render.Camera;
+import net.minecraft.client.Camera;
+import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.fog.FogData;
+import net.minecraft.client.renderer.fog.FogRenderer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /** Fog banks: inside one, the horizon closes in to a few dozen blocks. */
-@Mixin(BackgroundRenderer.class)
+@Mixin(FogRenderer.class)
 public abstract class BackgroundRendererMixin {
-    @Inject(method = "applyFog", at = @At("TAIL"), require = 0)
-    private static void cursedtides$fogBanks(Camera camera, BackgroundRenderer.FogType fogType, float viewDistance, boolean thickFog,
-                                            float tickDelta, CallbackInfo ci) {
-        MinecraftClient mc = MinecraftClient.getInstance();
-        if (mc.world == null || camera.getSubmersionType() != net.minecraft.block.enums.CameraSubmersionType.NONE) return;
-        float density = SeaHazards.fogDensity(camera.getPos().x, camera.getPos().z);
+    @Inject(method = "setupFog", at = @At("RETURN"), require = 0)
+    private void cursedtides$fogBanks(Camera camera, int renderDistanceInChunks, DeltaTracker deltaTracker, float darkenWorldAmount,
+                                      ClientLevel level, CallbackInfoReturnable<FogData> cir) {
+        if (level == null || camera.getFluidInCamera() != net.minecraft.world.level.material.FogType.NONE) return;
+        FogData fog = cir.getReturnValue();
+        if (fog == null) return;
+        float density = SeaHazards.fogDensity(camera.position().x, camera.position().z);
         if (density <= 0) return;
-        float end = Math.max(18f, viewDistance * (1 - density * 0.88f));
-        RenderSystem.setShaderFogStart(fogType == BackgroundRenderer.FogType.FOG_SKY ? 0 : end * 0.15f);
-        RenderSystem.setShaderFogEnd(end);
+        float view = renderDistanceInChunks * 16f;
+        float end = Math.max(18f, view * (1 - density * 0.88f));
+        fog.environmentalStart = Math.min(fog.environmentalStart, end * 0.15f);
+        fog.environmentalEnd = Math.min(fog.environmentalEnd, end);
+        fog.skyEnd = Math.min(fog.skyEnd, end);
+        fog.cloudEnd = Math.min(fog.cloudEnd, end);
     }
 }

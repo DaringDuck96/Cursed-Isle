@@ -8,14 +8,13 @@ import com.cursedtides.world.Builds;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.network.RegistryByteBuf;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.codec.PacketCodecs;
-import net.minecraft.network.packet.CustomPayload;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.math.Box;
-
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.phys.AABB;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,14 +26,14 @@ public final class Objectives {
     private Objectives() {}
 
     /** has = false when there's nowhere in particular to point. */
-    public record Target(boolean has, int x, int z, String label, List<Integer> marked) implements CustomPayload {
-        public static final CustomPayload.Id<Target> ID = new CustomPayload.Id<>(CursedTides.id("objective"));
-        public static final PacketCodec<RegistryByteBuf, Target> CODEC = PacketCodec.tuple(
-                PacketCodecs.BOOL, Target::has, PacketCodecs.VAR_INT, Target::x, PacketCodecs.VAR_INT, Target::z,
-                PacketCodecs.STRING, Target::label, PacketCodecs.VAR_INT.collect(PacketCodecs.toList()), Target::marked, Target::new);
+    public record Target(boolean has, int x, int z, String label, List<Integer> marked) implements CustomPacketPayload {
+        public static final CustomPacketPayload.Type<Target> ID = new CustomPacketPayload.Type<>(CursedTides.id("objective"));
+        public static final StreamCodec<RegistryFriendlyByteBuf, Target> CODEC = StreamCodec.composite(
+                ByteBufCodecs.BOOL, Target::has, ByteBufCodecs.VAR_INT, Target::x, ByteBufCodecs.VAR_INT, Target::z,
+                ByteBufCodecs.STRING_UTF8, Target::label, ByteBufCodecs.VAR_INT.apply(ByteBufCodecs.list()), Target::marked, Target::new);
 
         @Override
-        public Id<? extends CustomPayload> getId() { return ID; }
+        public Type<? extends CustomPacketPayload> type() { return ID; }
     }
 
     private record Goal(int x, int z, String label, StoryNpcEntity.Role role) {}
@@ -45,12 +44,12 @@ public final class Objectives {
     }
 
     /** The person the story (or a side tale) wants you to talk to next, if it's a person. */
-    public static StoryNpcEntity.Role storyRole(ServerPlayerEntity p) {
+    public static StoryNpcEntity.Role storyRole(ServerPlayer p) {
         Goal g = goal(p);
         return g == null ? null : g.role();
     }
 
-    private static Goal goal(ServerPlayerEntity p) {
+    private static Goal goal(ServerPlayer p) {
         int stage = QuestData.stage(p);
         switch (stage) {
             case QuestData.START -> {
@@ -84,7 +83,7 @@ public final class Objectives {
     }
 
     /** With the main story done (or waiting), the next side thing: Act Four, a letter, then a contract. */
-    private static Goal side(ServerPlayerEntity p) {
+    private static Goal side(ServerPlayer p) {
         int[] t = MusterArc.target(p);
         if (t != null) return new Goal(t[0], t[1], MusterArc.targetLabel(p), null);
         t = LanternArc.target(p);
@@ -99,17 +98,17 @@ public final class Objectives {
     }
 
     public static void register() {
-        PayloadTypeRegistry.playS2C().register(Target.ID, Target.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(Target.ID, Target.CODEC);
         ServerTickEvents.END_SERVER_TICK.register(Objectives::tick);
     }
 
     private static void tick(MinecraftServer server) {
-        if (server.getTicks() % 20 != 13) return;
-        for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
+        if (server.getTickCount() % 20 != 13) return;
+        for (ServerPlayer p : server.getPlayerList().getPlayers()) {
             Goal g = goal(p);
             List<Integer> marked = new ArrayList<>();
             if (g != null && g.role() != null) {
-                for (StoryNpcEntity npc : p.getServerWorld().getEntitiesByClass(StoryNpcEntity.class, new Box(p.getBlockPos()).expand(72),
+                for (StoryNpcEntity npc : p.level().getEntitiesOfClass(StoryNpcEntity.class, new AABB(p.blockPosition()).inflate(72),
                         n -> n.getRole() == g.role())) {
                     marked.add(npc.getId());
                 }

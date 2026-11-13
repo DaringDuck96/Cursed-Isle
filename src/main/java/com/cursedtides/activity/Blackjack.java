@@ -1,16 +1,15 @@
 package com.cursedtides.activity;
 
 import com.cursedtides.item.ModItems;
-import net.minecraft.entity.Entity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.server.network.ServerPlayerEntity;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.ItemStack;
 
 /** Twenty-One at the card table: beat the dealer without going over. Played through conversation. */
 public final class Blackjack {
@@ -47,42 +46,42 @@ public final class Blackjack {
         return sb + " (" + value(cards) + ")";
     }
 
-    public static boolean playing(ServerPlayerEntity p) { return HANDS.containsKey(p.getUuid()); }
+    public static boolean playing(ServerPlayer p) { return HANDS.containsKey(p.getUUID()); }
 
-    public static List<String> deal(ServerPlayerEntity p, Entity dealer) {
+    public static List<String> deal(ServerPlayer p, Entity dealer) {
         if (playing(p)) return status(p);
-        if (p.getInventory().count(ModItems.DOUBLOON) < 5) return List.of("Five doubloons a hand, friend.");
-        p.getInventory().remove(s -> s.isOf(ModItems.DOUBLOON), 5, p.playerScreenHandler.getCraftingInput());
+        if (p.getInventory().countItem(ModItems.DOUBLOON) < 5) return List.of("Five doubloons a hand, friend.");
+        com.cursedtides.util.Compat.take(p, s -> s.is(ModItems.DOUBLOON), 5);
         Hand h = new Hand(5, new Random(p.getRandom().nextLong()));
         h.mine.add(h.draw()); h.house.add(h.draw()); h.mine.add(h.draw()); h.house.add(h.draw());
-        HANDS.put(p.getUuid(), h);
+        HANDS.put(p.getUUID(), h);
         if (value(h.mine) == 21) return finish(p, "Twenty-one on the deal!");
         return status(p);
     }
 
-    private static List<String> status(ServerPlayerEntity p) {
-        Hand h = HANDS.get(p.getUuid());
+    private static List<String> status(ServerPlayer p) {
+        Hand h = HANDS.get(p.getUUID());
         return List.of("Your cards: " + show(h.mine) + ".   Dealer shows: " + RANKS[h.house.get(0) % 13] + SUITS[h.house.get(0) / 13] + " and one face down.");
     }
 
-    public static List<String> hit(ServerPlayerEntity p) {
-        Hand h = HANDS.get(p.getUuid());
+    public static List<String> hit(ServerPlayer p) {
+        Hand h = HANDS.get(p.getUUID());
         if (h == null) return List.of("You've no hand in play.");
         h.mine.add(h.draw());
         if (value(h.mine) > 21) {
-            HANDS.remove(p.getUuid());
+            HANDS.remove(p.getUUID());
             return List.of("You draw... " + show(h.mine) + ". Bust! The house takes your five.");
         }
         if (value(h.mine) == 21) return finish(p, "Twenty-one!");
         return status(p);
     }
 
-    public static List<String> stand(ServerPlayerEntity p) {
-        return HANDS.containsKey(p.getUuid()) ? finish(p, "You stand.") : List.of("You've no hand in play.");
+    public static List<String> stand(ServerPlayer p) {
+        return HANDS.containsKey(p.getUUID()) ? finish(p, "You stand.") : List.of("You've no hand in play.");
     }
 
-    private static List<String> finish(ServerPlayerEntity p, String opener) {
-        Hand h = HANDS.remove(p.getUuid());
+    private static List<String> finish(ServerPlayer p, String opener) {
+        Hand h = HANDS.remove(p.getUUID());
         while (value(h.house) < 17) h.house.add(h.draw());
         int me = value(h.mine), them = value(h.house);
         boolean natural = me == 21 && h.mine.size() == 2;
@@ -97,7 +96,7 @@ public final class Blackjack {
         } else {
             verdict = "The house wins.";
         }
-        if (pay > 0) p.giveItemStack(new ItemStack(ModItems.DOUBLOON, pay));
+        if (pay > 0) p.addItem(new ItemStack(ModItems.DOUBLOON, pay));
         return List.of(opener + " Your cards: " + show(h.mine) + ". Dealer: " + show(h.house) + ".", verdict);
     }
 }

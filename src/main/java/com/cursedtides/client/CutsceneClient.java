@@ -2,15 +2,14 @@ package com.cursedtides.client;
 
 import com.cursedtides.quest.Cutscenes;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.option.Perspective;
-import net.minecraft.entity.decoration.ArmorStandEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
-
+import net.minecraft.client.CameraType;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraft.world.phys.Vec3;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,10 +29,10 @@ public final class CutsceneClient {
                 if (n.length < 10) continue;
                 double[] v = new double[9];
                 for (int i = 0; i < 9; i++) v[i] = Double.parseDouble(n[i]);
-                shots.add(new Cutscenes.Shot(new Vec3d(v[0], v[1], v[2]), new Vec3d(v[3], v[4], v[5]), new Vec3d(v[6], v[7], v[8]),
+                shots.add(new Cutscenes.Shot(new Vec3(v[0], v[1], v[2]), new Vec3(v[3], v[4], v[5]), new Vec3(v[6], v[7], v[8]),
                         Integer.parseInt(n[9]), two.length > 1 ? two[1] : ""));
             }
-            if (!shots.isEmpty()) context.client().setScreen(new CutsceneScreen(payload.title(), shots));
+            if (!shots.isEmpty()) context.client().gui.setScreen(new CutsceneScreen(payload.title(), shots));
         }));
     }
 
@@ -41,50 +40,50 @@ public final class CutsceneClient {
         private final String title;
         private final List<Cutscenes.Shot> shots;
         private int shot, t;
-        private ArmorStandEntity cam;
-        private Perspective savedPerspective;
+        private ArmorStand cam;
+        private CameraType savedPerspective;
         private boolean savedHud;
 
         CutsceneScreen(String title, List<Cutscenes.Shot> shots) {
-            super(Text.literal(title));
+            super(Component.literal(title));
             this.title = title;
             this.shots = shots;
         }
 
         @Override
         protected void init() {
-            MinecraftClient mc = this.client;
-            if (cam != null || mc == null || mc.world == null) return;
-            cam = new ArmorStandEntity(mc.world, 0, 0, 0);
-            savedPerspective = mc.options.getPerspective();
-            savedHud = mc.options.hudHidden;
-            mc.options.setPerspective(Perspective.FIRST_PERSON);
-            mc.options.hudHidden = true;
+            Minecraft mc = this.minecraft;
+            if (cam != null || mc == null || mc.level == null) return;
+            cam = new ArmorStand(mc.level, 0, 0, 0);
+            savedPerspective = mc.options.getCameraType();
+            savedHud = mc.gui.hud.isHidden();
+            mc.options.setCameraType(CameraType.FIRST_PERSON);
+            if (!mc.gui.hud.isHidden()) mc.gui.hud.toggle();
             place(0f, true);
             mc.setCameraEntity(cam);
         }
 
         private void place(float ease, boolean snap) {
             Cutscenes.Shot s = shots.get(shot);
-            double k = s.ticks() <= 0 ? 1 : MathHelper.clamp((t + ease) / s.ticks(), 0, 1);
+            double k = s.ticks() <= 0 ? 1 : Mth.clamp((t + ease) / s.ticks(), 0, 1);
             k = k * k * (3 - 2 * k); // ease in and out
-            Vec3d pos = s.from().lerp(s.to(), k);
-            double eye = cam.getStandingEyeHeight();
-            Vec3d to = s.look().subtract(pos);
+            Vec3 pos = s.from().lerp(s.to(), k);
+            double eye = cam.getEyeHeight();
+            Vec3 to = s.look().subtract(pos);
             float yaw = (float) Math.toDegrees(Math.atan2(-to.x, to.z));
             float pitch = (float) -Math.toDegrees(Math.atan2(to.y, Math.hypot(to.x, to.z)));
             if (snap) {
-                cam.prevX = pos.x; cam.prevY = pos.y - eye; cam.prevZ = pos.z;
-                cam.prevYaw = yaw; cam.prevPitch = pitch;
+                cam.xo = pos.x; cam.yo = pos.y - eye; cam.zo = pos.z;
+                cam.yRotO = yaw; cam.xRotO = pitch;
             } else {
-                cam.prevX = cam.getX(); cam.prevY = cam.getY(); cam.prevZ = cam.getZ();
-                cam.prevYaw = cam.getYaw(); cam.prevPitch = cam.getPitch();
+                cam.xo = cam.getX(); cam.yo = cam.getY(); cam.zo = cam.getZ();
+                cam.yRotO = cam.getYRot(); cam.xRotO = cam.getXRot();
             }
-            cam.setPosition(pos.x, pos.y - eye, pos.z);
-            cam.lastRenderX = cam.prevX; cam.lastRenderY = cam.prevY; cam.lastRenderZ = cam.prevZ;
-            cam.setYaw(yaw);
-            cam.setPitch(pitch);
-            cam.setHeadYaw(yaw);
+            cam.setPos(pos.x, pos.y - eye, pos.z);
+            cam.xOld = cam.xo; cam.yOld = cam.yo; cam.zOld = cam.zo;
+            cam.setYRot(yaw);
+            cam.setXRot(pitch);
+            cam.setYHeadRot(yaw);
         }
 
         @Override
@@ -94,7 +93,7 @@ public final class CutsceneClient {
             if (t > shots.get(shot).ticks()) {
                 shot++;
                 t = 0;
-                if (shot >= shots.size()) { close(); return; }
+                if (shot >= shots.size()) { onClose(); return; }
                 place(0f, true);
                 return;
             }
@@ -102,47 +101,47 @@ public final class CutsceneClient {
         }
 
         @Override
-        public void close() {
-            MinecraftClient mc = this.client;
+        public void onClose() {
+            Minecraft mc = this.minecraft;
             if (mc != null) {
                 mc.setCameraEntity(mc.player);
-                if (savedPerspective != null) mc.options.setPerspective(savedPerspective);
-                mc.options.hudHidden = savedHud;
+                if (savedPerspective != null) mc.options.setCameraType(savedPerspective);
+                if (mc.gui.hud.isHidden() != savedHud) mc.gui.hud.toggle();
             }
-            super.close();
+            super.onClose();
         }
 
         @Override
-        public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+        public void extractRenderState(GuiGraphicsExtractor ctx, int mouseX, int mouseY, float delta) {
             int bar = this.height / 8;
             ctx.fill(0, 0, this.width, bar, 0xFF000000);
             ctx.fill(0, this.height - bar, this.width, this.height, 0xFF000000);
             if (shot < shots.size()) {
                 Cutscenes.Shot s = shots.get(shot);
-                float a = MathHelper.clamp(Math.min(t, s.ticks() - t) / 10f, 0, 1);
+                float a = Mth.clamp(Math.min(t, s.ticks() - t) / 10f, 0, 1);
                 int alpha = (int) (a * 255) << 24;
                 if (shot == 0 && !title.isEmpty()) {
-                    ctx.getMatrices().push();
-                    ctx.getMatrices().scale(2f, 2f, 1f);
-                    ctx.drawCenteredTextWithShadow(this.textRenderer, title, this.width / 4, bar / 2 - 4, 0xFFD24A | alpha);
-                    ctx.getMatrices().pop();
+                    ctx.pose().pushMatrix();
+                    ctx.pose().scale(2f, 2f);
+                    ctx.centeredText(this.font, title, this.width / 4, bar / 2 - 4, 0xFFD24A | alpha);
+                    ctx.pose().popMatrix();
                 }
                 if (!s.caption().isEmpty() && a > 0.05f) {
-                    List<net.minecraft.text.OrderedText> lines = this.textRenderer.wrapLines(Text.literal(s.caption()), this.width - 80);
+                    List<net.minecraft.util.FormattedCharSequence> lines = this.font.split(Component.literal(s.caption()), this.width - 80);
                     int y = this.height - bar + Math.max(4, (bar - lines.size() * 10) / 2);
                     for (var l : lines) {
-                        ctx.drawCenteredTextWithShadow(this.textRenderer, l, this.width / 2, y, 0xF0E6D2 | alpha);
+                        ctx.centeredText(this.font, l, this.width / 2, y, 0xF0E6D2 | alpha);
                         y += 10;
                     }
                 }
             }
-            ctx.drawTextWithShadow(this.textRenderer, "Esc to skip", this.width - 64, this.height - 10, 0x80FFFFFF);
+            ctx.text(this.font, "Esc to skip", this.width - 64, this.height - 10, 0x80FFFFFF);
         }
 
         @Override
-        public void renderBackground(DrawContext ctx, int mouseX, int mouseY, float delta) { }
+        public void extractBackground(GuiGraphicsExtractor ctx, int mouseX, int mouseY, float delta) { }
 
         @Override
-        public boolean shouldPause() { return false; }
+        public boolean isPauseScreen() { return false; }
     }
 }

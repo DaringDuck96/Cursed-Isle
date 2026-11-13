@@ -1,38 +1,40 @@
 package com.cursedtides.item;
 
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.item.ItemUseAnimation;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.EntityTypes;
 import com.cursedtides.entity.HexBoltEntity;
 import com.cursedtides.pirate.PirateData;
 import com.cursedtides.pirate.Weapon;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.NbtComponent;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LightningEntity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.entity.mob.Monster;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.projectile.ProjectileUtil;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.tooltip.TooltipType;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Hand;
-import net.minecraft.util.TypedActionResult;
-import net.minecraft.util.hit.EntityHitResult;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
-
 import java.util.List;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LightningBolt;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.monster.Enemy;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.ProjectileUtil;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * The voodoo staff. Sneak and use to choose a hex; use to cast it. New hexes come with Hex mastery:
@@ -54,28 +56,28 @@ public class HexStaffItem extends Item {
         Hex(String title, int level, int cost, String text) { this.title = title; this.level = level; this.cost = cost; this.text = text; }
     }
 
-    public HexStaffItem(Settings settings) {
+    public HexStaffItem(Properties settings) {
         super(settings);
     }
 
     public static Hex selected(ItemStack staff) {
-        int i = staff.getOrDefault(DataComponentTypes.CUSTOM_DATA, NbtComponent.DEFAULT).copyNbt().getInt("Hex");
+        int i = staff.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag().getIntOr("Hex", 0);
         Hex[] all = Hex.values();
         return all[Math.floorMod(i, all.length)];
     }
 
     private static void select(ItemStack staff, Hex hex) {
-        NbtCompound n = staff.getOrDefault(DataComponentTypes.CUSTOM_DATA, NbtComponent.DEFAULT).copyNbt();
+        CompoundTag n = staff.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
         n.putInt("Hex", hex.ordinal());
-        staff.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(n));
+        staff.set(DataComponents.CUSTOM_DATA, CustomData.of(n));
     }
 
     @Override
-    public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
-        ItemStack staff = user.getStackInHand(hand);
+    public InteractionResult use(Level world, Player user, InteractionHand hand) {
+        ItemStack staff = user.getItemInHand(hand);
         int level = PirateData.level(user, Weapon.HEX);
 
-        if (user.isSneaking()) {
+        if (user.isShiftKeyDown()) {
             Hex[] all = Hex.values();
             Hex next = selected(staff);
             for (int k = 1; k <= all.length; k++) {
@@ -83,163 +85,166 @@ public class HexStaffItem extends Item {
                 if (h.level <= level) { next = h; break; }
             }
             select(staff, next);
-            if (!world.isClient) {
-                user.sendMessage(Text.literal("Hex: " + next.title + " (" + next.cost + " voodoo)").formatted(Formatting.DARK_AQUA), true);
+            if (!world.isClientSide()) {
+                com.cursedtides.util.Compat.tell(user, Component.literal("Hex: " + next.title + " (" + next.cost + " voodoo)").withStyle(ChatFormatting.DARK_AQUA), true);
             }
-            return TypedActionResult.success(staff, world.isClient);
+            return InteractionResult.SUCCESS;
         }
 
         // Hold to charge, as the old staffs did: a tap casts, half a second makes it Charged, a second and a half Fully Charged
-        user.setCurrentHand(hand);
-        return TypedActionResult.consume(staff);
+        user.startUsingItem(hand);
+        return InteractionResult.CONSUME;
     }
 
     @Override
-    public int getMaxUseTime(ItemStack stack, LivingEntity user) { return 72000; }
+    public int getUseDuration(ItemStack stack, LivingEntity user) { return 72000; }
 
     @Override
-    public net.minecraft.util.UseAction getUseAction(ItemStack stack) { return net.minecraft.util.UseAction.BOW; }
+    public net.minecraft.world.item.ItemUseAnimation getUseAnimation(ItemStack stack) { return net.minecraft.world.item.ItemUseAnimation.BOW; }
 
     @Override
-    public void usageTick(World world, LivingEntity user, ItemStack stack, int remainingUseTicks) {
-        int held = getMaxUseTime(stack, user) - remainingUseTicks;
-        if (world.isClient && held > 8) {
-            Vec3d at = user.getEyePos().add(user.getRotationVec(1f).multiply(0.8));
+    public void onUseTick(Level world, LivingEntity user, ItemStack stack, int remainingUseTicks) {
+        int held = getUseDuration(stack, user) - remainingUseTicks;
+        if (world.isClientSide() && held > 8) {
+            Vec3 at = user.getEyePosition().add(user.getViewVector(1f).scale(0.8));
             world.addParticle(held >= 30 ? ParticleTypes.SOUL_FIRE_FLAME : ParticleTypes.WITCH, at.x, at.y - 0.2, at.z, 0, 0.02, 0);
         }
-        if (!world.isClient && (held == 10 || held == 30)) {
-            world.playSound(null, user.getBlockPos(), SoundEvents.BLOCK_AMETHYST_BLOCK_CHIME, SoundCategory.PLAYERS, 1f, held == 30 ? 1.6f : 1.1f);
-            if (user instanceof PlayerEntity p) p.sendMessage(Text.literal(held == 30 ? "Fully charged!" : "Charged...").formatted(Formatting.DARK_AQUA), true);
+        if (!world.isClientSide() && (held == 10 || held == 30)) {
+            world.playSound(null, user.blockPosition(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 1f, held == 30 ? 1.6f : 1.1f);
+            if (user instanceof Player p) com.cursedtides.util.Compat.tell(p, Component.literal(held == 30 ? "Fully charged!" : "Charged...").withStyle(ChatFormatting.DARK_AQUA), true);
         }
     }
 
     @Override
-    public void onStoppedUsing(ItemStack stack, World world, LivingEntity user, int remainingUseTicks) {
-        if (!(user instanceof PlayerEntity p)) return;
-        int held = getMaxUseTime(stack, user) - remainingUseTicks;
+    public boolean releaseUsing(ItemStack stack, Level world, LivingEntity user, int remainingUseTicks) {
+        if (!(user instanceof Player p)) return false;
+        int held = getUseDuration(stack, user) - remainingUseTicks;
         float charge = held >= 30 ? 3.0f : held >= 10 ? 1.8f : 1.0f;
-        cast(world, p, p.getActiveHand(), stack, charge);
+        cast(world, p, p.getUsedItemHand(), stack, charge);
+        return true;
     }
 
-    private TypedActionResult<ItemStack> cast(World world, PlayerEntity user, Hand hand, ItemStack staff, float charge) {
+    private InteractionResult cast(Level world, Player user, InteractionHand hand, ItemStack staff, float charge) {
         int level = PirateData.level(user, Weapon.HEX);
         Hex hex = selected(staff);
         if (hex.level > level) hex = Hex.BOLT;
         int cost = (int) Math.round(hex.cost * (charge >= 3 ? 2.0 : charge > 1 ? 1.4 : 1.0) * (1.0 - com.cursedtides.pirate.PerkData.stat(user,
                 com.cursedtides.pirate.Perk.Stat.HEX_COST)));
-        if (!world.isClient && !PirateData.spendVoodoo(user, cost)) {
-            user.sendMessage(Text.translatable("message.cursedtides.no_voodoo").formatted(Formatting.DARK_AQUA), true);
+        if (!world.isClientSide() && !PirateData.spendVoodoo(user, cost)) {
+            com.cursedtides.util.Compat.tell(user, Component.translatable("message.cursedtides.no_voodoo").withStyle(ChatFormatting.DARK_AQUA), true);
             world.playSound(null, user.getX(), user.getY(), user.getZ(),
-                    SoundEvents.BLOCK_FIRE_EXTINGUISH, SoundCategory.PLAYERS, 0.5f, 1.6f);
-            return TypedActionResult.fail(staff);
+                    SoundEvents.FIRE_EXTINGUISH, SoundSource.PLAYERS, 0.5f, 1.6f);
+            return InteractionResult.FAIL;
         }
 
-        user.getItemCooldownManager().set(this, Math.max(8, (hex == Hex.BOLT ? 20 : 40) - level / 2));
+        user.getCooldowns().addCooldown(new ItemStack(this), Math.max(8, (hex == Hex.BOLT ? 20 : 40) - level / 2));
         world.playSound(null, user.getX(), user.getY(), user.getZ(),
-                SoundEvents.ENTITY_EVOKER_CAST_SPELL, SoundCategory.PLAYERS, 0.8f, 1.3f);
-        if (world.isClient || !(world instanceof ServerWorld sw)) return TypedActionResult.success(staff, true);
+                SoundEvents.EVOKER_CAST_SPELL, SoundSource.PLAYERS, 0.8f, 1.3f);
+        if (world.isClientSide() || !(world instanceof ServerLevel sw)) return InteractionResult.SUCCESS;
 
         float power = (1.0f + level * 0.03f + (float) com.cursedtides.pirate.PerkData.stat(user, com.cursedtides.pirate.Perk.Stat.HEX_DAMAGE)) * charge;
         switch (hex) {
             case BOLT -> {
-                Vec3d dir = user.getRotationVec(1.0f);
+                Vec3 dir = user.getViewVector(1.0f);
                 int bolts = charge >= 3 ? 3 : 1;
                 for (int k = 0; k < bolts; k++) {
                     HexBoltEntity bolt = new HexBoltEntity(world, user, level);
                     bolt.setBonusDamage((float) com.cursedtides.pirate.PerkData.stat(user, com.cursedtides.pirate.Perk.Stat.HEX_DAMAGE)
                             + (charge - 1) * 7f);
-                    Vec3d d = bolts == 1 ? dir : dir.rotateY((k - 1) * 0.12f);
-                    bolt.setVelocity(d.x, d.y, d.z, 1.6f + (charge - 1) * 0.2f, 0.0f);
-                    world.spawnEntity(bolt);
+                    Vec3 d = bolts == 1 ? dir : dir.yRot((k - 1) * 0.12f);
+                    bolt.shoot(d.x, d.y, d.z, 1.6f + (charge - 1) * 0.2f, 0.0f);
+                    world.addFreshEntity(bolt);
                 }
-                if (charge > 1) sw.spawnParticles(ParticleTypes.SOUL_FIRE_FLAME, user.getX(), user.getEyeY(), user.getZ(), 12, 0.3, 0.3, 0.3, 0.05);
+                if (charge > 1) sw.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, user.getX(), user.getEyeY(), user.getZ(), 12, 0.3, 0.3, 0.3, 0.05);
             }
             case WITHER -> {
                 LivingEntity t = target(user, 24);
                 if (t != null) {
-                    t.addStatusEffect(new StatusEffectInstance(StatusEffects.WITHER, (int) (100 * power), 1), user);
-                    t.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, 160, 1), user);
-                    sw.spawnParticles(ParticleTypes.SQUID_INK, t.getX(), t.getBodyY(0.6), t.getZ(), 20, 0.3, 0.4, 0.3, 0.02);
+                    t.addEffect(new MobEffectInstance(MobEffects.WITHER, (int) (100 * power), 1), user);
+                    t.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 160, 1), user);
+                    sw.sendParticles(ParticleTypes.SQUID_INK, t.getX(), t.getY(0.6), t.getZ(), 20, 0.3, 0.4, 0.3, 0.02);
                 }
             }
             case WARD -> {
-                user.addStatusEffect(new StatusEffectInstance(StatusEffects.ABSORPTION, 400, 1 + level / 20));
-                user.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 200, 0));
-                sw.spawnParticles(ParticleTypes.SOUL, user.getX(), user.getY() + 1, user.getZ(), 24, 0.6, 0.6, 0.6, 0.02);
+                user.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 400, 1 + level / 20));
+                user.addEffect(new MobEffectInstance(MobEffects.RESISTANCE, 200, 0));
+                sw.sendParticles(ParticleTypes.SOUL, user.getX(), user.getY() + 1, user.getZ(), 24, 0.6, 0.6, 0.6, 0.02);
             }
             case GRASP -> {
-                for (Entity e : world.getOtherEntities(user, user.getBoundingBox().expand(8), e -> e instanceof LivingEntity && foe(user, e))) {
+                for (Entity e : world.getEntities(user, user.getBoundingBox().inflate(8), e -> e instanceof LivingEntity && foe(user, e))) {
                     LivingEntity l = (LivingEntity) e;
-                    l.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, (int) (60 * power), 6), user);
-                    l.addStatusEffect(new StatusEffectInstance(StatusEffects.MINING_FATIGUE, 60, 2), user);
-                    if (l instanceof MobEntity m) m.getNavigation().stop();
-                    sw.spawnParticles(ParticleTypes.FALLING_WATER, l.getX(), l.getY() + 0.2, l.getZ(), 30, 0.4, 0.1, 0.4, 0);
-                    sw.spawnParticles(ParticleTypes.BUBBLE_POP, l.getX(), l.getY() + 0.5, l.getZ(), 10, 0.3, 0.3, 0.3, 0.02);
+                    l.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, (int) (60 * power), 6), user);
+                    l.addEffect(new MobEffectInstance(MobEffects.MINING_FATIGUE, 60, 2), user);
+                    if (l instanceof Mob m) m.getNavigation().stop();
+                    sw.sendParticles(ParticleTypes.FALLING_WATER, l.getX(), l.getY() + 0.2, l.getZ(), 30, 0.4, 0.1, 0.4, 0);
+                    sw.sendParticles(ParticleTypes.BUBBLE_POP, l.getX(), l.getY() + 0.5, l.getZ(), 10, 0.3, 0.3, 0.3, 0.02);
                 }
-                world.playSound(null, user.getBlockPos(), SoundEvents.ENTITY_DROWNED_AMBIENT_WATER, SoundCategory.PLAYERS, 1f, 0.6f);
+                world.playSound(null, user.blockPosition(), SoundEvents.DROWNED_AMBIENT_WATER, SoundSource.PLAYERS, 1f, 0.6f);
             }
             case SIPHON -> {
                 LivingEntity t = target(user, 20);
                 if (t != null) {
                     float dmg = 8f * power;
-                    t.damage(world.getDamageSources().indirectMagic(user, user), dmg);
+                    t.hurt(world.damageSources().indirectMagic(user, user), dmg);
                     user.heal(dmg / 2);
-                    Vec3d from = t.getPos().add(0, t.getHeight() * 0.6, 0), to = user.getEyePos();
-                    Vec3d step = to.subtract(from).normalize();
+                    Vec3 from = t.position().add(0, t.getBbHeight() * 0.6, 0), to = user.getEyePosition();
+                    Vec3 step = to.subtract(from).normalize();
                     for (double d = 0; d < from.distanceTo(to); d += 0.6) {
-                        Vec3d q = from.add(step.multiply(d));
-                        sw.spawnParticles(ParticleTypes.DAMAGE_INDICATOR, q.x, q.y, q.z, 1, 0, 0, 0, 0);
+                        Vec3 q = from.add(step.scale(d));
+                        sw.sendParticles(ParticleTypes.DAMAGE_INDICATOR, q.x, q.y, q.z, 1, 0, 0, 0, 0);
                     }
                 }
             }
             case GHOST -> {
-                user.addStatusEffect(new StatusEffectInstance(StatusEffects.INVISIBILITY, 160, 0));
-                user.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, 160, 1));
-                for (MobEntity m : world.getEntitiesByClass(MobEntity.class, user.getBoundingBox().expand(24), m -> m.getTarget() == user)) {
+                user.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 160, 0));
+                user.addEffect(new MobEffectInstance(MobEffects.SPEED, 160, 1));
+                for (Mob m : world.getEntitiesOfClass(Mob.class, user.getBoundingBox().inflate(24), m -> m.getTarget() == user)) {
                     m.setTarget(null);
                 }
-                sw.spawnParticles(ParticleTypes.SOUL_FIRE_FLAME, user.getX(), user.getY() + 1, user.getZ(), 30, 0.4, 0.8, 0.4, 0.02);
+                sw.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, user.getX(), user.getY() + 1, user.getZ(), 30, 0.4, 0.8, 0.4, 0.02);
             }
             case STORM -> {
                 LivingEntity t = target(user, 40);
                 if (t != null) {
-                    LightningEntity bolt = EntityType.LIGHTNING_BOLT.create(world);
+                    LightningBolt bolt = EntityTypes.LIGHTNING_BOLT.create(world, EntitySpawnReason.EVENT);
                     if (bolt != null) {
-                        bolt.refreshPositionAfterTeleport(t.getPos());
-                        if (user instanceof net.minecraft.server.network.ServerPlayerEntity sp) bolt.setChanneler(sp);
-                        world.spawnEntity(bolt);
+                        bolt.snapTo(t.position());
+                        if (user instanceof net.minecraft.server.level.ServerPlayer sp) bolt.setCause(sp);
+                        world.addFreshEntity(bolt);
                     }
-                    t.damage(world.getDamageSources().indirectMagic(user, user), 6f * power);
-                    if (user instanceof net.minecraft.server.network.ServerPlayerEntity sp) com.cursedtides.activity.Achievements.grant(sp, "storm_caller");
+                    t.hurt(world.damageSources().indirectMagic(user, user), 6f * power);
+                    if (user instanceof net.minecraft.server.level.ServerPlayer sp) com.cursedtides.activity.Achievements.grant(sp, "storm_caller");
                 }
             }
         }
-        staff.damage(1, user, LivingEntity.getSlotForHand(hand));
-        return TypedActionResult.success(staff, false);
+        staff.hurtAndBreak(1, user, hand.asEquipmentSlot());
+        return InteractionResult.SUCCESS;
     }
 
-    private static boolean foe(PlayerEntity user, Entity e) {
-        return e.isAlive() && (e instanceof Monster || (e instanceof MobEntity m && m.getTarget() == user));
+    private static boolean foe(Player user, Entity e) {
+        return e.isAlive() && (e instanceof Enemy || (e instanceof Mob m && m.getTarget() == user));
     }
 
     /** The living thing under your crosshair, within range. */
-    private static LivingEntity target(PlayerEntity user, double range) {
-        Vec3d start = user.getEyePos();
-        Vec3d end = start.add(user.getRotationVec(1f).multiply(range));
-        Box box = user.getBoundingBox().stretch(user.getRotationVec(1f).multiply(range)).expand(1);
-        EntityHitResult hit = ProjectileUtil.raycast(user, start, end, box, e -> e instanceof LivingEntity && !e.isSpectator() && e.canHit(), range * range);
+    private static LivingEntity target(Player user, double range) {
+        Vec3 start = user.getEyePosition();
+        Vec3 end = start.add(user.getViewVector(1f).scale(range));
+        AABB box = user.getBoundingBox().expandTowards(user.getViewVector(1f).scale(range)).inflate(1);
+        EntityHitResult hit = ProjectileUtil.getEntityHitResult(user, start, end, box, e -> e instanceof LivingEntity && !e.isSpectator() && e.isPickable(), range * range);
         if (hit == null) {
-            user.sendMessage(Text.literal("No one there to hex.").formatted(Formatting.GRAY), true);
+            com.cursedtides.util.Compat.tell(user, Component.literal("No one there to hex.").withStyle(ChatFormatting.GRAY), true);
             return null;
         }
         return (LivingEntity) hit.getEntity();
     }
 
     @Override
-    public void appendTooltip(ItemStack stack, TooltipContext context, List<Text> tooltip, TooltipType type) {
+    public void appendHoverText(ItemStack stack, TooltipContext context, net.minecraft.world.item.component.TooltipDisplay display__, java.util.function.Consumer<Component> adder__, TooltipFlag type) {
+        java.util.List<Component> tooltip = new java.util.ArrayList<>();
         Hex h = selected(stack);
-        tooltip.add(Text.literal("Hex: " + h.title + " (" + h.cost + " voodoo)").formatted(Formatting.DARK_AQUA));
-        tooltip.add(Text.literal(h.text).formatted(Formatting.GRAY));
-        tooltip.add(Text.literal("Sneak and use to choose another hex.").formatted(Formatting.DARK_GRAY));
+        tooltip.add(Component.literal("Hex: " + h.title + " (" + h.cost + " voodoo)").withStyle(ChatFormatting.DARK_AQUA));
+        tooltip.add(Component.literal(h.text).withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.literal("Sneak and use to choose another hex.").withStyle(ChatFormatting.DARK_GRAY));
+        tooltip.forEach(adder__);
     }
 }

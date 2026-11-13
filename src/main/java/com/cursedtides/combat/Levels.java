@@ -11,28 +11,27 @@ import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.SpawnGroup;
-import net.minecraft.entity.attribute.EntityAttributeInstance;
-import net.minecraft.entity.attribute.EntityAttributeModifier;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.entity.mob.Monster;
-import net.minecraft.network.RegistryByteBuf;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.codec.PacketCodecs;
-import net.minecraft.network.packet.CustomPayload;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.monster.Enemy;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -126,7 +125,7 @@ public final class Levels {
     // ------------------------------------------------------------------ enemies
 
     public static int levelOf(Entity e) {
-        for (String t : e.getCommandTags()) {
+        for (String t : e.entityTags()) {
             if (t.startsWith(TAG_PREFIX)) {
                 try { return Integer.parseInt(t.substring(TAG_PREFIX.length())); } catch (NumberFormatException ignored) { }
             }
@@ -135,7 +134,7 @@ public final class Levels {
     }
 
     public static boolean isFoe(Entity e) {
-        return e instanceof MobEntity && (e instanceof Monster || e.getType().getSpawnGroup() == SpawnGroup.MONSTER);
+        return e instanceof Mob && (e instanceof Enemy || e.getType().getCategory() == MobCategory.MONSTER);
     }
 
     /** On the client, where tags aren't sent: a leveled foe wears its level in its name. */
@@ -155,35 +154,35 @@ public final class Levels {
      * Give a creature its level. Ordinary foes get health to match; named ones (bosses and the like, which
      * set their own health) only get the level shown.
      */
-    public static void apply(MobEntity mob, int level) {
+    public static void apply(Mob mob, int level) {
         if (levelOf(mob) > 0) return;
         level = Math.max(1, Math.min(50, level));
         boolean named = mob.hasCustomName();
-        mob.addCommandTag(TAG_PREFIX + level);
-        Text base = named ? mob.getCustomName()
-                : mob instanceof com.cursedtides.entity.CursedPirateEntity cp ? cp.title() : mob.getType().getName();
-        MutableText name = base.copy().append(Text.literal(" [Lv " + level + "]").formatted(color(level)));
+        mob.addTag(TAG_PREFIX + level);
+        Component base = named ? mob.getCustomName()
+                : mob instanceof com.cursedtides.entity.CursedPirateEntity cp ? cp.title() : mob.getType().getDescription();
+        MutableComponent name = base.copy().append(Component.literal(" [Lv " + level + "]").withStyle(color(level)));
         mob.setCustomName(name);
         if (!named) {
-            EntityAttributeInstance hp = mob.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
+            AttributeInstance hp = mob.getAttribute(Attributes.MAX_HEALTH);
             if (hp != null && !hp.hasModifier(HEALTH_MOD)) {
-                hp.addPersistentModifier(new EntityAttributeModifier(HEALTH_MOD, healthFactor(level) - 1,
-                        EntityAttributeModifier.Operation.ADD_MULTIPLIED_BASE));
+                hp.addPermanentModifier(new AttributeModifier(HEALTH_MOD, healthFactor(level) - 1,
+                        AttributeModifier.Operation.ADD_MULTIPLIED_BASE));
                 mob.setHealth(mob.getMaxHealth());
             }
         }
     }
 
-    private static Formatting color(int level) {
-        return level < 10 ? Formatting.GRAY : level < 20 ? Formatting.YELLOW : level < 30 ? Formatting.GOLD
-                : level < 40 ? Formatting.RED : Formatting.DARK_RED;
+    private static ChatFormatting color(int level) {
+        return level < 10 ? ChatFormatting.GRAY : level < 20 ? ChatFormatting.YELLOW : level < 30 ? ChatFormatting.GOLD
+                : level < 40 ? ChatFormatting.RED : ChatFormatting.DARK_RED;
     }
 
-    private static void onLoad(Entity e, ServerWorld world) {
-        if (!(e instanceof MobEntity mob) || !isFoe(e) || levelOf(e) > 0) return;
-        if (world != world.getServer().getOverworld() || !ModWorld.isArchipelago()) return;
-        int[] b = bandAt(e.getBlockPos());
-        int level = mob.hasCustomName() ? b[1] + 2 : b[0] + world.random.nextInt(b[1] - b[0] + 1);
+    private static void onLoad(Entity e, ServerLevel world) {
+        if (!(e instanceof Mob mob) || !isFoe(e) || levelOf(e) > 0) return;
+        if (world != world.getServer().overworld() || !ModWorld.isArchipelago()) return;
+        int[] b = bandAt(e.blockPosition());
+        int level = mob.hasCustomName() ? b[1] + 2 : b[0] + world.getRandom().nextInt(b[1] - b[0] + 1);
         apply(mob, level);
     }
 
@@ -191,13 +190,13 @@ public final class Levels {
 
     /** Foes hit harder with level; pirates hit harder as they master the weapon in hand. */
     public static float scaleIncoming(LivingEntity victim, DamageSource source, float amount) {
-        if (victim.getWorld().isClient) return amount;
-        Entity attacker = source.getAttacker();
+        if (victim.level().isClientSide()) return amount;
+        Entity attacker = source.getEntity();
         if (attacker == null || attacker == victim) return amount;
         int lv = levelOf(attacker);
-        if (lv > 0 && !(victim instanceof MobEntity && levelOf(victim) > 0)) amount *= (float) damageFactor(lv);
-        if (attacker instanceof ServerPlayerEntity p && levelOf(victim) > 0) {
-            Weapon w = com.cursedtides.pirate.PirateEvents.weaponFor(p, source.getSource());
+        if (lv > 0 && !(victim instanceof Mob && levelOf(victim) > 0)) amount *= (float) damageFactor(lv);
+        if (attacker instanceof ServerPlayer p && levelOf(victim) > 0) {
+            Weapon w = com.cursedtides.pirate.PirateEvents.weaponFor(p, source.getDirectEntity());
             if (w != null) amount *= 1f + 0.015f * PirateData.level(p, w);
         }
         return amount;
@@ -207,33 +206,33 @@ public final class Levels {
 
     /** After a hit has landed: show the number, and earn reputation in the weapon that struck it. */
     public static void afterDamage(LivingEntity victim, DamageSource source, float dealt) {
-        if (dealt <= 0 || victim.getWorld().isClient) return;
-        Entity attacker = source.getAttacker();
-        boolean crit = source.getSource() instanceof ServerPlayerEntity sp && sp.fallDistance > 0 && !sp.isOnGround();
+        if (dealt <= 0 || victim.level().isClientSide()) return;
+        Entity attacker = source.getEntity();
+        boolean crit = source.getDirectEntity() instanceof ServerPlayer sp && sp.fallDistance > 0 && !sp.onGround();
         int shown = Math.max(1, Math.round(dealt * HP_SCALE));
-        if (attacker instanceof ServerPlayerEntity p) {
+        if (attacker instanceof ServerPlayer p) {
             ServerPlayNetworking.send(p, new DamageNumber(victim.getId(), shown, crit ? 1 : 0));
-            com.cursedtides.quest.Lessons.onHit(p, com.cursedtides.pirate.PirateEvents.weaponFor(p, source.getSource()), victim);
+            com.cursedtides.quest.Lessons.onHit(p, com.cursedtides.pirate.PirateEvents.weaponFor(p, source.getDirectEntity()), victim);
             int lv = levelOf(victim);
             if (lv > 0) {
-                Weapon w = com.cursedtides.pirate.PirateEvents.weaponFor(p, source.getSource());
+                Weapon w = com.cursedtides.pirate.PirateEvents.weaponFor(p, source.getDirectEntity());
                 if (w != null) {
                     double rel = 1 + (lv - PirateData.notoriety(p)) * 0.1;
                     rel = Math.max(0.1, Math.min(2.0, rel));
-                    float rep = (float) (dealt * 0.6 * rel) + REP_REMAINDER.getOrDefault(p.getUuid(), 0f);
+                    float rep = (float) (dealt * 0.6 * rel) + REP_REMAINDER.getOrDefault(p.getUUID(), 0f);
                     int whole = (int) rep;
-                    REP_REMAINDER.put(p.getUuid(), rep - whole);
+                    REP_REMAINDER.put(p.getUUID(), rep - whole);
                     if (whole > 0) PirateData.addXp(p, w, whole);
                 }
             }
         }
-        if (victim instanceof ServerPlayerEntity p && attacker != null) {
+        if (victim instanceof ServerPlayer p && attacker != null) {
             ServerPlayNetworking.send(p, new DamageNumber(victim.getId(), shown, 2));
         }
     }
 
     /** The bonus for finishing a foe: worth more the tougher it was. */
-    public static int killReputation(ServerPlayerEntity p, LivingEntity victim) {
+    public static int killReputation(ServerPlayer p, LivingEntity victim) {
         int lv = levelOf(victim);
         if (lv <= 0) return Math.max(2, Math.round(victim.getMaxHealth() / 4f));
         double rel = Math.max(0.1, Math.min(2.0, 1 + (lv - PirateData.notoriety(p)) * 0.1));
@@ -246,20 +245,20 @@ public final class Levels {
         return (notoriety - 1) * 0.8;
     }
 
-    public static void refreshPlayer(ServerPlayerEntity p) {
-        EntityAttributeInstance hp = p.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
+    public static void refreshPlayer(ServerPlayer p) {
+        AttributeInstance hp = p.getAttribute(Attributes.MAX_HEALTH);
         if (hp == null) return;
         double want = playerBonusHealth(PirateData.notoriety(p));
-        EntityAttributeModifier cur = hp.getModifier(PLAYER_HEALTH);
-        if (cur != null && cur.value() == want) return;
+        AttributeModifier cur = hp.getModifier(PLAYER_HEALTH);
+        if (cur != null && cur.amount() == want) return;
         boolean full = p.getHealth() >= p.getMaxHealth() - 0.01f;
         hp.removeModifier(PLAYER_HEALTH);
-        if (want > 0) hp.addPersistentModifier(new EntityAttributeModifier(PLAYER_HEALTH, want, EntityAttributeModifier.Operation.ADD_VALUE));
+        if (want > 0) hp.addPermanentModifier(new AttributeModifier(PLAYER_HEALTH, want, AttributeModifier.Operation.ADD_VALUE));
         if (full) p.setHealth(p.getMaxHealth());
         sendHud(p);
     }
 
-    public static void sendHud(ServerPlayerEntity p) {
+    public static void sendHud(ServerPlayer p) {
         int total = PirateData.totalXp(p);
         int lv = PirateData.notoriety(p);
         int from = PirateData.totalXpForNotoriety(lv), to = PirateData.totalXpForNotoriety(lv + 1);
@@ -269,10 +268,10 @@ public final class Levels {
     private static final Map<UUID, Integer> LAST_HUD = new HashMap<>();
 
     private static void tick(MinecraftServer server) {
-        if (server.getTicks() % 10 != 0) return;
-        for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
+        if (server.getTickCount() % 10 != 0) return;
+        for (ServerPlayer p : server.getPlayerList().getPlayers()) {
             int key = PirateData.totalXp(p) * 31 + PirateData.voodoo(p);
-            Integer last = LAST_HUD.put(p.getUuid(), key);
+            Integer last = LAST_HUD.put(p.getUUID(), key);
             if (last == null || last != key) sendHud(p);
         }
     }
@@ -280,41 +279,41 @@ public final class Levels {
     // ------------------------------------------------------------------ payloads
 
     /** kind: 0 = you hit something, 1 = a critical hit, 2 = you were hit. */
-    public record DamageNumber(int entity, int amount, int kind) implements CustomPayload {
-        public static final CustomPayload.Id<DamageNumber> ID = new CustomPayload.Id<>(CursedTides.id("damage_number"));
-        public static final PacketCodec<RegistryByteBuf, DamageNumber> CODEC = PacketCodec.tuple(
-                PacketCodecs.VAR_INT, DamageNumber::entity, PacketCodecs.VAR_INT, DamageNumber::amount,
-                PacketCodecs.VAR_INT, DamageNumber::kind, DamageNumber::new);
+    public record DamageNumber(int entity, int amount, int kind) implements CustomPacketPayload {
+        public static final CustomPacketPayload.Type<DamageNumber> ID = new CustomPacketPayload.Type<>(CursedTides.id("damage_number"));
+        public static final StreamCodec<RegistryFriendlyByteBuf, DamageNumber> CODEC = StreamCodec.composite(
+                ByteBufCodecs.VAR_INT, DamageNumber::entity, ByteBufCodecs.VAR_INT, DamageNumber::amount,
+                ByteBufCodecs.VAR_INT, DamageNumber::kind, DamageNumber::new);
 
         @Override
-        public Id<? extends CustomPayload> getId() { return ID; }
+        public Type<? extends CustomPacketPayload> type() { return ID; }
     }
 
-    public record Hud(int notoriety, int rep, int repNeeded, int voodoo, int maxVoodoo) implements CustomPayload {
-        public static final CustomPayload.Id<Hud> ID = new CustomPayload.Id<>(CursedTides.id("hud"));
-        public static final PacketCodec<RegistryByteBuf, Hud> CODEC = PacketCodec.tuple(
-                PacketCodecs.VAR_INT, Hud::notoriety, PacketCodecs.VAR_INT, Hud::rep, PacketCodecs.VAR_INT, Hud::repNeeded,
-                PacketCodecs.VAR_INT, Hud::voodoo, PacketCodecs.VAR_INT, Hud::maxVoodoo, Hud::new);
+    public record Hud(int notoriety, int rep, int repNeeded, int voodoo, int maxVoodoo) implements CustomPacketPayload {
+        public static final CustomPacketPayload.Type<Hud> ID = new CustomPacketPayload.Type<>(CursedTides.id("hud"));
+        public static final StreamCodec<RegistryFriendlyByteBuf, Hud> CODEC = StreamCodec.composite(
+                ByteBufCodecs.VAR_INT, Hud::notoriety, ByteBufCodecs.VAR_INT, Hud::rep, ByteBufCodecs.VAR_INT, Hud::repNeeded,
+                ByteBufCodecs.VAR_INT, Hud::voodoo, ByteBufCodecs.VAR_INT, Hud::maxVoodoo, Hud::new);
 
         @Override
-        public Id<? extends CustomPayload> getId() { return ID; }
+        public Type<? extends CustomPacketPayload> type() { return ID; }
     }
 
     public static void register() {
-        PayloadTypeRegistry.playS2C().register(DamageNumber.ID, DamageNumber.CODEC);
-        PayloadTypeRegistry.playS2C().register(Hud.ID, Hud.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(DamageNumber.ID, DamageNumber.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(Hud.ID, Hud.CODEC);
         ServerEntityEvents.ENTITY_LOAD.register(Levels::onLoad);
         // Foes loaded while the world was starting (before it knew it was the archipelago) get their levels now
         net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STARTED.register(server -> {
-            ServerWorld w = server.getOverworld();
-            for (Entity e : w.iterateEntities()) onLoad(e, w);
+            ServerLevel w = server.overworld();
+            for (Entity e : w.getAllEntities()) onLoad(e, w);
         });
         ServerTickEvents.END_SERVER_TICK.register(Levels::tick);
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> server.execute(() -> refreshPlayer(handler.player)));
         ServerPlayerEvents.AFTER_RESPAWN.register((oldP, p, alive) -> refreshPlayer(p));
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
-            LAST_HUD.remove(handler.player.getUuid());
-            REP_REMAINDER.remove(handler.player.getUuid());
+            LAST_HUD.remove(handler.player.getUUID());
+            REP_REMAINDER.remove(handler.player.getUUID());
         });
     }
 }

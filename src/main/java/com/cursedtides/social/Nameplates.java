@@ -8,19 +8,18 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.network.RegistryByteBuf;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.codec.PacketCodecs;
-import net.minecraft.network.packet.CustomPayload;
-import net.minecraft.scoreboard.ServerScoreboard;
-import net.minecraft.scoreboard.Team;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.Box;
-
+import net.minecraft.server.ServerScoreboard;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.scores.PlayerTeam;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -38,81 +37,81 @@ public final class Nameplates {
     public static final int MARK_WORK = 1, MARK_RETURN = 2, MARK_STORY = 3;
 
     /** Server to client: which nearby people get which marker. */
-    public record Markers(List<Integer> ids, List<Integer> kinds) implements CustomPayload {
-        public static final CustomPayload.Id<Markers> ID = new CustomPayload.Id<>(CursedTides.id("npc_markers"));
-        public static final PacketCodec<RegistryByteBuf, Markers> CODEC = PacketCodec.tuple(
-                PacketCodecs.VAR_INT.collect(PacketCodecs.toList()), Markers::ids,
-                PacketCodecs.VAR_INT.collect(PacketCodecs.toList()), Markers::kinds, Markers::new);
+    public record Markers(List<Integer> ids, List<Integer> kinds) implements CustomPacketPayload {
+        public static final CustomPacketPayload.Type<Markers> ID = new CustomPacketPayload.Type<>(CursedTides.id("npc_markers"));
+        public static final StreamCodec<RegistryFriendlyByteBuf, Markers> CODEC = StreamCodec.composite(
+                ByteBufCodecs.VAR_INT.apply(ByteBufCodecs.list()), Markers::ids,
+                ByteBufCodecs.VAR_INT.apply(ByteBufCodecs.list()), Markers::kinds, Markers::new);
 
         @Override
-        public Id<? extends CustomPayload> getId() { return ID; }
+        public Type<? extends CustomPacketPayload> type() { return ID; }
     }
 
     private static final Map<UUID, String> LAST = new HashMap<>();
     private static final Map<UUID, Markers> SENT = new HashMap<>();
 
     public static void register() {
-        PayloadTypeRegistry.playS2C().register(Markers.ID, Markers.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(Markers.ID, Markers.CODEC);
         ServerPlayConnectionEvents.JOIN.register((h, s, server) -> server.execute(() -> refresh(h.player)));
-        ServerPlayConnectionEvents.DISCONNECT.register((h, s) -> { LAST.remove(h.player.getUuid()); SENT.remove(h.player.getUuid()); });
+        ServerPlayConnectionEvents.DISCONNECT.register((h, s) -> { LAST.remove(h.player.getUUID()); SENT.remove(h.player.getUUID()); });
         ServerTickEvents.END_SERVER_TICK.register(server -> {
-            if (server.getTicks() % 100 == 37) for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) refresh(p);
-            if (server.getTicks() % 20 == 3) for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) markers(p);
+            if (server.getTickCount() % 100 == 37) for (ServerPlayer p : server.getPlayerList().getPlayers()) refresh(p);
+            if (server.getTickCount() % 20 == 3) for (ServerPlayer p : server.getPlayerList().getPlayers()) markers(p);
         });
         // Crewmates can't hurt each other (this used to be the crew team's job)
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((victim, source, amount) -> {
-            if (victim instanceof ServerPlayerEntity v && source.getAttacker() instanceof ServerPlayerEntity a && a != v
-                    && CrewState.allied(v.getServer(), a.getUuid(), v.getUuid())) return false;
+            if (victim instanceof ServerPlayer v && source.getEntity() instanceof ServerPlayer a && a != v
+                    && CrewState.allied(v.level().getServer(), a.getUUID(), v.getUUID())) return false;
             return true;
         });
     }
 
     public static void syncAll(MinecraftServer server) {
         LAST.clear();
-        for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) refresh(p);
+        for (ServerPlayer p : server.getPlayerList().getPlayers()) refresh(p);
     }
 
-    private static Formatting levelColor(int lv) {
-        return lv < 10 ? Formatting.GRAY : lv < 20 ? Formatting.YELLOW : lv < 30 ? Formatting.GOLD : lv < 40 ? Formatting.RED : Formatting.DARK_RED;
+    private static ChatFormatting levelColor(int lv) {
+        return lv < 10 ? ChatFormatting.GRAY : lv < 20 ? ChatFormatting.YELLOW : lv < 30 ? ChatFormatting.GOLD : lv < 40 ? ChatFormatting.RED : ChatFormatting.DARK_RED;
     }
 
     /** Puts this pirate on their own scoreboard team, whose prefix and suffix make their nameplate. */
-    public static void refresh(ServerPlayerEntity p) {
-        MinecraftServer server = p.getServer();
+    public static void refresh(ServerPlayer p) {
+        MinecraftServer server = p.level().getServer();
         if (server == null) return;
-        CrewState.Crew crew = CrewState.get(server).crewOf(p.getUuid());
-        String guild = Guilds.nameOf(server, p.getUuid());
+        CrewState.Crew crew = CrewState.get(server).crewOf(p.getUUID());
+        String guild = Guilds.nameOf(server, p.getUUID());
         int lv = PirateData.notoriety(p);
         String badges = Infamy.badges(p), title = Titles.worn(p);
         String key = (crew == null ? "" : crew.name + "|" + crew.color) + "|" + guild + "|" + lv + "|" + badges + "|" + title;
-        if (key.equals(LAST.get(p.getUuid()))) return;
-        LAST.put(p.getUuid(), key);
+        if (key.equals(LAST.get(p.getUUID()))) return;
+        LAST.put(p.getUUID(), key);
         ServerScoreboard sb = server.getScoreboard();
-        String id = "ctp_" + p.getUuid().toString().replace("-", "").substring(0, 12);
-        Team t = sb.getTeam(id);
-        if (t == null) t = sb.addTeam(id);
-        t.setPrefix(crew == null ? Text.empty() : Text.literal("[" + crew.name + "] ").formatted(crew.formatting()));
-        MutableText suffix = Text.literal(" Lv " + lv).formatted(levelColor(lv));
-        if (!badges.isEmpty()) suffix.append(Text.literal(badges).formatted(Formatting.DARK_RED));
-        if (title != null) suffix.append(Text.literal(" ‹" + title + "›").formatted(Formatting.GRAY, Formatting.ITALIC));
-        if (guild != null) suffix.append(Text.literal(" «" + guild + "»").formatted(Formatting.DARK_GREEN));
-        t.setSuffix(suffix);
-        t.setColor(crew == null ? Formatting.WHITE : crew.formatting());
-        t.setShowFriendlyInvisibles(true);
-        sb.addScoreHolderToTeam(p.getNameForScoreboard(), t);
+        String id = "ctp_" + p.getUUID().toString().replace("-", "").substring(0, 12);
+        PlayerTeam t = sb.getPlayerTeam(id);
+        if (t == null) t = sb.addPlayerTeam(id);
+        t.setPlayerPrefix(crew == null ? Component.empty() : Component.literal("[" + crew.name + "] ").withStyle(crew.formatting()));
+        MutableComponent suffix = Component.literal(" Lv " + lv).withStyle(levelColor(lv));
+        if (!badges.isEmpty()) suffix.append(Component.literal(badges).withStyle(ChatFormatting.DARK_RED));
+        if (title != null) suffix.append(Component.literal(" ‹" + title + "›").withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
+        if (guild != null) suffix.append(Component.literal(" «" + guild + "»").withStyle(ChatFormatting.DARK_GREEN));
+        t.setPlayerSuffix(suffix);
+        t.setColor(java.util.Optional.of(net.minecraft.world.scores.TeamColor.VALUES.get((crew == null ? ChatFormatting.WHITE : crew.formatting()).ordinal())));
+        t.setSeeFriendlyInvisibles(true);
+        sb.addPlayerToTeam(p.getScoreboardName(), t);
     }
 
-    private static void markers(ServerPlayerEntity p) {
+    private static void markers(ServerPlayer p) {
         List<Integer> ids = new ArrayList<>(), kinds = new ArrayList<>();
         StoryNpcEntity.Role story = com.cursedtides.quest.Objectives.storyRole(p);
-        for (StoryNpcEntity npc : p.getServerWorld().getEntitiesByClass(StoryNpcEntity.class, new Box(p.getBlockPos()).expand(48), n -> true)) {
+        for (StoryNpcEntity npc : p.level().getEntitiesOfClass(StoryNpcEntity.class, new AABB(p.blockPosition()).inflate(48), n -> true)) {
             int e = com.cursedtides.quest.Errands.marker(p, npc.getRole());
             int k = npc.getRole() == story ? MARK_STORY : e == 2 ? MARK_RETURN : e == 1 ? MARK_WORK : 0;
             if (k > 0) { ids.add(npc.getId()); kinds.add(k); }
         }
         Markers m = new Markers(ids, kinds);
-        if (m.equals(SENT.get(p.getUuid()))) return;
-        SENT.put(p.getUuid(), m);
+        if (m.equals(SENT.get(p.getUUID()))) return;
+        SENT.put(p.getUUID(), m);
         ServerPlayNetworking.send(p, m);
     }
 }

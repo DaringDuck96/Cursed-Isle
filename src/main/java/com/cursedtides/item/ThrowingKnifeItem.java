@@ -1,45 +1,46 @@
 package com.cursedtides.item;
 
+import net.minecraft.world.InteractionResult;
 import com.cursedtides.entity.ThrowingKnifeEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.tooltip.TooltipType;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Hand;
-import net.minecraft.util.TypedActionResult;
-import net.minecraft.world.World;
-
 import java.util.List;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.level.Level;
 
 /** Thrown with a flick. Pick them back up where they land. */
 public class ThrowingKnifeItem extends Item {
-    public ThrowingKnifeItem(Settings settings) {
+    public ThrowingKnifeItem(Properties settings) {
         super(settings);
     }
 
     @Override
-    public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
-        ItemStack stack = user.getStackInHand(hand);
-        world.playSound(null, user.getX(), user.getY(), user.getZ(), SoundEvents.ENTITY_SNOWBALL_THROW,
-                SoundCategory.PLAYERS, 0.6f, 1.6f);
-        user.getItemCooldownManager().set(this, 8);
-        if (!world.isClient) {
+    public InteractionResult use(Level world, Player user, InteractionHand hand) {
+        ItemStack stack = user.getItemInHand(hand);
+        world.playSound(null, user.getX(), user.getY(), user.getZ(), SoundEvents.SNOWBALL_THROW,
+                SoundSource.PLAYERS, 0.6f, 1.6f);
+        user.getCooldowns().addCooldown(new ItemStack(this), 8);
+        if (!world.isClientSide()) {
             ThrowingKnifeEntity knife = new ThrowingKnifeEntity(world, user);
-            knife.setVelocity(user, user.getPitch(), user.getYaw(), 0.0f, 2.2f, 0.5f);
-            world.spawnEntity(knife);
+            knife.shootFromRotation(user, user.getXRot(), user.getYRot(), 0.0f, 2.2f, 0.5f);
+            world.addFreshEntity(knife);
         }
-        if (!user.getAbilities().creativeMode) {
-            stack.decrement(1);
+        if (!user.getAbilities().instabuild) {
+            stack.shrink(1);
         }
-        return TypedActionResult.success(stack, world.isClient);
+        return InteractionResult.SUCCESS;
     }
 
     @Override
-    public void appendTooltip(ItemStack stack, TooltipContext context, List<Text> tooltip, TooltipType type) {
-        tooltip.add(Text.literal("Right-click to throw. Trains Blades.").formatted(Formatting.GRAY));
+    public void appendHoverText(ItemStack stack, TooltipContext context, net.minecraft.world.item.component.TooltipDisplay display__, java.util.function.Consumer<Component> adder__, TooltipFlag type) {
+        java.util.List<Component> tooltip = new java.util.ArrayList<>();
+        tooltip.add(Component.literal("Right-click to throw. Trains Blades.").withStyle(ChatFormatting.GRAY));
+        tooltip.forEach(adder__);
     }
 }

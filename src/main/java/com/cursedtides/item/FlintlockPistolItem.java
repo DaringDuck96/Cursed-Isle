@@ -1,33 +1,32 @@
 package com.cursedtides.item;
 
+import net.minecraft.world.InteractionResult;
 import com.cursedtides.pirate.PirateData;
 import com.cursedtides.pirate.Weapon;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.projectile.ProjectileUtil;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.tooltip.TooltipType;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Hand;
-import net.minecraft.util.TypedActionResult;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.EntityHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.RaycastContext;
-import net.minecraft.world.World;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.ProjectileUtil;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * Any black-powder firearm: pistol, musket or blunderbuss. Hitscan, one Pistol Shot per
@@ -56,11 +55,11 @@ public class FlintlockPistolItem extends Item {
 
     private final Stats stats;
 
-    public FlintlockPistolItem(Settings settings) {
+    public FlintlockPistolItem(Properties settings) {
         this(settings, PISTOL);
     }
 
-    public FlintlockPistolItem(Settings settings, Stats stats) {
+    public FlintlockPistolItem(Properties settings, Stats stats) {
         super(settings);
         this.stats = stats;
     }
@@ -69,32 +68,32 @@ public class FlintlockPistolItem extends Item {
     private static final java.util.Map<java.util.UUID, Long> AIMING = new java.util.HashMap<>();
 
     @Override
-    public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
-        ItemStack gun = user.getStackInHand(hand);
-        if (user.isSneaking() && !world.isClient) {
+    public InteractionResult use(Level world, Player user, InteractionHand hand) {
+        ItemStack gun = user.getItemInHand(hand);
+        if (user.isShiftKeyDown() && !world.isClientSide()) {
             // Take Aim: steady yourself; the next shot within five seconds hits half again as hard
-            AIMING.put(user.getUuid(), world.getTime() + 100);
-            user.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(net.minecraft.entity.effect.StatusEffects.SLOWNESS, 100, 2, false, false));
-            user.sendMessage(Text.literal("You steady your aim...").formatted(Formatting.GOLD), true);
-            world.playSound(null, user.getBlockPos(), SoundEvents.ITEM_CROSSBOW_LOADING_MIDDLE.value(), SoundCategory.PLAYERS, 0.8f, 1.2f);
-            return TypedActionResult.success(gun);
+            AIMING.put(user.getUUID(), world.getGameTime() + 100);
+            user.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.SLOWNESS, 100, 2, false, false));
+            com.cursedtides.util.Compat.tell(user, Component.literal("You steady your aim...").withStyle(ChatFormatting.GOLD), true);
+            world.playSound(null, user.blockPosition(), SoundEvents.CROSSBOW_LOADING_MIDDLE.value(), SoundSource.PLAYERS, 0.8f, 1.2f);
+            return InteractionResult.SUCCESS;
         }
-        if (user.isSneaking()) return TypedActionResult.success(gun, true);
+        if (user.isShiftKeyDown()) return InteractionResult.SUCCESS;
 
         // Special shot in the off hand is loaded first: venom, hot or silver; otherwise plain lead
-        net.minecraft.item.Item shot = ModItems.PISTOL_SHOT;
-        ItemStack off = user.getOffHandStack();
-        if (off.isOf(ModItems.VENOM_SHOT) || off.isOf(ModItems.HOT_SHOT) || off.isOf(ModItems.SILVER_SHOT)) shot = off.getItem();
+        net.minecraft.world.item.Item shot = ModItems.PISTOL_SHOT;
+        ItemStack off = user.getOffhandItem();
+        if (off.is(ModItems.VENOM_SHOT) || off.is(ModItems.HOT_SHOT) || off.is(ModItems.SILVER_SHOT)) shot = off.getItem();
         double save = com.cursedtides.pirate.PerkData.stat(user, com.cursedtides.pirate.Perk.Stat.AMMO_SAVE);
-        boolean keepShot = !world.isClient && user.getRandom().nextDouble() < save
-                && user.getInventory().count(shot) > 0;
+        boolean keepShot = !world.isClientSide() && user.getRandom().nextDouble() < save
+                && user.getInventory().countItem(shot) > 0;
         if (!keepShot && !AmmoHelper.consume(user, shot)) {
             world.playSound(null, user.getX(), user.getY(), user.getZ(),
-                    SoundEvents.BLOCK_DISPENSER_FAIL, SoundCategory.PLAYERS, 0.8f, 1.4f);
-            if (!world.isClient) {
-                user.sendMessage(Text.translatable("message.cursedtides.no_pistol_shot"), true);
+                    SoundEvents.DISPENSER_FAIL, SoundSource.PLAYERS, 0.8f, 1.4f);
+            if (!world.isClientSide()) {
+                com.cursedtides.util.Compat.tell(user, Component.translatable("message.cursedtides.no_pistol_shot"), true);
             }
-            return TypedActionResult.fail(gun);
+            return InteractionResult.FAIL;
         }
 
         int level = PirateData.level(user, Weapon.PISTOL);
@@ -102,111 +101,113 @@ public class FlintlockPistolItem extends Item {
                 + (float) com.cursedtides.pirate.PerkData.stat(user, com.cursedtides.pirate.Perk.Stat.GUN_DAMAGE))
                 * com.cursedtides.profession.Honing.gunBonus(gun);
         double faster = com.cursedtides.pirate.PerkData.stat(user, com.cursedtides.pirate.Perk.Stat.RELOAD);
-        Long aimed = AIMING.remove(user.getUuid());
-        if (aimed != null && aimed >= world.getTime()) {
+        Long aimed = AIMING.remove(user.getUUID());
+        if (aimed != null && aimed >= world.getGameTime()) {
             damage *= 1.5f;
-            user.removeStatusEffect(net.minecraft.entity.effect.StatusEffects.SLOWNESS);
+            user.removeEffect(net.minecraft.world.effect.MobEffects.SLOWNESS);
         }
 
         world.playSound(null, user.getX(), user.getY(), user.getZ(),
-                SoundEvents.ENTITY_FIREWORK_ROCKET_LARGE_BLAST, SoundCategory.PLAYERS, 1.0f,
+                SoundEvents.FIREWORK_ROCKET_LARGE_BLAST, SoundSource.PLAYERS, 1.0f,
                 stats.pellets() > 1 ? 0.4f : stats.range() > 40 ? 0.7f : 0.55f);
         int reload = Math.max(stats.reloadTicks() / 2, stats.reloadTicks() - level);
         boolean secondBarrel = false;
         if (stats.barrels() > 1) {
-            var data = gun.getOrDefault(net.minecraft.component.DataComponentTypes.CUSTOM_DATA, net.minecraft.component.type.NbtComponent.DEFAULT).copyNbt();
-            int fired = data.getInt("Fired") + 1;
+            var data = gun.getOrDefault(net.minecraft.core.component.DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.EMPTY).copyTag();
+            int fired = data.getIntOr("Fired", 0) + 1;
             secondBarrel = fired < stats.barrels();
             data.putInt("Fired", secondBarrel ? fired : 0);
-            gun.set(net.minecraft.component.DataComponentTypes.CUSTOM_DATA, net.minecraft.component.type.NbtComponent.of(data));
+            gun.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.of(data));
         }
-        user.getItemCooldownManager().set(this, secondBarrel ? 6 : Math.max(6, (int) Math.round(reload * (1.0 - faster))));
+        user.getCooldowns().addCooldown(new ItemStack(this), secondBarrel ? 6 : Math.max(6, (int) Math.round(reload * (1.0 - faster))));
 
-        if (world instanceof ServerWorld serverWorld) {
-            Vec3d start = user.getEyePos();
-            Vec3d aim = user.getRotationVec(1.0f);
-            Vec3d muzzle = start.add(aim.multiply(0.8)).add(0, -0.15, 0);
+        if (world instanceof ServerLevel serverWorld) {
+            Vec3 start = user.getEyePosition();
+            Vec3 aim = user.getViewVector(1.0f);
+            Vec3 muzzle = start.add(aim.scale(0.8)).add(0, -0.15, 0);
             Map<Entity, Float> hits = new HashMap<>();
 
             for (int i = 0; i < stats.pellets(); i++) {
-                Vec3d dir = stats.pellets() > 1 ? jitter(aim, stats.spreadDegrees(), user) : aim;
-                Vec3d end = start.add(dir.multiply(stats.range()));
-                BlockHitResult blockHit = world.raycast(new RaycastContext(start, end,
-                        RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, user));
+                Vec3 dir = stats.pellets() > 1 ? jitter(aim, stats.spreadDegrees(), user) : aim;
+                Vec3 end = start.add(dir.scale(stats.range()));
+                BlockHitResult blockHit = world.clip(new ClipContext(start, end,
+                        ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, user));
                 if (blockHit.getType() != HitResult.Type.MISS) {
-                    end = blockHit.getPos();
+                    end = blockHit.getLocation();
                 }
-                Box searchBox = user.getBoundingBox().stretch(dir.multiply(stats.range())).expand(1.0);
-                EntityHitResult entityHit = ProjectileUtil.raycast(user, start, end, searchBox,
-                        e -> !e.isSpectator() && e.canHit() && e != user && e != user.getVehicle(),
-                        start.squaredDistanceTo(end));
+                AABB searchBox = user.getBoundingBox().expandTowards(dir.scale(stats.range())).inflate(1.0);
+                EntityHitResult entityHit = ProjectileUtil.getEntityHitResult(user, start, end, searchBox,
+                        e -> !e.isSpectator() && e.isPickable() && e != user && e != user.getVehicle(),
+                        start.distanceToSqr(end));
                 if (entityHit != null) {
-                    end = entityHit.getPos();
+                    end = entityHit.getLocation();
                     hits.merge(entityHit.getEntity(), damage, Float::sum);
                 }
                 double length = muzzle.distanceTo(end);
-                Vec3d step = end.subtract(muzzle).normalize();
+                Vec3 step = end.subtract(muzzle).normalize();
                 for (double d = 0; d < length; d += stats.pellets() > 1 ? 1.5 : 0.75) {
-                    Vec3d p = muzzle.add(step.multiply(d));
-                    serverWorld.spawnParticles(ParticleTypes.SMOKE, p.x, p.y, p.z, 1, 0, 0, 0, 0);
+                    Vec3 p = muzzle.add(step.scale(d));
+                    serverWorld.sendParticles(ParticleTypes.SMOKE, p.x, p.y, p.z, 1, 0, 0, 0, 0);
                 }
-                serverWorld.spawnParticles(ParticleTypes.CRIT, end.x, end.y, end.z, 3, 0.1, 0.1, 0.1, 0.1);
+                serverWorld.sendParticles(ParticleTypes.CRIT, end.x, end.y, end.z, 3, 0.1, 0.1, 0.1, 0.1);
             }
 
             if (stats.blast()) {
-                Vec3d end = start.add(aim.multiply(stats.range()));
-                BlockHitResult bh = world.raycast(new RaycastContext(start, end, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, user));
-                Vec3d at = hits.isEmpty() ? (bh.getType() != HitResult.Type.MISS ? bh.getPos() : null) : hits.keySet().iterator().next().getPos();
+                Vec3 end = start.add(aim.scale(stats.range()));
+                BlockHitResult bh = world.clip(new ClipContext(start, end, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, user));
+                Vec3 at = hits.isEmpty() ? (bh.getType() != HitResult.Type.MISS ? bh.getLocation() : null) : hits.keySet().iterator().next().position();
                 if (at != null) {
-                    serverWorld.spawnParticles(ParticleTypes.EXPLOSION, at.x, at.y + 0.5, at.z, 2, 0.3, 0.3, 0.3, 0);
-                    world.playSound(null, at.x, at.y, at.z, SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, 0.9f, 1.2f);
-                    for (Entity near : world.getOtherEntities(user, new Box(at, at).expand(2.5), e -> e instanceof LivingEntity && e.isAlive())) {
+                    serverWorld.sendParticles(ParticleTypes.EXPLOSION, at.x, at.y + 0.5, at.z, 2, 0.3, 0.3, 0.3, 0);
+                    world.playSound(null, at.x, at.y, at.z, SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 0.9f, 1.2f);
+                    for (Entity near : world.getEntities(user, new AABB(at, at).inflate(2.5), e -> e instanceof LivingEntity && e.isAlive())) {
                         hits.merge(near, damage * 0.5f, Float::sum);
                         if (near instanceof LivingEntity l) com.cursedtides.combat.Styles.stagger(l, 30);
                     }
                 }
-                user.addVelocity(-aim.x * 0.5, 0.1, -aim.z * 0.5);
-                user.velocityModified = true;
+                user.push(-aim.x * 0.5, 0.1, -aim.z * 0.5);
+                user.syncVelocity = true;
             }
-            if (user instanceof net.minecraft.server.network.ServerPlayerEntity sp) {
+            if (user instanceof net.minecraft.server.level.ServerPlayer sp) {
                 com.cursedtides.activity.ShootingRange.onShot(sp, hits.keySet());
             }
             for (Map.Entry<Entity, Float> hit : hits.entrySet()) {
                 Entity target = hit.getKey();
                 float dealt = hit.getValue();
-                if (shot == ModItems.SILVER_SHOT && target instanceof LivingEntity l && (l.getType().isIn(net.minecraft.registry.tag.EntityTypeTags.UNDEAD)
+                if (shot == ModItems.SILVER_SHOT && target instanceof LivingEntity l && (l.getType().builtInRegistryHolder().is(net.minecraft.tags.EntityTypeTags.UNDEAD)
                         || l instanceof com.cursedtides.entity.CursedPirateEntity)) dealt *= 1.75f;
-                if (shot == ModItems.HOT_SHOT) { dealt *= 1.15f; target.setOnFireFor(5); }
-                target.damage(world.getDamageSources().playerAttack(user), dealt);
+                if (shot == ModItems.HOT_SHOT) { dealt *= 1.15f; target.igniteForSeconds(5); }
+                target.hurt(world.damageSources().playerAttack(user), dealt);
                 if (shot == ModItems.VENOM_SHOT && target instanceof LivingEntity l) {
-                    l.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(net.minecraft.entity.effect.StatusEffects.POISON, 100, 1), user);
+                    l.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.POISON, 100, 1), user);
                 }
                 if (target instanceof LivingEntity living) {
-                    living.takeKnockback(stats.pellets() > 1 ? 0.8 : 0.4, -aim.x, -aim.z);
+                    com.cursedtides.util.Compat.knock(living, stats.pellets() > 1 ? 0.8 : 0.4, -aim.x, -aim.z);
                 }
             }
 
-            serverWorld.spawnParticles(ParticleTypes.LARGE_SMOKE, muzzle.x, muzzle.y, muzzle.z,
+            serverWorld.sendParticles(ParticleTypes.LARGE_SMOKE, muzzle.x, muzzle.y, muzzle.z,
                     stats.pellets() > 1 ? 10 : 4, 0.08, 0.08, 0.08, 0.02);
-            serverWorld.spawnParticles(ParticleTypes.FLAME, muzzle.x, muzzle.y, muzzle.z, 3, 0.03, 0.03, 0.03, 0.01);
-            gun.damage(1, user, LivingEntity.getSlotForHand(hand));
+            serverWorld.sendParticles(ParticleTypes.FLAME, muzzle.x, muzzle.y, muzzle.z, 3, 0.03, 0.03, 0.03, 0.01);
+            gun.hurtAndBreak(1, user, hand.asEquipmentSlot());
         }
 
-        return TypedActionResult.success(gun, world.isClient);
+        return InteractionResult.SUCCESS;
     }
 
-    private static Vec3d jitter(Vec3d dir, float degrees, PlayerEntity user) {
+    private static Vec3 jitter(Vec3 dir, float degrees, Player user) {
         double spread = Math.toRadians(degrees);
         var random = user.getRandom();
         double yaw = (random.nextDouble() - 0.5) * 2 * spread;
         double pitch = (random.nextDouble() - 0.5) * 2 * spread;
-        return dir.rotateY((float) yaw).rotateX((float) pitch).normalize();
+        return dir.yRot((float) yaw).xRot((float) pitch).normalize();
     }
 
     @Override
-    public void appendTooltip(ItemStack stack, TooltipContext context, List<Text> tooltip, TooltipType type) {
-        tooltip.add(Text.translatable(stats.tooltipKey()).formatted(Formatting.GRAY));
-        tooltip.add(Text.literal("Sneak + use: Take Aim (next shot +50%).").formatted(Formatting.DARK_GRAY));
-        if (stats.barrels() > 1) tooltip.add(Text.literal("Two barrels: fire twice, then reload.").formatted(Formatting.DARK_GRAY));
+    public void appendHoverText(ItemStack stack, TooltipContext context, net.minecraft.world.item.component.TooltipDisplay display__, java.util.function.Consumer<Component> adder__, TooltipFlag type) {
+        java.util.List<Component> tooltip = new java.util.ArrayList<>();
+        tooltip.add(Component.translatable(stats.tooltipKey()).withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.literal("Sneak + use: Take Aim (next shot +50%).").withStyle(ChatFormatting.DARK_GRAY));
+        if (stats.barrels() > 1) tooltip.add(Component.literal("Two barrels: fire twice, then reload.").withStyle(ChatFormatting.DARK_GRAY));
+        tooltip.forEach(adder__);
     }
 }

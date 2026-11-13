@@ -1,7 +1,7 @@
 package com.cursedtides.ship;
 
 import com.cursedtides.item.ModItems;
-import net.minecraft.item.Item;
+import net.minecraft.world.item.Item;
 
 /** The three hulls a captain can own. Bigger ships are tougher, carry more and hit harder, but sail slower. */
 public enum ShipClass {

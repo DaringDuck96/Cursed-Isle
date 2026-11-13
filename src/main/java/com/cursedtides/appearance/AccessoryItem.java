@@ -1,19 +1,18 @@
 package com.cursedtides.appearance;
 
-import net.minecraft.entity.attribute.EntityAttribute;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.tooltip.TooltipType;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Hand;
-import net.minecraft.util.TypedActionResult;
-import net.minecraft.world.World;
-
+import net.minecraft.world.InteractionResult;
 import java.util.List;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.Holder;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.level.Level;
 
 /** Worn, not held: use it to put it on (whatever was in that slot comes back to your pack). */
 public class AccessoryItem extends Item {
@@ -21,16 +20,16 @@ public class AccessoryItem extends Item {
 
     public final Slot slot;
     /** Attribute and amount it grants, or null for a purely special effect. */
-    public final RegistryEntry<EntityAttribute> attribute;
+    public final Holder<Attribute> attribute;
     public final double amount;
     /** Special effect key read by other systems ("crit", "explore", "voodoo"), or null. */
     public final String special;
     public final int visual;
     private final String effectText;
 
-    public AccessoryItem(Settings settings, Slot slot, RegistryEntry<EntityAttribute> attribute, double amount,
+    public AccessoryItem(Properties settings, Slot slot, Holder<Attribute> attribute, double amount,
                          String special, int visual, String effectText) {
-        super(settings.maxCount(1));
+        super(settings.stacksTo(1));
         this.slot = slot;
         this.attribute = attribute;
         this.amount = amount;
@@ -40,23 +39,23 @@ public class AccessoryItem extends Item {
     }
 
     @Override
-    public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
-        ItemStack stack = user.getStackInHand(hand);
-        if (!world.isClient && user instanceof ServerPlayerEntity sp) {
+    public InteractionResult use(Level world, Player user, InteractionHand hand) {
+        ItemStack stack = user.getItemInHand(hand);
+        if (!world.isClientSide() && user instanceof ServerPlayer sp) {
             Appearance.wear(sp, stack);
         }
-        return TypedActionResult.success(stack, world.isClient);
+        return InteractionResult.SUCCESS;
     }
 
     public static int quality(ItemStack stack) {
-        return stack.getOrDefault(net.minecraft.component.DataComponentTypes.CUSTOM_DATA, net.minecraft.component.type.NbtComponent.DEFAULT)
-                .copyNbt().getInt("Quality");
+        return stack.getOrDefault(net.minecraft.core.component.DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.EMPTY)
+                .copyTag().getIntOr("Quality", 0);
     }
 
     public static void setQuality(ItemStack stack, int q) {
-        var n = stack.getOrDefault(net.minecraft.component.DataComponentTypes.CUSTOM_DATA, net.minecraft.component.type.NbtComponent.DEFAULT).copyNbt();
+        var n = stack.getOrDefault(net.minecraft.core.component.DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.EMPTY).copyTag();
         n.putInt("Quality", q);
-        stack.set(net.minecraft.component.DataComponentTypes.CUSTOM_DATA, net.minecraft.component.type.NbtComponent.of(n));
+        stack.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.of(n));
     }
 
     /** Fine pieces are a quarter stronger, Masterwork half again. */
@@ -73,23 +72,26 @@ public class AccessoryItem extends Item {
     }
 
     @Override
-    public void onCraftByPlayer(ItemStack stack, World world, PlayerEntity player) {
-        if (world.isClient || !(player instanceof ServerPlayerEntity sp)) return;
+    public void onCraftedBy(ItemStack stack, Player player) {
+        Level world = player.level();
+        if (world.isClientSide() || !(player instanceof ServerPlayer sp)) return;
         int level = com.cursedtides.profession.ProfessionData.level(sp, trade());
         float roll = sp.getRandom().nextFloat();
         int q = level >= 20 && roll < 0.35f ? 2 : level >= 10 && roll < 0.6f ? 1 : 0;
         if (q > 0) {
             setQuality(stack, q);
-            sp.sendMessage(Text.literal(q == 2 ? "Masterwork!" : "Fine work.").formatted(Formatting.GOLD), true);
+            sp.sendSystemMessage(Component.literal(q == 2 ? "Masterwork!" : "Fine work.").withStyle(ChatFormatting.GOLD), true);
         }
         com.cursedtides.profession.ProfessionData.addXp(sp, trade(), 20 + 10 * stack.getRarity().ordinal());
     }
 
     @Override
-    public void appendTooltip(ItemStack stack, TooltipContext context, List<Text> tooltip, TooltipType type) {
+    public void appendHoverText(ItemStack stack, TooltipContext context, net.minecraft.world.item.component.TooltipDisplay display__, java.util.function.Consumer<Component> adder__, TooltipFlag type) {
+        java.util.List<Component> tooltip = new java.util.ArrayList<>();
         int q = quality(stack);
-        tooltip.add(Text.literal((q == 2 ? "Masterwork " : q == 1 ? "Fine " : "") + "Accessory (" + slot.name().toLowerCase() + ")").formatted(Formatting.GOLD));
-        tooltip.add(Text.literal(effectText + (q > 0 ? "  (x" + factor(q) + ")" : "")).formatted(Formatting.BLUE));
-        tooltip.add(Text.literal("Use to wear it. See what you're wearing with /pirate accessories.").formatted(Formatting.DARK_GRAY));
+        tooltip.add(Component.literal((q == 2 ? "Masterwork " : q == 1 ? "Fine " : "") + "Accessory (" + slot.name().toLowerCase() + ")").withStyle(ChatFormatting.GOLD));
+        tooltip.add(Component.literal(effectText + (q > 0 ? "  (x" + factor(q) + ")" : "")).withStyle(ChatFormatting.BLUE));
+        tooltip.add(Component.literal("Use to wear it. See what you're wearing with /pirate accessories.").withStyle(ChatFormatting.DARK_GRAY));
+        tooltip.forEach(adder__);
     }
 }

@@ -1,19 +1,20 @@
 package com.cursedtides.home;
 
-import net.minecraft.block.BedBlock;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.ChestBlock;
-import net.minecraft.block.DoorBlock;
-import net.minecraft.block.LanternBlock;
-import net.minecraft.block.SlabBlock;
-import net.minecraft.block.StairsBlock;
-import net.minecraft.block.enums.BedPart;
-import net.minecraft.block.enums.DoubleBlockHalf;
-import net.minecraft.block.enums.SlabType;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.BedBlock;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.ChestBlock;
+import net.minecraft.world.level.block.DoorBlock;
+import net.minecraft.world.level.block.LanternBlock;
+import net.minecraft.world.level.block.SlabBlock;
+import net.minecraft.world.level.block.StairBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BedPart;
+import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
+import net.minecraft.world.level.block.state.properties.SlabType;
 
 /** The buildings a deed raises. Each faces south (door on the +z side); width along x, depth along z. */
 public final class Blueprints {
@@ -31,7 +32,7 @@ public final class Blueprints {
     }
 
     /** Builds with its north-west floor corner at origin. Returns the door position. */
-    public static BlockPos build(ServerWorld w, Homes.Kind kind, BlockPos o) {
+    public static BlockPos build(ServerLevel w, Homes.Kind kind, BlockPos o) {
         Size s = size(kind);
         BlockState floor, wall, corner, roof;
         switch (kind) {
@@ -47,11 +48,11 @@ public final class Blueprints {
             for (int z = z0; z <= z1; z++) {
                 for (int y = y0 - 1; y >= y0 - 6; y--) {
                     BlockPos p = new BlockPos(x, y, z);
-                    if (!w.getBlockState(p).isReplaceable() && !w.getBlockState(p).isOf(Blocks.WATER)) break;
-                    w.setBlockState(p, s(Blocks.COBBLESTONE));
+                    if (!w.getBlockState(p).canBeReplaced() && !w.getBlockState(p).is(Blocks.WATER)) break;
+                    w.setBlockAndUpdate(p, s(Blocks.COBBLESTONE));
                 }
-                w.setBlockState(new BlockPos(x, y0 - 1, z), floor);
-                for (int y = y0; y < y0 + s.h() + 3; y++) w.setBlockState(new BlockPos(x, y, z), s(Blocks.AIR));
+                w.setBlockAndUpdate(new BlockPos(x, y0 - 1, z), floor);
+                for (int y = y0; y < y0 + s.h() + 3; y++) w.setBlockAndUpdate(new BlockPos(x, y, z), s(Blocks.AIR));
             }
         }
         int wallTop = y0 + s.h() - 2;
@@ -62,7 +63,7 @@ public final class Blueprints {
                 for (int y = y0; y <= wallTop; y++) {
                     boolean window = y == y0 + 1 && !(edgeX && edgeZ) && ((edgeZ && (x - x0) % 3 == 1) || (edgeX && (z - z0) % 3 == 1));
                     BlockState st = edgeX && edgeZ ? corner : window ? (kind == Homes.Kind.HIDEOUT ? s(Blocks.IRON_BARS) : s(Blocks.GLASS_PANE)) : wall;
-                    w.setBlockState(new BlockPos(x, y, z), st);
+                    w.setBlockAndUpdate(new BlockPos(x, y, z), st);
                 }
             }
         }
@@ -70,79 +71,79 @@ public final class Blueprints {
         for (int x = x0 - 1; x <= x1 + 1; x++) {
             for (int z = z0 - 1; z <= z1 + 1; z++) {
                 boolean rim = x == x0 - 1 || x == x1 + 1 || z == z0 - 1 || z == z1 + 1;
-                w.setBlockState(new BlockPos(x, wallTop + 1, z), rim ? slab(roof) : roof);
+                w.setBlockAndUpdate(new BlockPos(x, wallTop + 1, z), rim ? slab(roof) : roof);
             }
         }
         // Door, centred on the south wall
         int dx = x0 + s.w() / 2;
         BlockPos door = new BlockPos(dx, y0, z1);
         BlockState d = (kind == Homes.Kind.HIDEOUT ? Blocks.SPRUCE_DOOR : kind == Homes.Kind.HQ ? Blocks.DARK_OAK_DOOR : Blocks.OAK_DOOR)
-                .getDefaultState().with(DoorBlock.FACING, Direction.NORTH);
-        w.setBlockState(door, d.with(DoorBlock.HALF, DoubleBlockHalf.LOWER));
-        w.setBlockState(door.up(), d.with(DoorBlock.HALF, DoubleBlockHalf.UPPER));
-        w.setBlockState(door.up(2), corner);
-        w.setBlockState(new BlockPos(dx + 1, y0 + 1, z1 + 1), s(Blocks.LANTERN));
+                .defaultBlockState().setValue(DoorBlock.FACING, Direction.NORTH);
+        w.setBlockAndUpdate(door, d.setValue(DoorBlock.HALF, DoubleBlockHalf.LOWER));
+        w.setBlockAndUpdate(door.above(), d.setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER));
+        w.setBlockAndUpdate(door.above(2), corner);
+        w.setBlockAndUpdate(new BlockPos(dx + 1, y0 + 1, z1 + 1), s(Blocks.LANTERN));
         // Light inside
         for (int[] l : new int[][]{{x0 + 1, z0 + 1}, {x1 - 1, z0 + 1}, {x0 + s.w() / 2, z0 + s.d() / 2}}) {
-            w.setBlockState(new BlockPos(l[0], wallTop, l[1]), s(Blocks.LANTERN).with(LanternBlock.HANGING, true));
+            w.setBlockAndUpdate(new BlockPos(l[0], wallTop, l[1]), s(Blocks.LANTERN).setValue(LanternBlock.HANGING, true));
         }
         furnish(w, kind, x0, y0, z0, x1, z1);
         return door;
     }
 
-    private static void furnish(ServerWorld w, Homes.Kind kind, int x0, int y0, int z0, int x1, int z1) {
+    private static void furnish(ServerLevel w, Homes.Kind kind, int x0, int y0, int z0, int x1, int z1) {
         switch (kind) {
             case HOUSE, HIDEOUT, HQ -> {
                 bed(w, new BlockPos(x0 + 1, y0, z0 + 1));
                 if (kind == Homes.Kind.HQ) {
                     bed(w, new BlockPos(x0 + 3, y0, z0 + 1));
                     bed(w, new BlockPos(x0 + 5, y0, z0 + 1));
-                    w.setBlockState(new BlockPos(x0 + 7, y0, z0 + 5), s(Blocks.CARTOGRAPHY_TABLE));
-                    w.setBlockState(new BlockPos(x0 + 8, y0, z0 + 5), s(Blocks.LECTERN));
-                    for (int x = x0 + 5; x <= x0 + 9; x++) w.setBlockState(new BlockPos(x, y0, z0 + 7), s(Blocks.DARK_OAK_FENCE));
-                    w.setBlockState(new BlockPos(x1 - 1, y0, z1 - 2), s(Blocks.SMITHING_TABLE));
-                    w.setBlockState(new BlockPos(x1 - 1, y0, z1 - 3), s(Blocks.ANVIL));
+                    w.setBlockAndUpdate(new BlockPos(x0 + 7, y0, z0 + 5), s(Blocks.CARTOGRAPHY_TABLE));
+                    w.setBlockAndUpdate(new BlockPos(x0 + 8, y0, z0 + 5), s(Blocks.LECTERN));
+                    for (int x = x0 + 5; x <= x0 + 9; x++) w.setBlockAndUpdate(new BlockPos(x, y0, z0 + 7), s(Blocks.DARK_OAK_FENCE));
+                    w.setBlockAndUpdate(new BlockPos(x1 - 1, y0, z1 - 2), s(Blocks.SMITHING_TABLE));
+                    w.setBlockAndUpdate(new BlockPos(x1 - 1, y0, z1 - 3), s(Blocks.ANVIL));
                 }
-                w.setBlockState(new BlockPos(x1 - 1, y0, z0 + 1), s(Blocks.CHEST).with(ChestBlock.FACING, Direction.SOUTH));
-                w.setBlockState(new BlockPos(x1 - 2, y0, z0 + 1), s(Blocks.CHEST).with(ChestBlock.FACING, Direction.SOUTH));
-                w.setBlockState(new BlockPos(x1 - 1, y0, z0 + 3), s(Blocks.CRAFTING_TABLE));
-                w.setBlockState(new BlockPos(x1 - 1, y0, z0 + 4), s(Blocks.FURNACE));
-                w.setBlockState(new BlockPos(x0 + 1, y0, z1 - 1), s(Blocks.BARREL));
-                if (kind == Homes.Kind.HIDEOUT) w.setBlockState(new BlockPos(x0 + 3, y0, z0 + 3), s(Blocks.CARTOGRAPHY_TABLE));
+                w.setBlockAndUpdate(new BlockPos(x1 - 1, y0, z0 + 1), s(Blocks.CHEST).setValue(ChestBlock.FACING, Direction.SOUTH));
+                w.setBlockAndUpdate(new BlockPos(x1 - 2, y0, z0 + 1), s(Blocks.CHEST).setValue(ChestBlock.FACING, Direction.SOUTH));
+                w.setBlockAndUpdate(new BlockPos(x1 - 1, y0, z0 + 3), s(Blocks.CRAFTING_TABLE));
+                w.setBlockAndUpdate(new BlockPos(x1 - 1, y0, z0 + 4), s(Blocks.FURNACE));
+                w.setBlockAndUpdate(new BlockPos(x0 + 1, y0, z1 - 1), s(Blocks.BARREL));
+                if (kind == Homes.Kind.HIDEOUT) w.setBlockAndUpdate(new BlockPos(x0 + 3, y0, z0 + 3), s(Blocks.CARTOGRAPHY_TABLE));
             }
             case TAVERN -> {
                 // The bar along the back wall, barrels behind it
                 for (int x = x0 + 2; x <= x1 - 2; x++) {
-                    w.setBlockState(new BlockPos(x, y0, z0 + 2), s(Blocks.STRIPPED_SPRUCE_LOG));
-                    w.setBlockState(new BlockPos(x, y0, z0 + 1), (x % 2 == 0 ? Blocks.BARREL : Blocks.CHEST).getDefaultState());
+                    w.setBlockAndUpdate(new BlockPos(x, y0, z0 + 2), s(Blocks.STRIPPED_SPRUCE_LOG));
+                    w.setBlockAndUpdate(new BlockPos(x, y0, z0 + 1), (x % 2 == 0 ? Blocks.BARREL : Blocks.CHEST).defaultBlockState());
                 }
                 // Tables with stools
                 for (int[] t : new int[][]{{x0 + 3, z0 + 5}, {x1 - 3, z0 + 5}, {x0 + 6, z1 - 2}}) {
-                    w.setBlockState(new BlockPos(t[0], y0, t[1]), s(Blocks.OAK_FENCE));
-                    w.setBlockState(new BlockPos(t[0], y0 + 1, t[1]), s(Blocks.OAK_PRESSURE_PLATE));
-                    w.setBlockState(new BlockPos(t[0] - 1, y0, t[1]), s(Blocks.SPRUCE_STAIRS).with(StairsBlock.FACING, Direction.WEST));
-                    w.setBlockState(new BlockPos(t[0] + 1, y0, t[1]), s(Blocks.SPRUCE_STAIRS).with(StairsBlock.FACING, Direction.EAST));
+                    w.setBlockAndUpdate(new BlockPos(t[0], y0, t[1]), s(Blocks.OAK_FENCE));
+                    w.setBlockAndUpdate(new BlockPos(t[0], y0 + 1, t[1]), s(Blocks.OAK_PRESSURE_PLATE));
+                    w.setBlockAndUpdate(new BlockPos(t[0] - 1, y0, t[1]), s(Blocks.SPRUCE_STAIRS).setValue(StairBlock.FACING, Direction.WEST));
+                    w.setBlockAndUpdate(new BlockPos(t[0] + 1, y0, t[1]), s(Blocks.SPRUCE_STAIRS).setValue(StairBlock.FACING, Direction.EAST));
                 }
-                w.setBlockState(new BlockPos(x0 + 1, y0, z1 - 1), s(Blocks.JUKEBOX));
-                w.setBlockState(new BlockPos(x1 - 1, y0, z1 - 1), s(Blocks.CAMPFIRE));
+                w.setBlockAndUpdate(new BlockPos(x0 + 1, y0, z1 - 1), s(Blocks.JUKEBOX));
+                w.setBlockAndUpdate(new BlockPos(x1 - 1, y0, z1 - 1), s(Blocks.CAMPFIRE));
             }
         }
     }
 
-    private static void bed(ServerWorld w, BlockPos foot) {
-        BlockState bed = Blocks.RED_BED.getDefaultState().with(BedBlock.FACING, Direction.NORTH);
-        w.setBlockState(foot.south(), bed.with(BedBlock.PART, BedPart.FOOT));
-        w.setBlockState(foot, bed.with(BedBlock.PART, BedPart.HEAD));
+    private static void bed(ServerLevel w, BlockPos foot) {
+        BlockState bed = Blocks.BED.pick(DyeColor.RED).defaultBlockState().setValue(BedBlock.FACING, Direction.NORTH);
+        w.setBlockAndUpdate(foot.south(), bed.setValue(BedBlock.PART, BedPart.FOOT));
+        w.setBlockAndUpdate(foot, bed.setValue(BedBlock.PART, BedPart.HEAD));
     }
 
     private static BlockState slab(BlockState full) {
-        if (full.isOf(Blocks.SPRUCE_PLANKS)) return s(Blocks.SPRUCE_SLAB).with(SlabBlock.TYPE, SlabType.BOTTOM);
-        if (full.isOf(Blocks.DARK_OAK_PLANKS)) return s(Blocks.DARK_OAK_SLAB);
-        if (full.isOf(Blocks.DEEPSLATE_TILES)) return s(Blocks.DEEPSLATE_TILE_SLAB);
+        if (full.is(Blocks.SPRUCE_PLANKS)) return s(Blocks.SPRUCE_SLAB).setValue(SlabBlock.TYPE, SlabType.BOTTOM);
+        if (full.is(Blocks.DARK_OAK_PLANKS)) return s(Blocks.DARK_OAK_SLAB);
+        if (full.is(Blocks.DEEPSLATE_TILES)) return s(Blocks.DEEPSLATE_TILE_SLAB);
         return s(Blocks.MOSSY_STONE_BRICK_SLAB);
     }
 
-    private static BlockState s(net.minecraft.block.Block b) {
-        return b.getDefaultState();
+    private static BlockState s(net.minecraft.world.level.block.Block b) {
+        return b.defaultBlockState();
     }
 }

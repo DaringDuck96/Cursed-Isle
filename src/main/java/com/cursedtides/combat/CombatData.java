@@ -3,21 +3,20 @@ package com.cursedtides.combat;
 import com.cursedtides.pirate.PirateData;
 import com.cursedtides.pirate.Weapon;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.registry.tag.DamageTypeTags;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.Vec3d;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.phys.Vec3;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -41,78 +40,78 @@ public final class CombatData {
         ServerLivingEntityEvents.ALLOW_DAMAGE.register(CombatData::allowDamage);
     }
 
-    private static long now(ServerPlayerEntity player) {
-        return player.getServer() == null ? 0 : player.getServer().getTicks();
+    private static long now(ServerPlayer player) {
+        return player.level().getServer() == null ? 0 : player.level().getServer().getTickCount();
     }
 
-    public static boolean startParry(ServerPlayerEntity player, int ticks) {
+    public static boolean startParry(ServerPlayer player, int ticks) {
         long now = now(player);
-        UUID id = player.getUuid();
+        UUID id = player.getUUID();
         if (parryReady.getOrDefault(id, 0L) > now) {
             return false;
         }
         ticks += (int) com.cursedtides.pirate.PerkData.stat(player, com.cursedtides.pirate.Perk.Stat.PARRY_TICKS);
         parryUntil.put(id, now + ticks);
         parryReady.put(id, now + ticks + 20);
-        player.getWorld().playSound(null, player.getX(), player.getY(), player.getZ(),
-                SoundEvents.ITEM_ARMOR_EQUIP_CHAIN.value(), SoundCategory.PLAYERS, 0.8f, 1.4f);
+        player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                SoundEvents.ARMOR_EQUIP_CHAIN.value(), SoundSource.PLAYERS, 0.8f, 1.4f);
         return true;
     }
 
-    public static void dodge(ServerPlayerEntity player, int direction) {
+    public static void dodge(ServerPlayer player, int direction) {
         long now = now(player);
-        UUID id = player.getUuid();
-        if (dodgeReady.getOrDefault(id, 0L) > now || !player.isOnGround() || player.hasVehicle()) {
+        UUID id = player.getUUID();
+        if (dodgeReady.getOrDefault(id, 0L) > now || !player.onGround() || player.isPassenger()) {
             return;
         }
-        Vec3d forward = Vec3d.fromPolar(0.0f, player.getYaw());
-        Vec3d right = new Vec3d(-forward.z, 0.0, forward.x);
-        Vec3d dir = switch (direction) {
-            case DODGE_LEFT -> right.multiply(-1.0);
+        Vec3 forward = Vec3.directionFromRotation(0.0f, player.getYRot());
+        Vec3 right = new Vec3(-forward.z, 0.0, forward.x);
+        Vec3 dir = switch (direction) {
+            case DODGE_LEFT -> right.scale(-1.0);
             case DODGE_RIGHT -> right;
-            default -> forward.multiply(-1.0);
+            default -> forward.scale(-1.0);
         };
-        player.setVelocity(dir.x * 0.95, 0.25, dir.z * 0.95);
-        player.velocityModified = true;
-        player.addExhaustion(1.5f);
+        player.setDeltaMovement(dir.x * 0.95, 0.25, dir.z * 0.95);
+        player.syncVelocity = true;
+        player.causeFoodExhaustion(1.5f);
         dodgeUntil.put(id, now + 8);
         dodgeReady.put(id, now + Math.max(10, 30 - (long) com.cursedtides.pirate.PerkData.stat(player,
                 com.cursedtides.pirate.Perk.Stat.DODGE_CD)));
-        player.getWorld().playSound(null, player.getX(), player.getY(), player.getZ(),
-                SoundEvents.ENTITY_PLAYER_ATTACK_WEAK, SoundCategory.PLAYERS, 0.7f, 1.6f);
+        player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                SoundEvents.PLAYER_ATTACK_WEAK, SoundSource.PLAYERS, 0.7f, 1.6f);
     }
 
     private static boolean allowDamage(LivingEntity entity, DamageSource source, float amount) {
-        if (!(entity instanceof ServerPlayerEntity player) || source.isIn(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
+        if (!(entity instanceof ServerPlayer player) || source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
             return true;
         }
         long now = now(player);
-        UUID id = player.getUuid();
+        UUID id = player.getUUID();
 
-        if (dodgeUntil.getOrDefault(id, 0L) > now && source.getAttacker() != null) {
-            if (player.getWorld() instanceof ServerWorld world) {
-                world.spawnParticles(ParticleTypes.CLOUD, player.getX(), player.getY() + 0.5, player.getZ(), 6, 0.3, 0.2, 0.3, 0.02);
+        if (dodgeUntil.getOrDefault(id, 0L) > now && source.getEntity() != null) {
+            if (player.level() instanceof ServerLevel world) {
+                world.sendParticles(ParticleTypes.CLOUD, player.getX(), player.getY() + 0.5, player.getZ(), 6, 0.3, 0.2, 0.3, 0.02);
             }
             return false;
         }
 
-        Entity attacker = source.getAttacker();
-        boolean melee = attacker instanceof LivingEntity && source.getSource() == attacker
-                && !source.isIn(DamageTypeTags.IS_PROJECTILE) && !source.isIn(DamageTypeTags.IS_EXPLOSION);
+        Entity attacker = source.getEntity();
+        boolean melee = attacker instanceof LivingEntity && source.getDirectEntity() == attacker
+                && !source.is(DamageTypeTags.IS_PROJECTILE) && !source.is(DamageTypeTags.IS_EXPLOSION);
         if (melee && parryUntil.getOrDefault(id, 0L) > now) {
             parryUntil.remove(id);
             LivingEntity foe = (LivingEntity) attacker;
-            Vec3d push = foe.getPos().subtract(player.getPos()).multiply(1, 0, 1).normalize();
-            foe.takeKnockback(0.8, -push.x, -push.z);
-            foe.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 40, 2), player);
-            foe.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, 60, 0), player);
-            player.addStatusEffect(new StatusEffectInstance(StatusEffects.STRENGTH, 40, 0), player);
-            player.getWorld().playSound(null, player.getX(), player.getY(), player.getZ(),
-                    com.cursedtides.sound.ModSounds.SWORD_CLASH.value(), SoundCategory.PLAYERS, 1.0f, 0.9f + player.getRandom().nextFloat() * 0.3f);
-            if (player.getWorld() instanceof ServerWorld world) {
-                world.spawnParticles(ParticleTypes.CRIT, player.getX(), player.getEyeY() - 0.4, player.getZ(), 10, 0.3, 0.3, 0.3, 0.2);
+            Vec3 push = foe.position().subtract(player.position()).multiply(1, 0, 1).normalize();
+            com.cursedtides.util.Compat.knock(foe, 0.8, -push.x, -push.z);
+            foe.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 40, 2), player);
+            foe.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 60, 0), player);
+            player.addEffect(new MobEffectInstance(MobEffects.STRENGTH, 40, 0), player);
+            player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                    com.cursedtides.sound.ModSounds.SWORD_CLASH.value(), SoundSource.PLAYERS, 1.0f, 0.9f + player.getRandom().nextFloat() * 0.3f);
+            if (player.level() instanceof ServerLevel world) {
+                world.sendParticles(ParticleTypes.CRIT, player.getX(), player.getEyeY() - 0.4, player.getZ(), 10, 0.3, 0.3, 0.3, 0.2);
             }
-            player.sendMessage(Text.literal("Parried!").formatted(Formatting.GOLD), true);
+            player.sendSystemMessage(Component.literal("Parried!").withStyle(ChatFormatting.GOLD), true);
             PirateData.addXp(player, Weapon.CUTLASS, 2);
             return false;
         }

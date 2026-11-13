@@ -4,12 +4,12 @@ import com.cursedtides.pirate.Weapon;
 import com.cursedtides.profession.Profession;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
-import net.minecraft.particle.ParticleTypes;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.LocalDate;
@@ -73,32 +73,32 @@ public final class Festivals {
             Festival f = current();
             if (f == null) return;
             com.cursedtides.activity.Achievements.grant(handler.getPlayer(), "festival");
-            handler.getPlayer().playSoundToPlayer(com.cursedtides.sound.ModSounds.FESTIVAL.value(), net.minecraft.sound.SoundCategory.MASTER, 0.8f, 1f);
-            handler.getPlayer().sendMessage(Text.literal("✦ The " + f.title + " is on! ").formatted(Formatting.LIGHT_PURPLE, Formatting.BOLD)
-                    .append(Text.literal(f.perk + ".").formatted(Formatting.LIGHT_PURPLE)), false);
+            com.cursedtides.util.Compat.sound(handler.getPlayer(), com.cursedtides.sound.ModSounds.FESTIVAL.value(), net.minecraft.sounds.SoundSource.MASTER, 0.8f, 1f);
+            handler.getPlayer().sendSystemMessage(Component.literal("✦ The " + f.title + " is on! ").withStyle(ChatFormatting.LIGHT_PURPLE, ChatFormatting.BOLD)
+                    .append(Component.literal(f.perk + ".").withStyle(ChatFormatting.LIGHT_PURPLE)), false);
         });
         ServerTickEvents.END_SERVER_TICK.register(Festivals::tick);
     }
 
     /** Lanterns and fireworks over any town with a player nearby, after dark. */
     private static void tick(MinecraftServer server) {
-        if (server.getTicks() % 40 != 0) return;
+        if (server.getTickCount() % 40 != 0) return;
         Festival f = current();
         if (f == null) return;
-        ServerWorld world = server.getOverworld();
-        long t = world.getTimeOfDay() % 24000;
+        ServerLevel world = server.overworld();
+        long t = world.getOverworldClockTime() % 24000;
         if (t < 12500 || t > 23000) return;
-        for (ServerPlayerEntity p : world.getPlayers()) {
+        for (ServerPlayer p : world.players()) {
             var town = Prosperity.nearestPort(p.getBlockX(), p.getBlockZ(), 90);
             if (town == null) continue;
-            double x = town.island().cx() + world.random.nextInt(41) - 20;
-            double z = town.island().cz() + world.random.nextInt(41) - 20;
-            double y = com.cursedtides.world.Builds.groundY((int) x, (int) z) + 14 + world.random.nextInt(8);
+            double x = town.island().cx() + world.getRandom().nextInt(41) - 20;
+            double z = town.island().cz() + world.getRandom().nextInt(41) - 20;
+            double y = com.cursedtides.world.Builds.groundY((int) x, (int) z) + 14 + world.getRandom().nextInt(8);
             if (f == Festival.NIGHT_OF_LANTERNS) {
-                world.spawnParticles(ParticleTypes.SOUL_FIRE_FLAME, x, y, z, 12, 0.6, 0.6, 0.6, 0.01);
+                world.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, x, y, z, 12, 0.6, 0.6, 0.6, 0.01);
             } else {
-                world.spawnParticles(ParticleTypes.FIREWORK, x, y, z, 40, 0.2, 0.2, 0.2, 0.25);
-                world.spawnParticles(ParticleTypes.FLASH, x, y, z, 1, 0, 0, 0, 0);
+                world.sendParticles(ParticleTypes.FIREWORK, x, y, z, 40, 0.2, 0.2, 0.2, 0.25);
+                world.sendParticles(net.minecraft.core.particles.ColorParticleOption.create(ParticleTypes.FLASH, 0xFFFFFFFF), x, y, z, 1, 0, 0, 0, 0);
             }
         }
     }

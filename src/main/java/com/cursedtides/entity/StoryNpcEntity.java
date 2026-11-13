@@ -1,24 +1,24 @@
 package com.cursedtides.entity;
 
 import com.cursedtides.quest.StoryDialogue;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ai.goal.LookAroundGoal;
-import net.minecraft.entity.ai.goal.LookAtEntityGoal;
-import net.minecraft.entity.ai.goal.SwimGoal;
-import net.minecraft.entity.data.DataTracker;
-import net.minecraft.entity.data.TrackedData;
-import net.minecraft.entity.data.TrackedDataHandlerRegistry;
-import net.minecraft.entity.passive.WanderingTraderEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.World;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+import net.minecraft.world.entity.npc.wanderingtrader.WanderingTrader;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 
 /** A named story character who stays put and talks instead of trading. Can't be hurt. */
-public class StoryNpcEntity extends WanderingTraderEntity {
+public class StoryNpcEntity extends WanderingTrader {
 
     public enum Role {
         KEEPER("Keeper Wren"),
@@ -66,67 +66,70 @@ public class StoryNpcEntity extends WanderingTraderEntity {
         }
     }
 
-    private static final TrackedData<Integer> ROLE =
-            DataTracker.registerData(StoryNpcEntity.class, TrackedDataHandlerRegistry.INTEGER);
+    private static final EntityDataAccessor<Integer> ROLE =
+            SynchedEntityData.defineId(StoryNpcEntity.class, EntityDataSerializers.INT);
 
-    public StoryNpcEntity(EntityType<? extends WanderingTraderEntity> type, World world) {
+    public StoryNpcEntity(EntityType<? extends WanderingTrader> type, Level world) {
         super(type, world);
-        this.setInvulnerable(true);
+        this.setPermanentlyInvulnerable(true);
     }
 
     @Override
-    protected void initDataTracker(DataTracker.Builder builder) {
-        super.initDataTracker(builder);
-        builder.add(ROLE, 0);
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(ROLE, 0);
     }
 
     public Role getRole() {
         Role[] roles = Role.values();
-        return roles[MathHelper.clamp(this.dataTracker.get(ROLE), 0, roles.length - 1)];
+        return roles[Mth.clamp(this.entityData.get(ROLE), 0, roles.length - 1)];
     }
 
     public void setRole(Role role) {
-        this.dataTracker.set(ROLE, role.ordinal());
+        this.entityData.set(ROLE, role.ordinal());
     }
 
     @Override
-    protected void initGoals() {
-        this.goalSelector.add(0, new SwimGoal(this));
-        this.goalSelector.add(1, new LookAtEntityGoal(this, PlayerEntity.class, 8.0f));
-        this.goalSelector.add(2, new LookAroundGoal(this));
+    protected void registerGoals() {
+        this.goalSelector.addGoal(0, new FloatGoal(this));
+        this.goalSelector.addGoal(1, new LookAtPlayerGoal(this, Player.class, 8.0f));
+        this.goalSelector.addGoal(2, new RandomLookAroundGoal(this));
     }
 
     @Override
-    protected void fillRecipes() {
+    protected void updateTrades(net.minecraft.server.level.ServerLevel level__) {
         // Story characters don't trade.
     }
 
     @Override
-    public ActionResult interactMob(PlayerEntity player, Hand hand) {
-        if (hand == Hand.MAIN_HAND && player instanceof ServerPlayerEntity serverPlayer) {
-            if (com.cursedtides.quest.Errands.interact(this, serverPlayer)) return ActionResult.SUCCESS;
+    public InteractionResult mobInteract(Player player, InteractionHand hand) {
+        if (hand == InteractionHand.MAIN_HAND && player instanceof ServerPlayer serverPlayer) {
+            if (com.cursedtides.quest.Errands.interact(this, serverPlayer)) return InteractionResult.SUCCESS;
             String file = getRole().name().toLowerCase();
             if (!com.cursedtides.dialogue.Dialogue.open(serverPlayer, this, file)) {
                 StoryDialogue.talk(this, serverPlayer);
             }
         }
-        return ActionResult.success(this.getWorld().isClient);
+        return InteractionResult.SUCCESS;
     }
 
     @Override
-    public boolean cannotDespawn() {
+    public boolean requiresCustomPersistence() {
         return true;
     }
 
     @Override
-    public void writeCustomDataToNbt(NbtCompound nbt) {
-        super.writeCustomDataToNbt(nbt);
-        nbt.putInt("StoryRole", this.dataTracker.get(ROLE));
+    public void addAdditionalSaveData(net.minecraft.world.level.storage.ValueOutput out__) {
+        CompoundTag nbt = new CompoundTag();
+        super.addAdditionalSaveData(out__);
+        nbt.putInt("StoryRole", this.entityData.get(ROLE));
+        out__.store("ct", CompoundTag.CODEC, nbt);
     }
 
     @Override
-    public void readCustomDataFromNbt(NbtCompound nbt) {
-        super.readCustomDataFromNbt(nbt);
-        this.dataTracker.set(ROLE, nbt.getInt("StoryRole"));
+    public void readAdditionalSaveData(net.minecraft.world.level.storage.ValueInput in__) {
+        CompoundTag nbt = in__.read("ct", CompoundTag.CODEC).orElseGet(CompoundTag::new);
+        super.readAdditionalSaveData(in__);
+        this.entityData.set(ROLE, nbt.getIntOr("StoryRole", 0));
     }
 }

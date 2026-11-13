@@ -1,17 +1,17 @@
 package com.cursedtides.entity;
 
+import net.minecraft.world.InteractionResult;
 import com.cursedtides.item.ModItems;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.passive.WanderingTraderEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.village.TradeOffer;
-import net.minecraft.village.TradeOfferList;
-import net.minecraft.village.TradedItem;
-import net.minecraft.world.World;
-
 import java.util.Optional;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.npc.wanderingtrader.WanderingTrader;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.trading.ItemCost;
+import net.minecraft.world.item.trading.MerchantOffer;
+import net.minecraft.world.item.trading.MerchantOffers;
+import net.minecraft.world.level.Level;
 
 /**
  * Saltmarrow's shipwright. Sells sloops outright and trades up: hand in your old deed
@@ -20,25 +20,25 @@ import java.util.Optional;
 public class ShipwrightEntity extends QuartermasterEntity {
     private static final int UNLIMITED = 9999;
 
-    public ShipwrightEntity(EntityType<? extends WanderingTraderEntity> type, World world) {
+    public ShipwrightEntity(EntityType<? extends WanderingTrader> type, Level world) {
         super(type, world);
     }
 
     @Override
-    protected void fillRecipes() {
-        TradeOfferList offers = this.getOffers();
-        offers.add(new TradeOffer(new TradedItem(ModItems.DOUBLOON, 48), new ItemStack(ModItems.SLOOP_DEED), UNLIMITED, 5, 0.0f));
-        offers.add(new TradeOffer(new TradedItem(ModItems.DOUBLOON, 64), Optional.of(new TradedItem(ModItems.SLOOP_DEED, 1)),
+    protected void updateTrades(net.minecraft.server.level.ServerLevel level__) {
+        MerchantOffers offers = this.getOffers();
+        offers.add(new MerchantOffer(new ItemCost(ModItems.DOUBLOON, 48), new ItemStack(ModItems.SLOOP_DEED), UNLIMITED, 5, 0.0f));
+        offers.add(new MerchantOffer(new ItemCost(ModItems.DOUBLOON, 64), Optional.of(new ItemCost(ModItems.SLOOP_DEED, 1)),
                 new ItemStack(ModItems.BRIGANTINE_DEED), UNLIMITED, 10, 0.0f));
-        offers.add(new TradeOffer(new TradedItem(ModItems.DOUBLOON, 64), Optional.of(new TradedItem(ModItems.BRIGANTINE_DEED, 1)),
+        offers.add(new MerchantOffer(new ItemCost(ModItems.DOUBLOON, 64), Optional.of(new ItemCost(ModItems.BRIGANTINE_DEED, 1)),
                 new ItemStack(ModItems.GALLEON_DEED), UNLIMITED, 20, 0.0f));
-        offers.add(new TradeOffer(new TradedItem(ModItems.DOUBLOON, 32), Optional.of(new TradedItem(ModItems.SLOOP_DEED, 1)),
+        offers.add(new MerchantOffer(new ItemCost(ModItems.DOUBLOON, 32), Optional.of(new ItemCost(ModItems.SLOOP_DEED, 1)),
                 new ItemStack(ModItems.SCHOONER_DEED), UNLIMITED, 10, 0.0f));
-        offers.add(new TradeOffer(new TradedItem(ModItems.DOUBLOON, 40), Optional.of(new TradedItem(ModItems.BRIGANTINE_DEED, 1)),
+        offers.add(new MerchantOffer(new ItemCost(ModItems.DOUBLOON, 40), Optional.of(new ItemCost(ModItems.BRIGANTINE_DEED, 1)),
                 new ItemStack(ModItems.BRIG_DEED), UNLIMITED, 15, 0.0f));
-        offers.add(new TradeOffer(new TradedItem(ModItems.DOUBLOON, 64), Optional.of(new TradedItem(ModItems.BRIG_DEED, 1)),
+        offers.add(new MerchantOffer(new ItemCost(ModItems.DOUBLOON, 64), Optional.of(new ItemCost(ModItems.BRIG_DEED, 1)),
                 new ItemStack(ModItems.FRIGATE_DEED), UNLIMITED, 25, 0.0f));
-        offers.add(new TradeOffer(new TradedItem(ModItems.DOUBLOON, 64), Optional.of(new TradedItem(ModItems.FRIGATE_DEED, 1)),
+        offers.add(new MerchantOffer(new ItemCost(ModItems.DOUBLOON, 64), Optional.of(new ItemCost(ModItems.FRIGATE_DEED, 1)),
                 new ItemStack(ModItems.SHIP_OF_THE_LINE_DEED), UNLIMITED, 40, 0.0f));
         // Fittings
         offers.add(sell(24, ModItems.SWIVEL_GUN, 1));
@@ -70,8 +70,8 @@ public class ShipwrightEntity extends QuartermasterEntity {
         }
     }
 
-    private static TradeOffer sell(int doubloons, Item item, int count) {
-        return new TradeOffer(new TradedItem(ModItems.DOUBLOON, doubloons), new ItemStack(item, count), UNLIMITED, 2, 0.0f);
+    private static MerchantOffer sell(int doubloons, Item item, int count) {
+        return new MerchantOffer(new ItemCost(ModItems.DOUBLOON, doubloons), new ItemStack(item, count), UNLIMITED, 2, 0.0f);
     }
 
     @Override
@@ -81,27 +81,27 @@ public class ShipwrightEntity extends QuartermasterEntity {
 
     /** Sneak-click holding a deed to sell the ship back to the yard for half her value. */
     @Override
-    public net.minecraft.util.ActionResult interactMob(net.minecraft.entity.player.PlayerEntity player, net.minecraft.util.Hand hand) {
-        ItemStack held = player.getStackInHand(hand);
-        if (player.isSneaking() && held.getItem() instanceof com.cursedtides.item.ShipDeedItem deed) {
-            if (!this.getWorld().isClient) {
-                var data = held.get(net.minecraft.component.DataComponentTypes.CUSTOM_DATA);
-                boolean loaded = data != null && !data.copyNbt().getList("Cargo", net.minecraft.nbt.NbtElement.COMPOUND_TYPE).isEmpty()
-                        && data.copyNbt().getList("Cargo", net.minecraft.nbt.NbtElement.COMPOUND_TYPE).stream()
-                        .anyMatch(e -> e instanceof net.minecraft.nbt.NbtCompound c && !c.getString("id").isEmpty());
+    public net.minecraft.world.InteractionResult mobInteract(net.minecraft.world.entity.player.Player player, net.minecraft.world.InteractionHand hand) {
+        ItemStack held = player.getItemInHand(hand);
+        if (player.isShiftKeyDown() && held.getItem() instanceof com.cursedtides.item.ShipDeedItem deed) {
+            if (!this.level().isClientSide()) {
+                var data = held.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
+                boolean loaded = data != null && !data.copyTag().getListOrEmpty("Cargo").isEmpty()
+                        && data.copyTag().getListOrEmpty("Cargo").stream()
+                        .anyMatch(e -> e instanceof net.minecraft.nbt.CompoundTag c && !c.getStringOr("id", "").isEmpty());
                 if (loaded) {
-                    player.sendMessage(net.minecraft.text.Text.literal("Empty her hold first. I buy hulls, not cargo.")
-                            .formatted(net.minecraft.util.Formatting.GRAY), false);
+                    com.cursedtides.util.Compat.tell(player, net.minecraft.network.chat.Component.literal("Empty her hold first. I buy hulls, not cargo.")
+                            .withStyle(net.minecraft.ChatFormatting.GRAY), false);
                 } else {
                     int price = com.cursedtides.trade.Insurance.value(deed.shipClass()) / 2;
-                    held.decrement(1);
+                    held.shrink(1);
                     com.cursedtides.trade.Wallet.give(player, price * com.cursedtides.trade.Wallet.SILVER_PER_DOUBLOON);
-                    player.sendMessage(net.minecraft.text.Text.literal("Sold to the yard for " + price + " doubloons. She'll find a new captain.")
-                            .formatted(net.minecraft.util.Formatting.GOLD), false);
+                    com.cursedtides.util.Compat.tell(player, net.minecraft.network.chat.Component.literal("Sold to the yard for " + price + " doubloons. She'll find a new captain.")
+                            .withStyle(net.minecraft.ChatFormatting.GOLD), false);
                 }
             }
-            return net.minecraft.util.ActionResult.success(this.getWorld().isClient);
+            return net.minecraft.world.InteractionResult.SUCCESS;
         }
-        return super.interactMob(player, hand);
+        return super.mobInteract(player, hand);
     }
 }

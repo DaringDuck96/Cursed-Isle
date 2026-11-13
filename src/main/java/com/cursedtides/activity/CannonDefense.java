@@ -5,23 +5,22 @@ import com.cursedtides.item.ModItems;
 import com.cursedtides.ship.ShipEvents;
 import com.cursedtides.ship.ShipFaction;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.NbtComponent;
-import net.minecraft.entity.Entity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.particle.ParticleTypes;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.Heightmap;
-import net.minecraft.registry.tag.FluidTags;
-
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.FluidTags;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.phys.Vec3;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -37,26 +36,26 @@ public final class CannonDefense {
     private static final String LOANER = "LoanerCannon";
 
     private static final class Game {
-        final Vec3d harbour; final List<UUID> players = new ArrayList<>(); final List<UUID> ships = new ArrayList<>();
+        final Vec3 harbour; final List<UUID> players = new ArrayList<>(); final List<UUID> ships = new ArrayList<>();
         int wave, lives = LIVES, pause = 100, sunk;
-        Game(Vec3d harbour) { this.harbour = harbour; }
+        Game(Vec3 harbour) { this.harbour = harbour; }
     }
     private static Game game;
 
-    public static List<String> start(ServerPlayerEntity p, Entity sergeant) {
+    public static List<String> start(ServerPlayer p, Entity sergeant) {
         if (game != null) {
-            if (!game.players.contains(p.getUuid())) {
-                game.players.add(p.getUuid());
+            if (!game.players.contains(p.getUUID())) {
+                game.players.add(p.getUUID());
                 lend(p);
                 return List.of("Another gun on the wall! Take this and get to the battlements. Wave " + game.wave + " is coming in.");
             }
             return List.of("You're already on the guns! Fire!");
         }
-        game = new Game(sergeant.getPos());
-        game.players.add(p.getUuid());
+        game = new Game(sergeant.position());
+        game.players.add(p.getUUID());
         lend(p);
-        p.getServer().getPlayerManager().broadcast(Text.literal("Cannon Defense at " + nearestName(sergeant)
-                + "! Ships are making for the harbour. Every gun counts; talk to the gunnery sergeant to man one.").formatted(Formatting.GOLD), false);
+        p.level().getServer().getPlayerList().broadcastSystemMessage(Component.literal("Cannon Defense at " + nearestName(sergeant)
+                + "! Ships are making for the harbour. Every gun counts; talk to the gunnery sergeant to man one.").withStyle(ChatFormatting.GOLD), false);
         return List.of("Here: a cannon and shot. Ships will come straight for the docks. Sink them before they arrive.",
                 "Eight waves. We can take five ships in the harbour before the town's lost. Fire at will!");
     }
@@ -66,22 +65,22 @@ public final class CannonDefense {
         return port == null ? "the harbour" : port.island().name();
     }
 
-    private static void lend(ServerPlayerEntity p) {
+    private static void lend(ServerPlayer p) {
         ItemStack cannon = new ItemStack(ModItems.SHIPS_CANNON);
-        NbtCompound n = new NbtCompound();
+        CompoundTag n = new CompoundTag();
         n.putBoolean(LOANER, true);
-        cannon.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(n));
-        cannon.set(DataComponentTypes.CUSTOM_NAME, Text.literal("Loaned Harbour Cannon").formatted(Formatting.GRAY));
-        p.giveItemStack(cannon);
-        p.giveItemStack(new ItemStack(ModItems.CANNONBALL, 32));
+        cannon.set(DataComponents.CUSTOM_DATA, CustomData.of(n));
+        cannon.set(DataComponents.CUSTOM_NAME, Component.literal("Loaned Harbour Cannon").withStyle(ChatFormatting.GRAY));
+        p.addItem(cannon);
+        p.addItem(new ItemStack(ModItems.CANNONBALL, 32));
     }
 
-    private static void takeBack(ServerPlayerEntity p) {
+    private static void takeBack(ServerPlayer p) {
         var inv = p.getInventory();
-        for (int i = 0; i < inv.size(); i++) {
-            ItemStack s = inv.getStack(i);
-            if (s.isOf(ModItems.SHIPS_CANNON) && s.getOrDefault(DataComponentTypes.CUSTOM_DATA, NbtComponent.DEFAULT).copyNbt().getBoolean(LOANER)) {
-                inv.setStack(i, ItemStack.EMPTY);
+        for (int i = 0; i < inv.getContainerSize(); i++) {
+            ItemStack s = inv.getItem(i);
+            if (s.is(ModItems.SHIPS_CANNON) && s.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag().getBooleanOr(LOANER, false)) {
+                inv.setItem(i, ItemStack.EMPTY);
             }
         }
     }
@@ -91,10 +90,10 @@ public final class CannonDefense {
     }
 
     private static void tick(MinecraftServer server) {
-        if (game == null || server.getTicks() % 10 != 0) return;
-        ServerWorld w = server.getOverworld();
+        if (game == null || server.getTickCount() % 10 != 0) return;
+        ServerLevel w = server.overworld();
         Game g = game;
-        g.players.removeIf(id -> server.getPlayerManager().getPlayer(id) == null);
+        g.players.removeIf(id -> server.getPlayerList().getPlayer(id) == null);
         if (g.players.isEmpty()) { end(server, false); return; }
         // Ships: arrived, sunk, still coming
         for (UUID id : List.copyOf(g.ships)) {
@@ -105,14 +104,14 @@ public final class CannonDefense {
                 continue;
             }
             ship.forcedDestination = g.harbour;
-            if (ship.getPos().squaredDistanceTo(g.harbour.x, ship.getY(), g.harbour.z) < 22 * 22) {
+            if (ship.position().distanceToSqr(g.harbour.x, ship.getY(), g.harbour.z) < 22 * 22) {
                 g.ships.remove(id);
                 g.lives--;
-                w.spawnParticles(ParticleTypes.EXPLOSION_EMITTER, ship.getX(), ship.getY() + 2, ship.getZ(), 1, 0, 0, 0, 0);
-                w.playSound(null, ship.getBlockPos(), com.cursedtides.sound.ModSounds.CANNON_BOOM.value(), SoundCategory.HOSTILE, 3f, 0.6f);
-                ship.getPassengerList().forEach(Entity::discard);
+                w.sendParticles(ParticleTypes.EXPLOSION_EMITTER, ship.getX(), ship.getY() + 2, ship.getZ(), 1, 0, 0, 0, 0);
+                w.playSound(null, ship.blockPosition(), com.cursedtides.sound.ModSounds.CANNON_BOOM.value(), SoundSource.HOSTILE, 3f, 0.6f);
+                ship.getPassengers().forEach(Entity::discard);
                 ship.discard();
-                tell(server, Text.literal("A ship broke through into the harbour! Lives left: " + g.lives).formatted(Formatting.RED));
+                tell(server, Component.literal("A ship broke through into the harbour! Lives left: " + g.lives).withStyle(ChatFormatting.RED));
                 if (g.lives <= 0) { end(server, false); return; }
             }
         }
@@ -124,51 +123,51 @@ public final class CannonDefense {
         int count = 1 + (g.wave + 1) / 2;
         int spawned = 0;
         for (int tries = 0; tries < 40 && spawned < count; tries++) {
-            double a = w.random.nextDouble() * Math.PI * 2;
+            double a = w.getRandom().nextDouble() * Math.PI * 2;
             int x = (int) (g.harbour.x + Math.cos(a) * 95), z = (int) (g.harbour.z + Math.sin(a) * 95);
-            if (!w.isChunkLoaded(new BlockPos(x, 0, z))) continue;
-            int top = w.getTopY(Heightmap.Type.WORLD_SURFACE, x, z);
-            if (!w.getFluidState(new BlockPos(x, top - 1, z)).isIn(FluidTags.WATER) || !w.getFluidState(new BlockPos(x, top - 4, z)).isIn(FluidTags.WATER)) continue;
-            ServerPlayerEntity facing = server.getPlayerManager().getPlayer(g.players.get(0));
+            if (!w.hasChunkAt(new BlockPos(x, 0, z))) continue;
+            int top = w.getHeight(Heightmap.Types.WORLD_SURFACE, x, z);
+            if (!w.getFluidState(new BlockPos(x, top - 1, z)).is(FluidTags.WATER) || !w.getFluidState(new BlockPos(x, top - 4, z)).is(FluidTags.WATER)) continue;
+            ServerPlayer facing = server.getPlayerList().getPlayer(g.players.get(0));
             ShipEntity ship = ShipEvents.spawnShip(w, g.wave >= 6 ? ShipFaction.DROWNED : ShipFaction.PIRATE, x + 0.5, top - 0.1, z + 0.5, facing);
             if (ship == null) continue;
             ship.forcedDestination = g.harbour;
-            ship.addCommandTag("cursedtides_defense");
-            g.ships.add(ship.getUuid());
+            ship.addTag("cursedtides_defense");
+            g.ships.add(ship.getUUID());
             spawned++;
         }
-        tell(server, Text.literal("Wave " + g.wave + " of " + WAVES + ": " + spawned + " ships inbound!").formatted(Formatting.GOLD, Formatting.BOLD));
+        tell(server, Component.literal("Wave " + g.wave + " of " + WAVES + ": " + spawned + " ships inbound!").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
     }
 
-    private static void tell(MinecraftServer server, Text text) {
+    private static void tell(MinecraftServer server, Component text) {
         if (game == null) return;
         for (UUID id : game.players) {
-            ServerPlayerEntity p = server.getPlayerManager().getPlayer(id);
-            if (p != null) p.sendMessage(text, false);
+            ServerPlayer p = server.getPlayerList().getPlayer(id);
+            if (p != null) p.sendSystemMessage(text, false);
         }
     }
 
     private static void end(MinecraftServer server, boolean won) {
         Game g = game;
         game = null;
-        ServerWorld w = server.getOverworld();
+        ServerLevel w = server.overworld();
         for (UUID id : g.ships) {
             if (w.getEntity(id) instanceof ShipEntity ship) {
-                ship.getPassengerList().forEach(Entity::discard);
+                ship.getPassengers().forEach(Entity::discard);
                 ship.discard();
             }
         }
         int held = won ? WAVES : Math.max(0, g.wave - 1);
         for (UUID id : g.players) {
-            ServerPlayerEntity p = server.getPlayerManager().getPlayer(id);
+            ServerPlayer p = server.getPlayerList().getPlayer(id);
             if (p == null) continue;
             takeBack(p);
-            p.giveItemStack(new ItemStack(ModItems.DOUBLOON, 4 * held + g.sunk));
+            p.addItem(new ItemStack(ModItems.DOUBLOON, 4 * held + g.sunk));
             Leaderboards.submit(p, "defense", held);
             com.cursedtides.pirate.PirateData.addXp(p, com.cursedtides.pirate.Weapon.CANNON, 30 * held);
             if (won) Achievements.grant(p, "harbour_guard");
-            p.sendMessage(Text.literal(won ? "The harbour holds! Eight waves beaten back, " + g.sunk + " ships sunk."
-                    : "The defence is over. Waves held: " + held + ", ships sunk: " + g.sunk + ".").formatted(won ? Formatting.GOLD : Formatting.GRAY), false);
+            p.sendSystemMessage(Component.literal(won ? "The harbour holds! Eight waves beaten back, " + g.sunk + " ships sunk."
+                    : "The defence is over. Waves held: " + held + ", ships sunk: " + g.sunk + ".").withStyle(won ? ChatFormatting.GOLD : ChatFormatting.GRAY), false);
         }
         if (won) com.cursedtides.living.Prosperity.adjust(server, (int) g.harbour.x, (int) g.harbour.z, 10, "its harbour held");
     }

@@ -1,5 +1,6 @@
 package com.cursedtides.profession;
 
+import net.minecraft.world.entity.EntityTypes;
 import com.cursedtides.CursedTides;
 import com.cursedtides.pirate.PirateData;
 import com.cursedtides.wildlife.Wildlife;
@@ -7,18 +8,17 @@ import com.mojang.serialization.Codec;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
@@ -46,29 +46,29 @@ public final class ProfessionData {
         FishingContest.register();
     }
 
-    public static int xp(PlayerEntity player, Profession p) {
+    public static int xp(Player player, Profession p) {
         return player.getAttachedOrElse(XP.get(p), 0);
     }
 
-    public static int level(PlayerEntity player, Profession p) {
+    public static int level(Player player, Profession p) {
         return PirateData.levelForXp(xp(player, p));
     }
 
-    public static void addXp(ServerPlayerEntity player, Profession p, int amount) {
+    public static void addXp(ServerPlayer player, Profession p, int amount) {
         int before = level(player, p);
         amount = (int) Math.round(amount * (1.0 + com.cursedtides.living.Festivals.bonus(p)));
         player.setAttached(XP.get(p), xp(player, p) + amount);
         int after = level(player, p);
         if (after > before) {
-            player.sendMessage(Text.literal(p.displayName + " is now level " + after + "!").formatted(Formatting.GOLD, Formatting.BOLD), false);
-            player.getWorld().playSound(null, player.getBlockPos(), SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.6f, 1.3f);
+            player.sendSystemMessage(Component.literal(p.displayName + " is now level " + after + "!").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), false);
+            player.level().playSound(null, player.blockPosition(), SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.6f, 1.3f);
         } else {
-            player.sendMessage(Text.literal("+" + amount + " " + p.displayName + " xp").formatted(Formatting.DARK_AQUA), true);
+            player.sendSystemMessage(Component.literal("+" + amount + " " + p.displayName + " xp").withStyle(ChatFormatting.DARK_AQUA), true);
         }
     }
 
     /** Journal section. */
-    public static List<String> journal(PlayerEntity player) {
+    public static List<String> journal(Player player) {
         List<String> lines = new ArrayList<>();
         for (Profession p : Profession.values()) {
             int level = level(player, p);
@@ -82,24 +82,24 @@ public final class ProfessionData {
     // ------------------------------------------------------------------ hunting
 
     private static void onKill(LivingEntity victim, DamageSource source) {
-        if (!(source.getAttacker() instanceof ServerPlayerEntity hunter)) return;
+        if (!(source.getEntity() instanceof ServerPlayer hunter)) return;
         EntityType<?> t = victim.getType();
         ItemStack spoils;
         int xp;
         if (t == Wildlife.SHARK) { spoils = new ItemStack(com.cursedtides.item.ModItems.SHARK_TOOTH); xp = 14; }
-        else if (t == Wildlife.CROCODILE) { spoils = new ItemStack(Items.LEATHER, 2); xp = victim.getCommandTags().contains("cursedtides_boss") ? 120 : 14; }
+        else if (t == Wildlife.CROCODILE) { spoils = new ItemStack(Items.LEATHER, 2); xp = victim.entityTags().contains("cursedtides_boss") ? 120 : 14; }
         else if (t == Wildlife.JAGUAR) { spoils = new ItemStack(Items.LEATHER); xp = 12; }
         else if (t == Wildlife.BOAR) { spoils = new ItemStack(Items.PORKCHOP); xp = 6; }
         else if (t == Wildlife.SNAKE) { spoils = new ItemStack(Items.STRING); xp = 5; }
         else if (t == Wildlife.CRAB) { spoils = new ItemStack(Items.BONE_MEAL); xp = 3; }
-        else if (t == EntityType.COW || t == EntityType.PIG || t == EntityType.SHEEP || t == EntityType.CHICKEN
-                || t == EntityType.GOAT || t == EntityType.RABBIT) { spoils = null; xp = 2; }
+        else if (t == EntityTypes.COW || t == EntityTypes.PIG || t == EntityTypes.SHEEP || t == EntityTypes.CHICKEN
+                || t == EntityTypes.GOAT || t == EntityTypes.RABBIT) { spoils = null; xp = 2; }
         else return;
         addXp(hunter, Profession.HUNTING, xp);
         if (xp > 2) com.cursedtides.activity.Challenges.progress(hunter, "hunt", 1);
         int level = level(hunter, Profession.HUNTING);
         if (spoils != null && hunter.getRandom().nextFloat() < level * 0.025f) {
-            victim.dropStack(spoils);
+            com.cursedtides.util.Compat.drop(victim, spoils);
         }
     }
 }

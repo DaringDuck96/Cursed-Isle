@@ -1,12 +1,11 @@
 package com.cursedtides.item;
 
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.tooltip.TooltipType;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-
 import java.util.List;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 
 /** Fitted to your own ship by right-clicking her with it. The ship does the work (ShipEntity.interact). */
 public class ShipUpgradeItem extends Item {
@@ -31,7 +30,7 @@ public class ShipUpgradeItem extends Item {
 
     private final Kind kind;
 
-    public ShipUpgradeItem(Kind kind, Settings settings) {
+    public ShipUpgradeItem(Kind kind, Properties settings) {
         super(settings);
         this.kind = kind;
     }
@@ -41,8 +40,10 @@ public class ShipUpgradeItem extends Item {
     }
 
     @Override
-    public void appendTooltip(ItemStack stack, TooltipContext context, List<Text> tooltip, TooltipType type) {
-        tooltip.add(Text.literal(kind.effect() + " (up to " + kind.maxLevel() + " per ship)").formatted(Formatting.GRAY));
-        tooltip.add(Text.literal("Right-click your ship to fit it.").formatted(Formatting.DARK_GRAY));
+    public void appendHoverText(ItemStack stack, TooltipContext context, net.minecraft.world.item.component.TooltipDisplay display__, java.util.function.Consumer<Component> adder__, TooltipFlag type) {
+        java.util.List<Component> tooltip = new java.util.ArrayList<>();
+        tooltip.add(Component.literal(kind.effect() + " (up to " + kind.maxLevel() + " per ship)").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.literal("Right-click your ship to fit it.").withStyle(ChatFormatting.DARK_GRAY));
+        tooltip.forEach(adder__);
     }
 }

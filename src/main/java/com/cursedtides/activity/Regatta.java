@@ -1,5 +1,7 @@
 package com.cursedtides.activity;
 
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntityTypes;
 import com.cursedtides.entity.StoryNpcEntity;
 import com.cursedtides.item.ModItems;
 import com.cursedtides.pirate.PirateData;
@@ -7,23 +9,22 @@ import com.cursedtides.pirate.Weapon;
 import com.cursedtides.world.Archipelago;
 import com.cursedtides.world.ModWorld;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LightningEntity;
-import net.minecraft.entity.vehicle.BoatEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.world.PersistentState;
-
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LightningBolt;
+import net.minecraft.world.entity.vehicle.boat.Boat;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.saveddata.SavedData;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -49,19 +50,19 @@ public final class Regatta {
         ServerTickEvents.END_SERVER_TICK.register(Regatta::tick);
     }
 
-    public static void talk(StoryNpcEntity npc, ServerPlayerEntity player) {
-        Records records = Records.get(player.getServer());
+    public static void talk(StoryNpcEntity npc, ServerPlayer player) {
+        Records records = Records.get(player.level().getServer());
         List<String> lines = new ArrayList<>();
-        if (RUNS.containsKey(player.getUuid())) {
-            RUNS.remove(player.getUuid());
+        if (RUNS.containsKey(player.getUUID())) {
+            RUNS.remove(player.getUUID());
             lines.add("Giving up? Fair enough. The stacks have humbled better sailors. Talk to me when you want another go.");
         } else {
-            RUNS.put(player.getUuid(), new Run(player.getServer().getTicks(), 0));
+            RUNS.put(player.getUUID(), new Run(player.level().getServer().getTickCount(), 0));
             lines.add("One lap, eight buoys, yellow first, then sunwise round the island. Mind the stacks.");
             lines.add("The clock's running the moment you leave this hut. Get to your boat!");
         }
         lines.add("Record: " + records.describeBest());
-        Integer mine = records.best.get(player.getUuid());
+        Integer mine = records.best.get(player.getUUID());
         if (mine != null) lines.add("Your best: " + seconds(mine));
         com.cursedtides.quest.StoryDialogue.say(npc, player, lines.toArray(new String[0]));
     }
@@ -72,46 +73,46 @@ public final class Regatta {
 
     private static void tick(MinecraftServer server) {
         if (!ModWorld.isArchipelago()) return;
-        ServerWorld world = server.getOverworld();
-        int now = server.getTicks();
+        ServerLevel world = server.overworld();
+        int now = server.getTickCount();
         var isle = Archipelago.STORMBREAK_ISLE;
 
         // Stormbreak lives up to its name: lightning over the water around it
         if (now % 50 == 0) {
-            for (ServerPlayerEntity p : world.getPlayers()) {
+            for (ServerPlayer p : world.players()) {
                 double dx = p.getX() - isle.cx(), dz = p.getZ() - isle.cz();
-                if (dx * dx + dz * dz > 220 * 220 || world.random.nextFloat() > 0.5f) continue;
-                LightningEntity bolt = EntityType.LIGHTNING_BOLT.create(world);
+                if (dx * dx + dz * dz > 220 * 220 || world.getRandom().nextFloat() > 0.5f) continue;
+                LightningBolt bolt = EntityTypes.LIGHTNING_BOLT.create(world, EntitySpawnReason.EVENT);
                 if (bolt == null) continue;
-                double a = world.random.nextDouble() * Math.PI * 2, d = 30 + world.random.nextDouble() * 60;
-                bolt.refreshPositionAfterTeleport(p.getX() + Math.cos(a) * d, Archipelago.WATER_TOP + 1, p.getZ() + Math.sin(a) * d);
-                bolt.setCosmetic(true);
-                world.spawnEntity(bolt);
+                double a = world.getRandom().nextDouble() * Math.PI * 2, d = 30 + world.getRandom().nextDouble() * 60;
+                bolt.snapTo(p.getX() + Math.cos(a) * d, Archipelago.WATER_TOP + 1, p.getZ() + Math.sin(a) * d);
+                bolt.setVisualOnly(true);
+                world.addFreshEntity(bolt);
             }
         }
 
         if (now % 4 != 0 || RUNS.isEmpty()) return;
         for (var it = RUNS.entrySet().iterator(); it.hasNext(); ) {
             var e = it.next();
-            ServerPlayerEntity p = server.getPlayerManager().getPlayer(e.getKey());
+            ServerPlayer p = server.getPlayerList().getPlayer(e.getKey());
             Run run = e.getValue();
             if (p == null) { it.remove(); continue; }
             int elapsed = now - run.startTick();
             if (elapsed > TIME_LIMIT) {
-                p.sendMessage(Text.literal("Out of time! Talk to the Regatta Master to try again.").formatted(Formatting.RED), false);
+                p.sendSystemMessage(Component.literal("Out of time! Talk to the Regatta Master to try again.").withStyle(ChatFormatting.RED), false);
                 it.remove();
                 continue;
             }
             int[] b = BUOYS[run.next() % BUOYS.length];
             double bx = isle.cx() + b[0] + 0.5, bz = isle.cz() + b[1] + 0.5;
-            boolean afloat = p.getVehicle() instanceof BoatEntity;
+            boolean afloat = p.getVehicle() instanceof Boat;
             if (now % 20 == 0) {
-                p.sendMessage(Text.literal("Regatta " + seconds(elapsed) + "  |  buoy " + Math.min(run.next() + 1, 9) + "/9"
-                        + (afloat ? "" : "  (get in a boat!)")).formatted(Formatting.AQUA), true);
+                p.sendSystemMessage(Component.literal("Regatta " + seconds(elapsed) + "  |  buoy " + Math.min(run.next() + 1, 9) + "/9"
+                        + (afloat ? "" : "  (get in a boat!)")).withStyle(ChatFormatting.AQUA), true);
             }
             if (!afloat || Math.hypot(p.getX() - bx, p.getZ() - bz) > REACH) continue;
             int next = run.next() + 1;
-            world.playSound(null, p.getBlockPos(), SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), SoundCategory.PLAYERS, 1.0f, 0.8f + next * 0.08f);
+            world.playSound(null, p.blockPosition(), SoundEvents.NOTE_BLOCK_BELL.value(), SoundSource.PLAYERS, 1.0f, 0.8f + next * 0.08f);
             if (next < 9) {
                 e.setValue(new Run(run.startTick(), next));
                 continue;
@@ -122,42 +123,42 @@ public final class Regatta {
         }
     }
 
-    private static void finish(MinecraftServer server, ServerPlayerEntity p, int ticks) {
+    private static void finish(MinecraftServer server, ServerPlayer p, int ticks) {
         Records records = Records.get(server);
         boolean serverRecord = records.recordTicks == 0 || ticks < records.recordTicks;
-        Integer best = records.best.get(p.getUuid());
+        Integer best = records.best.get(p.getUUID());
         boolean personal = best == null || ticks < best;
-        if (personal) records.best.put(p.getUuid(), ticks);
-        records.names.put(p.getUuid(), p.getName().getString());
+        if (personal) records.best.put(p.getUUID(), ticks);
+        records.names.put(p.getUUID(), p.getName().getString());
         if (serverRecord) {
             records.recordTicks = ticks;
             records.recordHolder = p.getName().getString();
         }
-        records.markDirty();
+        records.setDirty();
         com.cursedtides.activity.Leaderboards.submit(p, "regatta", ticks);
         int purse = ticks < 20 * 75 ? 30 : ticks < 20 * 100 ? 18 : ticks < 20 * 140 ? 10 : 5;
-        p.giveItemStack(new ItemStack(ModItems.DOUBLOON, purse));
+        p.addItem(new ItemStack(ModItems.DOUBLOON, purse));
         PirateData.addXp(p, Weapon.SAILING, 40 + purse * 2);
-        p.sendMessage(Text.literal("Finished in " + seconds(ticks) + "! Purse: " + purse + " doubloons"
-                + (personal ? "  (personal best)" : "")).formatted(Formatting.GOLD), false);
-        p.getWorld().playSound(null, p.getBlockPos(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundCategory.PLAYERS, 0.8f, 1.2f);
+        p.sendSystemMessage(Component.literal("Finished in " + seconds(ticks) + "! Purse: " + purse + " doubloons"
+                + (personal ? "  (personal best)" : "")).withStyle(ChatFormatting.GOLD), false);
+        p.level().playSound(null, p.blockPosition(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.8f, 1.2f);
         if (serverRecord) {
-            server.getPlayerManager().broadcast(Text.literal(p.getName().getString() + " has set a new Stormbreak regatta record: "
-                    + seconds(ticks) + "!").formatted(Formatting.GOLD, Formatting.BOLD), false);
+            server.getPlayerList().broadcastSystemMessage(Component.literal(p.getName().getString() + " has set a new Stormbreak regatta record: "
+                    + seconds(ticks) + "!").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), false);
         }
     }
 
     /** Server-wide regatta times. */
-    public static final class Records extends PersistentState {
+    public static final class Records extends SavedData {
         final Map<UUID, Integer> best = new HashMap<>();
         final Map<UUID, String> names = new HashMap<>();
         int recordTicks;
         String recordHolder = "";
 
-        private static final Type<Records> TYPE = new Type<>(Records::new, Records::fromNbt, null);
+        private static final net.minecraft.world.level.saveddata.SavedDataType<Records> TYPE = com.cursedtides.util.Saved.type("cursedtides_regatta", Records::new, Records::fromNbt, (st__, l__) -> st__.save(new CompoundTag(), l__));
 
         static Records get(MinecraftServer server) {
-            return server.getOverworld().getPersistentStateManager().getOrCreate(TYPE, "cursedtides_regatta");
+            return server.overworld().getDataStorage().computeIfAbsent(TYPE);
         }
 
         String describeBest() {
@@ -175,14 +176,13 @@ public final class Regatta {
             return sb.toString();
         }
 
-        @Override
-        public NbtCompound writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup lookup) {
+                public CompoundTag save(CompoundTag nbt, HolderLookup.Provider lookup) {
             nbt.putInt("Record", recordTicks);
             nbt.putString("Holder", recordHolder);
-            NbtList list = new NbtList();
+            ListTag list = new ListTag();
             for (var e : best.entrySet()) {
-                NbtCompound c = new NbtCompound();
-                c.putUuid("Id", e.getKey());
+                CompoundTag c = new CompoundTag();
+                c.store("Id", net.minecraft.core.UUIDUtil.CODEC, e.getKey());
                 c.putInt("Ticks", e.getValue());
                 c.putString("Name", names.getOrDefault(e.getKey(), "?"));
                 list.add(c);
@@ -191,15 +191,15 @@ public final class Regatta {
             return nbt;
         }
 
-        private static Records fromNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup lookup) {
+        private static Records fromNbt(CompoundTag nbt, HolderLookup.Provider lookup) {
             Records r = new Records();
-            r.recordTicks = nbt.getInt("Record");
-            r.recordHolder = nbt.getString("Holder");
-            NbtList list = nbt.getList("Times", NbtElement.COMPOUND_TYPE);
+            r.recordTicks = nbt.getIntOr("Record", 0);
+            r.recordHolder = nbt.getStringOr("Holder", "");
+            ListTag list = nbt.getListOrEmpty("Times");
             for (int i = 0; i < list.size(); i++) {
-                NbtCompound c = list.getCompound(i);
-                r.best.put(c.getUuid("Id"), c.getInt("Ticks"));
-                r.names.put(c.getUuid("Id"), c.getString("Name"));
+                CompoundTag c = list.getCompoundOrEmpty(i);
+                r.best.put(c.read("Id", net.minecraft.core.UUIDUtil.CODEC).orElse(null), c.getIntOr("Ticks", 0));
+                r.names.put(c.read("Id", net.minecraft.core.UUIDUtil.CODEC).orElse(null), c.getStringOr("Name", ""));
             }
             return r;
         }

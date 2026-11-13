@@ -4,10 +4,10 @@ import com.cursedtides.dungeon.Dungeon;
 import com.cursedtides.dungeon.Dungeons;
 import com.cursedtides.ui.UiPayloads;
 import com.cursedtides.world.Archipelago;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 
 /**
  * A sea chart of the Shattered Reach drawn from the island list: discovered islands are
@@ -22,7 +22,7 @@ public class ChartScreen extends Screen {
     private int minX, minZ, maxX, maxZ;
 
     public ChartScreen(UiPayloads.Chart chart) {
-        super(Text.literal("Sea Chart"));
+        super(Component.literal("Sea Chart"));
         this.chart = chart;
         minX = Integer.MAX_VALUE; minZ = Integer.MAX_VALUE; maxX = Integer.MIN_VALUE; maxZ = Integer.MIN_VALUE;
         for (Archipelago.Island is : Archipelago.ISLANDS) {
@@ -34,7 +34,7 @@ public class ChartScreen extends Screen {
         }
     }
 
-    private static void disc(DrawContext context, int cx, int cz, int r, int color) {
+    private static void disc(GuiGraphicsExtractor context, int cx, int cz, int r, int color) {
         for (int dz = -r; dz <= r; dz++) {
             int half = (int) Math.sqrt(r * r - dz * dz);
             context.fill(cx - half, cz + dz, cx + half + 1, cz + dz + 1, color);
@@ -49,17 +49,17 @@ public class ChartScreen extends Screen {
     private int sz(double z) { return top() + (int) ((z - minZ) * scale()); }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        super.renderBackground(context, mouseX, mouseY, delta);
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+        super.extractBackground(context, mouseX, mouseY, delta);
         int l = left(), t = top(), s = size();
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("§6§lThe Shattered Reach"), this.width / 2, 20, 0xFFFFFF);
+        context.centeredText(this.font, Component.literal("§6§lThe Shattered Reach"), this.width / 2, 20, 0xFFFFFFFF);
         context.fill(l - 3, t - 3, l + s + 3, t + s + 3, SEA_EDGE);
         context.fill(l, t, l + s, t + s, SEA);
 
         if (!chart.archipelago()) {
-            context.drawCenteredTextWithShadow(this.textRenderer,
-                    Text.literal("This world isn't the Cursed Archipelago, so there's no chart of it."), this.width / 2, t + s / 2, 0xFFFFFF);
-            super.render(context, mouseX, mouseY, delta);
+            context.centeredText(this.font,
+                    Component.literal("This world isn't the Cursed Archipelago, so there's no chart of it."), this.width / 2, t + s / 2, 0xFFFFFFFF);
+            super.extractRenderState(context, mouseX, mouseY, delta);
             return;
         }
 
@@ -73,7 +73,7 @@ public class ChartScreen extends Screen {
             disc(context, cx, cz, r, color);
             if (is.hasLobe()) disc(context, sx(is.lobeX()), sz(is.lobeZ()), Math.max(2, (int) (is.lobeR() * 0.85 * scale())), color);
             String label = known ? is.name() : "?";
-            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(label), cx, cz + r + 3, known ? 0xFFF2D9 : 0x9FB3C8);
+            context.centeredText(this.font, Component.literal(label), cx, cz + r + 3, known ? 0xFFFFF2D9 : 0xFF9FB3C8);
         }
 
         // Dungeon entrances on islands you've found
@@ -87,7 +87,7 @@ public class ChartScreen extends Screen {
 
         // Whirlpools and fog banks
         for (var w : com.cursedtides.explore.SeaHazards.WHIRLPOOLS) {
-            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("§3@"), sx(w.x()), sz(w.z()) - 4, 0xFFFFFF);
+            context.centeredText(this.font, Component.literal("§3@"), sx(w.x()), sz(w.z()) - 4, 0xFFFFFFFF);
         }
         for (var f : com.cursedtides.explore.SeaHazards.FOG) {
             int r = Math.max(3, (int) (f.radius() * scale())), fx = sx(f.x()), fz = sz(f.z());
@@ -97,21 +97,21 @@ public class ChartScreen extends Screen {
         // Treasure X's
         for (int i = 0; i + 1 < chart.marks().size(); i += 2) {
             int x = sx(chart.marks().get(i)), z = sz(chart.marks().get(i + 1));
-            context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("§c§lX"), x, z - 4, 0xFFFFFF);
+            context.centeredText(this.font, Component.literal("§c§lX"), x, z - 4, 0xFFFFFFFF);
         }
 
         // You
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
         if (client.player != null) {
             int px = sx(client.player.getX()), pz = sz(client.player.getZ());
             context.fill(px - 2, pz - 2, px + 3, pz + 3, 0xFFFFFFFF);
             context.fill(px - 1, pz - 1, px + 2, pz + 2, 0xFFE03C3C);
         }
 
-        context.drawCenteredTextWithShadow(this.textRenderer,
-                Text.literal("§fwhite/red: you   §8■§f dungeon   §a■§f vault opened   §cX§f treasure   §3@§f whirlpool"),
-                this.width / 2, t + s + 8, 0xFFFFFF);
-        super.render(context, mouseX, mouseY, delta);
+        context.centeredText(this.font,
+                Component.literal("§fwhite/red: you   §8■§f dungeon   §a■§f vault opened   §cX§f treasure   §3@§f whirlpool"),
+                this.width / 2, t + s + 8, 0xFFFFFFFF);
+        super.extractRenderState(context, mouseX, mouseY, delta);
     }
 
     private static int colorFor(Archipelago.Style style) {
@@ -134,12 +134,12 @@ public class ChartScreen extends Screen {
     }
 
     @Override
-    public boolean shouldPause() {
+    public boolean isPauseScreen() {
         return false;
     }
 
     /** Screen.render() draws the background itself, and 1.21 allows only one blur per frame: we draw it first, by hand. */
     @Override
-    public void renderBackground(net.minecraft.client.gui.DrawContext context, int mouseX, int mouseY, float delta) {
+    public void extractBackground(net.minecraft.client.gui.GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
     }
 }

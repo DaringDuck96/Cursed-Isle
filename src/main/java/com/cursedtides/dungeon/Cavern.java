@@ -3,24 +3,23 @@ package com.cursedtides.dungeon;
 import com.cursedtides.CursedTides;
 import com.cursedtides.world.Canvas;
 import com.cursedtides.world.Noise;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.LanternBlock;
-import net.minecraft.block.PointedDripstoneBlock;
-import net.minecraft.block.enums.Thickness;
-import net.minecraft.block.entity.MobSpawnerBlockEntity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.item.ItemStack;
-import net.minecraft.loot.LootTable;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.random.Random;
-
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LanternBlock;
+import net.minecraft.world.level.block.PointedDripstoneBlock;
+import net.minecraft.world.level.block.entity.SpawnerBlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.SpeleothemThickness;
+import net.minecraft.world.level.storage.loot.LootTable;
 
 /**
  * A grand cavern, deep under an island: a chain of huge irregular chambers (domed, pillared, with stalagmites,
@@ -35,8 +34,8 @@ public class Cavern {
 
     record Sample(double x, double z, int floor, double r) {}
 
-    static final RegistryKey<LootTable> LOOT = RegistryKey.of(RegistryKeys.LOOT_TABLE, CursedTides.id("chests/dungeon"));
-    static final RegistryKey<LootTable> VAULT = RegistryKey.of(RegistryKeys.LOOT_TABLE, CursedTides.id("chests/dungeon_vault"));
+    static final ResourceKey<LootTable> LOOT = ResourceKey.create(Registries.LOOT_TABLE, CursedTides.id("chests/dungeon"));
+    static final ResourceKey<LootTable> VAULT = ResourceKey.create(Registries.LOOT_TABLE, CursedTides.id("chests/dungeon_vault"));
 
     public final int index;
     public final String name;
@@ -196,7 +195,7 @@ public class Cavern {
 
     public void place(Canvas c) {
         if (!c.intersects(minX, minZ, maxX, maxZ)) return;
-        Random rng = Random.create(seed ^ (c.minX * 341873128712L + c.minZ * 132897987541L));
+        RandomSource rng = RandomSource.create(seed ^ (c.minX * 341873128712L + c.minZ * 132897987541L));
         c.columns(Math.max(c.minX, minX), Math.max(c.minZ, minZ), Math.min(c.maxX, maxX), Math.min(c.maxZ, maxZ), (x, z) -> column(c, x, z));
         decorate(c, rng);
     }
@@ -239,7 +238,7 @@ public class Cavern {
         if (shellLo < shellHi) for (int y = shellLo; y <= shellHi; y++) c.set(x, y, z, theme.wall(x, y, z));
         if (lo > hi) return;
         for (int y = lo - 2; y < lo; y++) c.set(x, y, z, theme.floor(x, y, z));
-        for (int y = lo; y <= hi; y++) c.set(x, y, z, Blocks.CAVE_AIR.getDefaultState());
+        for (int y = lo; y <= hi; y++) c.set(x, y, z, Blocks.CAVE_AIR.defaultBlockState());
         c.set(x, hi + 1, z, theme.wall(x, hi + 1, z));
         // Liquids in pools and at the bottom of the chasm
         if (inside != null && inside.kind() == Kind.POOL && pool(inside, x, z)) {
@@ -247,9 +246,9 @@ public class Cavern {
         }
         if (inside != null && inside.kind() == Kind.CHASM && chasm(inside, x, z)) {
             if (bridge(inside, x, z)) {
-                c.set(x, inside.floor() - 1, z, Blocks.SPRUCE_PLANKS.getDefaultState());
-                if (bridgeEdge(inside, x, z)) c.set(x, inside.floor(), z, Blocks.SPRUCE_FENCE.getDefaultState());
-                for (int y = inside.floor() - 12; y < inside.floor() - 2; y++) c.set(x, y, z, Blocks.CAVE_AIR.getDefaultState());
+                c.set(x, inside.floor() - 1, z, Blocks.SPRUCE_PLANKS.defaultBlockState());
+                if (bridgeEdge(inside, x, z)) c.set(x, inside.floor(), z, Blocks.SPRUCE_FENCE.defaultBlockState());
+                for (int y = inside.floor() - 12; y < inside.floor() - 2; y++) c.set(x, y, z, Blocks.CAVE_AIR.defaultBlockState());
                 for (int y = inside.floor() - 12; y < inside.floor() - 9; y++) c.set(x, y, z, theme.liquid());
             } else {
                 for (int y = lo; y < lo + 3; y++) c.set(x, y, z, theme.liquid());
@@ -308,10 +307,10 @@ public class Cavern {
         for (int i = 0; i < n; i++) {
             int y = up ? base + i : base - i;
             BlockState s = theme.spikeBlock();
-            if (s.isOf(Blocks.POINTED_DRIPSTONE)) {
-                Thickness th = i == n - 1 ? Thickness.TIP : i == 0 && n > 2 ? Thickness.BASE : Thickness.MIDDLE;
-                if (n == 1) th = Thickness.TIP;
-                s = s.with(PointedDripstoneBlock.VERTICAL_DIRECTION, dir).with(PointedDripstoneBlock.THICKNESS, th);
+            if (s.is(Blocks.POINTED_DRIPSTONE)) {
+                SpeleothemThickness th = i == n - 1 ? SpeleothemThickness.TIP : i == 0 && n > 2 ? SpeleothemThickness.BASE : SpeleothemThickness.MIDDLE;
+                if (n == 1) th = SpeleothemThickness.TIP;
+                s = s.setValue(PointedDripstoneBlock.TIP_DIRECTION, dir).setValue(PointedDripstoneBlock.THICKNESS, th);
             }
             c.set(x, y, z, s);
         }
@@ -319,7 +318,7 @@ public class Cavern {
 
     // ------------------------------------------------------------------ furnishings
 
-    private void decorate(Canvas c, Random rng) {
+    private void decorate(Canvas c, RandomSource rng) {
         for (int i = 0; i < chambers.size(); i++) {
             Chamber ch = chambers.get(i);
             switch (ch.kind()) {
@@ -327,9 +326,9 @@ public class Cavern {
                     // The rope back up, and a camp left by the last party down here
                     BlockPos rope = ropeLanding();
                     for (int y = rope.getY(); y < rope.getY() + 6; y++) c.set(rope.getX(), y, rope.getZ(), CaveRopeHolder.rope());
-                    c.set(ch.cx() + 3, floorAt(ch, ch.cx() + 3, ch.cz() + 2), ch.cz() + 2, Blocks.CAMPFIRE.getDefaultState());
-                    c.set(ch.cx() + 5, floorAt(ch, ch.cx() + 5, ch.cz() + 2), ch.cz() + 2, Blocks.BARREL.getDefaultState());
-                    c.set(ch.cx() + 4, floorAt(ch, ch.cx() + 4, ch.cz() + 4), ch.cz() + 4, Blocks.LANTERN.getDefaultState());
+                    c.set(ch.cx() + 3, floorAt(ch, ch.cx() + 3, ch.cz() + 2), ch.cz() + 2, Blocks.CAMPFIRE.defaultBlockState());
+                    c.set(ch.cx() + 5, floorAt(ch, ch.cx() + 5, ch.cz() + 2), ch.cz() + 2, Blocks.BARREL.defaultBlockState());
+                    c.set(ch.cx() + 4, floorAt(ch, ch.cx() + 4, ch.cz() + 4), ch.cz() + 4, Blocks.LANTERN.defaultBlockState());
                 }
                 case HALL, CHASM, POOL -> {
                     spawner(c, ch, ch.cx() + ch.rx() / 3, ch.cz() - ch.rz() / 3, theme.mob(i));
@@ -368,12 +367,12 @@ public class Cavern {
     }
 
     private void lampPost(Canvas c, int x, int y, int z) {
-        c.set(x, y, z, Blocks.SPRUCE_FENCE.getDefaultState());
-        c.set(x, y + 1, z, Blocks.SPRUCE_FENCE.getDefaultState());
-        c.set(x, y + 2, z, theme == CavernTheme.CURSED ? Blocks.SOUL_LANTERN.getDefaultState() : Blocks.LANTERN.getDefaultState());
+        c.set(x, y, z, Blocks.SPRUCE_FENCE.defaultBlockState());
+        c.set(x, y + 1, z, Blocks.SPRUCE_FENCE.defaultBlockState());
+        c.set(x, y + 2, z, theme == CavernTheme.CURSED ? Blocks.SOUL_LANTERN.defaultBlockState() : Blocks.LANTERN.defaultBlockState());
     }
 
-    private void chest(Canvas c, Chamber ch, double out, RegistryKey<LootTable> loot, ItemStack... items) {
+    private void chest(Canvas c, Chamber ch, double out, ResourceKey<LootTable> loot, ItemStack... items) {
         double a = rnd(ch.cx() + (int) (out * 10), 40) * Math.PI * 2;
         int x = ch.cx() + (int) (Math.cos(a) * ch.rx() * out * 0.8), z = ch.cz() + (int) (Math.sin(a) * ch.rz() * out * 0.8);
         if (!c.contains(x, z) || inPillar(ch, x, z) || (ch.kind() == Kind.POOL && pool(ch, x, z)) || (ch.kind() == Kind.CHASM && chasm(ch, x, z))) return;
@@ -384,20 +383,20 @@ public class Cavern {
         if (!c.contains(x, z)) return;
         if (inPillar(ch, x, z) || (ch.kind() == Kind.POOL && pool(ch, x, z)) || (ch.kind() == Kind.CHASM && chasm(ch, x, z))) return;
         int y = floorAt(ch, x, z);
-        c.set(x, y, z, Blocks.SPAWNER.getDefaultState());
-        if (c.world().getBlockEntity(new BlockPos(x, y, z)) instanceof MobSpawnerBlockEntity spawner) {
-            spawner.setEntityType(type, Random.create(Noise.hash(x, y, z, 404)));
+        c.set(x, y, z, Blocks.SPAWNER.defaultBlockState());
+        if (c.world().getBlockEntity(new BlockPos(x, y, z)) instanceof SpawnerBlockEntity spawner) {
+            spawner.setEntityId(type, RandomSource.create(Noise.hash(x, y, z, 404)));
         }
     }
 
     /** Indirection so the world generator doesn't load block classes before they're registered. */
     static final class CaveRopeHolder {
-        static BlockState rope() { return com.cursedtides.block.ModBlocks.CAVE_ROPE.getDefaultState(); }
+        static BlockState rope() { return com.cursedtides.block.ModBlocks.CAVE_ROPE.defaultBlockState(); }
     }
 
     @SuppressWarnings("unused")
     private static Block b(Block b) { return b; }
 
     @SuppressWarnings("unused")
-    private static BlockState hanging(Block lantern) { return lantern.getDefaultState().with(LanternBlock.HANGING, true); }
+    private static BlockState hanging(Block lantern) { return lantern.defaultBlockState().setValue(LanternBlock.HANGING, true); }
 }

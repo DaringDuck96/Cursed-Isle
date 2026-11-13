@@ -5,10 +5,10 @@ import com.mojang.serialization.Codec;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
 
 /** Side quest progress, one number per quest. */
 public final class SideQuests {
@@ -30,27 +30,27 @@ public final class SideQuests {
 
     public static final int LEDGER_RETURNED = 2, LEDGER_SOLD = 3;
 
-    public static int get(PlayerEntity p, AttachmentType<Integer> q) {
+    public static int get(Player p, AttachmentType<Integer> q) {
         return p.getAttachedOrElse(q, 0);
     }
 
-    public static void set(PlayerEntity p, AttachmentType<Integer> q, int v) {
+    public static void set(Player p, AttachmentType<Integer> q, int v) {
         p.setAttached(q, v);
     }
 
     public static void register() {
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
-            if (!entity.getCommandTags().contains("cursedtides_shade")) return;
-            if (source.getAttacker() instanceof ServerPlayerEntity player && get(player, SHADE) < 2) {
+            if (!entity.entityTags().contains("cursedtides_shade")) return;
+            if (source.getEntity() instanceof ServerPlayer player && get(player, SHADE) < 2) {
                 set(player, SHADE, 2);
-                player.sendMessage(Text.literal("The shade lets out a long sigh and is gone. Sorrel will want to know.")
-                        .formatted(Formatting.DARK_AQUA, Formatting.ITALIC), false);
+                player.sendSystemMessage(Component.literal("The shade lets out a long sigh and is gone. Sorrel will want to know.")
+                        .withStyle(ChatFormatting.DARK_AQUA, ChatFormatting.ITALIC), false);
             }
         });
     }
 
     /** Lines for the journal. */
-    public static java.util.List<String> journal(PlayerEntity p) {
+    public static java.util.List<String> journal(Player p) {
         java.util.List<String> lines = new java.util.ArrayList<>();
         switch (get(p, LEDGER)) {
             case 1 -> lines.add("§fThe Governor's Ledger: §7find the ledger Captain Rook stole (Blackthorn Isle, 150, -330). Return it, or not.");

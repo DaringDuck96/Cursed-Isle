@@ -1,23 +1,23 @@
 package com.cursedtides.faction;
 
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
 
 /** The powers of the Shattered Reach that remember what you do. */
 public enum Faction {
-    NAVY("Tidewatch Navy", Formatting.BLUE),
-    BRETHREN("Saltmarrow Brethren", Formatting.DARK_RED),
-    SMUGGLERS("Raven's Landing Smugglers", Formatting.DARK_PURPLE);
+    NAVY("Tidewatch Navy", ChatFormatting.BLUE),
+    BRETHREN("Saltmarrow Brethren", ChatFormatting.DARK_RED),
+    SMUGGLERS("Raven's Landing Smugglers", ChatFormatting.DARK_PURPLE);
 
     private final String displayName;
-    private final Formatting color;
+    private final ChatFormatting color;
 
-    Faction(String displayName, Formatting color) {
+    Faction(String displayName, ChatFormatting color) {
         this.displayName = displayName;
         this.color = color;
     }
 
     public String displayName() { return displayName; }
-    public Formatting color() { return color; }
+    public ChatFormatting color() { return color; }
 
     public Faction rival() {
         return this == NAVY ? BRETHREN : NAVY; // smugglers and Brethren both answer to the Navy's guns

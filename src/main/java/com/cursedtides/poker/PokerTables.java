@@ -6,19 +6,19 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.entity.Entity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.network.RegistryByteBuf;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.codec.PacketCodecs;
-import net.minecraft.network.packet.CustomPayload;
+import net.minecraft.ChatFormatting;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
@@ -34,19 +34,19 @@ public final class PokerTables {
 
     public static final int MIN_BUY_IN = 10, MAX_BUY_IN = 64;
 
-    public record State(NbtCompound data) implements CustomPayload {
-        public static final CustomPayload.Id<State> ID = new CustomPayload.Id<>(CursedTides.id("poker_state"));
-        public static final PacketCodec<RegistryByteBuf, State> CODEC =
-                PacketCodec.tuple(PacketCodecs.NBT_COMPOUND, State::data, State::new);
-        @Override public Id<? extends CustomPayload> getId() { return ID; }
+    public record State(CompoundTag data) implements CustomPacketPayload {
+        public static final CustomPacketPayload.Type<State> ID = new CustomPacketPayload.Type<>(CursedTides.id("poker_state"));
+        public static final StreamCodec<RegistryFriendlyByteBuf, State> CODEC =
+                StreamCodec.composite(ByteBufCodecs.COMPOUND_TAG, State::data, State::new);
+        @Override public Type<? extends CustomPacketPayload> type() { return ID; }
     }
 
     /** action: 0 fold, 1 check/call, 2 raise to amount, 3 all-in, 10 deal next hand, 11 leave. */
-    public record Action(int action, int amount) implements CustomPayload {
-        public static final CustomPayload.Id<Action> ID = new CustomPayload.Id<>(CursedTides.id("poker_action"));
-        public static final PacketCodec<RegistryByteBuf, Action> CODEC = PacketCodec.tuple(
-                PacketCodecs.VAR_INT, Action::action, PacketCodecs.VAR_INT, Action::amount, Action::new);
-        @Override public Id<? extends CustomPayload> getId() { return ID; }
+    public record Action(int action, int amount) implements CustomPacketPayload {
+        public static final CustomPacketPayload.Type<Action> ID = new CustomPacketPayload.Type<>(CursedTides.id("poker_action"));
+        public static final StreamCodec<RegistryFriendlyByteBuf, Action> CODEC = StreamCodec.composite(
+                ByteBufCodecs.VAR_INT, Action::action, ByteBufCodecs.VAR_INT, Action::amount, Action::new);
+        @Override public Type<? extends CustomPacketPayload> type() { return ID; }
     }
 
     public static final int DEAL = 10, LEAVE = 11;
@@ -63,8 +63,8 @@ public final class PokerTables {
     private static final Map<UUID, UUID> TABLE_OF = new HashMap<>();   // player -> table key
 
     public static void register() {
-        PayloadTypeRegistry.playS2C().register(State.ID, State.CODEC);
-        PayloadTypeRegistry.playC2S().register(Action.ID, Action.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(State.ID, State.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(Action.ID, Action.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(Action.ID, (payload, context) ->
                 context.server().execute(() -> handle(context.player(), payload)));
         ServerTickEvents.END_SERVER_TICK.register(server -> {
@@ -72,7 +72,7 @@ public final class PokerTables {
             for (var e : Map.copyOf(TABLES).entrySet()) {
                 Table t = e.getValue();
                 for (UUID id : Map.copyOf(t.seatOf).keySet()) {
-                    if (server.getPlayerManager().getPlayer(id) == null) leaveById(server, id, false);
+                    if (server.getPlayerList().getPlayer(id) == null) leaveById(server, id, false);
                 }
                 if (!TABLES.containsKey(e.getKey())) continue;
                 if (t.game.tick()) broadcast(server, t);
@@ -82,85 +82,85 @@ public final class PokerTables {
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> leave(handler.getPlayer(), false));
     }
 
-    public static boolean isSeated(ServerPlayerEntity player) {
-        return TABLE_OF.containsKey(player.getUuid());
+    public static boolean isSeated(ServerPlayer player) {
+        return TABLE_OF.containsKey(player.getUUID());
     }
 
     /** A private table against the house. */
-    public static void join(ServerPlayerEntity player) {
+    public static void join(ServerPlayer player) {
         join(player, null);
     }
 
     /** Sit down at this dealer's table, with as many doubloons as you carry between the table limits. */
-    public static void join(ServerPlayerEntity player, @Nullable Entity dealer) {
-        UUID existing = TABLE_OF.get(player.getUuid());
+    public static void join(ServerPlayer player, @Nullable Entity dealer) {
+        UUID existing = TABLE_OF.get(player.getUUID());
         if (existing != null) {
             Table t = TABLES.get(existing);
             if (t != null) send(player, t);
             return;
         }
-        int carried = player.getInventory().count(ModItems.DOUBLOON);
+        int carried = player.getInventory().countItem(ModItems.DOUBLOON);
         if (carried < MIN_BUY_IN) {
-            player.sendMessage(Text.literal("The buy-in is at least " + MIN_BUY_IN + " doubloons.").formatted(Formatting.GRAY), false);
+            player.sendSystemMessage(Component.literal("The buy-in is at least " + MIN_BUY_IN + " doubloons.").withStyle(ChatFormatting.GRAY), false);
             return;
         }
         int buyIn = Math.min(MAX_BUY_IN, carried);
-        UUID key = dealer != null ? dealer.getUuid() : player.getUuid();
+        UUID key = dealer != null ? dealer.getUUID() : player.getUUID();
         String name = com.cursedtides.character.CharacterData.pirateName(player);
         Table t = TABLES.get(key);
         if (t == null) {
             take(player, buyIn);
             PokerGame game = new PokerGame(name, buyIn);
             t = new Table(game);
-            game.seatsOwner(0, player.getUuid());
-            t.seatOf.put(player.getUuid(), 0);
+            game.seatsOwner(0, player.getUUID());
+            t.seatOf.put(player.getUUID(), 0);
             TABLES.put(key, t);
-            TABLE_OF.put(player.getUuid(), key);
-            player.sendMessage(Text.literal("You buy in for " + buyIn + " doubloons.").formatted(Formatting.GOLD), false);
+            TABLE_OF.put(player.getUUID(), key);
+            player.sendSystemMessage(Component.literal("You buy in for " + buyIn + " doubloons.").withStyle(ChatFormatting.GOLD), false);
             game.startHand();
             send(player, t);
             return;
         }
         if (t.game.humans() + t.waiting.size() >= PokerGame.SEATS) {
-            player.sendMessage(Text.literal("The table's full. Wait for a seat.").formatted(Formatting.GRAY), false);
+            player.sendSystemMessage(Component.literal("The table's full. Wait for a seat.").withStyle(ChatFormatting.GRAY), false);
             return;
         }
         take(player, buyIn);
-        TABLE_OF.put(player.getUuid(), key);
+        TABLE_OF.put(player.getUUID(), key);
         if (t.game.handOver) {
-            int seat = t.game.seatHuman(player.getUuid(), name, buyIn);
-            t.seatOf.put(player.getUuid(), seat);
-            player.sendMessage(Text.literal("You buy in for " + buyIn + " doubloons and join the table.").formatted(Formatting.GOLD), false);
-            broadcast(player.getServer(), t);
+            int seat = t.game.seatHuman(player.getUUID(), name, buyIn);
+            t.seatOf.put(player.getUUID(), seat);
+            player.sendSystemMessage(Component.literal("You buy in for " + buyIn + " doubloons and join the table.").withStyle(ChatFormatting.GOLD), false);
+            broadcast(player.level().getServer(), t);
         } else {
-            t.waiting.put(player.getUuid(), buyIn);
-            player.sendMessage(Text.literal("You buy in for " + buyIn + " doubloons. You'll be dealt in at the next hand.")
-                    .formatted(Formatting.GOLD), false);
+            t.waiting.put(player.getUUID(), buyIn);
+            player.sendSystemMessage(Component.literal("You buy in for " + buyIn + " doubloons. You'll be dealt in at the next hand.")
+                    .withStyle(ChatFormatting.GOLD), false);
             send(player, t);
         }
     }
 
     private static void seatWaiting(MinecraftServer server, Table t) {
         for (var w : Map.copyOf(t.waiting).entrySet()) {
-            ServerPlayerEntity p = server.getPlayerManager().getPlayer(w.getKey());
+            ServerPlayer p = server.getPlayerList().getPlayer(w.getKey());
             t.waiting.remove(w.getKey());
             if (p == null) continue;
-            int seat = t.game.seatHuman(p.getUuid(), com.cursedtides.character.CharacterData.pirateName(p), w.getValue());
+            int seat = t.game.seatHuman(p.getUUID(), com.cursedtides.character.CharacterData.pirateName(p), w.getValue());
             if (seat < 0) {
                 give(p, w.getValue());
-                TABLE_OF.remove(p.getUuid());
+                TABLE_OF.remove(p.getUUID());
                 continue;
             }
-            t.seatOf.put(p.getUuid(), seat);
+            t.seatOf.put(p.getUUID(), seat);
         }
         broadcast(server, t);
     }
 
-    private static void handle(ServerPlayerEntity player, Action action) {
-        UUID key = TABLE_OF.get(player.getUuid());
+    private static void handle(ServerPlayer player, Action action) {
+        UUID key = TABLE_OF.get(player.getUUID());
         Table t = key == null ? null : TABLES.get(key);
         if (t == null) return;
-        Integer seat = t.seatOf.get(player.getUuid());
+        Integer seat = t.seatOf.get(player.getUUID());
         if (action.action() == LEAVE) {
             leave(player, true);
             return;
@@ -171,37 +171,37 @@ public final class PokerTables {
         }
         if (action.action() == DEAL) {
             if (t.game.stack(seat) <= 0 && t.game.handOver) {
-                player.sendMessage(Text.literal("You're out of chips. Better luck next time.").formatted(Formatting.GRAY), false);
+                player.sendSystemMessage(Component.literal("You're out of chips. Better luck next time.").withStyle(ChatFormatting.GRAY), false);
                 leave(player, true);
                 return;
             }
             for (var e : Map.copyOf(t.seatOf).entrySet()) {
                 if (t.game.stack(e.getValue()) > 0) continue;
-                ServerPlayerEntity busted = player.getServer().getPlayerManager().getPlayer(e.getKey());
+                ServerPlayer busted = player.level().getServer().getPlayerList().getPlayer(e.getKey());
                 if (busted != null) {
-                    busted.sendMessage(Text.literal("You're out of chips and give up your seat.").formatted(Formatting.GRAY), false);
+                    busted.sendSystemMessage(Component.literal("You're out of chips and give up your seat.").withStyle(ChatFormatting.GRAY), false);
                     leave(busted, true);
                 }
             }
             if (!TABLES.containsValue(t)) return;
-            if (!t.waiting.isEmpty()) seatWaiting(player.getServer(), t);
+            if (!t.waiting.isEmpty()) seatWaiting(player.level().getServer(), t);
             t.game.startHand();
         } else {
             if (!t.game.act(seat, action.action(), action.amount())) return;
-            player.getWorld().playSound(null, player.getX(), player.getY(), player.getZ(),
-                    SoundEvents.ITEM_BOOK_PAGE_TURN, SoundCategory.PLAYERS, 0.4f, 1.6f);
+            player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                    SoundEvents.BOOK_PAGE_TURN, SoundSource.PLAYERS, 0.4f, 1.6f);
         }
-        broadcast(player.getServer(), t);
+        broadcast(player.level().getServer(), t);
     }
 
-    public static void leave(ServerPlayerEntity player, boolean notify) {
-        if (player.getServer() == null) return;
-        int chips = leaveById(player.getServer(), player.getUuid(), notify);
+    public static void leave(ServerPlayer player, boolean notify) {
+        if (player.level().getServer() == null) return;
+        int chips = leaveById(player.level().getServer(), player.getUUID(), notify);
         if (chips < 0) return;
         give(player, chips);
         if (notify) {
-            player.sendMessage(Text.literal("You cash out " + chips + " doubloons.").formatted(Formatting.GOLD), false);
-            NbtCompound closed = new NbtCompound();
+            player.sendSystemMessage(Component.literal("You cash out " + chips + " doubloons.").withStyle(ChatFormatting.GOLD), false);
+            CompoundTag closed = new CompoundTag();
             closed.putBoolean("Closed", true);
             ServerPlayNetworking.send(player, new State(closed));
         }
@@ -228,22 +228,22 @@ public final class PokerTables {
     private static void broadcast(@Nullable MinecraftServer server, Table t) {
         if (server == null) return;
         for (var e : t.seatOf.entrySet()) {
-            ServerPlayerEntity p = server.getPlayerManager().getPlayer(e.getKey());
+            ServerPlayer p = server.getPlayerList().getPlayer(e.getKey());
             if (p != null) ServerPlayNetworking.send(p, new State(t.game.toNbt(e.getValue())));
         }
         for (UUID id : t.waiting.keySet()) {
-            ServerPlayerEntity p = server.getPlayerManager().getPlayer(id);
+            ServerPlayer p = server.getPlayerList().getPlayer(id);
             if (p != null) send(p, t);
         }
     }
 
-    private static void send(ServerPlayerEntity player, Table t) {
-        Integer seat = t.seatOf.get(player.getUuid());
-        NbtCompound data = t.game.toNbt(seat == null ? 0 : seat);
+    private static void send(ServerPlayer player, Table t) {
+        Integer seat = t.seatOf.get(player.getUUID());
+        CompoundTag data = t.game.toNbt(seat == null ? 0 : seat);
         if (seat == null) {
             // Watching from the rail until the next deal: don't show anyone's cards
             data.putIntArray("Cards", new int[PokerGame.SEATS * 2]);
-            int[] hidden = data.getIntArray("Cards");
+            int[] hidden = data.getIntArray("Cards").orElse(new int[0]);
             java.util.Arrays.fill(hidden, -1);
             data.putIntArray("Cards", hidden);
             data.putInt("ToCall", 0);
@@ -252,24 +252,24 @@ public final class PokerTables {
         ServerPlayNetworking.send(player, new State(data));
     }
 
-    private static void take(ServerPlayerEntity player, int amount) {
+    private static void take(ServerPlayer player, int amount) {
         var inv = player.getInventory();
         int left = amount;
-        for (int i = 0; i < inv.size() && left > 0; i++) {
-            ItemStack stack = inv.getStack(i);
-            if (stack.isOf(ModItems.DOUBLOON)) {
+        for (int i = 0; i < inv.getContainerSize() && left > 0; i++) {
+            ItemStack stack = inv.getItem(i);
+            if (stack.is(ModItems.DOUBLOON)) {
                 int t = Math.min(left, stack.getCount());
-                stack.decrement(t);
+                stack.shrink(t);
                 left -= t;
             }
         }
     }
 
-    private static void give(ServerPlayerEntity player, int amount) {
+    private static void give(ServerPlayer player, int amount) {
         while (amount > 0) {
             int n = Math.min(64, amount);
             ItemStack coins = new ItemStack(ModItems.DOUBLOON, n);
-            if (!player.getInventory().insertStack(coins)) player.dropItem(coins, false);
+            if (!player.getInventory().add(coins)) player.drop(coins, false, net.minecraft.util.Prediction.SERVER_ONLY);
             amount -= n;
         }
     }

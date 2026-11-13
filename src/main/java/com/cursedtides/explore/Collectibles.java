@@ -4,19 +4,19 @@ import com.cursedtides.CursedTides;
 import com.mojang.serialization.Codec;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.NbtComponent;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Rarity;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.Registry;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Rarity;
+import net.minecraft.world.item.component.CustomData;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -80,7 +80,7 @@ public final class Collectibles {
     public static final AttachmentType<List<String>> FOUND = AttachmentRegistry.<List<String>>builder()
             .persistent(Codec.STRING.listOf()).copyOnDeath().initializer(List::of).buildAndRegister(CursedTides.id("collectibles"));
 
-    public static final Item ITEM = Registry.register(Registries.ITEM, CursedTides.id("curio"), new CollectibleItem(new Item.Settings().maxCount(1).rarity(Rarity.UNCOMMON)));
+    public static final Item ITEM = Registry.register(BuiltInRegistries.ITEM, com.cursedtides.util.Reg.itemId("curio"), new CollectibleItem(com.cursedtides.util.Reg.props().stacksTo(1).rarity(Rarity.UNCOMMON)));
 
     @Nullable
     public static Entry byId(String id) {
@@ -88,26 +88,26 @@ public final class Collectibles {
         return null;
     }
 
-    public static boolean has(ServerPlayerEntity p, String id) {
+    public static boolean has(ServerPlayer p, String id) {
         return p.getAttachedOrElse(FOUND, List.of()).contains(id);
     }
 
-    public static int count(ServerPlayerEntity p) {
+    public static int count(ServerPlayer p) {
         return p.getAttachedOrElse(FOUND, List.of()).size();
     }
 
     public static ItemStack stack(Entry e) {
         ItemStack s = new ItemStack(ITEM);
-        NbtCompound n = new NbtCompound();
+        CompoundTag n = new CompoundTag();
         n.putString("Curio", e.id());
-        s.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(n));
-        s.set(DataComponentTypes.ITEM_NAME, Text.literal(e.kind().title + ": " + e.title()));
-        s.set(DataComponentTypes.CUSTOM_MODEL_DATA, new net.minecraft.component.type.CustomModelDataComponent(e.kind().ordinal() + 1));
+        s.set(DataComponents.CUSTOM_DATA, CustomData.of(n));
+        s.set(DataComponents.ITEM_NAME, Component.literal(e.kind().title + ": " + e.title()));
+        s.set(DataComponents.CUSTOM_MODEL_DATA, new net.minecraft.world.item.component.CustomModelData(java.util.List.of((float) (e.kind().ordinal() + 1)), java.util.List.of(), java.util.List.of(), java.util.List.of()));
         return s;
     }
 
     /** Something the player hasn't found yet (of that kind, or any kind if null); a repeat if they've found them all. */
-    public static ItemStack randomFor(ServerPlayerEntity p, @Nullable Kind kind) {
+    public static ItemStack randomFor(ServerPlayer p, @Nullable Kind kind) {
         Set<String> found = new HashSet<>(p.getAttachedOrElse(FOUND, List.of()));
         List<Entry> pool = new ArrayList<>(), any = new ArrayList<>();
         for (Entry e : ALL) {
@@ -120,16 +120,16 @@ public final class Collectibles {
     }
 
     /** Reading a curio records it. */
-    static void study(ServerPlayerEntity p, Entry e) {
-        p.sendMessage(Text.literal(e.kind().title + ": " + e.title()).formatted(Formatting.GOLD, Formatting.BOLD), false);
-        p.sendMessage(Text.literal(e.text()).formatted(Formatting.ITALIC), false);
+    static void study(ServerPlayer p, Entry e) {
+        p.sendSystemMessage(Component.literal(e.kind().title + ": " + e.title()).withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), false);
+        p.sendSystemMessage(Component.literal(e.text()).withStyle(ChatFormatting.ITALIC), false);
         if (has(p, e.id())) return;
         List<String> found = new ArrayList<>(p.getAttachedOrElse(FOUND, List.of()));
         found.add(e.id());
         p.setAttached(FOUND, found);
-        p.sendMessage(Text.literal("Added to your Encyclopedia (" + found.size() + "/" + ALL.size() + "). Open it with /encyclopedia.")
-                .formatted(Formatting.LIGHT_PURPLE), false);
-        p.getWorld().playSound(null, p.getBlockPos(), SoundEvents.ITEM_BOOK_PAGE_TURN, SoundCategory.PLAYERS, 1f, 1f);
+        p.sendSystemMessage(Component.literal("Added to your Encyclopedia (" + found.size() + "/" + ALL.size() + "). Open it with /encyclopedia.")
+                .withStyle(ChatFormatting.LIGHT_PURPLE), false);
+        p.level().playSound(null, p.blockPosition(), SoundEvents.BOOK_PAGE_TURN, SoundSource.PLAYERS, 1f, 1f);
         com.cursedtides.pirate.PirateData.addXp(p, com.cursedtides.pirate.Weapon.EXPLORATION, 15);
         com.cursedtides.activity.Challenges.progress(p, "bottle", 1);
         if (found.size() >= 10) com.cursedtides.activity.Achievements.grant(p, "collector");

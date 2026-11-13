@@ -1,28 +1,28 @@
 package com.cursedtides.entity;
 
 import com.cursedtides.item.ModItems;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.attribute.DefaultAttributeContainer;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.mob.AbstractSkeletonEntity;
-import net.minecraft.entity.mob.HostileEntity;
-import net.minecraft.entity.mob.SkeletonEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.random.Random;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.Difficulty;
-import net.minecraft.world.LocalDifficulty;
-import net.minecraft.world.ServerWorldAccess;
-import net.minecraft.world.World;
-import net.minecraft.world.WorldAccess;
+import net.minecraft.world.DifficultyInstance;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.monster.skeleton.AbstractSkeleton;
+import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.monster.skeleton.Skeleton;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.ServerLevelAccessor;
 
 /**
  * A cursed skeleton deckhand. Fights up close with a cutlass (holding a non-bow item
  * makes skeleton AI switch to melee), burns in daylight like any undead.
  */
-public class CursedPirateEntity extends SkeletonEntity {
+public class CursedPirateEntity extends Skeleton {
     /** What the sea made of them, by the island they rose on. */
     public enum Kind { DECKHAND("Cursed"), BONE("Bone"), BARNACLE("Barnacle"), EMBER("Ember");
         public final String word; Kind(String word) { this.word = word; } }
@@ -30,53 +30,53 @@ public class CursedPirateEntity extends SkeletonEntity {
     public enum Rank { GRUNT("Grunt"), BRUTE("Brute"), CAPTAIN("Captain");
         public final String word; Rank(String word) { this.word = word; } }
 
-    private static final net.minecraft.entity.data.TrackedData<Integer> VARIANT =
-            net.minecraft.entity.data.DataTracker.registerData(CursedPirateEntity.class, net.minecraft.entity.data.TrackedDataHandlerRegistry.INTEGER);
+    private static final net.minecraft.network.syncher.EntityDataAccessor<Integer> VARIANT =
+            net.minecraft.network.syncher.SynchedEntityData.defineId(CursedPirateEntity.class, net.minecraft.network.syncher.EntityDataSerializers.INT);
 
-    public CursedPirateEntity(EntityType<? extends SkeletonEntity> type, World world) {
+    public CursedPirateEntity(EntityType<? extends Skeleton> type, Level world) {
         super(type, world);
     }
 
     @Override
-    protected void initDataTracker(net.minecraft.entity.data.DataTracker.Builder builder) {
-        super.initDataTracker(builder);
-        builder.add(VARIANT, 0);
+    protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(VARIANT, 0);
     }
 
-    public Kind kind() { return Kind.values()[Math.floorMod(this.dataTracker.get(VARIANT) & 0xF, Kind.values().length)]; }
-    public Rank rank() { return Rank.values()[Math.floorMod(this.dataTracker.get(VARIANT) >> 4, Rank.values().length)]; }
+    public Kind kind() { return Kind.values()[Math.floorMod(this.entityData.get(VARIANT) & 0xF, Kind.values().length)]; }
+    public Rank rank() { return Rank.values()[Math.floorMod(this.entityData.get(VARIANT) >> 4, Rank.values().length)]; }
 
     /** "Barnacle Brute", "Ember Captain", "Cursed Grunt". */
-    public net.minecraft.text.Text title() {
-        return net.minecraft.text.Text.literal(kind().word + " " + rank().word);
+    public net.minecraft.network.chat.Component title() {
+        return net.minecraft.network.chat.Component.literal(kind().word + " " + rank().word);
     }
 
     public void setVariant(Kind kind, Rank rank) {
-        this.dataTracker.set(VARIANT, kind.ordinal() | (rank.ordinal() << 4));
-        var scale = this.getAttributeInstance(EntityAttributes.GENERIC_SCALE);
-        var hp = this.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
-        var dmg = this.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE);
-        var speed = this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+        this.entityData.set(VARIANT, kind.ordinal() | (rank.ordinal() << 4));
+        var scale = this.getAttribute(Attributes.SCALE);
+        var hp = this.getAttribute(Attributes.MAX_HEALTH);
+        var dmg = this.getAttribute(Attributes.ATTACK_DAMAGE);
+        var speed = this.getAttribute(Attributes.MOVEMENT_SPEED);
         if (rank == Rank.BRUTE) {
             if (scale != null) scale.setBaseValue(1.3);
             if (hp != null) hp.setBaseValue(42);
             if (dmg != null) dmg.setBaseValue(5);
             if (speed != null) speed.setBaseValue(0.25);
-            this.equipStack(EquipmentSlot.MAINHAND, new ItemStack(this.random.nextBoolean() ? ModItems.BOARDING_AXE : ModItems.BROADSWORD));
+            this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(this.random.nextBoolean() ? ModItems.BOARDING_AXE : ModItems.BROADSWORD));
         } else if (rank == Rank.CAPTAIN) {
             if (scale != null) scale.setBaseValue(1.1);
             if (hp != null) hp.setBaseValue(36);
             if (dmg != null) dmg.setBaseValue(4);
             // (the captain's coat and tricorn are part of his model)
         }
-        this.setEquipmentDropChance(EquipmentSlot.MAINHAND, 0.03f);
+        this.setDropChance(EquipmentSlot.MAINHAND, 0.03f);
         this.setHealth(this.getMaxHealth());
     }
 
     @Override
-    public net.minecraft.entity.EntityData initialize(net.minecraft.world.ServerWorldAccess world, LocalDifficulty difficulty,
-                                                     SpawnReason reason, net.minecraft.entity.EntityData data) {
-        net.minecraft.entity.EntityData out = super.initialize(world, difficulty, reason, data);
+    public net.minecraft.world.entity.SpawnGroupData finalizeSpawn(net.minecraft.world.level.ServerLevelAccessor world, DifficultyInstance difficulty,
+                                                     EntitySpawnReason reason, net.minecraft.world.entity.SpawnGroupData data) {
+        net.minecraft.world.entity.SpawnGroupData out = super.finalizeSpawn(world, difficulty, reason, data);
         if (this.getClass() != CursedPirateEntity.class) return out; // bosses built on this (Thorne) set themselves up
         // The island decides what they're made of; the dice decide their rank
         com.cursedtides.world.Archipelago.Column col = com.cursedtides.world.Archipelago.column(this.getBlockX(), this.getBlockZ());
@@ -98,37 +98,37 @@ public class CursedPirateEntity extends SkeletonEntity {
     public void tick() {
         super.tick();
         // A captain rallies the dead around him
-        if (!this.getWorld().isClient && rank() == Rank.CAPTAIN && this.age % 40 == 0 && this.getTarget() != null) {
-            for (CursedPirateEntity mate : this.getWorld().getEntitiesByClass(CursedPirateEntity.class, this.getBoundingBox().expand(8), m -> m != this)) {
-                mate.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(net.minecraft.entity.effect.StatusEffects.STRENGTH, 60, 0));
+        if (!this.level().isClientSide() && rank() == Rank.CAPTAIN && this.tickCount % 40 == 0 && this.getTarget() != null) {
+            for (CursedPirateEntity mate : this.level().getEntitiesOfClass(CursedPirateEntity.class, this.getBoundingBox().inflate(8), m -> m != this)) {
+                mate.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.STRENGTH, 60, 0));
             }
         }
     }
 
     @Override
-    public void writeCustomDataToNbt(net.minecraft.nbt.NbtCompound nbt) {
-        super.writeCustomDataToNbt(nbt);
-        nbt.putInt("Variant", this.dataTracker.get(VARIANT));
+    protected void addAdditionalSaveData(net.minecraft.world.level.storage.ValueOutput nbt) {
+        super.addAdditionalSaveData(nbt);
+        nbt.putInt("Variant", this.entityData.get(VARIANT));
     }
 
     @Override
-    public void readCustomDataFromNbt(net.minecraft.nbt.NbtCompound nbt) {
-        super.readCustomDataFromNbt(nbt);
-        this.dataTracker.set(VARIANT, nbt.getInt("Variant"));
+    protected void readAdditionalSaveData(net.minecraft.world.level.storage.ValueInput nbt) {
+        super.readAdditionalSaveData(nbt);
+        this.entityData.set(VARIANT, nbt.getIntOr("Variant", 0));
     }
 
-    public static DefaultAttributeContainer.Builder createPirateAttributes() {
-        return AbstractSkeletonEntity.createAbstractSkeletonAttributes()
-                .add(EntityAttributes.GENERIC_MAX_HEALTH, 26.0)
-                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 3.0)
-                .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.28)
-                .add(EntityAttributes.GENERIC_ARMOR, 2.0);
+    public static AttributeSupplier.Builder createPirateAttributes() {
+        return AbstractSkeleton.createAttributes()
+                .add(Attributes.MAX_HEALTH, 26.0)
+                .add(Attributes.ATTACK_DAMAGE, 3.0)
+                .add(Attributes.MOVEMENT_SPEED, 0.28)
+                .add(Attributes.ARMOR, 2.0);
     }
 
     @Override
-    protected void initEquipment(Random random, LocalDifficulty localDifficulty) {
-        this.equipStack(EquipmentSlot.MAINHAND, new ItemStack(ModItems.CUTLASS));
-        this.setEquipmentDropChance(EquipmentSlot.MAINHAND, 0.05f);
+    protected void populateDefaultEquipmentSlots(RandomSource random, DifficultyInstance localDifficulty) {
+        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(ModItems.CUTLASS));
+        this.setDropChance(EquipmentSlot.MAINHAND, 0.05f);
     }
 
     /**
@@ -136,22 +136,22 @@ public class CursedPirateEntity extends SkeletonEntity {
      * spawn-restriction registration so it works without access wideners.
      */
     @Override
-    public boolean canSpawn(WorldAccess world, SpawnReason reason) {
-        if (reason != SpawnReason.NATURAL && reason != SpawnReason.CHUNK_GENERATION) {
-            return super.canSpawn(world, reason);
+    public boolean checkSpawnRules(LevelAccessor world, EntitySpawnReason reason) {
+        if (reason != EntitySpawnReason.NATURAL && reason != EntitySpawnReason.CHUNK_GENERATION) {
+            return super.checkSpawnRules(world, reason);
         }
         if (world.getDifficulty() == Difficulty.PEACEFUL) {
             return false;
         }
-        BlockPos pos = this.getBlockPos();
-        BlockPos below = pos.down();
+        BlockPos pos = this.blockPosition();
+        BlockPos below = pos.below();
         if (!world.getFluidState(pos).isEmpty()) {
             return false;
         }
-        if (!world.getBlockState(below).isSolidBlock(world, below)) {
+        if (!world.getBlockState(below).isRedstoneConductor(world, below)) {
             return false;
         }
-        return world instanceof ServerWorldAccess serverWorld
-                && HostileEntity.isSpawnDark(serverWorld, pos, this.random);
+        return world instanceof ServerLevelAccessor serverWorld
+                && Monster.isDarkEnoughToSpawn(serverWorld, pos, this.random);
     }
 }

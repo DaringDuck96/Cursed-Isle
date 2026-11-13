@@ -1,11 +1,12 @@
 package com.cursedtides.world;
 
+import net.minecraft.world.item.DyeColor;
 import com.cursedtides.world.Archipelago.Island;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.StairsBlock;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.math.Direction;
+import net.minecraft.core.Direction;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.StairBlock;
+import net.minecraft.world.level.block.state.BlockState;
 
 /**
  * The hidden islands: the mist shrine on the Isle That Isn't, the throne hall of Kingsrest, the smugglers' cache in
@@ -53,7 +54,7 @@ public final class HiddenBuilds {
         }
     }
 
-    private static BlockState s(net.minecraft.block.Block b) { return b.getDefaultState(); }
+    private static BlockState s(net.minecraft.world.level.block.Block b) { return b.defaultBlockState(); }
 
     /** A ring of standing stones in the mist, with a cracked pedestal in the middle. */
     private static void mistShrine(Canvas c, int cx, int cz) {
@@ -94,10 +95,10 @@ public final class HiddenBuilds {
             c.fill(cx - 5, y, z, cx - 5, y + 6, z, s(Blocks.GILDED_BLACKSTONE));
             c.fill(cx + 5, y, z, cx + 5, y + 6, z, s(Blocks.GILDED_BLACKSTONE));
         }
-        c.fill(cx - 1, y, z1 + 4, cx + 1, y, z2 - 1, s(Blocks.RED_CARPET));
+        c.fill(cx - 1, y, z1 + 4, cx + 1, y, z2 - 1, s(Blocks.CARPET.pick(DyeColor.RED)));
         // The throne
         c.fill(cx - 2, y, z1 + 1, cx + 2, y, z1 + 3, s(Blocks.GOLD_BLOCK));
-        c.set(cx, y + 1, z1 + 2, s(Blocks.POLISHED_BLACKSTONE_STAIRS).with(StairsBlock.FACING, Direction.NORTH));
+        c.set(cx, y + 1, z1 + 2, s(Blocks.POLISHED_BLACKSTONE_STAIRS).setValue(StairBlock.FACING, Direction.NORTH));
         c.fill(cx - 1, y + 1, z1 + 1, cx + 1, y + 3, z1 + 1, s(Blocks.GILDED_BLACKSTONE));
         c.set(cx, y + 4, z1 + 1, s(Blocks.SOUL_LANTERN));
         c.chest(cx + 3, y, z1 + 1, Direction.SOUTH, Builds.TREASURE, new ItemStack(com.cursedtides.item.ModItems.ANCIENT_RELIC));
@@ -118,19 +119,19 @@ public final class HiddenBuilds {
         c.set(cx, y, cz - 3, s(Blocks.BARREL));
         c.set(cx - 3, y, cz, s(Blocks.BARREL));
         c.set(cx + 3, y, cz, s(Blocks.BARREL));
-        c.set(cx, y + 3, cz, s(Blocks.LANTERN).with(net.minecraft.block.LanternBlock.HANGING, true));
+        c.set(cx, y + 3, cz, s(Blocks.LANTERN).setValue(net.minecraft.world.level.block.LanternBlock.HANGING, true));
     }
 
     /** The brig: an iron-bound cell with a barred window, and a gaoler's step outside. */
     private static void brig(Canvas c, int x, int z) {
         int y = Builds.floorAt(x, z);
-        BlockState wall = com.cursedtides.block.ModBlocks.SEALED_GATE.getDefaultState();
+        BlockState wall = com.cursedtides.block.ModBlocks.SEALED_GATE.defaultBlockState();
         c.fill(x - 3, y - 1, z - 3, x + 3, y + 4, z + 3, wall);
         c.fill(x - 2, y, z - 2, x + 2, y + 2, z + 2, s(Blocks.AIR));
         c.fill(x - 1, y + 1, z + 3, x + 1, y + 1, z + 3, s(Blocks.IRON_BARS));
         c.set(x - 2, y, z - 2, s(Blocks.HAY_BLOCK));
         c.set(x + 2, y, z - 2, s(Blocks.CAULDRON));
-        c.set(x, y + 2, z, s(Blocks.LANTERN).with(net.minecraft.block.LanternBlock.HANGING, true));
+        c.set(x, y + 2, z, s(Blocks.LANTERN).setValue(net.minecraft.world.level.block.LanternBlock.HANGING, true));
         c.fill(x - 2, y - 1, z + 4, x + 2, y - 1, z + 5, s(Blocks.STONE_BRICKS));
         c.fill(x - 2, y, z + 4, x + 2, y + 2, z + 5, s(Blocks.AIR));
     }
@@ -143,6 +144,6 @@ public final class HiddenBuilds {
         c.set(x - 1, y, z - 1, s(Blocks.STONE_BRICK_WALL));
         c.set(x + 1, y, z - 1, s(Blocks.STONE_BRICK_WALL));
         c.set(x, y, z, s(Blocks.ANVIL));
-        c.set(x, y, z + 1, s(Blocks.CHAIN));
+        c.set(x, y, z + 1, s(Blocks.IRON_CHAIN));
     }
 }

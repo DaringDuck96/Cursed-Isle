@@ -3,18 +3,18 @@ package com.cursedtides.activity;
 import com.cursedtides.world.Archipelago;
 import com.cursedtides.world.Builds;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.entity.Entity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.particle.DustParticleEffect;
-import net.minecraft.particle.ParticleTypes;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.particles.DustParticleOptions;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3f;
 
 import java.util.HashMap;
@@ -36,14 +36,14 @@ public final class StackRun {
     private record Run(int next, long started) {}
     private static final Map<UUID, Run> RUNS = new HashMap<>();
 
-    public static Vec3d flag(int i) {
+    public static Vec3 flag(int i) {
         var isle = Archipelago.STORMBREAK_ISLE;
         int x = isle.cx() + FLAGS[i][0], z = isle.cz() + FLAGS[i][1];
-        return new Vec3d(x + 0.5, Builds.groundY(x, z), z + 0.5);
+        return new Vec3(x + 0.5, Builds.groundY(x, z), z + 0.5);
     }
 
-    public static List<String> start(ServerPlayerEntity p, Entity master) {
-        RUNS.put(p.getUuid(), new Run(0, p.getServerWorld().getTime()));
+    public static List<String> start(ServerPlayer p, Entity master) {
+        RUNS.put(p.getUUID(), new Run(0, p.level().getGameTime()));
         return List.of("Ten flags, in order, over the top and back down. The next one's burning gold. The clock's already running!",
                 "Fall in the sea and you start again. Mind the edges, they crumble.");
     }
@@ -53,45 +53,45 @@ public final class StackRun {
     }
 
     private static void tick(MinecraftServer server) {
-        ServerWorld world = server.getOverworld();
-        if (server.getTicks() % 10 == 0 && !RUNS.isEmpty()) {
+        ServerLevel world = server.overworld();
+        if (server.getTickCount() % 10 == 0 && !RUNS.isEmpty()) {
             for (int i = 0; i < FLAGS.length; i++) {
-                Vec3d f = flag(i);
-                world.spawnParticles(new DustParticleEffect(new Vector3f(0.8f, 0.1f, 0.1f), 1.5f), f.x, f.y + 1.5, f.z, 3, 0.2, 0.6, 0.2, 0);
+                Vec3 f = flag(i);
+                world.sendParticles(new DustParticleOptions(0xCC1A1A, 1.5f), f.x, f.y + 1.5, f.z, 3, 0.2, 0.6, 0.2, 0);
             }
         }
         for (Map.Entry<UUID, Run> e : List.copyOf(RUNS.entrySet())) {
-            ServerPlayerEntity p = server.getPlayerManager().getPlayer(e.getKey());
+            ServerPlayer p = server.getPlayerList().getPlayer(e.getKey());
             Run run = e.getValue();
-            if (p == null || p.hasVehicle() || p.getAbilities().flying || p.isFallFlying()) { RUNS.remove(e.getKey()); continue; }
-            if (p.isTouchingWater()) {
+            if (p == null || p.isPassenger() || p.getAbilities().flying || p.isFallFlying()) { RUNS.remove(e.getKey()); continue; }
+            if (p.isInWater()) {
                 RUNS.remove(e.getKey());
-                p.sendMessage(Text.literal("Into the drink! Run abandoned.").formatted(Formatting.RED), true);
+                p.sendSystemMessage(Component.literal("Into the drink! Run abandoned.").withStyle(ChatFormatting.RED), true);
                 continue;
             }
-            Vec3d f = flag(run.next());
-            if (server.getTicks() % 4 == 0) {
-                world.spawnParticles(p, ParticleTypes.WAX_OFF, true, f.x, f.y + 1.2, f.z, 6, 0.3, 0.8, 0.3, 0);
+            Vec3 f = flag(run.next());
+            if (server.getTickCount() % 4 == 0) {
+                world.sendParticles(p, ParticleTypes.WAX_OFF, true, false, f.x, f.y + 1.2, f.z, 6, 0.3, 0.8, 0.3, 0);
             }
-            if (p.getPos().squaredDistanceTo(f) < TOUCH * TOUCH) {
-                world.playSound(null, p.getBlockPos(), SoundEvents.BLOCK_NOTE_BLOCK_CHIME.value(), SoundCategory.PLAYERS, 1f, 1f + run.next() * 0.08f);
+            if (p.position().distanceToSqr(f) < TOUCH * TOUCH) {
+                world.playSound(null, p.blockPosition(), SoundEvents.NOTE_BLOCK_CHIME.value(), SoundSource.PLAYERS, 1f, 1f + run.next() * 0.08f);
                 if (run.next() + 1 >= FLAGS.length) {
                     RUNS.remove(e.getKey());
-                    finish(p, (int) (world.getTime() - run.started()));
+                    finish(p, (int) (world.getGameTime() - run.started()));
                 } else {
                     RUNS.put(e.getKey(), new Run(run.next() + 1, run.started()));
-                    p.sendMessage(Text.literal("Flag " + (run.next() + 1) + "/" + FLAGS.length + "  "
-                            + String.format("%.1fs", (world.getTime() - run.started()) / 20.0)).formatted(Formatting.YELLOW), true);
+                    p.sendSystemMessage(Component.literal("Flag " + (run.next() + 1) + "/" + FLAGS.length + "  "
+                            + String.format("%.1fs", (world.getGameTime() - run.started()) / 20.0)).withStyle(ChatFormatting.YELLOW), true);
                 }
             }
         }
     }
 
-    private static void finish(ServerPlayerEntity p, int ticks) {
-        p.sendMessage(Text.literal("Stack Run complete in " + String.format("%.1f", ticks / 20.0) + " seconds!").formatted(Formatting.GOLD, Formatting.BOLD), false);
-        if (Leaderboards.submit(p, "course", ticks)) p.sendMessage(Text.literal("A personal best!").formatted(Formatting.YELLOW), false);
+    private static void finish(ServerPlayer p, int ticks) {
+        p.sendSystemMessage(Component.literal("Stack Run complete in " + String.format("%.1f", ticks / 20.0) + " seconds!").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), false);
+        if (Leaderboards.submit(p, "course", ticks)) p.sendSystemMessage(Component.literal("A personal best!").withStyle(ChatFormatting.YELLOW), false);
         if (ticks < 90 * 20) Achievements.grant(p, "stack_runner");
-        p.giveItemStack(new ItemStack(com.cursedtides.item.ModItems.DOUBLOON, ticks < 90 * 20 ? 12 : 5));
+        p.addItem(new ItemStack(com.cursedtides.item.ModItems.DOUBLOON, ticks < 90 * 20 ? 12 : 5));
         com.cursedtides.pirate.PirateData.addXp(p, com.cursedtides.pirate.Weapon.EXPLORATION, 40);
     }
 }

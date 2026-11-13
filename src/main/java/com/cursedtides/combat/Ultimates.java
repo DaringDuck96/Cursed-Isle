@@ -13,24 +13,23 @@ import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.entity.mob.Monster;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.particle.ParticleTypes;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Vec3d;
-
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.monster.Enemy;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -51,22 +50,22 @@ public final class Ultimates {
             .persistent(Codec.LONG).copyOnDeath().initializer(() -> 0L).buildAndRegister(CursedTides.id("ultimate_ready"));
 
     private static final class Job {
-        final ServerPlayerEntity player; final int every; int left; final IntConsumer step; int t;
-        Job(ServerPlayerEntity p, int every, int times, IntConsumer step) { this.player = p; this.every = every; this.left = times; this.step = step; }
+        final ServerPlayer player; final int every; int left; final IntConsumer step; int t;
+        Job(ServerPlayer p, int every, int times, IntConsumer step) { this.player = p; this.every = every; this.left = times; this.step = step; }
     }
     private static final List<Job> JOBS = new ArrayList<>();
 
     public static void register() {
         ServerTickEvents.END_SERVER_TICK.register(Ultimates::tick);
         ServerLivingEntityEvents.AFTER_DEATH.register((victim, source) -> {
-            if (!(victim instanceof Monster) || !(victim.getWorld() instanceof ServerWorld world)) return;
-            Entity killer = source.getAttacker();
+            if (!(victim instanceof Enemy) || !(victim.level() instanceof ServerLevel world)) return;
+            Entity killer = source.getEntity();
             if (killer == null) return;
             // An officer learns from every foe their people put down nearby
-            for (ServerPlayerEntity officer : world.getPlayers(p -> p.squaredDistanceTo(victim) < 24 * 24)) {
+            for (ServerPlayer officer : world.getPlayers(p -> p.distanceToSqr(victim) < 24 * 24)) {
                 if (killer == officer) continue;
                 boolean ours = killer instanceof CrewmateEntity
-                        || (killer instanceof PlayerEntity kp && CrewState.shipmates(world.getServer(), officer.getUuid(), kp.getUuid()));
+                        || (killer instanceof Player kp && CrewState.shipmates(world.getServer(), officer.getUUID(), kp.getUUID()));
                 if (ours) ProfessionData.addXp(officer, Profession.LEADERSHIP, 4);
             }
         });
@@ -84,7 +83,7 @@ public final class Ultimates {
     }
 
     /** The proficiency whose ultimate you'd use, or null if none has reached the mark. */
-    public static Weapon best(PlayerEntity p) {
+    public static Weapon best(Player p) {
         Weapon best = null;
         int lvl = UNLOCK_LEVEL - 1;
         for (Weapon w : Weapon.values()) {
@@ -94,114 +93,114 @@ public final class Ultimates {
         return best;
     }
 
-    public static void use(ServerPlayerEntity p) {
+    public static void use(ServerPlayer p) {
         Weapon w = best(p);
         if (w == null) {
-            p.sendMessage(Text.literal("Your ultimate unlocks when any proficiency reaches " + UNLOCK_LEVEL + ".").formatted(Formatting.GRAY), true);
+            p.sendSystemMessage(Component.literal("Your ultimate unlocks when any proficiency reaches " + UNLOCK_LEVEL + ".").withStyle(ChatFormatting.GRAY), true);
             return;
         }
-        long now = p.getServerWorld().getTime();
+        long now = p.level().getGameTime();
         long ready = p.getAttachedOrElse(READY_AT, 0L);
         if (ready > now) {
-            p.sendMessage(Text.literal(nameFor(w) + " ready in " + ((ready - now) / 20) + "s").formatted(Formatting.GRAY), true);
+            p.sendSystemMessage(Component.literal(nameFor(w) + " ready in " + ((ready - now) / 20) + "s").withStyle(ChatFormatting.GRAY), true);
             return;
         }
         p.setAttached(READY_AT, now + COOLDOWN);
         com.cursedtides.activity.Achievements.grant(p, "ultimate");
-        ServerWorld world = p.getServerWorld();
-        p.sendMessage(Text.literal("⚔ " + nameFor(w) + "!").formatted(Formatting.GOLD, Formatting.BOLD), true);
-        world.playSound(null, p.getBlockPos(), com.cursedtides.sound.ModSounds.ULTIMATE.value(), SoundCategory.PLAYERS, 1f, 1f);
+        ServerLevel world = p.level();
+        p.sendSystemMessage(Component.literal("⚔ " + nameFor(w) + "!").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), true);
+        world.playSound(null, p.blockPosition(), com.cursedtides.sound.ModSounds.ULTIMATE.value(), SoundSource.PLAYERS, 1f, 1f);
         switch (w) {
             case CUTLASS -> {
-                p.addStatusEffect(new StatusEffectInstance(StatusEffects.STRENGTH, 120, 1));
-                p.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, 120, 1));
+                p.addEffect(new MobEffectInstance(MobEffects.STRENGTH, 120, 1));
+                p.addEffect(new MobEffectInstance(MobEffects.SPEED, 120, 1));
                 JOBS.add(new Job(p, 10, 12, i -> {
                     for (LivingEntity t : foes(p, 4.5)) {
-                        t.timeUntilRegen = 0;
-                        t.damage(world.getDamageSources().playerAttack(p), 4f);
+                        t.setInvulnerableTime(0);
+                        t.hurt(world.damageSources().playerAttack(p), 4f);
                         Styles.stagger(t, 15);
                     }
                     for (int k = 0; k < 10; k++) {
                         double a = Math.PI * 2 * k / 10 + i;
-                        world.spawnParticles(ParticleTypes.SWEEP_ATTACK, p.getX() + Math.cos(a) * 2.5, p.getY() + 1, p.getZ() + Math.sin(a) * 2.5, 1, 0, 0, 0, 0);
+                        world.sendParticles(ParticleTypes.SWEEP_ATTACK, p.getX() + Math.cos(a) * 2.5, p.getY() + 1, p.getZ() + Math.sin(a) * 2.5, 1, 0, 0, 0, 0);
                     }
-                    world.playSound(null, p.getBlockPos(), SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, SoundCategory.PLAYERS, 0.8f, 0.8f + i * 0.05f);
+                    world.playSound(null, p.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.8f, 0.8f + i * 0.05f);
                 }));
             }
             case PISTOL -> {
                 List<LivingEntity> targets = foes(p, 28);
-                targets.sort(Comparator.comparingDouble(p::squaredDistanceTo));
+                targets.sort(Comparator.comparingDouble(p::distanceToSqr));
                 List<LivingEntity> marked = targets.subList(0, Math.min(6, targets.size()));
                 JOBS.add(new Job(p, 5, marked.size(), i -> {
                     LivingEntity t = marked.get(i);
                     if (!t.isAlive()) return;
-                    Vec3d from = p.getEyePos(), to = t.getPos().add(0, t.getHeight() * 0.6, 0);
-                    Vec3d step = to.subtract(from).normalize();
+                    Vec3 from = p.getEyePosition(), to = t.position().add(0, t.getBbHeight() * 0.6, 0);
+                    Vec3 step = to.subtract(from).normalize();
                     for (double d = 0; d < from.distanceTo(to); d += 0.8) {
-                        Vec3d q = from.add(step.multiply(d));
-                        world.spawnParticles(ParticleTypes.SMOKE, q.x, q.y, q.z, 1, 0, 0, 0, 0);
+                        Vec3 q = from.add(step.scale(d));
+                        world.sendParticles(ParticleTypes.SMOKE, q.x, q.y, q.z, 1, 0, 0, 0, 0);
                     }
-                    t.timeUntilRegen = 0;
-                    t.damage(world.getDamageSources().playerAttack(p), 14f);
-                    world.playSound(null, p.getBlockPos(), SoundEvents.ENTITY_FIREWORK_ROCKET_LARGE_BLAST, SoundCategory.PLAYERS, 1f, 0.6f);
+                    t.setInvulnerableTime(0);
+                    t.hurt(world.damageSources().playerAttack(p), 14f);
+                    world.playSound(null, p.blockPosition(), SoundEvents.FIREWORK_ROCKET_LARGE_BLAST, SoundSource.PLAYERS, 1f, 0.6f);
                 }));
             }
             case CANNON -> {
-                HitResult hit = p.raycast(64, 0, false);
-                Vec3d centre = hit.getPos();
+                HitResult hit = p.pick(64, 0, false);
+                Vec3 centre = hit.getLocation();
                 JOBS.add(new Job(p, 6, 10, i -> {
-                    Vec3d at = centre.add((p.getRandom().nextDouble() - 0.5) * 10, 0, (p.getRandom().nextDouble() - 0.5) * 10);
-                    world.spawnParticles(ParticleTypes.EXPLOSION_EMITTER, at.x, at.y + 0.5, at.z, 1, 0, 0, 0, 0);
-                    world.playSound(null, at.x, at.y, at.z, SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, 1.2f, 0.9f);
-                    for (Entity e : world.getOtherEntities(p, new Box(at, at).expand(3), e -> e instanceof LivingEntity && e.isAlive() && isFoe(p, e))) {
-                        e.timeUntilRegen = 0;
-                        e.damage(world.getDamageSources().playerAttack(p), 10f);
+                    Vec3 at = centre.add((p.getRandom().nextDouble() - 0.5) * 10, 0, (p.getRandom().nextDouble() - 0.5) * 10);
+                    world.sendParticles(ParticleTypes.EXPLOSION_EMITTER, at.x, at.y + 0.5, at.z, 1, 0, 0, 0, 0);
+                    world.playSound(null, at.x, at.y, at.z, SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 1.2f, 0.9f);
+                    for (Entity e : world.getEntities(p, new AABB(at, at).inflate(3), e -> e instanceof LivingEntity && e.isAlive() && isFoe(p, e))) {
+                        e.setInvulnerableTime(0);
+                        e.hurt(world.damageSources().playerAttack(p), 10f);
                     }
                 }));
             }
             case HEX -> {
                 for (LivingEntity t : foes(p, 10)) {
-                    t.addStatusEffect(new StatusEffectInstance(StatusEffects.WITHER, 140, 1), p);
-                    t.addStatusEffect(new StatusEffectInstance(StatusEffects.LEVITATION, 30, 0), p);
+                    t.addEffect(new MobEffectInstance(MobEffects.WITHER, 140, 1), p);
+                    t.addEffect(new MobEffectInstance(MobEffects.LEVITATION, 30, 0), p);
                     Styles.stagger(t, 80);
                 }
                 p.heal(8);
-                world.spawnParticles(ParticleTypes.SOUL_FIRE_FLAME, p.getX(), p.getY() + 0.5, p.getZ(), 120, 5, 0.5, 5, 0.02);
-                world.playSound(null, p.getBlockPos(), SoundEvents.ENTITY_WARDEN_SONIC_BOOM, SoundCategory.PLAYERS, 0.6f, 1.3f);
+                world.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, p.getX(), p.getY() + 0.5, p.getZ(), 120, 5, 0.5, 5, 0.02);
+                world.playSound(null, p.blockPosition(), SoundEvents.WARDEN_SONIC_BOOM, SoundSource.PLAYERS, 0.6f, 1.3f);
             }
             case SAILING -> {
                 if (p.getVehicle() instanceof ShipEntity ship) {
                     JOBS.add(new Job(p, 5, 40, i -> {
-                        Vec3d fwd = Vec3d.fromPolar(0, ship.getYaw());
-                        ship.addVelocity(fwd.x * 0.08, 0, fwd.z * 0.08);
-                        world.spawnParticles(ParticleTypes.CLOUD, ship.getX(), ship.getY() + 6, ship.getZ(), 4, 2, 1, 2, 0.05);
+                        Vec3 fwd = Vec3.directionFromRotation(0, ship.getYRot());
+                        ship.push(fwd.x * 0.08, 0, fwd.z * 0.08);
+                        world.sendParticles(ParticleTypes.CLOUD, ship.getX(), ship.getY() + 6, ship.getZ(), 4, 2, 1, 2, 0.05);
                     }));
-                    p.sendMessage(Text.literal("Every stitch of canvas aloft!").formatted(Formatting.AQUA), false);
+                    p.sendSystemMessage(Component.literal("Every stitch of canvas aloft!").withStyle(ChatFormatting.AQUA), false);
                 } else {
-                    p.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, 400, 2));
-                    p.addStatusEffect(new StatusEffectInstance(StatusEffects.DOLPHINS_GRACE, 400, 0));
-                    p.addStatusEffect(new StatusEffectInstance(StatusEffects.WATER_BREATHING, 600, 0));
+                    p.addEffect(new MobEffectInstance(MobEffects.SPEED, 400, 2));
+                    p.addEffect(new MobEffectInstance(MobEffects.DOLPHINS_GRACE, 400, 0));
+                    p.addEffect(new MobEffectInstance(MobEffects.WATER_BREATHING, 600, 0));
                 }
             }
             case EXPLORATION -> {
-                p.addStatusEffect(new StatusEffectInstance(StatusEffects.NIGHT_VISION, 900, 0));
-                p.addStatusEffect(new StatusEffectInstance(StatusEffects.LUCK, 1200, 2));
-                for (LivingEntity t : foes(p, 48)) t.addStatusEffect(new StatusEffectInstance(StatusEffects.GLOWING, 600, 0));
-                p.sendMessage(Text.literal("Your eye for trouble sharpens: every foe nearby is marked, and luck sits on your shoulder.")
-                        .formatted(Formatting.GREEN), false);
+                p.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 900, 0));
+                p.addEffect(new MobEffectInstance(MobEffects.LUCK, 1200, 2));
+                for (LivingEntity t : foes(p, 48)) t.addEffect(new MobEffectInstance(MobEffects.GLOWING, 600, 0));
+                p.sendSystemMessage(Component.literal("Your eye for trouble sharpens: every foe nearby is marked, and luck sits on your shoulder.")
+                        .withStyle(ChatFormatting.GREEN), false);
             }
         }
     }
 
-    private static boolean isFoe(ServerPlayerEntity p, Entity e) {
+    private static boolean isFoe(ServerPlayer p, Entity e) {
         if (e == p || e instanceof CrewmateEntity) return false;
-        if (e instanceof PlayerEntity other) return com.cursedtides.social.Duels.inDuel(p.getUuid()) && com.cursedtides.social.Duels.inDuel(other.getUuid());
-        return e instanceof Monster || (e instanceof net.minecraft.entity.mob.MobEntity m && m.getTarget() == p);
+        if (e instanceof Player other) return com.cursedtides.social.Duels.inDuel(p.getUUID()) && com.cursedtides.social.Duels.inDuel(other.getUUID());
+        return e instanceof Enemy || (e instanceof net.minecraft.world.entity.Mob m && m.getTarget() == p);
     }
 
-    private static List<LivingEntity> foes(ServerPlayerEntity p, double r) {
+    private static List<LivingEntity> foes(ServerPlayer p, double r) {
         List<LivingEntity> out = new ArrayList<>();
-        for (Entity e : p.getWorld().getOtherEntities(p, p.getBoundingBox().expand(r), e -> e instanceof LivingEntity && e.isAlive() && isFoe(p, e))) {
+        for (Entity e : p.level().getEntities(p, p.getBoundingBox().inflate(r), e -> e instanceof LivingEntity && e.isAlive() && isFoe(p, e))) {
             out.add((LivingEntity) e);
         }
         return out;
@@ -211,30 +210,30 @@ public final class Ultimates {
         Iterator<Job> it = JOBS.iterator();
         while (it.hasNext()) {
             Job j = it.next();
-            if (j.player.isRemoved() || j.player.isDead()) { it.remove(); continue; }
+            if (j.player.isRemoved() || j.player.isDeadOrDying()) { it.remove(); continue; }
             if (j.t++ % j.every != 0) continue;
             int i = (j.t - 1) / j.every;
             j.step.accept(i);
             if (--j.left <= 0) it.remove();
         }
-        if (server.getTicks() % 200 == 0) leadershipAura(server);
+        if (server.getTickCount() % 200 == 0) leadershipAura(server);
     }
 
     /** Officers steady the people around them: crewmates and shipmates within 16 blocks. */
     private static void leadershipAura(MinecraftServer server) {
-        for (ServerPlayerEntity officer : server.getPlayerManager().getPlayerList()) {
+        for (ServerPlayer officer : server.getPlayerList().getPlayers()) {
             int lvl = ProfessionData.level(officer, Profession.LEADERSHIP);
             if (lvl < 5) continue;
-            Box area = officer.getBoundingBox().expand(16);
-            List<LivingEntity> people = new ArrayList<>(officer.getWorld().getEntitiesByClass(CrewmateEntity.class, area, Entity::isAlive));
-            for (ServerPlayerEntity mate : officer.getServerWorld().getPlayers(m -> m != officer && m.squaredDistanceTo(officer) < 256
-                    && CrewState.shipmates(server, officer.getUuid(), m.getUuid()))) people.add(mate);
+            AABB area = officer.getBoundingBox().inflate(16);
+            List<LivingEntity> people = new ArrayList<>(officer.level().getEntitiesOfClass(CrewmateEntity.class, area, Entity::isAlive));
+            for (ServerPlayer mate : officer.level().getPlayers(m -> m != officer && m.distanceToSqr(officer) < 256
+                    && CrewState.shipmates(server, officer.getUUID(), m.getUUID()))) people.add(mate);
             for (LivingEntity l : people) {
-                l.addStatusEffect(new StatusEffectInstance(StatusEffects.STRENGTH, 240, 0, true, false));
-                if (lvl >= 15) l.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 240, 0, true, false));
-                if (lvl >= 25) l.addStatusEffect(new StatusEffectInstance(StatusEffects.REGENERATION, 100, 0, true, false));
+                l.addEffect(new MobEffectInstance(MobEffects.STRENGTH, 240, 0, true, false));
+                if (lvl >= 15) l.addEffect(new MobEffectInstance(MobEffects.RESISTANCE, 240, 0, true, false));
+                if (lvl >= 25) l.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 100, 0, true, false));
             }
-            if (!people.isEmpty() && server.getTicks() % 1200 == 0) ProfessionData.addXp(officer, Profession.LEADERSHIP, 2 + people.size());
+            if (!people.isEmpty() && server.getTickCount() % 1200 == 0) ProfessionData.addXp(officer, Profession.LEADERSHIP, 2 + people.size());
         }
     }
 }

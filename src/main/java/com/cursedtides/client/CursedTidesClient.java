@@ -3,20 +3,19 @@ package com.cursedtides.client;
 import com.cursedtides.CursedTides;
 import com.cursedtides.entity.ModEntities;
 import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
+import net.fabricmc.fabric.api.client.rendering.v1.ModelLayerRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
-import net.minecraft.client.render.entity.EntityRendererFactory;
-import net.minecraft.client.render.entity.FlyingItemEntityRenderer;
-import net.minecraft.client.render.entity.WanderingTraderEntityRenderer;
-import net.minecraft.entity.passive.WanderingTraderEntity;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.entity.ThrownItemRenderer;
+import net.minecraft.client.renderer.entity.WanderingTraderRenderer;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.npc.wanderingtrader.WanderingTrader;
 
 public class CursedTidesClient implements ClientModInitializer {
     private static final Identifier SHIPWRIGHT_TEXTURE = CursedTides.id("textures/entity/shipwright.png");
 
     @Override
     public void onInitializeClient() {
-        EntityModelLayerRegistry.registerModelLayer(ShipRenderer.LAYER, ShipModel::getTexturedModelData);
         registerWildlife();
 
         // Characters, crews and the cursed, drawn with the Mob Workshop's models (see WorkshopModels)
@@ -29,18 +28,17 @@ public class CursedTidesClient implements ClientModInitializer {
         CutsceneClient.register();
         // A pirate's tip on the loading screens, as the old game had
         net.fabricmc.fabric.api.client.screen.v1.ScreenEvents.AFTER_INIT.register((client, screen, w, h) -> {
-            if (!(screen instanceof net.minecraft.client.gui.screen.world.LevelLoadingScreen
-                    || screen instanceof net.minecraft.client.gui.screen.DownloadingTerrainScreen
-                    || screen instanceof net.minecraft.client.gui.screen.MessageScreen
-                    || screen instanceof net.minecraft.client.gui.screen.ProgressScreen
-                    || screen instanceof net.minecraft.client.gui.screen.multiplayer.ConnectScreen)) return;
+            if (!(screen instanceof net.minecraft.client.gui.screens.LevelLoadingScreen
+                    || screen instanceof net.minecraft.client.gui.screens.GenericMessageScreen
+                    || screen instanceof net.minecraft.client.gui.screens.ProgressScreen
+                    || screen instanceof net.minecraft.client.gui.screens.ConnectScreen)) return;
             String tip = com.cursedtides.ui.Tips.random(new java.util.Random());
-            net.fabricmc.fabric.api.client.screen.v1.ScreenEvents.afterRender(screen).register((s, ctx, mx, my, delta) -> {
-                var tr = net.minecraft.client.MinecraftClient.getInstance().textRenderer;
+            net.fabricmc.fabric.api.client.screen.v1.ScreenEvents.afterExtract(screen).register((s, ctx, mx, my, delta) -> {
+                var tr = net.minecraft.client.Minecraft.getInstance().font;
                 int y = s.height - 40;
-                ctx.drawCenteredTextWithShadow(tr, "Pirate Tip", s.width / 2, y, 0xFFD24A);
-                var lines = tr.wrapLines(net.minecraft.text.Text.literal(tip), Math.min(360, s.width - 40));
-                for (int i = 0; i < lines.size(); i++) ctx.drawCenteredTextWithShadow(tr, lines.get(i), s.width / 2, y + 12 + i * 10, 0xE6DCC8);
+                ctx.centeredText(tr, "Pirate Tip", s.width / 2, y, 0xFFFFD24A);
+                var lines = tr.split(net.minecraft.network.chat.Component.literal(tip), Math.min(360, s.width - 40));
+                for (int i = 0; i < lines.size(); i++) ctx.centeredText(tr, lines.get(i), s.width / 2, y + 12 + i * 10, 0xFFE6DCC8);
             });
         });
         EntityRendererRegistry.register(ModEntities.CURSED_PIRATE, ctx -> BossLooks.rebuild(ctx, new WorkshopBipedRenderer<>(ctx,
@@ -56,39 +54,17 @@ public class CursedTidesClient implements ClientModInitializer {
         EntityRendererRegistry.register(ModEntities.CREWMATE, ctx -> new WorkshopBipedRenderer<>(ctx, new String[]{"crew_gunner", "crew_bosun", "crew_navigator"},
                 e -> CREW[Math.floorMod(e.getRole(), 3)], e -> CREW[Math.floorMod(e.getRole(), 3)], 1.0f));
         EntityRendererRegistry.register(ModEntities.SHIP, ShipRenderer::new);
-        EntityRendererRegistry.register(ModEntities.CANNONBALL, FlyingItemEntityRenderer::new);
-        EntityRendererRegistry.register(ModEntities.HEX_BOLT, FlyingItemEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.CANNONBALL, ThrownItemRenderer::new);
+        EntityRendererRegistry.register(ModEntities.HEX_BOLT, ThrownItemRenderer::new);
 
-        EntityRendererRegistry.register(ModEntities.THROWING_KNIFE, FlyingItemEntityRenderer::new);
-        EntityRendererRegistry.register(com.cursedtides.combat.Grenades.TYPE, FlyingItemEntityRenderer::new);
-
-        // Sailor's garb icons take the cloth's dye colour (the overlay layer stays as drawn)
-        net.fabricmc.fabric.api.client.rendering.v1.ColorProviderRegistry.ITEM.register(
-                (stack, tintIndex) -> tintIndex > 0 ? -1
-                        : 0xFF000000 | net.minecraft.component.type.DyedColorComponent.getColor(stack, 0xB0A890),
-                com.cursedtides.item.ModClothing.SAILOR_SET.toArray(new net.minecraft.item.Item[0]));
+        EntityRendererRegistry.register(ModEntities.THROWING_KNIFE, ThrownItemRenderer::new);
+        EntityRendererRegistry.register(com.cursedtides.combat.Grenades.TYPE, ThrownItemRenderer::new);
 
         ShipKeys.register();
         ShipKeys.registerReceivers();
         AppearanceClient.register();
         MiniGameScreens.register();
         CombatHud.register();
-        net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap.INSTANCE.putBlock(
-                com.cursedtides.block.ModBlocks.MOON_SEAL, net.minecraft.client.render.RenderLayer.getCutout());
-        net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap.INSTANCE.putBlock(
-                com.cursedtides.block.ModBlocks.CAVE_ROPE, net.minecraft.client.render.RenderLayer.getCutout());
-    }
-
-    /** The trader model in the shipwright's own work clothes. */
-    static class ShipwrightRenderer extends WanderingTraderEntityRenderer {
-        ShipwrightRenderer(EntityRendererFactory.Context context) {
-            super(context);
-        }
-
-        @Override
-        public Identifier getTexture(WanderingTraderEntity entity) {
-            return SHIPWRIGHT_TEXTURE;
-        }
     }
 
     private static void registerWildlife() {
@@ -99,7 +75,7 @@ public class CursedTidesClient implements ClientModInitializer {
                 {com.cursedtides.wildlife.IslandBeasts.SNAPJAW, "snapjaw", 0.5f, 1.0f},
                 {com.cursedtides.wildlife.IslandBeasts.LIVING_STUMP, "living_stump", 0.6f, 1.0f}}) {
             @SuppressWarnings("unchecked")
-            net.minecraft.entity.EntityType<net.minecraft.entity.mob.HostileEntity> type = (net.minecraft.entity.EntityType<net.minecraft.entity.mob.HostileEntity>) b[0];
+            net.minecraft.world.entity.EntityType<net.minecraft.world.entity.monster.Monster> type = (net.minecraft.world.entity.EntityType<net.minecraft.world.entity.monster.Monster>) b[0];
             String id = (String) b[1];
             float shadow = (Float) b[2], scale = (Float) b[3];
             EntityRendererRegistry.register(type, ctx -> new CreatureRenderer<>(ctx, WorkshopModels.layer(id), WorkshopModels.parts(id), shadow, scale, e -> id, "workshop"));
@@ -112,16 +88,16 @@ public class CursedTidesClient implements ClientModInitializer {
         var snake = CreatureRenderer.layer("snake");
         var monkey = CreatureRenderer.layer("monkey");
         var tentacle = CreatureRenderer.layer("tentacle");
-        EntityModelLayerRegistry.registerModelLayer(tentacle, WildlifeModels::tentacle);
+        ModelLayerRegistry.registerModelLayer(tentacle, WildlifeModels::tentacle);
         EntityRendererRegistry.register(com.cursedtides.sea.Leviathan.TENTACLE, ctx -> new CreatureRenderer<>(ctx, tentacle,
                 WildlifeModels.TENTACLE_PARTS, 1.2f, 2.2f, e -> "tentacle"));
-        EntityModelLayerRegistry.registerModelLayer(croc, WildlifeModels::crocodile);
-        EntityModelLayerRegistry.registerModelLayer(shark, WildlifeModels::shark);
-        EntityModelLayerRegistry.registerModelLayer(jaguar, WildlifeModels::jaguar);
-        EntityModelLayerRegistry.registerModelLayer(boar, WildlifeModels::boar);
-        EntityModelLayerRegistry.registerModelLayer(crab, WildlifeModels::crab);
-        EntityModelLayerRegistry.registerModelLayer(snake, WildlifeModels::snake);
-        EntityModelLayerRegistry.registerModelLayer(monkey, WildlifeModels::monkey);
+        ModelLayerRegistry.registerModelLayer(croc, WildlifeModels::crocodile);
+        ModelLayerRegistry.registerModelLayer(shark, WildlifeModels::shark);
+        ModelLayerRegistry.registerModelLayer(jaguar, WildlifeModels::jaguar);
+        ModelLayerRegistry.registerModelLayer(boar, WildlifeModels::boar);
+        ModelLayerRegistry.registerModelLayer(crab, WildlifeModels::crab);
+        ModelLayerRegistry.registerModelLayer(snake, WildlifeModels::snake);
+        ModelLayerRegistry.registerModelLayer(monkey, WildlifeModels::monkey);
         EntityRendererRegistry.register(com.cursedtides.wildlife.Wildlife.CROCODILE, ctx -> new CreatureRenderer<>(ctx, croc,
                 WildlifeModels.CROCODILE_PARTS, 0.8f, 1.0f, e -> e.isAlligator() ? "alligator" : "crocodile"));
         EntityRendererRegistry.register(com.cursedtides.wildlife.Wildlife.SHARK, ctx -> new CreatureRenderer<>(ctx, shark,
@@ -141,7 +117,7 @@ public class CursedTidesClient implements ClientModInitializer {
     private static final String[] CREW = {"crew_gunner", "crew_bosun", "crew_navigator"};
 
     /** Which workshop model (and texture) each story character wears. */
-    private static String npcModel(net.minecraft.entity.passive.WanderingTraderEntity e) {
+    private static String npcModel(WanderingTrader e) {
         if (!(e instanceof com.cursedtides.entity.StoryNpcEntity npc)) return "keeper_wren";
         return switch (npc.getRole()) {
             case KEEPER -> "keeper_wren";

@@ -1,5 +1,6 @@
 package com.cursedtides.living;
 
+import net.minecraft.world.entity.EntityTypes;
 import com.cursedtides.combat.Levels;
 import com.cursedtides.entity.ModEntities;
 import com.cursedtides.wildlife.Wildlife;
@@ -9,15 +10,14 @@ import com.cursedtides.world.ModWorld;
 import com.cursedtides.world.Noise;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
-
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.EntitySpawnReason;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -62,17 +62,17 @@ public final class Camps {
     private static List<Supplier<EntityType<?>>> kinds(Archipelago.Style style) {
         return switch (style) {
             case SANDY -> List.of(() -> ModEntities.CURSED_PIRATE, () -> Wildlife.CRAB);
-            case TOWN -> List.of(() -> ModEntities.CURSED_PIRATE, () -> EntityType.PILLAGER);
-            case REEF, KEYS -> List.of(() -> ModEntities.CURSED_PIRATE, () -> EntityType.DROWNED);
-            case VOLCANIC -> List.of(() -> ModEntities.CURSED_PIRATE, () -> ModEntities.CURSED_PIRATE, () -> EntityType.MAGMA_CUBE);
-            case CURSED -> List.of(() -> ModEntities.CURSED_PIRATE, () -> ModEntities.CURSED_PIRATE, () -> EntityType.STRAY);
-            case FORTRESS -> List.of(() -> EntityType.PILLAGER, () -> EntityType.VINDICATOR, () -> ModEntities.CURSED_PIRATE);
+            case TOWN -> List.of(() -> ModEntities.CURSED_PIRATE, () -> EntityTypes.PILLAGER);
+            case REEF, KEYS -> List.of(() -> ModEntities.CURSED_PIRATE, () -> EntityTypes.DROWNED);
+            case VOLCANIC -> List.of(() -> ModEntities.CURSED_PIRATE, () -> ModEntities.CURSED_PIRATE, () -> EntityTypes.MAGMA_CUBE);
+            case CURSED -> List.of(() -> ModEntities.CURSED_PIRATE, () -> ModEntities.CURSED_PIRATE, () -> EntityTypes.STRAY);
+            case FORTRESS -> List.of(() -> EntityTypes.PILLAGER, () -> EntityTypes.VINDICATOR, () -> ModEntities.CURSED_PIRATE);
             case BAYOU -> List.of(() -> Wildlife.CROCODILE, () -> Wildlife.SNAKE, () -> ModEntities.CURSED_PIRATE);
-            case JUNGLE -> List.of(() -> Wildlife.JAGUAR, () -> Wildlife.SNAKE, () -> EntityType.SPIDER);
-            case CLIFFS, CRAGS -> List.of(() -> ModEntities.CURSED_PIRATE, () -> EntityType.SPIDER);
-            case DESERT -> List.of(() -> ModEntities.CURSED_PIRATE, () -> EntityType.HUSK);
-            case ATOLL -> List.of(() -> ModEntities.CURSED_PIRATE, () -> EntityType.DROWNED);
-            case ANCIENT -> List.of(() -> ModEntities.CURSED_PIRATE, () -> ModEntities.CURSED_PIRATE, () -> EntityType.VINDICATOR);
+            case JUNGLE -> List.of(() -> Wildlife.JAGUAR, () -> Wildlife.SNAKE, () -> EntityTypes.SPIDER);
+            case CLIFFS, CRAGS -> List.of(() -> ModEntities.CURSED_PIRATE, () -> EntityTypes.SPIDER);
+            case DESERT -> List.of(() -> ModEntities.CURSED_PIRATE, () -> EntityTypes.HUSK);
+            case ATOLL -> List.of(() -> ModEntities.CURSED_PIRATE, () -> EntityTypes.DROWNED);
+            case ANCIENT -> List.of(() -> ModEntities.CURSED_PIRATE, () -> ModEntities.CURSED_PIRATE, () -> EntityTypes.VINDICATOR);
         };
     }
 
@@ -141,33 +141,33 @@ public final class Camps {
         ServerTickEvents.END_SERVER_TICK.register(Camps::tick);
         // Camp foes left over from before a restart: clear them, the camp will raise fresh ones.
         ServerEntityEvents.ENTITY_LOAD.register((e, world) -> {
-            if (e.getCommandTags().contains(TAG) && !OWNER.containsKey(e.getUuid())) e.discard();
+            if (e.entityTags().contains(TAG) && !OWNER.containsKey(e.getUUID())) e.discard();
         });
     }
 
     private static void tick(MinecraftServer server) {
-        if (server.getTicks() % 20 != 7 || !ModWorld.isArchipelago()) return;
-        ServerWorld world = server.getOverworld();
-        List<ServerPlayerEntity> players = world.getPlayers(p -> !p.isSpectator());
+        if (server.getTickCount() % 20 != 7 || !ModWorld.isArchipelago()) return;
+        ServerLevel world = server.overworld();
+        List<ServerPlayer> players = world.getPlayers(p -> !p.isSpectator());
         if (players.isEmpty() && OWNER.isEmpty()) return;
-        long now = world.getTime();
-        for (ServerPlayerEntity p : players) {
+        long now = world.getGameTime();
+        for (ServerPlayer p : players) {
             com.cursedtides.world.Areas.Area a = com.cursedtides.world.Areas.at(p.getX(), p.getZ());
             String name = a == null ? "" : a.name();
-            String before = WHERE.put(p.getUuid(), name);
+            String before = WHERE.put(p.getUUID(), name);
             if (a != null && !name.equals(before)) {
-                int[] b = Levels.bandAt(p.getBlockPos());
+                int[] b = Levels.bandAt(p.blockPosition());
                 String title = Character.toUpperCase(name.charAt(0)) + name.substring(1);
-                p.networkHandler.sendPacket(new net.minecraft.network.packet.s2c.play.TitleFadeS2CPacket(10, 50, 20));
-                p.networkHandler.sendPacket(new net.minecraft.network.packet.s2c.play.SubtitleS2CPacket(
-                        net.minecraft.text.Text.literal(a.island().name() + "  ·  Lv " + b[0] + "-" + b[1]).formatted(net.minecraft.util.Formatting.GRAY)));
-                p.networkHandler.sendPacket(new net.minecraft.network.packet.s2c.play.TitleS2CPacket(
-                        net.minecraft.text.Text.literal(title).formatted(net.minecraft.util.Formatting.GOLD)));
+                p.connection.send(new net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket(10, 50, 20));
+                p.connection.send(new net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket(
+                        net.minecraft.network.chat.Component.literal(a.island().name() + "  ·  Lv " + b[0] + "-" + b[1]).withStyle(net.minecraft.ChatFormatting.GRAY)));
+                p.connection.send(new net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket(
+                        net.minecraft.network.chat.Component.literal(title).withStyle(net.minecraft.ChatFormatting.GOLD)));
             }
         }
         for (Camp c : all()) {
             double nearest = Double.MAX_VALUE;
-            for (ServerPlayerEntity p : players) {
+            for (ServerPlayer p : players) {
                 double dx = p.getX() - c.x, dz = p.getZ() - c.z;
                 nearest = Math.min(nearest, dx * dx + dz * dz);
             }
@@ -176,7 +176,7 @@ public final class Camps {
                 Entity e = world.getEntity(c.members.get(i));
                 if (e == null || !e.isAlive()) {
                     OWNER.remove(c.members.remove(i));
-                    if (c.nextSpawn < now) c.nextSpawn = now + (c.elite != null ? 20 * 300 : 20 * (25 + world.random.nextInt(25)));
+                    if (c.nextSpawn < now) c.nextSpawn = now + (c.elite != null ? 20 * 300 : 20 * (25 + world.getRandom().nextInt(25)));
                     continue;
                 }
                 if (nearest > 112 * 112) {
@@ -184,7 +184,7 @@ public final class Camps {
                     OWNER.remove(c.members.remove(i));
                     continue;
                 }
-                if (e instanceof MobEntity mob) leash(mob, c);
+                if (e instanceof Mob mob) leash(mob, c);
             }
             if (nearest > 64 * 64 || nearest < 10 * 10) continue;
             if (c.members.size() < c.size && now >= c.nextSpawn) {
@@ -193,49 +193,49 @@ public final class Camps {
         }
     }
 
-    private static void leash(MobEntity mob, Camp c) {
+    private static void leash(Mob mob, Camp c) {
         double dx = mob.getX() - c.x, dz = mob.getZ() - c.z;
         double d2 = dx * dx + dz * dz;
         if (d2 > 48 * 48) {
             // Too far: it loses heart and is back at camp, whole
             int y = Builds.groundY(c.x, c.z);
             mob.setTarget(null);
-            mob.refreshPositionAndAngles(c.x + 0.5, y, c.z + 0.5, mob.getYaw(), 0);
+            mob.snapTo(c.x + 0.5, y, c.z + 0.5, mob.getYRot(), 0);
             mob.setHealth(mob.getMaxHealth());
         } else if (d2 > 28 * 28 && mob.getTarget() == null) {
-            mob.getNavigation().startMovingTo(c.x + 0.5, Builds.groundY(c.x, c.z), c.z + 0.5, 1.0);
-        } else if (d2 > 12 * 12 && mob.getTarget() == null && mob.getNavigation().isIdle()) {
-            mob.getNavigation().startMovingTo(c.x + 0.5, Builds.groundY(c.x, c.z), c.z + 0.5, 0.8);
+            mob.getNavigation().moveTo(c.x + 0.5, Builds.groundY(c.x, c.z), c.z + 0.5, 1.0);
+        } else if (d2 > 12 * 12 && mob.getTarget() == null && mob.getNavigation().isDone()) {
+            mob.getNavigation().moveTo(c.x + 0.5, Builds.groundY(c.x, c.z), c.z + 0.5, 0.8);
         }
     }
 
-    private static boolean spawn(ServerWorld world, Camp c) {
+    private static boolean spawn(ServerLevel world, Camp c) {
         for (int tries = 0; tries < 6; tries++) {
-            int x = c.x + world.random.nextInt(9) - 4, z = c.z + world.random.nextInt(9) - 4;
+            int x = c.x + world.getRandom().nextInt(9) - 4, z = c.z + world.getRandom().nextInt(9) - 4;
             BlockPos at = new BlockPos(x, Builds.groundY(x, z), z);
-            if (!world.isChunkLoaded(at.getX() >> 4, at.getZ() >> 4)) return false;
-            if (!world.getBlockState(at).isAir() || !world.getBlockState(at.up()).isAir() || world.getBlockState(at.down()).isAir()) continue;
-            Entity e = c.kinds.get(world.random.nextInt(c.kinds.size())).get().create(world);
-            if (!(e instanceof MobEntity mob)) return false;
-            mob.refreshPositionAndAngles(x + 0.5, at.getY(), z + 0.5, world.random.nextFloat() * 360, 0);
-            mob.initialize(world, world.getLocalDifficulty(at), SpawnReason.EVENT, null);
-            mob.addCommandTag(TAG);
+            if (!world.hasChunk(at.getX() >> 4, at.getZ() >> 4)) return false;
+            if (!world.getBlockState(at).isAir() || !world.getBlockState(at.above()).isAir() || world.getBlockState(at.below()).isAir()) continue;
+            Entity e = c.kinds.get(world.getRandom().nextInt(c.kinds.size())).get().create(world, EntitySpawnReason.EVENT);
+            if (!(e instanceof Mob mob)) return false;
+            mob.snapTo(x + 0.5, at.getY(), z + 0.5, world.getRandom().nextFloat() * 360, 0);
+            mob.finalizeSpawn(world, world.getCurrentDifficultyAt(at), EntitySpawnReason.EVENT, null);
+            mob.addTag(TAG);
             if (c.elite != null) {
-                mob.setCustomName(net.minecraft.text.Text.literal(c.elite).formatted(net.minecraft.util.Formatting.DARK_RED, net.minecraft.util.Formatting.BOLD));
+                mob.setCustomName(net.minecraft.network.chat.Component.literal(c.elite).withStyle(net.minecraft.ChatFormatting.DARK_RED, net.minecraft.ChatFormatting.BOLD));
                 Levels.apply(mob, c.level);
-                var hp = mob.getAttributeInstance(net.minecraft.entity.attribute.EntityAttributes.GENERIC_MAX_HEALTH);
+                var hp = mob.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH);
                 if (hp != null) {
-                    hp.addPersistentModifier(new net.minecraft.entity.attribute.EntityAttributeModifier(com.cursedtides.CursedTides.id("elite"),
-                            3 * Levels.healthFactor(c.level) - 1, net.minecraft.entity.attribute.EntityAttributeModifier.Operation.ADD_MULTIPLIED_BASE));
+                    hp.addPermanentModifier(new net.minecraft.world.entity.ai.attributes.AttributeModifier(com.cursedtides.CursedTides.id("elite"),
+                            3 * Levels.healthFactor(c.level) - 1, net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADD_MULTIPLIED_BASE));
                     mob.setHealth(mob.getMaxHealth());
                 }
                 mob.setCustomNameVisible(true);
             } else {
-                Levels.apply(mob, c.level - 1 + world.random.nextInt(3));
+                Levels.apply(mob, c.level - 1 + world.getRandom().nextInt(3));
             }
-            OWNER.put(mob.getUuid(), c);
-            c.members.add(mob.getUuid());
-            world.spawnEntity(mob);
+            OWNER.put(mob.getUUID(), c);
+            c.members.add(mob.getUUID());
+            world.addFreshEntity(mob);
             return true;
         }
         return false;

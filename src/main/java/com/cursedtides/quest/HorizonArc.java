@@ -1,5 +1,6 @@
 package com.cursedtides.quest;
 
+import net.minecraft.world.entity.EntityTypes;
 import com.cursedtides.CursedTides;
 import com.cursedtides.dungeon.Dungeon;
 import com.cursedtides.dungeon.Dungeons;
@@ -16,34 +17,33 @@ import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.EndPortalFrameBlock;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.PersistentState;
-
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.EndPortalFrameBlock;
+import net.minecraft.world.level.saveddata.SavedData;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -105,15 +105,15 @@ public final class HorizonArc {
         ServerTickEvents.END_SERVER_TICK.register(HorizonArc::tick);
     }
 
-    public static int stage(PlayerEntity p) { return p.getAttachedOrElse(STAGE, 0); }
-    public static int relicCount(PlayerEntity p) { return Integer.bitCount(p.getAttachedOrElse(RELICS, 0)); }
+    public static int stage(Player p) { return p.getAttachedOrElse(STAGE, 0); }
+    public static int relicCount(Player p) { return Integer.bitCount(p.getAttachedOrElse(RELICS, 0)); }
 
-    public static boolean hasRelic(PlayerEntity p, String name) {
+    public static boolean hasRelic(Player p, String name) {
         for (Relic r : Relic.values()) if (r.name().equalsIgnoreCase(name)) return hasRelic(p, r);
         return false;
     }
 
-    public static boolean hasFlag(PlayerEntity p, String name) {
+    public static boolean hasFlag(Player p, String name) {
         int f = switch (name) {
             case "court" -> COURT;
             case "exposed" -> EXPOSED;
@@ -125,7 +125,7 @@ public final class HorizonArc {
         return f != 0 && flag(p, f);
     }
 
-    public static String endingName(PlayerEntity p) {
+    public static String endingName(Player p) {
         return switch (ending(p)) {
             case SEALED -> "sealed";
             case CLAIMED -> "claimed";
@@ -137,216 +137,216 @@ public final class HorizonArc {
     public static boolean gateOpened(MinecraftServer server) {
         return server != null && GateState.get(server).gateOpened;
     }
-    public static int ending(PlayerEntity p) { return p.getAttachedOrElse(ENDING, 0); }
-    private static int relics(PlayerEntity p) { return p.getAttachedOrElse(RELICS, 0); }
-    private static boolean hasRelic(PlayerEntity p, Relic r) { return (relics(p) & (1 << r.ordinal())) != 0; }
-    private static int count(PlayerEntity p) { return Integer.bitCount(relics(p)); }
-    private static boolean flag(PlayerEntity p, int f) { return (p.getAttachedOrElse(FLAGS, 0) & f) != 0; }
-    private static void setFlag(PlayerEntity p, int f) { p.setAttached(FLAGS, p.getAttachedOrElse(FLAGS, 0) | f); }
-    private static void setStage(PlayerEntity p, int s) { p.setAttached(STAGE, s); }
+    public static int ending(Player p) { return p.getAttachedOrElse(ENDING, 0); }
+    private static int relics(Player p) { return p.getAttachedOrElse(RELICS, 0); }
+    private static boolean hasRelic(Player p, Relic r) { return (relics(p) & (1 << r.ordinal())) != 0; }
+    private static int count(Player p) { return Integer.bitCount(relics(p)); }
+    private static boolean flag(Player p, int f) { return (p.getAttachedOrElse(FLAGS, 0) & f) != 0; }
+    private static void setFlag(Player p, int f) { p.setAttached(FLAGS, p.getAttachedOrElse(FLAGS, 0) | f); }
+    private static void setStage(Player p, int s) { p.setAttached(STAGE, s); }
 
     // ------------------------------------------------------------------ relics
 
-    static void grant(ServerPlayerEntity p, Relic r) {
+    static void grant(ServerPlayer p, Relic r) {
         if (stage(p) != GATHER && !(r == Relic.DAWN && stage(p) <= SEEK_SCHOLAR)) return;
         if (hasRelic(p, r)) return;
         p.setAttached(RELICS, relics(p) | (1 << r.ordinal()));
         QuestData.give(p, new ItemStack(r.item()));
         int n = count(p);
         if (n >= 7) com.cursedtides.activity.Achievements.grant(p, "seven_relics");
-        p.sendMessage(Text.literal("Relic recovered: " + r.displayName + " (" + n + "/7)").formatted(Formatting.GOLD, Formatting.BOLD), false);
-        p.getWorld().playSound(null, p.getBlockPos(), SoundEvents.BLOCK_BEACON_ACTIVATE, SoundCategory.PLAYERS, 0.8f, 1.3f);
+        p.sendSystemMessage(Component.literal("Relic recovered: " + r.displayName + " (" + n + "/7)").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), false);
+        p.level().playSound(null, p.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 0.8f, 1.3f);
         if (n == 4) {
-            p.sendMessage(Text.literal("The sea feels wrong tonight. The curse stirs as the relics come together.")
-                    .formatted(Formatting.DARK_AQUA, Formatting.ITALIC), false);
+            p.sendSystemMessage(Component.literal("The sea feels wrong tonight. The curse stirs as the relics come together.")
+                    .withStyle(ChatFormatting.DARK_AQUA, ChatFormatting.ITALIC), false);
         }
         if (n == 7) {
             setStage(p, TO_GATE);
-            p.sendMessage(Text.literal("All seven. Take them to the Wayfarer at the Last Horizon.").formatted(Formatting.YELLOW), false);
+            p.sendSystemMessage(Component.literal("All seven. Take them to the Wayfarer at the Last Horizon.").withStyle(ChatFormatting.YELLOW), false);
         }
     }
 
     /** Arc players near an event share in it: relics are for the whole crew. */
-    private static List<ServerPlayerEntity> nearby(Entity at, double range) {
-        List<ServerPlayerEntity> out = new ArrayList<>();
-        if (at.getWorld() instanceof ServerWorld w) {
-            for (ServerPlayerEntity p : w.getPlayers(p -> p.squaredDistanceTo(at) < range * range)) out.add(p);
+    private static List<ServerPlayer> nearby(Entity at, double range) {
+        List<ServerPlayer> out = new ArrayList<>();
+        if (at.level() instanceof ServerLevel w) {
+            for (ServerPlayer p : w.getPlayers(p -> p.distanceToSqr(at) < range * range)) out.add(p);
         }
         return out;
     }
 
     /** Called whenever a vault is opened, even one opened before. */
-    public static void onVault(ServerPlayerEntity opener, Dungeon d) {
+    public static void onVault(ServerPlayer opener, Dungeon d) {
         Relic r = d.index == 30 ? Relic.REEF : d.index == 36 ? Relic.SERPENT : null;
         if (r == null) return;
-        for (ServerPlayerEntity p : nearby(opener, 32)) grant(p, r);
+        for (ServerPlayer p : nearby(opener, 32)) grant(p, r);
     }
 
-    public static void onShipSunk(ServerPlayerEntity sinker, ShipEntity ship) {
-        if (!ship.getCommandTags().contains(SHIP_TAG)) return;
-        for (ServerPlayerEntity p : nearby(ship, 96)) grant(p, Relic.SOVEREIGN);
+    public static void onShipSunk(ServerPlayer sinker, ShipEntity ship) {
+        if (!ship.entityTags().contains(SHIP_TAG)) return;
+        for (ServerPlayer p : nearby(ship, 96)) grant(p, Relic.SOVEREIGN);
         grant(sinker, Relic.SOVEREIGN);
-        ship.dropStack(new ItemStack(FlagItem.item(FlagItem.Design.KRAKEN)));
-        if (ship.getServer() != null) {
-            ship.getServer().getPlayerManager().broadcast(Text.literal("The Sovereign Dawn, flagship of the lost Meridian Fleet, sinks a second time.")
-                    .formatted(Formatting.DARK_AQUA, Formatting.BOLD), false);
+        com.cursedtides.util.Compat.drop(ship, new ItemStack(FlagItem.item(FlagItem.Design.KRAKEN)));
+        if (ship.level().getServer() != null) {
+            ship.level().getServer().getPlayerList().broadcastSystemMessage(Component.literal("The Sovereign Dawn, flagship of the lost Meridian Fleet, sinks a second time.")
+                    .withStyle(ChatFormatting.DARK_AQUA, ChatFormatting.BOLD), false);
         }
     }
 
     /** The waterlogged log of the Meridian Fleet, read aloud at night over Crooked Reef. */
-    public static boolean summonSovereign(ServerPlayerEntity p) {
-        ServerWorld world = p.getServerWorld();
+    public static boolean summonSovereign(ServerPlayer p) {
+        ServerLevel world = p.level();
         var reef = Archipelago.CROOKED_REEF;
         if (Math.hypot(p.getX() - reef.cx(), p.getZ() - reef.cz()) > 150) {
-            p.sendMessage(Text.literal("The log's last entry: \"...going down over the reef they call Crooked...\" Read it there.")
-                    .formatted(Formatting.GRAY), false);
+            p.sendSystemMessage(Component.literal("The log's last entry: \"...going down over the reef they call Crooked...\" Read it there.")
+                    .withStyle(ChatFormatting.GRAY), false);
             return false;
         }
-        if (!world.isNight()) {
-            p.sendMessage(Text.literal("The ink only shows by moonlight. Wait for night.").formatted(Formatting.GRAY), false);
+        if (!world.isDarkOutside()) {
+            p.sendSystemMessage(Component.literal("The ink only shows by moonlight. Wait for night.").withStyle(ChatFormatting.GRAY), false);
             return false;
         }
-        if (!world.getEntitiesByClass(ShipEntity.class, p.getBoundingBox().expand(200), s -> s.getCommandTags().contains(SHIP_TAG)).isEmpty()) {
-            p.sendMessage(Text.literal("She's already out there.").formatted(Formatting.GRAY), true);
+        if (!world.getEntitiesOfClass(ShipEntity.class, p.getBoundingBox().inflate(200), s -> s.entityTags().contains(SHIP_TAG)).isEmpty()) {
+            p.sendSystemMessage(Component.literal("She's already out there.").withStyle(ChatFormatting.GRAY), true);
             return false;
         }
         BlockPos at = com.cursedtides.ship.ShipEvents.findSeaSpot(world, p, 50, 75);
         if (at == null) {
-            p.sendMessage(Text.literal("Get out onto open water first.").formatted(Formatting.GRAY), true);
+            p.sendSystemMessage(Component.literal("Get out onto open water first.").withStyle(ChatFormatting.GRAY), true);
             return false;
         }
         ShipEntity ship = com.cursedtides.ship.ShipEvents.spawnShip(world, com.cursedtides.ship.ShipFaction.DROWNED,
                 at.getX() + 0.5, at.getY() - 0.1, at.getZ() + 0.5, p);
         if (ship == null) return false;
         ship.makeLegendary("The Sovereign Dawn");
-        ship.addCommandTag(SHIP_TAG);
-        world.playSound(null, at, SoundEvents.ENTITY_ELDER_GUARDIAN_CURSE, SoundCategory.HOSTILE, 3.0f, 0.5f);
-        p.getServer().getPlayerManager().broadcast(Text.literal("A ghost galleon rises over Crooked Reef: the Sovereign Dawn, lost these forty years.")
-                .formatted(Formatting.DARK_AQUA, Formatting.BOLD), false);
+        ship.addTag(SHIP_TAG);
+        world.playSound(null, at, SoundEvents.ELDER_GUARDIAN_CURSE, SoundSource.HOSTILE, 3.0f, 0.5f);
+        p.level().getServer().getPlayerList().broadcastSystemMessage(Component.literal("A ghost galleon rises over Crooked Reef: the Sovereign Dawn, lost these forty years.")
+                .withStyle(ChatFormatting.DARK_AQUA, ChatFormatting.BOLD), false);
         return true;
     }
 
     // ------------------------------------------------------------------ bosses
 
-    private static MobEntity boss(ServerWorld w, double x, double y, double z, Function<ServerWorld, ? extends MobEntity> f,
+    private static Mob boss(ServerLevel w, double x, double y, double z, Function<ServerLevel, ? extends Mob> f,
                                   String name, float health, double scale, String tag, ItemStack weapon) {
-        MobEntity mob = f.apply(w);
+        Mob mob = f.apply(w);
         if (mob == null) return null;
-        mob.refreshPositionAndAngles(x, y, z, 0, 0);
-        mob.initialize(w, w.getLocalDifficulty(BlockPos.ofFloored(x, y, z)), SpawnReason.EVENT, null);
-        mob.setCustomName(Text.literal(name).formatted(Formatting.GOLD, Formatting.BOLD));
+        mob.snapTo(x, y, z, 0, 0);
+        mob.finalizeSpawn(w, w.getCurrentDifficultyAt(BlockPos.containing(x, y, z)), EntitySpawnReason.EVENT, null);
+        mob.setCustomName(Component.literal(name).withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
         mob.setCustomNameVisible(true);
-        mob.setPersistent();
-        mob.addCommandTag(tag);
-        var hp = mob.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
+        mob.setPersistenceRequired();
+        mob.addTag(tag);
+        var hp = mob.getAttribute(Attributes.MAX_HEALTH);
         if (hp != null) hp.setBaseValue(health);
         mob.setHealth(health);
-        var size = mob.getAttributeInstance(EntityAttributes.GENERIC_SCALE);
+        var size = mob.getAttribute(Attributes.SCALE);
         if (size != null) size.setBaseValue(scale);
-        var armor = mob.getAttributeInstance(EntityAttributes.GENERIC_ARMOR);
+        var armor = mob.getAttribute(Attributes.ARMOR);
         if (armor != null) armor.setBaseValue(12);
         if (weapon != null) {
-            mob.equipStack(EquipmentSlot.MAINHAND, weapon);
-            mob.setEquipmentDropChance(EquipmentSlot.MAINHAND, 0.0f);
+            mob.setItemSlot(EquipmentSlot.MAINHAND, weapon);
+            mob.setDropChance(EquipmentSlot.MAINHAND, 0.0f);
         }
-        w.spawnEntity(mob);
+        w.addFreshEntity(mob);
         return mob;
     }
 
-    private static void minion(ServerWorld w, double x, double y, double z, Function<ServerWorld, ? extends MobEntity> f, String name) {
-        MobEntity mob = f.apply(w);
+    private static void minion(ServerLevel w, double x, double y, double z, Function<ServerLevel, ? extends Mob> f, String name) {
+        Mob mob = f.apply(w);
         if (mob == null) return;
-        mob.refreshPositionAndAngles(x, y, z, 0, 0);
-        mob.initialize(w, w.getLocalDifficulty(BlockPos.ofFloored(x, y, z)), SpawnReason.EVENT, null);
-        mob.setCustomName(Text.literal(name));
-        mob.setPersistent();
-        mob.equipStack(EquipmentSlot.HEAD, new ItemStack(Items.TURTLE_HELMET));
-        w.spawnEntity(mob);
+        mob.snapTo(x, y, z, 0, 0);
+        mob.finalizeSpawn(w, w.getCurrentDifficultyAt(BlockPos.containing(x, y, z)), EntitySpawnReason.EVENT, null);
+        mob.setCustomName(Component.literal(name));
+        mob.setPersistenceRequired();
+        mob.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.TURTLE_HELMET));
+        w.addFreshEntity(mob);
     }
 
     private static boolean bossNear(Entity at, String tag) {
-        return !at.getWorld().getEntitiesByClass(MobEntity.class, at.getBoundingBox().expand(64),
-                m -> m.isAlive() && m.getCommandTags().contains(tag)).isEmpty();
+        return !at.level().getEntitiesOfClass(Mob.class, at.getBoundingBox().inflate(64),
+                m -> m.isAlive() && m.entityTags().contains(tag)).isEmpty();
     }
 
     private static int gateY() {
         return Builds.groundY(Archipelago.LAST_HORIZON.cx(), Archipelago.LAST_HORIZON.cz());
     }
 
-    private static void ambush(ServerPlayerEntity p) {
-        ServerWorld w = p.getServerWorld();
+    private static void ambush(ServerPlayer p) {
+        ServerLevel w = p.level();
         int gx = Archipelago.LAST_HORIZON.cx(), gz = Archipelago.LAST_HORIZON.cz(), y = gateY();
-        boss(w, gx + 0.5, y, gz - 9.5, EntityType.VINDICATOR::create, "Rook Varga, the Turncoat", 220, 1.2, ROOK_TAG,
+        boss(w, gx + 0.5, y, gz - 9.5, w__ -> EntityTypes.VINDICATOR.create(w__, EntitySpawnReason.STRUCTURE), "Rook Varga, the Turncoat", 220, 1.2, ROOK_TAG,
                 new ItemStack(Items.NETHERITE_AXE));
         for (int[] o : new int[][]{{-4, -8}, {4, -8}, {-6, -5}, {6, -5}}) {
-            minion(w, gx + o[0] + 0.5, y, gz + o[1] + 0.5, o[0] < 0 ? EntityType.VINDICATOR::create : EntityType.PILLAGER::create,
+            minion(w, gx + o[0] + 0.5, y, gz + o[1] + 0.5, o[0] < 0 ? w__ -> EntityTypes.VINDICATOR.create(w__, EntitySpawnReason.STRUCTURE) : w__ -> EntityTypes.PILLAGER.create(w__, EntitySpawnReason.STRUCTURE),
                     "Accord Cutthroat");
         }
     }
 
-    private static void openGate(ServerPlayerEntity p) {
-        ServerWorld w = p.getServerWorld();
+    private static void openGate(ServerPlayer p) {
+        ServerLevel w = p.level();
         int gx = Archipelago.LAST_HORIZON.cx(), gz = Archipelago.LAST_HORIZON.cz(), y = gateY();
         for (int x = gx - 4; x <= gx + 4; x++) {
-            for (int yy = y; yy <= y + 12; yy++) w.setBlockState(new BlockPos(x, yy, gz), Blocks.AIR.getDefaultState());
+            for (int yy = y; yy <= y + 12; yy++) w.setBlockAndUpdate(new BlockPos(x, yy, gz), Blocks.AIR.defaultBlockState());
         }
         for (int i = 0; i < 7; i++) {
-            w.setBlockState(new BlockPos(gx - 3 + i, y - 1, gz + 3), Blocks.END_PORTAL_FRAME.getDefaultState().with(EndPortalFrameBlock.EYE, true));
+            w.setBlockAndUpdate(new BlockPos(gx - 3 + i, y - 1, gz + 3), Blocks.END_PORTAL_FRAME.defaultBlockState().setValue(EndPortalFrameBlock.HAS_EYE, true));
         }
         GateState.get(w.getServer()).gateOpened = true;
-        GateState.get(w.getServer()).markDirty();
-        w.playSound(null, new BlockPos(gx, y, gz), SoundEvents.BLOCK_END_PORTAL_SPAWN, SoundCategory.BLOCKS, 2.0f, 0.7f);
-        MobEntity sovereign = boss(w, gx + 0.5, y, gz - 4.5, EntityType.DROWNED::create, "The Tide Sovereign", 420, 2.4, SOVEREIGN_TAG,
+        GateState.get(w.getServer()).setDirty();
+        w.playSound(null, new BlockPos(gx, y, gz), SoundEvents.END_PORTAL_SPAWN, SoundSource.BLOCKS, 2.0f, 0.7f);
+        Mob sovereign = boss(w, gx + 0.5, y, gz - 4.5, w__ -> EntityTypes.DROWNED.create(w__, EntitySpawnReason.STRUCTURE), "The Tide Sovereign", 420, 2.4, SOVEREIGN_TAG,
                 new ItemStack(Items.TRIDENT));
-        if (sovereign != null) sovereign.equipStack(EquipmentSlot.HEAD, new ItemStack(Items.TURTLE_HELMET)); // the sun won't save you
+        if (sovereign != null) sovereign.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.TURTLE_HELMET)); // the sun won't save you
         for (int[] o : new int[][]{{-5, -2}, {5, -2}, {-3, -7}, {3, -7}}) {
-            minion(w, gx + o[0] + 0.5, y, gz + o[1] + 0.5, EntityType.DROWNED::create, "Drowned Herald");
+            minion(w, gx + o[0] + 0.5, y, gz + o[1] + 0.5, w__ -> EntityTypes.DROWNED.create(w__, EntitySpawnReason.STRUCTURE), "Drowned Herald");
         }
-        net.minecraft.util.math.Vec3d at = new net.minecraft.util.math.Vec3d(gx + 0.5, y + 2, gz - 4.5);
+        net.minecraft.world.phys.Vec3 at = new net.minecraft.world.phys.Vec3(gx + 0.5, y + 2, gz - 4.5);
         Cutscenes.playNear(w, at, 80, "The Tide Sovereign", java.util.List.of(
                 new Cutscenes.Shot(at.add(0, 6, 16), at.add(0, 3, 9), at, 80, "The seven relics blaze in the gate, and the Last Horizon opens."),
                 Cutscenes.orbit(at, 7, 1, 60, 120, 80, "Out of it steps the thing the old tides served: the Tide Sovereign, crowned in coral.")));
     }
 
     private static void onDeath(LivingEntity victim, DamageSource source) {
-        var tags = victim.getCommandTags();
+        var tags = victim.entityTags();
         String name = victim.getCustomName() == null ? "" : victim.getCustomName().getString();
         if (tags.contains("cursedtides_boss") && name.contains("Cinder King")) {
-            for (ServerPlayerEntity p : nearby(victim, 64)) grant(p, Relic.EMBER);
+            for (ServerPlayer p : nearby(victim, 64)) grant(p, Relic.EMBER);
         } else if (tags.contains("cursedtides_boss") && name.contains("Veil Witch")) {
-            for (ServerPlayerEntity p : nearby(victim, 64)) grant(p, Relic.VEIL);
+            for (ServerPlayer p : nearby(victim, 64)) grant(p, Relic.VEIL);
         } else if (tags.contains(HAND_TAG)) {
-            for (ServerPlayerEntity p : nearby(victim, 64)) {
+            for (ServerPlayer p : nearby(victim, 64)) {
                 if (flag(p, EXPOSED)) grant(p, Relic.LANTERN);
             }
         } else if (tags.contains(ROOK_TAG)) {
-            for (ServerPlayerEntity p : nearby(victim, 80)) {
+            for (ServerPlayer p : nearby(victim, 80)) {
                 if (stage(p) == TURNCOAT) {
                     setStage(p, OPEN_GATE);
-                    p.sendMessage(Text.literal("Rook falls, cursing the Accord that followed him. The relics are still yours. "
-                            + "Speak to the Wayfarer to set them in the gate.").formatted(Formatting.YELLOW), false);
+                    p.sendSystemMessage(Component.literal("Rook falls, cursing the Accord that followed him. The relics are still yours. "
+                            + "Speak to the Wayfarer to set them in the gate.").withStyle(ChatFormatting.YELLOW), false);
                 }
             }
         } else if (tags.contains(SOVEREIGN_TAG)) {
-            victim.dropStack(new ItemStack(ModItems.DOUBLOON, 64));
-            victim.dropStack(new ItemStack(FlagItem.item(FlagItem.Design.HORIZON)));
-            for (ServerPlayerEntity p : nearby(victim, 80)) {
+            com.cursedtides.util.Compat.drop(victim, new ItemStack(ModItems.DOUBLOON, 64));
+            com.cursedtides.util.Compat.drop(victim, new ItemStack(FlagItem.item(FlagItem.Design.HORIZON)));
+            for (ServerPlayer p : nearby(victim, 80)) {
                 if (stage(p) == SOVEREIGN_FIGHT) {
                     setStage(p, CHOOSE);
-                    p.sendMessage(Text.literal("The Tide Sovereign breaks apart into seawater. Beyond the gate, the sea is still. "
-                            + "The Wayfarer is waiting for your decision.").formatted(Formatting.YELLOW), false);
+                    p.sendSystemMessage(Component.literal("The Tide Sovereign breaks apart into seawater. Beyond the gate, the sea is still. "
+                            + "The Wayfarer is waiting for your decision.").withStyle(ChatFormatting.YELLOW), false);
                 }
             }
-            if (victim.getServer() != null) {
-                victim.getServer().getPlayerManager().broadcast(Text.literal("The Tide Sovereign has fallen at the Last Horizon!")
-                        .formatted(Formatting.GOLD, Formatting.BOLD), false);
+            if (victim.level().getServer() != null) {
+                victim.level().getServer().getPlayerList().broadcastSystemMessage(Component.literal("The Tide Sovereign has fallen at the Last Horizon!")
+                        .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), false);
             }
         }
     }
 
     // ------------------------------------------------------------------ conversations
 
-    public static void wayfarer(StoryNpcEntity npc, ServerPlayerEntity p) {
+    public static void wayfarer(StoryNpcEntity npc, ServerPlayer p) {
         switch (stage(p)) {
             case NONE -> {
                 StoryDialogue.say(npc, p,
@@ -356,7 +356,7 @@ public final class HorizonArc {
                         "Here is the first. I dug it out of the observatory. Take it to the scholar camped on the Forgotten Keys; he can read the marks.");
                 setStage(p, SEEK_SCHOLAR);
                 grant(p, Relic.DAWN);
-                p.sendMessage(Text.literal("New story: The Seven Tides").formatted(Formatting.YELLOW, Formatting.BOLD), false);
+                p.sendSystemMessage(Component.literal("New story: The Seven Tides").withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD), false);
             }
             case SEEK_SCHOLAR -> StoryDialogue.say(npc, p, "The Forgotten Keys, south-east of here past Crooked Reef. Find the scholar's camp.");
             case GATHER -> StoryDialogue.say(npc, p, "You have " + count(p) + " of the seven. Keep going, and watch your back.");
@@ -365,7 +365,7 @@ public final class HorizonArc {
                         "Rook Varga. He told you he'd help at the gate, didn't he? Help himself, more like.");
                 if (!bossNear(npc, ROOK_TAG)) ambush(p);
                 setStage(p, TURNCOAT);
-                p.sendMessage(Text.literal("Betrayal! Defeat Rook Varga and his Accord.").formatted(Formatting.RED, Formatting.BOLD), false);
+                p.sendSystemMessage(Component.literal("Betrayal! Defeat Rook Varga and his Accord.").withStyle(ChatFormatting.RED, ChatFormatting.BOLD), false);
             }
             case TURNCOAT -> {
                 StoryDialogue.say(npc, p, "Rook first! He won't let you near that gate while he's breathing.");
@@ -386,7 +386,7 @@ public final class HorizonArc {
         }
     }
 
-    private static void choose(StoryNpcEntity npc, ServerPlayerEntity p) {
+    private static void choose(StoryNpcEntity npc, ServerPlayer p) {
         int pick = com.cursedtides.dialogue.Dialogue.choice(p);
         boolean courtAvailable = flag(p, COURT) && QuestData.has(p, ModItems.LAMPWRIGHT_SEAL);
         boolean court = courtAvailable && pick == 2;
@@ -405,7 +405,7 @@ public final class HorizonArc {
         p.setAttached(ENDING, ending);
         com.cursedtides.activity.Achievements.grant(p, "horizon");
         setStage(p, DONE);
-        MinecraftServer server = p.getServer();
+        MinecraftServer server = p.level().getServer();
         switch (ending) {
             case SEALED -> {
                 StoryDialogue.say(npc, p, "You let them go. The relics sink into the threshold and the gate grinds shut.",
@@ -431,17 +431,17 @@ public final class HorizonArc {
                 QuestData.give(p, new ItemStack(ModItems.DOUBLOON, 500));
             }
         }
-        p.getWorld().playSound(null, p.getBlockPos(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundCategory.PLAYERS, 1.0f, 0.8f);
+        p.level().playSound(null, p.blockPosition(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.0f, 0.8f);
         if (server != null) {
-            server.getPlayerManager().broadcast(Text.literal(p.getName().getString() + " " + switch (ending) {
+            server.getPlayerList().broadcastSystemMessage(Component.literal(p.getName().getString() + " " + switch (ending) {
                 case SEALED -> "has sealed the Horizon Gate. The Reach breathes easier.";
                 case CLAIMED -> "has claimed the Seventh Tide. The drowned bow to a new sovereign.";
                 default -> "has given the Horizon Gate to the Lantern Court.";
-            }).formatted(Formatting.GOLD, Formatting.BOLD), false);
+            }).withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), false);
         }
     }
 
-    private static void epilogue(StoryNpcEntity npc, ServerPlayerEntity p) {
+    private static void epilogue(StoryNpcEntity npc, ServerPlayer p) {
         StoryDialogue.say(npc, p, switch (ending(p)) {
             case SEALED -> "The gate is quiet. Thank you, Warden.";
             case CLAIMED -> "The sea moves when you walk past it, Sovereign. Be careful what it asks of you.";
@@ -450,14 +450,14 @@ public final class HorizonArc {
         });
     }
 
-    public static String title(PlayerEntity p) {
+    public static String title(Player p) {
         String crown = CrownArc.title(p);
         if (crown != null) return crown;
         return horizonTitle(p);
     }
 
     /** The title from this act's ending alone. */
-    public static String horizonTitle(PlayerEntity p) {
+    public static String horizonTitle(Player p) {
         return switch (ending(p)) {
             case SEALED -> "Warden of the Horizon";
             case CLAIMED -> "Sovereign of the Seventh Tide";
@@ -467,7 +467,7 @@ public final class HorizonArc {
     }
 
     /** The scholar on the Forgotten Keys reads the relics and sends you after the rest. */
-    public static void scholar(StoryNpcEntity npc, ServerPlayerEntity p) {
+    public static void scholar(StoryNpcEntity npc, ServerPlayer p) {
         if (LanternArc.scholar(npc, p)) return;
         int s = stage(p);
         if (s == NONE) {
@@ -505,7 +505,7 @@ public final class HorizonArc {
     }
 
     /** Governor Harrow is the Lantern Court's hand. Returns true when the arc took over the conversation. */
-    static boolean governor(StoryNpcEntity npc, ServerPlayerEntity p) {
+    static boolean governor(StoryNpcEntity npc, ServerPlayer p) {
         if (stage(p) != GATHER || hasRelic(p, Relic.LANTERN)) {
             if (flag(p, EXPOSED)) {
                 StoryDialogue.say(npc, p, "You've cost me everything, captain. Get out before I call the guard.");
@@ -517,7 +517,7 @@ public final class HorizonArc {
         if (flag(p, EXPOSED)) {
             StoryDialogue.say(npc, p, "My Hand will see you dead before you take that lantern.");
             if (!bossNear(npc, HAND_TAG)) {
-                boss(p.getServerWorld(), npc.getX() + 2, npc.getY(), npc.getZ(), EntityType.EVOKER::create,
+                boss(p.level(), npc.getX() + 2, npc.getY(), npc.getZ(), w__ -> EntityTypes.EVOKER.create(w__, EntitySpawnReason.STRUCTURE),
                         "The Lampwright's Hand", 180, 1.15, HAND_TAG, null);
             }
             return true;
@@ -542,14 +542,14 @@ public final class HorizonArc {
             setFlag(p, EXPOSED);
             FactionData.adjust(p, Faction.NAVY, 50);
             StoryDialogue.say(npc, p, "Then you'll take it from my Hand's corpse. Kill them!");
-            boss(p.getServerWorld(), npc.getX() + 2, npc.getY(), npc.getZ(), EntityType.EVOKER::create,
+            boss(p.level(), npc.getX() + 2, npc.getY(), npc.getZ(), w__ -> EntityTypes.EVOKER.create(w__, EntitySpawnReason.STRUCTURE),
                     "The Lampwright's Hand", 180, 1.15, HAND_TAG, null);
         }
         return true;
     }
 
     /** Rook Varga's Free Accord: a pirate coalition that wants the gate. */
-    static boolean rook(StoryNpcEntity npc, ServerPlayerEntity p) {
+    static boolean rook(StoryNpcEntity npc, ServerPlayer p) {
         if (stage(p) < GATHER || stage(p) >= DONE || flag(p, MET_ROOK)) return false;
         setFlag(p, MET_ROOK);
         StoryDialogue.say(npc, p,
@@ -562,7 +562,7 @@ public final class HorizonArc {
     }
 
     /** The Admiral thanks those who exposed the Court. */
-    static boolean admiral(StoryNpcEntity npc, ServerPlayerEntity p) {
+    static boolean admiral(StoryNpcEntity npc, ServerPlayer p) {
         if (!flag(p, EXPOSED) || !hasRelic(p, Relic.LANTERN) || flag(p, ADMIRAL_THANKED)) return false;
         setFlag(p, ADMIRAL_THANKED);
         StoryDialogue.say(npc, p, "Harrow, a Court agent. Under my nose. The Admiralty owes you, captain: a hundred doubloons, and our thanks.");
@@ -573,7 +573,7 @@ public final class HorizonArc {
 
     // ------------------------------------------------------------------ journal
 
-    public static List<String> journal(PlayerEntity p) {
+    public static List<String> journal(Player p) {
         List<String> lines = new ArrayList<>();
         int s = stage(p);
         String objective = switch (s) {
@@ -599,32 +599,31 @@ public final class HorizonArc {
     // ------------------------------------------------------------------ the lasting effects of each ending
 
     private static void tick(MinecraftServer server) {
-        if (server.getTicks() % 40 != 0) return;
-        for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
-            if (ending(p) == CLAIMED && p.isTouchingWater()) {
-                p.addStatusEffect(new StatusEffectInstance(StatusEffects.CONDUIT_POWER, 220, 0, true, false));
+        if (server.getTickCount() % 40 != 0) return;
+        for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+            if (ending(p) == CLAIMED && p.isInWater()) {
+                p.addEffect(new MobEffectInstance(MobEffects.CONDUIT_POWER, 220, 0, true, false));
             }
         }
     }
 
     /** Server-wide: has the gate been opened? */
-    static final class GateState extends PersistentState {
+    static final class GateState extends SavedData {
         boolean gateOpened;
-        private static final Type<GateState> TYPE = new Type<>(GateState::new, GateState::fromNbt, null);
+        private static final net.minecraft.world.level.saveddata.SavedDataType<GateState> TYPE = com.cursedtides.util.Saved.type("cursedtides_horizon", GateState::new, GateState::fromNbt, (st__, l__) -> st__.save(new CompoundTag(), l__));
 
         static GateState get(MinecraftServer server) {
-            return server.getOverworld().getPersistentStateManager().getOrCreate(TYPE, "cursedtides_horizon");
+            return server.overworld().getDataStorage().computeIfAbsent(TYPE);
         }
 
-        @Override
-        public NbtCompound writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup lookup) {
+                public CompoundTag save(CompoundTag nbt, HolderLookup.Provider lookup) {
             nbt.putBoolean("GateOpened", gateOpened);
             return nbt;
         }
 
-        private static GateState fromNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup lookup) {
+        private static GateState fromNbt(CompoundTag nbt, HolderLookup.Provider lookup) {
             GateState w = new GateState();
-            w.gateOpened = nbt.getBoolean("GateOpened");
+            w.gateOpened = nbt.getBooleanOr("GateOpened", false);
             return w;
         }
     }

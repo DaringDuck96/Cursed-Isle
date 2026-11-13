@@ -5,19 +5,19 @@ import com.cursedtides.faction.ContractType;
 import com.cursedtides.faction.Faction;
 import com.cursedtides.faction.FactionData;
 import com.cursedtides.item.ModItems;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 /** What each story character says, depending on how far the player has got. */
 public final class StoryDialogue {
     private StoryDialogue() {}
 
-    public static void talk(StoryNpcEntity npc, ServerPlayerEntity player) {
+    public static void talk(StoryNpcEntity npc, ServerPlayer player) {
         int stage = QuestData.stage(player);
         switch (npc.getRole()) {
             case KEEPER -> keeper(npc, player, stage);
@@ -48,11 +48,11 @@ public final class StoryDialogue {
                 com.cursedtides.trade.AuctionHouse.open(player);
             }
         }
-        player.getWorld().playSound(null, npc.getX(), npc.getY(), npc.getZ(),
-                SoundEvents.ENTITY_VILLAGER_AMBIENT, SoundCategory.NEUTRAL, 0.6f, 0.9f);
+        player.level().playSound(null, npc.getX(), npc.getY(), npc.getZ(),
+                SoundEvents.VILLAGER_AMBIENT, SoundSource.NEUTRAL, 0.6f, 0.9f);
     }
 
-    private static void keeper(StoryNpcEntity npc, ServerPlayerEntity player, int stage) {
+    private static void keeper(StoryNpcEntity npc, ServerPlayer player, int stage) {
         if (stage == QuestData.START) {
             // The castaway's lessons (see Lessons): blade, guard, pistol, doll, firebomb, then a sloop of your own
             Lessons.talk(player);
@@ -64,7 +64,7 @@ public final class StoryDialogue {
         }
     }
 
-    private static void harbormaster(StoryNpcEntity npc, ServerPlayerEntity player, int stage) {
+    private static void harbormaster(StoryNpcEntity npc, ServerPlayer player, int stage) {
         if (stage == QuestData.START) {
             say(npc, player, "I don't hire strangers. If old Wren on Driftwood Island vouches for you, come back.");
         } else if (stage == QuestData.FIND_YSOLDE) {
@@ -79,11 +79,11 @@ public final class StoryDialogue {
                     "Sell what you plunder to the Quartermasters, and the market buys trade goods. Bigger guns, better shot: it all costs doubloons.");
             QuestData.give(player, new ItemStack(ModItems.DOUBLOON, 15));
             // Wren's lessons already gave you a sloop; anyone who skipped them gets the harbour's
-            if (Lessons.step(player) != Lessons.Step.DONE && player.getInventory().count(ModItems.SLOOP_DEED) == 0) {
+            if (Lessons.step(player) != Lessons.Step.DONE && player.getInventory().countItem(ModItems.SLOOP_DEED) == 0) {
                 QuestData.give(player, new ItemStack(ModItems.SLOOP_DEED));
             }
-            player.sendMessage(Text.literal("Ship controls: R/V raise or lower sails, Z/X fire port or starboard guns, "
-                    + "B cargo hold. Sneak-punch your ship to stow her in the deed.").formatted(Formatting.AQUA), false);
+            player.sendSystemMessage(Component.literal("Ship controls: R/V raise or lower sails, Z/X fire port or starboard guns, "
+                    + "B cargo hold. Sneak-punch your ship to stow her in the deed.").withStyle(ChatFormatting.AQUA), false);
             QuestData.setStage(player, QuestData.FIND_SHARDS);
             advanced(player);
         } else if (stage == QuestData.FIND_SHARDS) {
@@ -101,7 +101,7 @@ public final class StoryDialogue {
         }
     }
 
-    private static void bellwright(StoryNpcEntity npc, ServerPlayerEntity player, int stage) {
+    private static void bellwright(StoryNpcEntity npc, ServerPlayer player, int stage) {
         if (stage < QuestData.FIND_SHARDS) {
             say(npc, player, "Bells, bells... I don't cast for strangers. Not since the last one.");
         } else if (stage == QuestData.FIND_SHARDS) {
@@ -116,8 +116,8 @@ public final class StoryDialogue {
                 QuestData.take(player, ModItems.EMBER_SHARD);
                 QuestData.give(player, new ItemStack(ModItems.STILLING_BELL));
                 QuestData.setStage(player, QuestData.RING_BELL);
-                player.getWorld().playSound(null, npc.getX(), npc.getY(), npc.getZ(),
-                        SoundEvents.BLOCK_ANVIL_USE, SoundCategory.NEUTRAL, 0.8f, 0.8f);
+                player.level().playSound(null, npc.getX(), npc.getY(), npc.getZ(),
+                        SoundEvents.ANVIL_USE, SoundSource.NEUTRAL, 0.8f, 0.8f);
                 advanced(player);
             } else {
                 say(npc, player, "I need both shards to work with. "
@@ -135,9 +135,9 @@ public final class StoryDialogue {
     // ------------------------------------------------------------------ tavern dice
 
     /** Hold doubloons and talk to him: two dice each, high roll doubles your stake (up to 16). */
-    private static void gambler(StoryNpcEntity npc, ServerPlayerEntity player) {
-        ItemStack held = player.getMainHandStack();
-        if (!held.isOf(ModItems.DOUBLOON)) {
+    private static void gambler(StoryNpcEntity npc, ServerPlayer player) {
+        ItemStack held = player.getMainHandItem();
+        if (!held.is(ModItems.DOUBLOON)) {
             say(npc, player, "Bones, friend! Hold your doubloons out (up to sixteen) and we'll roll two dice apiece. High roll takes it.");
             return;
         }
@@ -145,12 +145,12 @@ public final class StoryDialogue {
         var rng = player.getRandom();
         int mine = rng.nextInt(6) + 1 + rng.nextInt(6) + 1;
         int his = rng.nextInt(6) + 1 + rng.nextInt(6) + 1;
-        player.getWorld().playSound(null, npc.getX(), npc.getY(), npc.getZ(), SoundEvents.BLOCK_WOOD_HIT, SoundCategory.NEUTRAL, 1.0f, 1.4f);
+        player.level().playSound(null, npc.getX(), npc.getY(), npc.getZ(), SoundEvents.WOOD_HIT, SoundSource.NEUTRAL, 1.0f, 1.4f);
         if (mine > his) {
             QuestData.give(player, new ItemStack(ModItems.DOUBLOON, stake));
             say(npc, player, "You roll " + mine + ", I roll " + his + ". Curse it! Take your " + stake + ".");
         } else if (mine < his) {
-            held.decrement(stake);
+            held.shrink(stake);
             say(npc, player, "You roll " + mine + ", I roll " + his + ". The bones love me tonight.");
         } else {
             say(npc, player, "Both " + mine + "! Push. Roll again?");
@@ -159,7 +159,7 @@ public final class StoryDialogue {
 
     // ------------------------------------------------------------------ side quests
 
-    private static void governor(StoryNpcEntity npc, ServerPlayerEntity player) {
+    private static void governor(StoryNpcEntity npc, ServerPlayer player) {
         if (HorizonArc.governor(npc, player)) return;
         int q = SideQuests.get(player, SideQuests.LEDGER);
         if (q == 0) {
@@ -167,7 +167,7 @@ public final class StoryDialogue {
                     "A captain, are you? Then you may be of use. Port Meridian's ledger has been stolen: every debt, every bribe, every name.",
                     "Captain Rook Varga took it to Blackthorn Isle, north of Hollowgrave. Bring it back to me, discreetly.");
             SideQuests.set(player, SideQuests.LEDGER, 1);
-            player.sendMessage(Text.literal("New side quest: The Governor's Ledger").formatted(Formatting.YELLOW), false);
+            player.sendSystemMessage(Component.literal("New side quest: The Governor's Ledger").withStyle(ChatFormatting.YELLOW), false);
         } else if (q == 1) {
             if (QuestData.has(player, ModItems.GOVERNORS_LEDGER)) {
                 QuestData.take(player, ModItems.GOVERNORS_LEDGER);
@@ -186,7 +186,7 @@ public final class StoryDialogue {
         }
     }
 
-    private static void rook(StoryNpcEntity npc, ServerPlayerEntity player) {
+    private static void rook(StoryNpcEntity npc, ServerPlayer player) {
         if (HorizonArc.rook(npc, player)) return;
         int q = SideQuests.get(player, SideQuests.LEDGER);
         if (q == 1 && QuestData.has(player, ModItems.GOVERNORS_LEDGER)) {
@@ -202,7 +202,7 @@ public final class StoryDialogue {
                 FactionData.adjust(player, Faction.NAVY, -40);
                 say(npc, player, "Ha! A pleasure. Harrow's name will be mud by the next tide.");
             } else {
-                player.sendMessage(Text.literal("Decide what to do with the ledger.").formatted(Formatting.GRAY), true);
+                player.sendSystemMessage(Component.literal("Decide what to do with the ledger.").withStyle(ChatFormatting.GRAY), true);
             }
         } else if (q == SideQuests.LEDGER_SOLD) {
             say(npc, player, "Always welcome by my fire, friend.");
@@ -213,13 +213,13 @@ public final class StoryDialogue {
         }
     }
 
-    private static void naturalist(StoryNpcEntity npc, ServerPlayerEntity player) {
+    private static void naturalist(StoryNpcEntity npc, ServerPlayer player) {
         int q = SideQuests.get(player, SideQuests.SPECIMENS);
         if (q == 0) {
             say(npc, player, "Oh! A visitor! I'm cataloguing the Reach. Would you fetch me three specimens?",
                     "A bucket of tropical fish, a sea pickle from the reefs, and a blue orchid from the bayou mud.");
             SideQuests.set(player, SideQuests.SPECIMENS, 1);
-            player.sendMessage(Text.literal("New side quest: Specimens of the Reach").formatted(Formatting.YELLOW), false);
+            player.sendSystemMessage(Component.literal("New side quest: Specimens of the Reach").withStyle(ChatFormatting.YELLOW), false);
         } else if (q == 1) {
             boolean fish = QuestData.has(player, Items.TROPICAL_FISH_BUCKET);
             boolean pickle = QuestData.has(player, Items.SEA_PICKLE);
@@ -242,13 +242,13 @@ public final class StoryDialogue {
         }
     }
 
-    private static void medium(StoryNpcEntity npc, ServerPlayerEntity player) {
+    private static void medium(StoryNpcEntity npc, ServerPlayer player) {
         int q = SideQuests.get(player, SideQuests.SHADE);
         if (q == 0) {
             say(npc, player, "You hear her too, don't you? Lady Morrow, in the house on the hill. Sixty years dead and still pacing.",
                     "She won't rest while she can still hold a blade. Go and... persuade her.");
             SideQuests.set(player, SideQuests.SHADE, 1);
-            player.sendMessage(Text.literal("New side quest: The Restless Shade").formatted(Formatting.YELLOW), false);
+            player.sendSystemMessage(Component.literal("New side quest: The Restless Shade").withStyle(ChatFormatting.YELLOW), false);
         } else if (q == 1) {
             say(npc, player, "She's still there. I can feel her pacing. The big house, on the hill.");
         } else if (q == 2) {
@@ -261,14 +261,14 @@ public final class StoryDialogue {
         }
     }
 
-    private static void foreman(StoryNpcEntity npc, ServerPlayerEntity player) {
+    private static void foreman(StoryNpcEntity npc, ServerPlayer player) {
         int q = SideQuests.get(player, SideQuests.SEAM);
         var seam = com.cursedtides.dungeon.Dungeons.byName("The Deep Seam");
         if (q == 0) {
             say(npc, player, "Gold in these hills, and something down the Deep Seam that's killed three of my diggers.",
                     "Clear it to the bottom and open that old vault, and I'll pay you a share.");
             SideQuests.set(player, SideQuests.SEAM, 1);
-            player.sendMessage(Text.literal("New side quest: Down the Deep Seam").formatted(Formatting.YELLOW), false);
+            player.sendSystemMessage(Component.literal("New side quest: Down the Deep Seam").withStyle(ChatFormatting.YELLOW), false);
         } else if (q == 1) {
             if (seam != null && com.cursedtides.dungeon.Dungeons.isCleared(player, seam)) {
                 SideQuests.set(player, SideQuests.SEAM, 2);
@@ -285,13 +285,13 @@ public final class StoryDialogue {
 
     // ------------------------------------------------------------------ factions
 
-    private static void commodore(StoryNpcEntity npc, ServerPlayerEntity player) {
+    private static void commodore(StoryNpcEntity npc, ServerPlayer player) {
         int navy = FactionData.rep(player, Faction.NAVY);
         int brethren = FactionData.rep(player, Faction.BRETHREN);
 
         if (FactionData.isWanted(player)) {
             int bounty = FactionData.bounty(player);
-            if (player.getInventory().count(ModItems.DOUBLOON) >= bounty) {
+            if (player.getInventory().countItem(ModItems.DOUBLOON) >= bounty) {
                 takeDoubloons(player, bounty);
                 FactionData.set(player, Faction.NAVY, -50);
                 say(npc, player,
@@ -317,7 +317,7 @@ public final class StoryDialogue {
         contractBoard(npc, player, Faction.NAVY);
     }
 
-    private static void broker(StoryNpcEntity npc, ServerPlayerEntity player) {
+    private static void broker(StoryNpcEntity npc, ServerPlayer player) {
         int navy = FactionData.rep(player, Faction.NAVY);
         int brethren = FactionData.rep(player, Faction.BRETHREN);
         if (navy >= 300) {
@@ -334,7 +334,7 @@ public final class StoryDialogue {
         contractBoard(npc, player, Faction.BRETHREN);
     }
 
-    static void contractBoard(StoryNpcEntity npc, ServerPlayerEntity player, Faction giver) {
+    static void contractBoard(StoryNpcEntity npc, ServerPlayer player, Faction giver) {
         FactionData.Contract current = FactionData.contract(player);
         ContractType type = current.contractType();
 
@@ -353,8 +353,8 @@ public final class StoryDialogue {
                                 ? "Good work. The Tidewatch pays its debts: " + type.doubloons() + " doubloons."
                                 : "Ha! That'll make them squeal at Ironwatch. " + type.doubloons() + " doubloons, as promised.",
                         "Come back when you want more work.");
-                player.getWorld().playSound(null, player.getX(), player.getY(), player.getZ(),
-                        SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 0.8f, 0.8f);
+                player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                        SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.8f, 0.8f);
             } else {
                 say(npc, player, "Still waiting on that job: " + type.description() + " ("
                         + current.progress() + "/" + type.goal() + ").");
@@ -369,10 +369,10 @@ public final class StoryDialogue {
                         ? "The Tidewatch has work for a capable " + rank.toLowerCase() + ". " + offer.description() + "."
                         : "Got a job for you, " + rank.toLowerCase() + ". " + offer.description() + ".",
                 "Pay is " + offer.doubloons() + " doubloons, and you'll be better thought of here.");
-        player.sendMessage(Text.literal("New contract: " + offer.description()).formatted(Formatting.YELLOW), false);
+        player.sendSystemMessage(Component.literal("New contract: " + offer.description()).withStyle(ChatFormatting.YELLOW), false);
     }
 
-    private static ContractType pickContract(ServerPlayerEntity player, Faction giver) {
+    private static ContractType pickContract(ServerPlayer player, Faction giver) {
         java.util.List<ContractType> options = new java.util.ArrayList<>();
         for (ContractType t : ContractType.values()) {
             if (t.giver() == giver) options.add(t);
@@ -380,36 +380,36 @@ public final class StoryDialogue {
         return options.get(player.getRandom().nextInt(options.size()));
     }
 
-    static void takeDoubloons(ServerPlayerEntity player, int amount) {
+    static void takeDoubloons(ServerPlayer player, int amount) {
         var inv = player.getInventory();
         int left = amount;
-        for (int i = 0; i < inv.size() && left > 0; i++) {
-            ItemStack stack = inv.getStack(i);
-            if (stack.isOf(ModItems.DOUBLOON)) {
+        for (int i = 0; i < inv.getContainerSize() && left > 0; i++) {
+            ItemStack stack = inv.getItem(i);
+            if (stack.is(ModItems.DOUBLOON)) {
                 int take = Math.min(left, stack.getCount());
-                stack.decrement(take);
+                stack.shrink(take);
                 left -= take;
             }
         }
     }
 
-    public static void say(StoryNpcEntity npc, ServerPlayerEntity player, String... lines) {
+    public static void say(StoryNpcEntity npc, ServerPlayer player, String... lines) {
         String name = npc.getRole().displayName();
         for (String line : lines) {
             if (com.cursedtides.dialogue.Dialogue.capture(player, line)) continue;
-            player.sendMessage(Text.literal("[" + name + "] ").formatted(Formatting.GOLD)
-                    .append(Text.literal(line).formatted(Formatting.WHITE)), false);
+            player.sendSystemMessage(Component.literal("[" + name + "] ").withStyle(ChatFormatting.GOLD)
+                    .append(Component.literal(line).withStyle(ChatFormatting.WHITE)), false);
         }
     }
 
-    private static void hint(ServerPlayerEntity player, int stage) {
-        player.sendMessage(Text.literal("Goal: ").formatted(Formatting.YELLOW)
-                .append(QuestData.objective(player).copy().formatted(Formatting.GRAY)), false);
+    private static void hint(ServerPlayer player, int stage) {
+        player.sendSystemMessage(Component.literal("Goal: ").withStyle(ChatFormatting.YELLOW)
+                .append(QuestData.objective(player).copy().withStyle(ChatFormatting.GRAY)), false);
     }
 
-    private static void advanced(ServerPlayerEntity player) {
-        player.getWorld().playSound(null, player.getX(), player.getY(), player.getZ(),
-                SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundCategory.PLAYERS, 0.5f, 1.3f);
+    private static void advanced(ServerPlayer player) {
+        player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.5f, 1.3f);
         hint(player, QuestData.stage(player));
     }
 }

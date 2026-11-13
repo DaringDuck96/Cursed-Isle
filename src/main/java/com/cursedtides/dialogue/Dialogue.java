@@ -1,5 +1,6 @@
 package com.cursedtides.dialogue;
 
+import net.minecraft.world.InteractionResult;
 import com.cursedtides.CursedTides;
 import com.cursedtides.character.CharacterData;
 import com.cursedtides.entity.QuartermasterEntity;
@@ -15,17 +16,16 @@ import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
-import net.minecraft.entity.Entity;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtString;
-import net.minecraft.resource.ResourceManager;
-import net.minecraft.resource.ResourceType;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.Identifier;
-
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.Entity;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
@@ -63,29 +63,29 @@ public final class Dialogue {
     }
 
     public static void register() {
-        PayloadTypeRegistry.playS2C().register(DialoguePayloads.Show.ID, DialoguePayloads.Show.CODEC);
-        PayloadTypeRegistry.playC2S().register(DialoguePayloads.Choose.ID, DialoguePayloads.Choose.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(DialoguePayloads.Show.ID, DialoguePayloads.Show.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(DialoguePayloads.Choose.ID, DialoguePayloads.Choose.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(DialoguePayloads.Choose.ID,
                 (payload, ctx) -> ctx.server().execute(() -> choose(ctx.player(), payload.index())));
         // Marines and hired hands chat too
         net.fabricmc.fabric.api.event.player.UseEntityCallback.EVENT.register((player, world, hand, entity, hit) -> {
-            if (world.isClient || hand != net.minecraft.util.Hand.MAIN_HAND || player.isSneaking()) return net.minecraft.util.ActionResult.PASS;
+            if (world.isClientSide() || hand != net.minecraft.world.InteractionHand.MAIN_HAND || player.isShiftKeyDown()) return net.minecraft.world.InteractionResult.PASS;
             String file = entity instanceof com.cursedtides.entity.MarineEntity ? "marine"
                     : entity instanceof com.cursedtides.entity.CrewmateEntity ? "crewmate" : null;
-            if (file != null && player instanceof ServerPlayerEntity sp && open(sp, entity, file)) return net.minecraft.util.ActionResult.SUCCESS;
-            return net.minecraft.util.ActionResult.PASS;
+            if (file != null && player instanceof ServerPlayer sp && open(sp, entity, file)) return net.minecraft.world.InteractionResult.SUCCESS;
+            return net.minecraft.world.InteractionResult.PASS;
         });
-        ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
+        ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
             @Override
             public Identifier getFabricId() {
                 return CursedTides.id("dialogue");
             }
 
             @Override
-            public void reload(ResourceManager manager) {
+            public void onResourceManagerReload(ResourceManager manager) {
                 FILES.clear();
-                manager.findResources("dialogue", id -> id.getPath().endsWith(".json")).forEach((id, resource) -> {
-                    try (Reader reader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8)) {
+                manager.listResources("dialogue", id -> id.getPath().endsWith(".json")).forEach((id, resource) -> {
+                    try (Reader reader = new InputStreamReader(resource.open(), StandardCharsets.UTF_8)) {
                         String name = id.getPath().substring("dialogue/".length(), id.getPath().length() - ".json".length());
                         FILES.put(name, JsonParser.parseReader(reader).getAsJsonObject());
                     } catch (Exception e) {
@@ -108,26 +108,26 @@ public final class Dialogue {
     // ------------------------------------------------------------------ the handlers' side
 
     /** Quest code says its lines through here; inside a conversation they go to the window, not the chat. */
-    public static boolean capture(ServerPlayerEntity player, String line) {
-        Session s = SESSIONS.get(player.getUuid());
+    public static boolean capture(ServerPlayer player, String line) {
+        Session s = SESSIONS.get(player.getUUID());
         if (s == null || s.captured == null) return false;
         s.captured.add(line);
         return true;
     }
 
     /** Which reply the player chose for a two- or three-way decision: 0 the plain one, 1 the alternative, 2 the third. */
-    public static int choice(ServerPlayerEntity player) {
-        Session s = SESSIONS.get(player.getUuid());
+    public static int choice(ServerPlayer player) {
+        Session s = SESSIONS.get(player.getUUID());
         if (s != null && s.captured != null) return s.choice;
-        return player.isSneaking() ? 1 : 0;
+        return player.isShiftKeyDown() ? 1 : 0;
     }
 
     // ------------------------------------------------------------------ opening and showing
 
-    public static boolean open(ServerPlayerEntity player, Entity npc, String file) {
+    public static boolean open(ServerPlayer player, Entity npc, String file) {
         if (!FILES.containsKey(file)) return false;
         Session s = new Session(npc.getId(), file);
-        SESSIONS.put(player.getUuid(), s);
+        SESSIONS.put(player.getUUID(), s);
         JsonObject root = FILES.get(file);
         String start = "root";
         if (root.has("start")) {
@@ -139,7 +139,7 @@ public final class Dialogue {
                 }
             }
         }
-        player.getWorld().playSound(null, npc.getBlockPos(), SoundEvents.ENTITY_VILLAGER_AMBIENT, SoundCategory.NEUTRAL, 0.5f, 0.9f
+        player.level().playSound(null, npc.blockPosition(), SoundEvents.VILLAGER_AMBIENT, SoundSource.NEUTRAL, 0.5f, 0.9f
                 + player.getRandom().nextFloat() * 0.2f);
         show(player, npc, s, start, null);
         return true;
@@ -158,7 +158,7 @@ public final class Dialogue {
         return nodes.has(n) ? nodes.getAsJsonObject(n) : null;
     }
 
-    private static void show(ServerPlayerEntity player, Entity npc, Session s, String nodeName, List<String> override) {
+    private static void show(ServerPlayer player, Entity npc, Session s, String nodeName, List<String> override) {
         JsonObject node = node(s.file, nodeName);
         if (node == null) {
             close(player);
@@ -167,7 +167,7 @@ public final class Dialogue {
         s.node = nodeName.contains(":") ? nodeName : nodeName;
         List<String> text = override != null && !override.isEmpty() ? override : pickText(node, player, npc);
         s.shown.clear();
-        NbtList options = new NbtList();
+        ListTag options = new ListTag();
         JsonArray opts = node.has("options") ? node.getAsJsonArray("options") : new JsonArray();
         // Nodes without their own replies borrow the speaker's main menu
         if (opts.isEmpty() && !nodeName.equals("root")) {
@@ -184,9 +184,9 @@ public final class Dialogue {
         for (JsonElement e : opts) {
             JsonObject o = e.getAsJsonObject();
             if (!Conditions.all(list(o, "if"), player, npc)) continue;
-            if (o.has("once") && player.getCommandTags().contains(flagTag(o.get("once").getAsString()))) continue;
+            if (o.has("once") && player.entityTags().contains(flagTag(o.get("once").getAsString()))) continue;
             s.shown.add(o);
-            options.add(NbtString.of(fill(o.get("label").getAsString(), player, npc)));
+            options.add(StringTag.valueOf(fill(o.get("label").getAsString(), player, npc)));
             if (s.shown.size() >= 6) break;
         }
         if (s.shown.isEmpty()) {
@@ -194,19 +194,19 @@ public final class Dialogue {
             bye.addProperty("label", "Farewell.");
             bye.addProperty("action", "close");
             s.shown.add(bye);
-            options.add(NbtString.of("Farewell."));
+            options.add(StringTag.valueOf("Farewell."));
         }
-        NbtCompound data = new NbtCompound();
+        CompoundTag data = new CompoundTag();
         data.putInt("Npc", npc.getId());
         data.putString("Name", speaker(s.file, npc));
-        NbtList lines = new NbtList();
-        for (String t : text) lines.add(NbtString.of(fill(t, player, npc)));
+        ListTag lines = new ListTag();
+        for (String t : text) lines.add(StringTag.valueOf(fill(t, player, npc)));
         data.put("Text", lines);
         data.put("Options", options);
         ServerPlayNetworking.send(player, new DialoguePayloads.Show(data));
     }
 
-    private static List<String> pickText(JsonObject node, ServerPlayerEntity player, Entity npc) {
+    private static List<String> pickText(JsonObject node, ServerPlayer player, Entity npc) {
         JsonArray variants = null;
         if (node.has("text_if")) {
             for (JsonElement e : node.getAsJsonArray("text_if")) {
@@ -245,11 +245,11 @@ public final class Dialogue {
         return data != null && data.has("name") ? data.get("name").getAsString() : npc.getName().getString();
     }
 
-    private static String fill(String s, ServerPlayerEntity p, Entity npc) {
+    private static String fill(String s, ServerPlayer p, Entity npc) {
         if (s.indexOf('{') < 0) return s;
-        long time = p.getWorld().getTimeOfDay() % 24000;
+        long time = p.level().getOverworldClockTime() % 24000;
         String tod = time < 1000 || time >= 23000 ? "dawn" : time < 6000 ? "morning" : time < 12000 ? "afternoon" : time < 13000 ? "evening" : "night";
-        String weather = p.getWorld().isThundering() ? "storm" : p.getWorld().isRaining() ? "rain" : "fair weather";
+        String weather = p.level().isThundering() ? "storm" : p.level().isRaining() ? "rain" : "fair weather";
         int island = Archipelago.islandIndexAt(npc.getBlockX(), npc.getBlockZ());
         String title = HorizonArc.title(p);
         return s.replace("{player}", CharacterData.pirateName(p))
@@ -259,8 +259,8 @@ public final class Dialogue {
                 .replace("{title}", title != null ? title : "captain")
                 .replace("{relics}", String.valueOf(HorizonArc.relicCount(p)))
                 .replace("{festival}", com.cursedtides.living.Festivals.currentName())
-                .replace("{town_mood}", com.cursedtides.living.Prosperity.mood(p.getServer(), npc.getBlockX(), npc.getBlockZ()))
-                .replace("{prosperity}", String.valueOf(com.cursedtides.living.Prosperity.at(p.getServer(), npc.getBlockX(), npc.getBlockZ())))
+                .replace("{town_mood}", com.cursedtides.living.Prosperity.mood(p.level().getServer(), npc.getBlockX(), npc.getBlockZ()))
+                .replace("{prosperity}", String.valueOf(com.cursedtides.living.Prosperity.at(p.level().getServer(), npc.getBlockX(), npc.getBlockZ())))
                 .replace("{bounty}", String.valueOf(com.cursedtides.faction.FactionData.bounty(p)))
                 .replace("{challenge}", com.cursedtides.activity.Challenges.describeDaily(p))
                 .replace("{npc}", npc.hasCustomName() && npc.getCustomName() != null ? npc.getCustomName().getString() : npc.getName().getString());
@@ -277,18 +277,18 @@ public final class Dialogue {
 
     // ------------------------------------------------------------------ choosing
 
-    private static void choose(ServerPlayerEntity player, int index) {
-        Session s = SESSIONS.get(player.getUuid());
+    private static void choose(ServerPlayer player, int index) {
+        Session s = SESSIONS.get(player.getUUID());
         if (s == null) return;
-        Entity npc = player.getWorld().getEntityById(s.npcId);
-        if (index < 0 || npc == null || !npc.isAlive() || npc.squaredDistanceTo(player) > 10 * 10 || index >= s.shown.size()) {
-            SESSIONS.remove(player.getUuid());
+        Entity npc = player.level().getEntity(s.npcId);
+        if (index < 0 || npc == null || !npc.isAlive() || npc.distanceToSqr(player) > 10 * 10 || index >= s.shown.size()) {
+            SESSIONS.remove(player.getUUID());
             if (index >= 0) close(player);
             return;
         }
         JsonObject o = s.shown.get(index);
-        if (o.has("set")) player.addCommandTag(flagTag(o.get("set").getAsString()));
-        if (o.has("once")) player.addCommandTag(flagTag(o.get("once").getAsString()));
+        if (o.has("set")) player.addTag(flagTag(o.get("set").getAsString()));
+        if (o.has("once")) player.addTag(flagTag(o.get("once").getAsString()));
         String action = o.has("action") ? o.get("action").getAsString() : null;
         String then = o.has("then") ? o.get("then").getAsString() : "root";
         if (action == null) {
@@ -323,7 +323,7 @@ public final class Dialogue {
                     List<String> lines = s.captured;
                     s.captured = null;
                     s.choice = 0;
-                    if (SESSIONS.get(player.getUuid()) == s) {
+                    if (SESSIONS.get(player.getUUID()) == s) {
                         if (lines.isEmpty()) {
                             // Nothing said: the business opened its own window (or had nothing to add)
                             close(player);
@@ -339,15 +339,15 @@ public final class Dialogue {
                     return;
                 }
                 List<String> lines = Specials.run(action.substring(8), player, npc);
-                if (SESSIONS.get(player.getUuid()) != s) return; // the special opened its own window
+                if (SESSIONS.get(player.getUUID()) != s) return; // the special opened its own window
                 if (lines == null || lines.isEmpty()) close(player);
                 else show(player, npc, s, then, lines);
             }
         }
     }
 
-    public static void close(ServerPlayerEntity player) {
-        SESSIONS.remove(player.getUuid());
-        ServerPlayNetworking.send(player, new DialoguePayloads.Show(new NbtCompound()));
+    public static void close(ServerPlayer player) {
+        SESSIONS.remove(player.getUUID());
+        ServerPlayNetworking.send(player, new DialoguePayloads.Show(new CompoundTag()));
     }
 }

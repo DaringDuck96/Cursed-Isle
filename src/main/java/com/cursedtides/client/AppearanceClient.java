@@ -3,13 +3,13 @@ package com.cursedtides.client;
 import com.cursedtides.CursedTides;
 import com.cursedtides.appearance.Appearance;
 import com.cursedtides.appearance.Look;
+import com.mojang.blaze3d.platform.NativeImage;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.texture.NativeImageBackedTexture;
-import net.minecraft.resource.Resource;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.packs.resources.Resource;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.InputStream;
@@ -36,15 +36,15 @@ public final class AppearanceClient {
             for (Appearance.Entry e : payload.entries()) CODES.put(e.id(), e.code());
         }));
         ClientPlayNetworking.registerGlobalReceiver(Appearance.Open.ID, (payload, context) ->
-                context.client().execute(() -> context.client().setScreen(new AppearanceScreen(payload.code()))));
+                context.client().execute(() -> context.client().gui.setScreen(new AppearanceScreen(payload.code()))));
         ClientPlayNetworking.registerGlobalReceiver(com.cursedtides.explore.Encyclopedia.Open.ID, (payload, context) ->
-                context.client().execute(() -> context.client().setScreen(new EncyclopediaScreen(payload.data()))));
+                context.client().execute(() -> context.client().gui.setScreen(new EncyclopediaScreen(payload.data()))));
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> CODES.clear());
     }
 
     public static int code(UUID id) {
-        MinecraftClient mc = MinecraftClient.getInstance();
-        if (preview != null && mc.player != null && mc.player.getUuid().equals(id)) return preview;
+        Minecraft mc = Minecraft.getInstance();
+        if (preview != null && mc.player != null && mc.player.getUUID().equals(id)) return preview;
         return CODES.getOrDefault(id, 0);
     }
 
@@ -74,7 +74,7 @@ public final class AppearanceClient {
         if ((acc & Look.ACC_EYEPATCH) != 0) layer(out, "acc_eyepatch", -1);
         if ((acc & Look.ACC_EARRING) != 0) layer(out, "acc_earring", -1);
         Identifier id = CursedTides.id("look/built_" + Integer.toHexString(code));
-        MinecraftClient.getInstance().getTextureManager().registerTexture(id, new NativeImageBackedTexture(out));
+        Minecraft.getInstance().getTextureManager().register(id, new DynamicTexture(id::toString, out));
         return id;
     }
 
@@ -85,7 +85,7 @@ public final class AppearanceClient {
         int tr = (tint >> 16) & 255, tg = (tint >> 8) & 255, tb = tint & 255;
         for (int x = 0; x < 64; x++) {
             for (int y = 0; y < 64; y++) {
-                int s = src.getColor(x, y);
+                int s = net.minecraft.util.ARGB.toABGR(src.getPixel(x, y));
                 int sa = (s >>> 24) & 255;
                 if (sa == 0) continue;
                 int sr = s & 255, sg = (s >> 8) & 255, sb = (s >> 16) & 255;
@@ -94,14 +94,14 @@ public final class AppearanceClient {
                     sg = sg * tg / 255;
                     sb = sb * tb / 255;
                 }
-                int d = out.getColor(x, y);
+                int d = net.minecraft.util.ARGB.toABGR(out.getPixel(x, y));
                 int da = (d >>> 24) & 255;
                 int dr = d & 255, dg = (d >> 8) & 255, db = (d >> 16) & 255;
                 int oa = sa + da * (255 - sa) / 255;
                 int or = oa == 0 ? 0 : (sr * sa + dr * da * (255 - sa) / 255) / oa;
                 int og = oa == 0 ? 0 : (sg * sa + dg * da * (255 - sa) / 255) / oa;
                 int ob = oa == 0 ? 0 : (sb * sa + db * da * (255 - sa) / 255) / oa;
-                out.setColor(x, y, (oa << 24) | (ob << 16) | (og << 8) | or);
+                out.setPixelABGR(x, y, (oa << 24) | (ob << 16) | (og << 8) | or);
             }
         }
     }
@@ -110,9 +110,9 @@ public final class AppearanceClient {
     private static NativeImage load(String name) {
         return LAYERS.computeIfAbsent(name, n -> {
             Identifier id = CursedTides.id("textures/look/" + n + ".png");
-            Optional<Resource> res = MinecraftClient.getInstance().getResourceManager().getResource(id);
+            Optional<Resource> res = Minecraft.getInstance().getResourceManager().getResource(id);
             if (res.isEmpty()) return null;
-            try (InputStream in = res.get().getInputStream()) {
+            try (InputStream in = res.get().open()) {
                 return NativeImage.read(in);
             } catch (Exception e) {
                 CursedTides.LOGGER.warn("Couldn't read look layer {}", id, e);

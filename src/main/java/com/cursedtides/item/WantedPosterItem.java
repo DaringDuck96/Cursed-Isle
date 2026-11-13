@@ -1,34 +1,35 @@
 package com.cursedtides.item;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.tooltip.TooltipType;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Hand;
-import net.minecraft.util.TypedActionResult;
-import net.minecraft.world.World;
-
+import net.minecraft.world.InteractionResult;
 import java.util.List;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.level.Level;
 
 /** A Tidewatch wanted poster. Read it to see who's worth hunting today. */
 public class WantedPosterItem extends Item {
-    public WantedPosterItem(Settings settings) {
+    public WantedPosterItem(Properties settings) {
         super(settings);
     }
 
     @Override
-    public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
-        if (user instanceof ServerPlayerEntity p && p.getServer() != null) {
-            for (Text line : com.cursedtides.living.Bounties.board(p.getServer())) p.sendMessage(line, false);
+    public InteractionResult use(Level world, Player user, InteractionHand hand) {
+        if (user instanceof ServerPlayer p && p.level().getServer() != null) {
+            for (Component line : com.cursedtides.living.Bounties.board(p.level().getServer())) p.sendSystemMessage(line, false);
         }
-        return TypedActionResult.success(user.getStackInHand(hand), world.isClient);
+        return InteractionResult.SUCCESS;
     }
 
     @Override
-    public void appendTooltip(ItemStack stack, TooltipContext context, List<Text> tooltip, TooltipType type) {
-        tooltip.add(Text.literal("Use to read the current wanted list.").formatted(Formatting.GRAY));
+    public void appendHoverText(ItemStack stack, TooltipContext context, net.minecraft.world.item.component.TooltipDisplay display__, java.util.function.Consumer<Component> adder__, TooltipFlag type) {
+        java.util.List<Component> tooltip = new java.util.ArrayList<>();
+        tooltip.add(Component.literal("Use to read the current wanted list.").withStyle(ChatFormatting.GRAY));
+        tooltip.forEach(adder__);
     }
 }

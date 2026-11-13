@@ -2,15 +2,15 @@ package com.cursedtides.client;
 
 import com.cursedtides.activity.Emotes;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 
 /** A ring of emotes. Click one, or press its number. */
 public class EmoteScreen extends Screen {
     public EmoteScreen() {
-        super(Text.literal("Emotes"));
+        super(Component.literal("Emotes"));
     }
 
     @Override
@@ -22,26 +22,26 @@ public class EmoteScreen extends Screen {
             double a = Math.PI * 2 * i / all.length - Math.PI / 2;
             int x = cx + (int) (Math.cos(a) * 100) - 35, y = cy + (int) (Math.sin(a) * 80) - 10;
             String name = all[i].name().charAt(0) + all[i].name().substring(1).toLowerCase();
-            addDrawableChild(ButtonWidget.builder(Text.literal(name), b -> {
+            addRenderableWidget(Button.builder(Component.literal(name), b -> {
                 ClientPlayNetworking.send(new Emotes.Do(id));
-                close();
-            }).dimensions(x, y, 70, 20).build());
+                onClose();
+            }).bounds(x, y, 70, 20).build());
         }
     }
 
     @Override
-    public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
-        super.renderBackground(ctx, mouseX, mouseY, delta);
-        super.render(ctx, mouseX, mouseY, delta);
-        ctx.drawCenteredTextWithShadow(textRenderer, Text.literal("§6Emotes"), width / 2, height / 2 - 4, 0xFFFFFF);
+    public void extractRenderState(GuiGraphicsExtractor ctx, int mouseX, int mouseY, float delta) {
+        super.extractBackground(ctx, mouseX, mouseY, delta);
+        super.extractRenderState(ctx, mouseX, mouseY, delta);
+        ctx.centeredText(font, Component.literal("§6Emotes"), width / 2, height / 2 - 4, 0xFFFFFFFF);
     }
 
     @Override
-    public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void extractBackground(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
     }
 
     @Override
-    public boolean shouldPause() {
+    public boolean isPauseScreen() {
         return false;
     }
 }

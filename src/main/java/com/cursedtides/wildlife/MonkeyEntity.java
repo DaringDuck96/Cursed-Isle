@@ -1,97 +1,97 @@
 package com.cursedtides.wildlife;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ai.goal.EscapeDangerGoal;
-import net.minecraft.entity.ai.goal.FollowOwnerGoal;
-import net.minecraft.entity.ai.goal.LookAroundGoal;
-import net.minecraft.entity.ai.goal.LookAtEntityGoal;
-import net.minecraft.entity.ai.goal.SitGoal;
-import net.minecraft.entity.ai.goal.SwimGoal;
-import net.minecraft.entity.ai.goal.WanderAroundFarGoal;
-import net.minecraft.entity.attribute.DefaultAttributeContainer;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.entity.passive.PassiveEntity;
-import net.minecraft.entity.passive.TameableEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.world.World;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.AgeableMob;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.TamableAnimal;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.world.entity.ai.goal.FollowOwnerGoal;
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.world.entity.ai.goal.PanicGoal;
+import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+import net.minecraft.world.entity.ai.goal.SitWhenOrderedToGoal;
+import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
 /** A jungle monkey. Feed it melon or cocoa until it trusts you, and it becomes your companion. */
-public class MonkeyEntity extends TameableEntity {
-    public MonkeyEntity(EntityType<? extends MonkeyEntity> type, World world) {
+public class MonkeyEntity extends TamableAnimal {
+    public MonkeyEntity(EntityType<? extends MonkeyEntity> type, Level world) {
         super(type, world);
     }
 
-    public static DefaultAttributeContainer.Builder createMonkeyAttributes() {
-        return MobEntity.createMobAttributes()
-                .add(EntityAttributes.GENERIC_MAX_HEALTH, 10.0)
-                .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.3);
+    public static AttributeSupplier.Builder createMonkeyAttributes() {
+        return Mob.createMobAttributes()
+                .add(Attributes.MAX_HEALTH, 10.0)
+                .add(Attributes.MOVEMENT_SPEED, 0.3);
     }
 
     @Override
-    protected void initGoals() {
-        this.goalSelector.add(0, new SwimGoal(this));
-        this.goalSelector.add(1, new EscapeDangerGoal(this, 1.5));
-        this.goalSelector.add(2, new SitGoal(this));
-        this.goalSelector.add(3, new FollowOwnerGoal(this, 1.1, 8.0f, 2.0f));
-        this.goalSelector.add(6, new WanderAroundFarGoal(this, 1.0));
-        this.goalSelector.add(7, new LookAtEntityGoal(this, PlayerEntity.class, 8.0f));
-        this.goalSelector.add(8, new LookAroundGoal(this));
+    protected void registerGoals() {
+        this.goalSelector.addGoal(0, new FloatGoal(this));
+        this.goalSelector.addGoal(1, new PanicGoal(this, 1.5));
+        this.goalSelector.addGoal(2, new SitWhenOrderedToGoal(this));
+        this.goalSelector.addGoal(3, new FollowOwnerGoal(this, 1.1, 8.0f, 2.0f));
+        this.goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 1.0));
+        this.goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 8.0f));
+        this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
     }
 
     private static boolean isTreat(ItemStack stack) {
-        return stack.isOf(Items.MELON_SLICE) || stack.isOf(Items.COCOA_BEANS) || stack.isOf(Items.SWEET_BERRIES);
+        return stack.is(Items.MELON_SLICE) || stack.is(Items.COCOA_BEANS) || stack.is(Items.SWEET_BERRIES);
     }
 
     @Override
-    public ActionResult interactMob(PlayerEntity player, Hand hand) {
-        ItemStack stack = player.getStackInHand(hand);
-        boolean client = this.getWorld().isClient;
-        if (!this.isTamed() && isTreat(stack)) {
-            stack.decrementUnlessCreative(1, player);
+    public InteractionResult mobInteract(Player player, InteractionHand hand) {
+        ItemStack stack = player.getItemInHand(hand);
+        boolean client = this.level().isClientSide();
+        if (!this.isTame() && isTreat(stack)) {
+            stack.consume(1, player);
             if (!client) {
                 if (this.random.nextInt(3) == 0) {
-                    this.setOwner(player);
-                    this.setPersistent();
+                    this.tame(player);
+                    this.setPersistenceRequired();
                     this.navigation.stop();
-                    this.setSitting(true);
-                    this.getWorld().sendEntityStatus(this, (byte) 7);
+                    this.setOrderedToSit(true);
+                    this.level().broadcastEntityEvent(this, (byte) 7);
                 } else {
-                    this.getWorld().sendEntityStatus(this, (byte) 6);
+                    this.level().broadcastEntityEvent(this, (byte) 6);
                 }
             }
-            return ActionResult.success(client);
+            return InteractionResult.SUCCESS;
         }
-        if (this.isTamed() && this.isOwner(player) && hand == Hand.MAIN_HAND) {
+        if (this.isTame() && this.isOwnedBy(player) && hand == InteractionHand.MAIN_HAND) {
             if (isTreat(stack) && this.getHealth() < this.getMaxHealth()) {
-                stack.decrementUnlessCreative(1, player);
+                stack.consume(1, player);
                 this.heal(4.0f);
-                return ActionResult.success(client);
+                return InteractionResult.SUCCESS;
             }
             if (!client) {
-                this.setSitting(!this.isSitting());
+                this.setOrderedToSit(!this.isOrderedToSit());
                 this.jumping = false;
                 this.navigation.stop();
             }
-            return ActionResult.success(client);
+            return InteractionResult.SUCCESS;
         }
-        return super.interactMob(player, hand);
+        return super.mobInteract(player, hand);
     }
 
     @Override
-    public boolean isBreedingItem(ItemStack stack) {
+    public boolean isFood(ItemStack stack) {
         return false;
     }
 
     @Nullable
     @Override
-    public PassiveEntity createChild(ServerWorld world, PassiveEntity entity) {
+    public AgeableMob getBreedOffspring(ServerLevel world, AgeableMob entity) {
         return null;
     }
 }

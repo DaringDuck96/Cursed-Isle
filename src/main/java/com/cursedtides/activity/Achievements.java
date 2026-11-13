@@ -1,10 +1,9 @@
 package com.cursedtides.activity;
 
 import com.cursedtides.CursedTides;
-import net.minecraft.advancement.AdvancementEntry;
-import net.minecraft.server.network.ServerPlayerEntity;
-
 import java.util.List;
+import net.minecraft.advancements.AdvancementHolder;
+import net.minecraft.server.level.ServerPlayer;
 
 /**
  * Feats, shown in the vanilla advancements screen under their own tab. Each is an advancement with a single
@@ -24,22 +23,22 @@ public final class Achievements {
             "first_contract", "contractor", "letter_reader", "postmaster", "drowned_lights",
             "boarder", "sea_monster", "black_muster", "wreck_diver", "spire_climber", "all_delves", "errand_runner", "pillar_of_the_reach");
 
-    private static AdvancementEntry entry(ServerPlayerEntity p, String id) {
-        if (p.getServer() == null) return null;
-        return p.getServer().getAdvancementLoader().get(CursedTides.id("feats/" + id));
+    private static AdvancementHolder entry(ServerPlayer p, String id) {
+        if (p.level().getServer() == null) return null;
+        return p.level().getServer().getAdvancements().get(CursedTides.id("feats/" + id));
     }
 
-    public static void grant(ServerPlayerEntity p, String id) {
-        AdvancementEntry e = entry(p, id);
-        if (e != null) p.getAdvancementTracker().grantCriterion(e, "done");
+    public static void grant(ServerPlayer p, String id) {
+        AdvancementHolder e = entry(p, id);
+        if (e != null) p.getAdvancements().award(e, "done");
     }
 
-    public static boolean has(ServerPlayerEntity p, String id) {
-        AdvancementEntry e = entry(p, id);
-        return e != null && p.getAdvancementTracker().getProgress(e).isDone();
+    public static boolean has(ServerPlayer p, String id) {
+        AdvancementHolder e = entry(p, id);
+        return e != null && p.getAdvancements().getOrStartProgress(e).isDone();
     }
 
-    public static int count(ServerPlayerEntity p) {
+    public static int count(ServerPlayer p) {
         int n = 0;
         for (String id : ALL) if (has(p, id)) n++;
         return n;

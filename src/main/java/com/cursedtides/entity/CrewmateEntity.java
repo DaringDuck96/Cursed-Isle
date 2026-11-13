@@ -1,96 +1,99 @@
 package com.cursedtides.entity;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ai.goal.LookAroundGoal;
-import net.minecraft.entity.ai.goal.LookAtEntityGoal;
-import net.minecraft.entity.attribute.DefaultAttributeContainer;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.data.DataTracker;
-import net.minecraft.entity.data.TrackedData;
-import net.minecraft.entity.data.TrackedDataHandlerRegistry;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.entity.mob.PathAwareEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.text.Text;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.World;
+import net.minecraft.ChatFormatting;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 
 /**
  * A hired hand who sits aboard your ship and does a job: gunner, bosun or navigator.
  * The ship reads their roles each tick. Sneak-right-click as the owner to dismiss.
  */
-public class CrewmateEntity extends PathAwareEntity {
+public class CrewmateEntity extends PathfinderMob {
     public static final int GUNNER = 0, BOSUN = 1, NAVIGATOR = 2;
     public static final String[] ROLE_NAMES = {"Gunner", "Bosun", "Navigator"};
     private static final String[] FIRST = {"Ned", "Bree", "Obi", "Wil", "Rosa", "Fenn", "Ivo", "Kit", "Lark", "Moss", "Pip", "Juno"};
     private static final String[] LAST = {"Brine", "Tarr", "Gale", "Hook", "Salt", "Rudd", "Keel", "Rook", "Shoal", "Cray"};
 
-    private static final TrackedData<Integer> ROLE = DataTracker.registerData(CrewmateEntity.class, TrackedDataHandlerRegistry.INTEGER);
+    private static final EntityDataAccessor<Integer> ROLE = SynchedEntityData.defineId(CrewmateEntity.class, EntityDataSerializers.INT);
 
-    public CrewmateEntity(EntityType<? extends PathAwareEntity> type, World world) {
+    public CrewmateEntity(EntityType<? extends PathfinderMob> type, Level world) {
         super(type, world);
     }
 
-    public static DefaultAttributeContainer.Builder createCrewAttributes() {
-        return MobEntity.createMobAttributes()
-                .add(EntityAttributes.GENERIC_MAX_HEALTH, 30.0)
-                .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.25);
+    public static AttributeSupplier.Builder createCrewAttributes() {
+        return Mob.createMobAttributes()
+                .add(Attributes.MAX_HEALTH, 30.0)
+                .add(Attributes.MOVEMENT_SPEED, 0.25);
     }
 
     @Override
-    protected void initDataTracker(DataTracker.Builder builder) {
-        super.initDataTracker(builder);
-        builder.add(ROLE, 0);
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(ROLE, 0);
     }
 
     public int getRole() {
-        return MathHelper.clamp(this.dataTracker.get(ROLE), 0, 2);
+        return Mth.clamp(this.entityData.get(ROLE), 0, 2);
     }
 
     public void setRole(int role) {
-        this.dataTracker.set(ROLE, role);
+        this.entityData.set(ROLE, role);
         String name = FIRST[this.random.nextInt(FIRST.length)] + " " + LAST[this.random.nextInt(LAST.length)];
-        this.setCustomName(Text.literal(name + ", " + ROLE_NAMES[getRole()]).formatted(Formatting.AQUA));
+        this.setCustomName(Component.literal(name + ", " + ROLE_NAMES[getRole()]).withStyle(ChatFormatting.AQUA));
         this.setCustomNameVisible(true);
     }
 
     @Override
-    protected void initGoals() {
-        this.goalSelector.add(1, new LookAtEntityGoal(this, PlayerEntity.class, 8.0f));
-        this.goalSelector.add(2, new LookAroundGoal(this));
+    protected void registerGoals() {
+        this.goalSelector.addGoal(1, new LookAtPlayerGoal(this, Player.class, 8.0f));
+        this.goalSelector.addGoal(2, new RandomLookAroundGoal(this));
     }
 
     @Override
-    public ActionResult interactMob(PlayerEntity player, Hand hand) {
-        if (hand == Hand.MAIN_HAND && player.isSneaking() && this.getVehicle() instanceof ShipEntity ship
+    public InteractionResult mobInteract(Player player, InteractionHand hand) {
+        if (hand == InteractionHand.MAIN_HAND && player.isShiftKeyDown() && this.getVehicle() instanceof ShipEntity ship
                 && ship.isOwner(player) && ship.getOwner() != null) {
-            if (!this.getWorld().isClient) {
-                player.sendMessage(Text.literal("Dismissed: ").append(this.getName()).formatted(Formatting.GRAY), false);
+            if (!this.level().isClientSide()) {
+                com.cursedtides.util.Compat.tell(player, Component.literal("Dismissed: ").append(this.getName()).withStyle(ChatFormatting.GRAY), false);
                 this.discard();
             }
-            return ActionResult.success(this.getWorld().isClient);
+            return InteractionResult.SUCCESS;
         }
-        return super.interactMob(player, hand);
+        return super.mobInteract(player, hand);
     }
 
     @Override
-    public boolean cannotDespawn() {
+    public boolean requiresCustomPersistence() {
         return true;
     }
 
     @Override
-    public void writeCustomDataToNbt(NbtCompound nbt) {
-        super.writeCustomDataToNbt(nbt);
+    public void addAdditionalSaveData(net.minecraft.world.level.storage.ValueOutput out__) {
+        CompoundTag nbt = new CompoundTag();
+        super.addAdditionalSaveData(out__);
         nbt.putInt("CrewRole", getRole());
+        out__.store("ct", CompoundTag.CODEC, nbt);
     }
 
     @Override
-    public void readCustomDataFromNbt(NbtCompound nbt) {
-        super.readCustomDataFromNbt(nbt);
-        this.dataTracker.set(ROLE, nbt.getInt("CrewRole"));
+    public void readAdditionalSaveData(net.minecraft.world.level.storage.ValueInput in__) {
+        CompoundTag nbt = in__.read("ct", CompoundTag.CODEC).orElseGet(CompoundTag::new);
+        super.readAdditionalSaveData(in__);
+        this.entityData.set(ROLE, nbt.getIntOr("CrewRole", 0));
     }
 }

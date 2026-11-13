@@ -6,22 +6,22 @@ import com.cursedtides.faction.Faction;
 import com.cursedtides.faction.FactionData;
 import com.cursedtides.item.ModItems;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.PersistentState;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -63,7 +63,7 @@ public final class Forts {
 
     // ------------------------------------------------------------------ saved state
 
-    public static class State extends PersistentState {
+    public static class State extends SavedData {
         /** hp per battery, flattened fort by fort. */
         final int[] hp = new int[FORTS.stream().mapToInt(f -> f.batteries().size()).sum()];
         final long[] silencedUntil = new long[FORTS.size()];
@@ -72,24 +72,23 @@ public final class Forts {
             java.util.Arrays.fill(hp, BATTERY_HP);
         }
 
-        private static final Type<State> TYPE = new Type<>(State::new, State::fromNbt, null);
+        private static final net.minecraft.world.level.saveddata.SavedDataType<State> TYPE = com.cursedtides.util.Saved.type("cursedtides_forts", State::new, State::fromNbt, (st__, l__) -> st__.save(new CompoundTag(), l__));
 
         static State get(MinecraftServer server) {
-            return server.getOverworld().getPersistentStateManager().getOrCreate(TYPE, "cursedtides_forts");
+            return server.overworld().getDataStorage().computeIfAbsent(TYPE);
         }
 
-        @Override
-        public NbtCompound writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup lookup) {
+                public CompoundTag save(CompoundTag nbt, HolderLookup.Provider lookup) {
             nbt.putIntArray("Hp", hp);
             nbt.putLongArray("Silenced", silencedUntil);
             return nbt;
         }
 
-        private static State fromNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup lookup) {
+        private static State fromNbt(CompoundTag nbt, HolderLookup.Provider lookup) {
             State s = new State();
-            int[] h = nbt.getIntArray("Hp");
+            int[] h = nbt.getIntArray("Hp").orElse(new int[0]);
             System.arraycopy(h, 0, s.hp, 0, Math.min(h.length, s.hp.length));
-            long[] l = nbt.getLongArray("Silenced");
+            long[] l = nbt.getLongArray("Silenced").orElse(new long[0]);
             System.arraycopy(l, 0, s.silencedUntil, 0, Math.min(l.length, s.silencedUntil.length));
             return s;
         }
@@ -111,15 +110,15 @@ public final class Forts {
         ServerTickEvents.END_SERVER_TICK.register(Forts::tick);
     }
 
-    private static boolean hostileTo(Fort f, PlayerEntity p) {
+    private static boolean hostileTo(Fort f, Player p) {
         return f.navy() ? FactionData.isWanted(p) : FactionData.rep(p, Faction.NAVY) >= 300;
     }
 
     private static void tick(MinecraftServer server) {
-        if (!ModWorld.isArchipelago() || server.getTicks() % 50 != 0) return;
-        ServerWorld world = server.getOverworld();
+        if (!ModWorld.isArchipelago() || server.getTickCount() % 50 != 0) return;
+        ServerLevel world = server.overworld();
         State s = State.get(server);
-        long now = world.getTime();
+        long now = world.getGameTime();
         for (int fi = 0; fi < FORTS.size(); fi++) {
             Fort f = FORTS.get(fi);
             if (s.silencedUntil[fi] > now) continue;
@@ -127,44 +126,44 @@ public final class Forts {
                 s.silencedUntil[fi] = 0;
                 for (int bi = 0; bi < f.batteries().size(); bi++) {
                     s.hp[slot(fi, bi)] = BATTERY_HP;
-                    world.setBlockState(gunPos(f.batteries().get(bi)), Blocks.ANVIL.getDefaultState());
+                    world.setBlockAndUpdate(gunPos(f.batteries().get(bi)), Blocks.ANVIL.defaultBlockState());
                 }
-                s.markDirty();
+                s.setDirty();
             }
             for (int bi = 0; bi < f.batteries().size(); bi++) {
                 if (s.hp[slot(fi, bi)] <= 0) continue;
                 BlockPos gun = gunPos(f.batteries().get(bi));
-                if (!world.isChunkLoaded(gun)) continue;
+                if (!world.hasChunkAt(gun)) continue;
                 ShipEntity target = null;
                 double best = 75 * 75;
-                for (ShipEntity ship : world.getEntitiesByClass(ShipEntity.class, new net.minecraft.util.math.Box(gun).expand(75), e -> true)) {
-                    if (!(ship.getControllingPassenger() instanceof ServerPlayerEntity captain) || !hostileTo(f, captain)) continue;
-                    double d = ship.squaredDistanceTo(Vec3d.ofCenter(gun));
+                for (ShipEntity ship : world.getEntitiesOfClass(ShipEntity.class, new net.minecraft.world.phys.AABB(gun).inflate(75), e -> true)) {
+                    if (!(ship.getControllingPassenger() instanceof ServerPlayer captain) || !hostileTo(f, captain)) continue;
+                    double d = ship.distanceToSqr(Vec3.atCenterOf(gun));
                     if (d < best) { best = d; target = ship; }
                 }
-                if (target == null || world.random.nextInt(3) != 0) continue;
+                if (target == null || world.getRandom().nextInt(3) != 0) continue;
                 fire(world, gun, target);
             }
         }
     }
 
-    private static void fire(ServerWorld world, BlockPos gun, Entity target) {
-        Vec3d from = Vec3d.ofCenter(gun).add(0, 1.2, 0);
-        Vec3d to = target.getPos().add(target.getVelocity().multiply(20)).add(0, 1.5, 0);
-        Vec3d d = to.subtract(from);
+    private static void fire(ServerLevel world, BlockPos gun, Entity target) {
+        Vec3 from = Vec3.atCenterOf(gun).add(0, 1.2, 0);
+        Vec3 to = target.position().add(target.getDeltaMovement().scale(20)).add(0, 1.5, 0);
+        Vec3 d = to.subtract(from);
         double flat = Math.sqrt(d.x * d.x + d.z * d.z);
         CannonballEntity ball = new CannonballEntity(world, from.x, from.y, from.z);
-        ball.addCommandTag("cursedtides_fort_shot");
-        ball.setVelocity(d.x, d.y + flat * 0.12, d.z, 2.4f, 4.0f);
-        world.spawnEntity(ball);
-        world.spawnParticles(ParticleTypes.LARGE_SMOKE, from.x, from.y, from.z, 10, 0.3, 0.3, 0.3, 0.02);
-        world.playSound(null, gun, com.cursedtides.sound.ModSounds.CANNON_BOOM.value(), SoundCategory.HOSTILE, 3f, 0.8f);
+        ball.addTag("cursedtides_fort_shot");
+        ball.shoot(d.x, d.y + flat * 0.12, d.z, 2.4f, 4.0f);
+        world.addFreshEntity(ball);
+        world.sendParticles(ParticleTypes.LARGE_SMOKE, from.x, from.y, from.z, 10, 0.3, 0.3, 0.3, 0.02);
+        world.playSound(null, gun, com.cursedtides.sound.ModSounds.CANNON_BOOM.value(), SoundSource.HOSTILE, 3f, 0.8f);
     }
 
     /** Called where any cannonball lands. */
-    public static void onImpact(ServerWorld world, Vec3d at, @Nullable Entity owner, CannonballEntity ball) {
-        if (ball.getCommandTags().contains("cursedtides_fort_shot")) return;
-        ServerPlayerEntity shooter = shooter(world, owner);
+    public static void onImpact(ServerLevel world, Vec3 at, @Nullable Entity owner, CannonballEntity ball) {
+        if (ball.entityTags().contains("cursedtides_fort_shot")) return;
+        ServerPlayer shooter = shooter(world, owner);
         State s = State.get(world.getServer());
         for (int fi = 0; fi < FORTS.size(); fi++) {
             Fort f = FORTS.get(fi);
@@ -172,34 +171,34 @@ public final class Forts {
                 int k = slot(fi, bi);
                 if (s.hp[k] <= 0) continue;
                 BlockPos gun = gunPos(f.batteries().get(bi));
-                if (at.squaredDistanceTo(Vec3d.ofCenter(gun)) > 4.5 * 4.5) continue;
+                if (at.distanceToSqr(Vec3.atCenterOf(gun)) > 4.5 * 4.5) continue;
                 s.hp[k]--;
-                s.markDirty();
+                s.setDirty();
                 if (s.hp[k] > 0) {
-                    world.setBlockState(gun, (s.hp[k] == 2 ? Blocks.CHIPPED_ANVIL : Blocks.DAMAGED_ANVIL).getDefaultState());
-                    if (shooter != null) shooter.sendMessage(Text.literal("Hit on a " + f.name() + " battery!").formatted(Formatting.GOLD), true);
+                    world.setBlockAndUpdate(gun, (s.hp[k] == 2 ? Blocks.CHIPPED_ANVIL : Blocks.DAMAGED_ANVIL).defaultBlockState());
+                    if (shooter != null) shooter.sendSystemMessage(Component.literal("Hit on a " + f.name() + " battery!").withStyle(ChatFormatting.GOLD), true);
                     return;
                 }
-                world.setBlockState(gun, Blocks.BLACKSTONE.getDefaultState());
-                world.setBlockState(gun.up(), Blocks.FIRE.getDefaultState());
-                world.spawnParticles(ParticleTypes.EXPLOSION_EMITTER, gun.getX() + 0.5, gun.getY() + 1, gun.getZ() + 0.5, 1, 0, 0, 0, 0);
+                world.setBlockAndUpdate(gun, Blocks.BLACKSTONE.defaultBlockState());
+                world.setBlockAndUpdate(gun.above(), Blocks.FIRE.defaultBlockState());
+                world.sendParticles(ParticleTypes.EXPLOSION_EMITTER, gun.getX() + 0.5, gun.getY() + 1, gun.getZ() + 0.5, 1, 0, 0, 0, 0);
                 boolean anyLeft = false;
                 for (int bj = 0; bj < f.batteries().size(); bj++) if (s.hp[slot(fi, bj)] > 0) anyLeft = true;
-                if (shooter != null) shooter.sendMessage(Text.literal("A " + f.name() + " battery is silenced!").formatted(Formatting.GOLD), false);
+                if (shooter != null) shooter.sendSystemMessage(Component.literal("A " + f.name() + " battery is silenced!").withStyle(ChatFormatting.GOLD), false);
                 if (!anyLeft) silenced(world, s, fi, shooter);
                 return;
             }
         }
     }
 
-    private static void silenced(ServerWorld world, State s, int fi, @Nullable ServerPlayerEntity shooter) {
+    private static void silenced(ServerLevel world, State s, int fi, @Nullable ServerPlayer shooter) {
         Fort f = FORTS.get(fi);
-        s.silencedUntil[fi] = world.getTime() + 24000;
-        s.markDirty();
-        world.getServer().getPlayerManager().broadcast(Text.literal("The guns of " + f.name() + " have fallen silent"
-                + (shooter != null ? ", silenced by " + shooter.getName().getString() : "") + "!").formatted(Formatting.GOLD, Formatting.BOLD), false);
+        s.silencedUntil[fi] = world.getGameTime() + 24000;
+        s.setDirty();
+        world.getServer().getPlayerList().broadcastSystemMessage(Component.literal("The guns of " + f.name() + " have fallen silent"
+                + (shooter != null ? ", silenced by " + shooter.getName().getString() : "") + "!").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), false);
         if (shooter == null) return;
-        shooter.giveItemStack(new ItemStack(ModItems.DOUBLOON, 40));
+        shooter.addItem(new ItemStack(ModItems.DOUBLOON, 40));
         com.cursedtides.profession.ProfessionData.addXp(shooter, com.cursedtides.profession.Profession.LEADERSHIP, 50);
         com.cursedtides.pirate.PirateData.addXp(shooter, com.cursedtides.pirate.Weapon.CANNON, 200);
         if (f.navy()) {
@@ -213,12 +212,12 @@ public final class Forts {
     }
 
     @Nullable
-    private static ServerPlayerEntity shooter(ServerWorld world, @Nullable Entity owner) {
-        if (owner instanceof ServerPlayerEntity p) return p;
+    private static ServerPlayer shooter(ServerLevel world, @Nullable Entity owner) {
+        if (owner instanceof ServerPlayer p) return p;
         if (owner instanceof ShipEntity ship) {
-            if (ship.getControllingPassenger() instanceof ServerPlayerEntity p) return p;
+            if (ship.getControllingPassenger() instanceof ServerPlayer p) return p;
             UUID id = ship.getOwner();
-            return id == null ? null : world.getServer().getPlayerManager().getPlayer(id);
+            return id == null ? null : world.getServer().getPlayerList().getPlayer(id);
         }
         return null;
     }
@@ -231,7 +230,7 @@ public final class Forts {
             int alive = 0;
             for (int bi = 0; bi < f.batteries().size(); bi++) if (s.hp[slot(fi, bi)] > 0) alive++;
             sb.append(sb.isEmpty() ? "" : "; ").append(f.name()).append(": ")
-                    .append(s.silencedUntil[fi] > server.getOverworld().getTime() ? "silenced" : alive + " guns");
+                    .append(s.silencedUntil[fi] > server.overworld().getGameTime() ? "silenced" : alive + " guns");
         }
         return sb.toString();
     }

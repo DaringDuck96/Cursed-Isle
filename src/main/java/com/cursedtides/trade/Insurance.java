@@ -2,19 +2,18 @@ package com.cursedtides.trade;
 
 import com.cursedtides.item.ShipDeedItem;
 import com.cursedtides.ship.ShipClass;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.NbtComponent;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.world.PersistentState;
-
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.level.saveddata.SavedData;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -48,71 +47,70 @@ public final class Insurance {
     }
 
     public static boolean isInsured(ItemStack deed) {
-        NbtComponent c = deed.get(DataComponentTypes.CUSTOM_DATA);
-        return c != null && c.copyNbt().getBoolean(KEY);
+        CustomData c = deed.get(DataComponents.CUSTOM_DATA);
+        return c != null && c.copyTag().getBooleanOr(KEY, false);
     }
 
     /** At the banker, holding a deed: buys a policy. */
-    public static void insure(ServerPlayerEntity player, ItemStack deed, ShipDeedItem item) {
+    public static void insure(ServerPlayer player, ItemStack deed, ShipDeedItem item) {
         if (isInsured(deed)) {
-            player.sendMessage(Text.literal("That ship is already insured.").formatted(Formatting.GRAY), false);
+            player.sendSystemMessage(Component.literal("That ship is already insured.").withStyle(ChatFormatting.GRAY), false);
             return;
         }
         int premium = premium(item.shipClass());
         if (!Wallet.pay(player, premium * Wallet.SILVER_PER_DOUBLOON)) {
-            player.sendMessage(Text.literal("A policy on a " + item.shipClass().displayName() + " costs " + premium
-                    + " doubloons. Come back with the coin.").formatted(Formatting.RED), false);
+            player.sendSystemMessage(Component.literal("A policy on a " + item.shipClass().displayName() + " costs " + premium
+                    + " doubloons. Come back with the coin.").withStyle(ChatFormatting.RED), false);
             return;
         }
-        NbtComponent c = deed.get(DataComponentTypes.CUSTOM_DATA);
-        NbtCompound data = c == null ? new NbtCompound() : c.copyNbt();
+        CustomData c = deed.get(DataComponents.CUSTOM_DATA);
+        CompoundTag data = c == null ? new CompoundTag() : c.copyTag();
         data.putBoolean(KEY, true);
-        deed.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(data));
-        player.sendMessage(Text.literal("Insured for " + premium + " doubloons. If she goes down, the bank will replace her hull"
-                + " (though not her cargo).").formatted(Formatting.GOLD), false);
+        deed.set(DataComponents.CUSTOM_DATA, CustomData.of(data));
+        player.sendSystemMessage(Component.literal("Insured for " + premium + " doubloons. If she goes down, the bank will replace her hull"
+                + " (though not her cargo).").withStyle(ChatFormatting.GOLD), false);
     }
 
     /** Called when an insured player ship sinks. */
     public static void payOut(MinecraftServer server, UUID owner, ItemStack replacement) {
-        ServerPlayerEntity p = server.getPlayerManager().getPlayer(owner);
+        ServerPlayer p = server.getPlayerList().getPlayer(owner);
         if (p != null) {
-            if (!p.getInventory().insertStack(replacement)) p.dropItem(replacement, false);
-            p.sendMessage(Text.literal("The Bank of Kingsport honours your policy: a replacement deed for ")
-                    .append(replacement.getName()).append(Text.literal(".")).formatted(Formatting.GOLD), false);
+            if (!p.getInventory().add(replacement)) p.drop(replacement, false, net.minecraft.util.Prediction.SERVER_ONLY);
+            p.sendSystemMessage(Component.literal("The Bank of Kingsport honours your policy: a replacement deed for ")
+                    .append(replacement.getHoverName()).append(Component.literal(".")).withStyle(ChatFormatting.GOLD), false);
             return;
         }
         Claims claims = Claims.get(server);
         claims.pending.computeIfAbsent(owner, k -> new ArrayList<>()).add(replacement);
-        claims.markDirty();
+        claims.setDirty();
     }
 
     /** Hands over any replacement deeds waiting for this player. */
-    public static boolean collect(ServerPlayerEntity p) {
-        Claims claims = Claims.get(p.getServer());
-        List<ItemStack> deeds = claims.pending.remove(p.getUuid());
+    public static boolean collect(ServerPlayer p) {
+        Claims claims = Claims.get(p.level().getServer());
+        List<ItemStack> deeds = claims.pending.remove(p.getUUID());
         if (deeds == null || deeds.isEmpty()) return false;
-        for (ItemStack d : deeds) if (!p.getInventory().insertStack(d)) p.dropItem(d, false);
-        claims.markDirty();
-        p.sendMessage(Text.literal("Your insurance claim is settled: " + deeds.size() + " replacement deed(s).").formatted(Formatting.GOLD), false);
+        for (ItemStack d : deeds) if (!p.getInventory().add(d)) p.drop(d, false, net.minecraft.util.Prediction.SERVER_ONLY);
+        claims.setDirty();
+        p.sendSystemMessage(Component.literal("Your insurance claim is settled: " + deeds.size() + " replacement deed(s).").withStyle(ChatFormatting.GOLD), false);
         return true;
     }
 
-    static final class Claims extends PersistentState {
+    static final class Claims extends SavedData {
         final Map<UUID, List<ItemStack>> pending = new HashMap<>();
-        private static final Type<Claims> TYPE = new Type<>(Claims::new, Claims::fromNbt, null);
+        private static final net.minecraft.world.level.saveddata.SavedDataType<Claims> TYPE = com.cursedtides.util.Saved.type("cursedtides_insurance", Claims::new, Claims::fromNbt, (st__, l__) -> st__.save(new CompoundTag(), l__));
 
         static Claims get(MinecraftServer server) {
-            return server.getOverworld().getPersistentStateManager().getOrCreate(TYPE, "cursedtides_insurance");
+            return server.overworld().getDataStorage().computeIfAbsent(TYPE);
         }
 
-        @Override
-        public NbtCompound writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup lookup) {
-            NbtList list = new NbtList();
+                public CompoundTag save(CompoundTag nbt, HolderLookup.Provider lookup) {
+            ListTag list = new ListTag();
             pending.forEach((id, deeds) -> {
                 for (ItemStack d : deeds) {
-                    NbtCompound c = new NbtCompound();
-                    c.putUuid("Owner", id);
-                    c.put("Deed", d.encode(lookup));
+                    CompoundTag c = new CompoundTag();
+                    c.store("Owner", net.minecraft.core.UUIDUtil.CODEC, id);
+                    c.put("Deed", com.cursedtides.util.Compat.saveStack(d, lookup));
                     list.add(c);
                 }
             });
@@ -120,13 +118,13 @@ public final class Insurance {
             return nbt;
         }
 
-        private static Claims fromNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup lookup) {
+        private static Claims fromNbt(CompoundTag nbt, HolderLookup.Provider lookup) {
             Claims c = new Claims();
-            NbtList list = nbt.getList("Claims", NbtElement.COMPOUND_TYPE);
+            ListTag list = nbt.getListOrEmpty("Claims");
             for (int i = 0; i < list.size(); i++) {
-                NbtCompound e = list.getCompound(i);
-                ItemStack.fromNbt(lookup, e.get("Deed")).ifPresent(d ->
-                        c.pending.computeIfAbsent(e.getUuid("Owner"), k -> new ArrayList<>()).add(d));
+                CompoundTag e = list.getCompoundOrEmpty(i);
+                com.cursedtides.util.Compat.loadStack(lookup, e.get("Deed")).ifPresent(d ->
+                        c.pending.computeIfAbsent(e.read("Owner", net.minecraft.core.UUIDUtil.CODEC).orElse(null), k -> new ArrayList<>()).add(d));
             }
             return c;
         }

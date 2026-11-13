@@ -1,22 +1,22 @@
 package com.cursedtides.item;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
 final class AmmoHelper {
     private AmmoHelper() {}
 
     /** Removes one of {@code ammo} from the player's inventory. Creative players never run dry. */
-    static boolean consume(PlayerEntity player, Item ammo) {
-        if (player.getAbilities().creativeMode) {
+    static boolean consume(Player player, Item ammo) {
+        if (player.getAbilities().instabuild) {
             return true;
         }
         var inventory = player.getInventory();
-        for (int i = 0; i < inventory.size(); i++) {
-            ItemStack stack = inventory.getStack(i);
-            if (stack.isOf(ammo)) {
-                stack.decrement(1);
+        for (int i = 0; i < inventory.getContainerSize(); i++) {
+            ItemStack stack = inventory.getItem(i);
+            if (stack.is(ammo)) {
+                stack.shrink(1);
                 return true;
             }
         }

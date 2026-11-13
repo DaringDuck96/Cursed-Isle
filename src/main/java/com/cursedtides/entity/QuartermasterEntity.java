@@ -1,52 +1,54 @@
 package com.cursedtides.entity;
 
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.item.DyeColor;
 import com.cursedtides.item.ModItems;
-import net.minecraft.entity.EntityData;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.ai.goal.EscapeDangerGoal;
-import net.minecraft.entity.ai.goal.FleeEntityGoal;
-import net.minecraft.entity.ai.goal.LookAtCustomerGoal;
-import net.minecraft.entity.ai.goal.LookAtEntityGoal;
-import net.minecraft.entity.ai.goal.StopFollowingCustomerGoal;
-import net.minecraft.entity.ai.goal.SwimGoal;
-import net.minecraft.entity.ai.goal.WanderAroundFarGoal;
-import net.minecraft.entity.passive.WanderingTraderEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.village.TradeOffer;
-import net.minecraft.village.TradeOfferList;
-import net.minecraft.village.TradedItem;
-import net.minecraft.world.LocalDifficulty;
-import net.minecraft.world.ServerWorldAccess;
-import net.minecraft.world.World;
-import net.minecraft.world.WorldAccess;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.DifficultyInstance;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.SpawnGroupData;
+import net.minecraft.world.entity.ai.goal.AvoidEntityGoal;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.world.entity.ai.goal.LookAtTradingPlayerGoal;
+import net.minecraft.world.entity.ai.goal.PanicGoal;
+import net.minecraft.world.entity.ai.goal.TradeWithPlayerGoal;
+import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
+import net.minecraft.world.entity.npc.wanderingtrader.WanderingTrader;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.trading.ItemCost;
+import net.minecraft.world.item.trading.MerchantOffer;
+import net.minecraft.world.item.trading.MerchantOffers;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.ServerLevelAccessor;
 import org.jetbrains.annotations.Nullable;
 
 /**
  * A port merchant who deals in doubloons. Sells weapons and ammunition and buys
  * gold and plunder. Never despawns and never restocks out.
  */
-public class QuartermasterEntity extends WanderingTraderEntity {
+public class QuartermasterEntity extends WanderingTrader {
     private static final int UNLIMITED = 9999;
 
-    public QuartermasterEntity(EntityType<? extends WanderingTraderEntity> type, World world) {
+    public QuartermasterEntity(EntityType<? extends WanderingTrader> type, Level world) {
         super(type, world);
     }
 
     /** Same as a wandering trader, minus the invisibility-potion habit. */
     @Override
-    protected void initGoals() {
-        this.goalSelector.add(0, new SwimGoal(this));
-        this.goalSelector.add(1, new StopFollowingCustomerGoal(this));
-        this.goalSelector.add(1, new FleeEntityGoal<>(this, CursedPirateEntity.class, 8.0f, 0.5, 0.5));
-        this.goalSelector.add(1, new EscapeDangerGoal(this, 0.5));
-        this.goalSelector.add(1, new LookAtCustomerGoal(this));
-        this.goalSelector.add(8, new WanderAroundFarGoal(this, 0.35));
-        this.goalSelector.add(9, new LookAtEntityGoal(this, PlayerEntity.class, 6.0f));
+    protected void registerGoals() {
+        this.goalSelector.addGoal(0, new FloatGoal(this));
+        this.goalSelector.addGoal(1, new TradeWithPlayerGoal(this));
+        this.goalSelector.addGoal(1, new AvoidEntityGoal<>(this, CursedPirateEntity.class, 8.0f, 0.5, 0.5));
+        this.goalSelector.addGoal(1, new PanicGoal(this, 0.5));
+        this.goalSelector.addGoal(1, new LookAtTradingPlayerGoal(this));
+        this.goalSelector.addGoal(8, new WaterAvoidingRandomStrollGoal(this, 0.35));
+        this.goalSelector.addGoal(9, new LookAtPlayerGoal(this, Player.class, 6.0f));
     }
 
     /** Specialist vendors are told apart by their trade, which is part of their name. */
@@ -76,49 +78,49 @@ public class QuartermasterEntity extends WanderingTraderEntity {
     }
 
     /** Opens the ordinary shop window. */
-    public void openShop(PlayerEntity player) {
+    public void openShop(Player player) {
         if (this.getOffers().isEmpty()) return;
         if (!com.cursedtides.living.Hours.isOpen(this)) {
-            player.sendMessage(net.minecraft.text.Text.literal("<" + this.getDisplayName().getString() + "> " + com.cursedtides.living.Hours.closedLine(this))
-                    .formatted(net.minecraft.util.Formatting.GRAY), false);
+            com.cursedtides.util.Compat.tell(player, net.minecraft.network.chat.Component.literal("<" + this.getDisplayName().getString() + "> " + com.cursedtides.living.Hours.closedLine(this))
+                    .withStyle(net.minecraft.ChatFormatting.GRAY), false);
             return;
         }
-        this.setCustomer(player);
-        this.sendOffers(player, this.getDisplayName(), 1);
+        this.setTradingPlayer(player);
+        this.openTradingScreen(player, this.getDisplayName(), 1);
     }
 
     @Override
-    public net.minecraft.util.ActionResult interactMob(PlayerEntity player, net.minecraft.util.Hand hand) {
+    public net.minecraft.world.InteractionResult mobInteract(Player player, net.minecraft.world.InteractionHand hand) {
         // Click to talk; sneak-click goes straight to business
-        if (hand == net.minecraft.util.Hand.MAIN_HAND && !player.isSneaking() && this.isAlive() && !this.hasCustomer()) {
-            if (player instanceof net.minecraft.server.network.ServerPlayerEntity sp
+        if (hand == net.minecraft.world.InteractionHand.MAIN_HAND && !player.isShiftKeyDown() && this.isAlive() && !this.isTrading()) {
+            if (player instanceof net.minecraft.server.level.ServerPlayer sp
                     && com.cursedtides.dialogue.Dialogue.open(sp, this, dialogueFile())) {
-                return net.minecraft.util.ActionResult.SUCCESS;
+                return net.minecraft.world.InteractionResult.SUCCESS;
             }
         }
-        if (isMarket() && hand == net.minecraft.util.Hand.MAIN_HAND && this.isAlive()) {
-            if (player instanceof net.minecraft.server.network.ServerPlayerEntity sp && !com.cursedtides.living.Hours.isOpen(this)) {
+        if (isMarket() && hand == net.minecraft.world.InteractionHand.MAIN_HAND && this.isAlive()) {
+            if (player instanceof net.minecraft.server.level.ServerPlayer sp && !com.cursedtides.living.Hours.isOpen(this)) {
                 openShop(sp); // just says it's shut
-            } else if (player instanceof net.minecraft.server.network.ServerPlayerEntity sp) {
+            } else if (player instanceof net.minecraft.server.level.ServerPlayer sp) {
                 com.cursedtides.trade.Markets.open(sp, this);
             }
-            return net.minecraft.util.ActionResult.success(this.getWorld().isClient);
+            return net.minecraft.world.InteractionResult.SUCCESS;
         }
-        return super.interactMob(player, hand);
+        return super.mobInteract(player, hand);
     }
 
     @Override
-    protected void fillRecipes() {
-        TradeOfferList offers = this.getOffers();
+    protected void updateTrades(net.minecraft.server.level.ServerLevel level__) {
+        MerchantOffers offers = this.getOffers();
         switch (trade()) {
             case "clothier" -> {
                 for (Item piece : com.cursedtides.item.ModClothing.SAILOR_SET) offers.add(sell(3, piece, 1));
                 for (Item piece : com.cursedtides.item.ModClothing.BAYOU_SET) offers.add(sell(5, piece, 1));
                 for (Item piece : com.cursedtides.item.ModClothing.CAPTAIN_SET) offers.add(sell(18, piece, 1));
-                offers.add(sell(1, Items.WHITE_DYE, 2));
-                offers.add(sell(1, Items.RED_DYE, 2));
-                offers.add(sell(1, Items.BLACK_DYE, 2));
-                offers.add(buy(Items.WHITE_WOOL, 8, 1));
+                offers.add(sell(1, Items.DYE.pick(DyeColor.WHITE), 2));
+                offers.add(sell(1, Items.DYE.pick(DyeColor.RED), 2));
+                offers.add(sell(1, Items.DYE.pick(DyeColor.BLACK), 2));
+                offers.add(buy(Items.WOOL.pick(DyeColor.WHITE), 8, 1));
                 offers.add(buy(Items.LEATHER, 6, 1));
                 offers.add(sell(4, com.cursedtides.appearance.Accessories.RED_BANDANA, 1));
                 offers.add(sell(4, com.cursedtides.appearance.Accessories.BLACK_BANDANA, 1));
@@ -185,17 +187,17 @@ public class QuartermasterEntity extends WanderingTraderEntity {
                 offers.add(sell(10, ModItems.HULL_PLATING, 1));
                 offers.add(sell(10, ModItems.FINE_CANVAS, 1));
                 offers.add(sell(6, Items.SPYGLASS, 1));
-                offers.add(potion(6, net.minecraft.potion.Potions.LONG_WATER_BREATHING));
+                offers.add(potion(6, net.minecraft.world.item.alchemy.Potions.LONG_WATER_BREATHING));
                 offers.add(buy(Items.IRON_NUGGET, 18, 1));
-                offers.add(buy(Items.CHAIN, 4, 1));
+                offers.add(buy(Items.IRON_CHAIN, 4, 1));
                 offers.add(buy(Items.NAUTILUS_SHELL, 1, 3));
                 offers.add(buy(Items.HEART_OF_THE_SEA, 1, 26));
                 return;
             }
             case "peddler" -> {
-                offers.add(sell(12, net.minecraft.item.Items.PARROT_SPAWN_EGG, 1));
+                offers.add(sell(12, net.minecraft.world.item.Items.PARROT_SPAWN_EGG, 1));
                 offers.add(sell(10, com.cursedtides.activity.MiniGames.BREWERS_KIT, 1));
-                net.minecraft.util.math.random.Random r = this.getRandom();
+                net.minecraft.util.RandomSource r = this.getRandom();
                 for (int i = 0; i < 4; i++) offers.add(sell(10 + r.nextInt(16), com.cursedtides.appearance.Accessories.random(r, true), 1));
                 offers.add(sell(30, com.cursedtides.ship.FlagItem.randomRare(r), 1));
                 offers.add(sell(14, ModItems.TREASURE_MAP, 1));
@@ -254,11 +256,11 @@ public class QuartermasterEntity extends WanderingTraderEntity {
             case "apothecary" -> {
                 offers.add(sell(30, com.cursedtides.combat.Grenades.VOODOO_DOLL, 1));
                 offers.add(sell(10, com.cursedtides.activity.MiniGames.BREWERS_KIT, 1));
-                offers.add(potion(4, net.minecraft.potion.Potions.HEALING));
-                offers.add(potion(6, net.minecraft.potion.Potions.REGENERATION));
-                offers.add(potion(6, net.minecraft.potion.Potions.LONG_WATER_BREATHING));
-                offers.add(potion(5, net.minecraft.potion.Potions.FIRE_RESISTANCE));
-                offers.add(potion(5, net.minecraft.potion.Potions.SWIFTNESS));
+                offers.add(potion(4, net.minecraft.world.item.alchemy.Potions.HEALING));
+                offers.add(potion(6, net.minecraft.world.item.alchemy.Potions.REGENERATION));
+                offers.add(potion(6, net.minecraft.world.item.alchemy.Potions.LONG_WATER_BREATHING));
+                offers.add(potion(5, net.minecraft.world.item.alchemy.Potions.FIRE_RESISTANCE));
+                offers.add(potion(5, net.minecraft.world.item.alchemy.Potions.SWIFTNESS));
                 offers.add(sell(2, Items.GLISTERING_MELON_SLICE, 1));
                 offers.add(sell(5, com.cursedtides.profession.ProfessionItems.SEA_LEGS_TONIC, 1));
                 offers.add(sell(4, com.cursedtides.profession.ProfessionItems.LANTERN_TONIC, 1));
@@ -279,9 +281,9 @@ public class QuartermasterEntity extends WanderingTraderEntity {
         offers.add(sell(5, Items.COOKED_COD, 8));
         offers.add(sell(12, ModItems.TREASURE_MAP, 1));
         // For the flooded dungeons of the Sunken Reach and Hollowgrave
-        offers.add(new TradeOffer(new TradedItem(ModItems.DOUBLOON, 6),
-                net.minecraft.component.type.PotionContentsComponent.createStack(Items.POTION,
-                        net.minecraft.potion.Potions.LONG_WATER_BREATHING), UNLIMITED, 2, 0.0f));
+        offers.add(new MerchantOffer(new ItemCost(ModItems.DOUBLOON, 6),
+                net.minecraft.world.item.alchemy.PotionContents.createItemStack(Items.POTION,
+                        net.minecraft.world.item.alchemy.Potions.LONG_WATER_BREATHING), UNLIMITED, 2, 0.0f));
         offers.add(sell(10, Items.TURTLE_HELMET, 1));
         // Clothes and blades
         for (Item piece : com.cursedtides.item.ModClothing.SAILOR_SET) offers.add(sell(4, piece, 1));
@@ -297,35 +299,35 @@ public class QuartermasterEntity extends WanderingTraderEntity {
         offers.add(buy(Items.HEART_OF_THE_SEA, 1, 24));
     }
 
-    private static TradeOffer potion(int doubloons, net.minecraft.registry.entry.RegistryEntry<net.minecraft.potion.Potion> potion) {
-        return new TradeOffer(new TradedItem(ModItems.DOUBLOON, doubloons),
-                net.minecraft.component.type.PotionContentsComponent.createStack(Items.POTION, potion), UNLIMITED, 2, 0.0f);
+    private static MerchantOffer potion(int doubloons, net.minecraft.core.Holder<net.minecraft.world.item.alchemy.Potion> potion) {
+        return new MerchantOffer(new ItemCost(ModItems.DOUBLOON, doubloons),
+                net.minecraft.world.item.alchemy.PotionContents.createItemStack(Items.POTION, potion), UNLIMITED, 2, 0.0f);
     }
 
-    private static TradeOffer sell(int doubloons, Item item, int count) {
-        return new TradeOffer(new TradedItem(ModItems.DOUBLOON, doubloons), new ItemStack(item, count), UNLIMITED, 2, 0.0f);
+    private static MerchantOffer sell(int doubloons, Item item, int count) {
+        return new MerchantOffer(new ItemCost(ModItems.DOUBLOON, doubloons), new ItemStack(item, count), UNLIMITED, 2, 0.0f);
     }
 
-    private static TradeOffer buy(Item item, int count, int doubloons) {
-        return new TradeOffer(new TradedItem(item, count), new ItemStack(ModItems.DOUBLOON, doubloons), UNLIMITED, 2, 0.0f);
+    private static MerchantOffer buy(Item item, int count, int doubloons) {
+        return new MerchantOffer(new ItemCost(item, count), new ItemStack(ModItems.DOUBLOON, doubloons), UNLIMITED, 2, 0.0f);
     }
 
     @Override
-    public EntityData initialize(ServerWorldAccess world, LocalDifficulty difficulty, SpawnReason spawnReason,
-                                 @Nullable EntityData entityData) {
-        this.setPersistent();
-        return super.initialize(world, difficulty, spawnReason, entityData);
+    public SpawnGroupData finalizeSpawn(ServerLevelAccessor world, DifficultyInstance difficulty, EntitySpawnReason spawnReason,
+                                 @Nullable SpawnGroupData entityData) {
+        this.setPersistenceRequired();
+        return super.finalizeSpawn(world, difficulty, spawnReason, entityData);
     }
 
     /** Natural spawns only on dry, solid ground. */
     @Override
-    public boolean canSpawn(WorldAccess world, SpawnReason reason) {
-        if (reason != SpawnReason.NATURAL && reason != SpawnReason.CHUNK_GENERATION) {
-            return super.canSpawn(world, reason);
+    public boolean checkSpawnRules(LevelAccessor world, EntitySpawnReason reason) {
+        if (reason != EntitySpawnReason.NATURAL && reason != EntitySpawnReason.CHUNK_GENERATION) {
+            return super.checkSpawnRules(world, reason);
         }
-        BlockPos pos = this.getBlockPos();
-        BlockPos below = pos.down();
+        BlockPos pos = this.blockPosition();
+        BlockPos below = pos.below();
         return world.getFluidState(pos).isEmpty()
-                && world.getBlockState(below).isSolidBlock(world, below);
+                && world.getBlockState(below).isRedstoneConductor(world, below);
     }
 }

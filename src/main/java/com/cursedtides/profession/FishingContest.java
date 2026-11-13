@@ -3,17 +3,16 @@ package com.cursedtides.profession;
 import com.cursedtides.entity.StoryNpcEntity;
 import com.cursedtides.item.ModItems;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.world.PersistentState;
-
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.saveddata.SavedData;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -31,35 +30,35 @@ public final class FishingContest {
 
     static void register() {
         ServerTickEvents.END_SERVER_TICK.register(server -> {
-            if (server.getTicks() % 200 == 0) State.get(server).rollOver(server);
+            if (server.getTickCount() % 200 == 0) State.get(server).rollOver(server);
         });
     }
 
     private static long contestId(MinecraftServer server) {
-        return server.getOverworld().getTimeOfDay() / LENGTH;
+        return server.overworld().getOverworldClockTime() / LENGTH;
     }
 
-    public static void talk(StoryNpcEntity npc, ServerPlayerEntity player) {
-        MinecraftServer server = player.getServer();
+    public static void talk(StoryNpcEntity npc, ServerPlayer player) {
+        MinecraftServer server = player.level().getServer();
         if (server == null) return;
         State s = State.get(server);
         s.rollOver(server);
-        List<ItemStack> prizes = s.prizes.remove(player.getUuid());
+        List<ItemStack> prizes = s.prizes.remove(player.getUUID());
         if (prizes != null) {
-            for (ItemStack prize : prizes) if (!player.getInventory().insertStack(prize)) player.dropItem(prize, false);
+            for (ItemStack prize : prizes) if (!player.getInventory().add(prize)) player.drop(prize, false, net.minecraft.util.Prediction.SERVER_ONLY);
             say(npc, player, "Your winnings from the last contest! Well fished.");
-            s.markDirty();
+            s.setDirty();
         }
-        ItemStack held = player.getMainHandStack();
+        ItemStack held = player.getMainHandItem();
         if (held.getItem() instanceof CatchItem) {
             int w = CatchItem.weight(held);
-            Entry best = s.entries.get(player.getUuid());
+            Entry best = s.entries.get(player.getUUID());
             if (best != null && best.weight >= w) {
                 say(npc, player, String.format("%.1f lb. A fine fish, but your %s at %.1f lb is still your best.",
                         w / 10.0, best.species, best.weight / 10.0));
             } else {
-                s.entries.put(player.getUuid(), new Entry(player.getName().getString(), held.getName().getString(), w));
-                s.markDirty();
+                s.entries.put(player.getUUID(), new Entry(player.getName().getString(), held.getHoverName().getString(), w));
+                s.setDirty();
                 say(npc, player, String.format("Let's see... %.1f lb! That's on the board.", w / 10.0));
             }
         } else {
@@ -67,7 +66,7 @@ public final class FishingContest {
                     "Snapper, swordfish, marlin if you've the skill for it. Biggest single fish wins.");
         }
         List<Entry> board = s.ranked();
-        long left = (contestId(server) + 1) * LENGTH - server.getOverworld().getTimeOfDay();
+        long left = (contestId(server) + 1) * LENGTH - server.overworld().getOverworldClockTime();
         StringBuilder sb = new StringBuilder("Board (" + (left / 1000) + " hours left):");
         if (board.isEmpty()) sb.append(" nothing yet.");
         for (int i = 0; i < Math.min(5, board.size()); i++) {
@@ -77,20 +76,20 @@ public final class FishingContest {
         say(npc, player, sb.toString());
     }
 
-    private static void say(StoryNpcEntity npc, ServerPlayerEntity p, String... lines) {
+    private static void say(StoryNpcEntity npc, ServerPlayer p, String... lines) {
         com.cursedtides.quest.StoryDialogue.say(npc, p, lines);
     }
 
     record Entry(String name, String species, int weight) {}
 
-    static final class State extends PersistentState {
+    static final class State extends SavedData {
         long contest = -1;
         final Map<UUID, Entry> entries = new HashMap<>();
         final Map<UUID, List<ItemStack>> prizes = new HashMap<>();
-        private static final Type<State> TYPE = new Type<>(State::new, State::fromNbt, null);
+        private static final net.minecraft.world.level.saveddata.SavedDataType<State> TYPE = com.cursedtides.util.Saved.type("cursedtides_fishing_contest", State::new, State::fromNbt, (st__, l__) -> st__.save(new CompoundTag(), l__));
 
         static State get(MinecraftServer server) {
-            return server.getOverworld().getPersistentStateManager().getOrCreate(TYPE, "cursedtides_fishing_contest");
+            return server.overworld().getDataStorage().computeIfAbsent(TYPE);
         }
 
         List<Entry> ranked() {
@@ -113,41 +112,40 @@ public final class FishingContest {
                     List<ItemStack> prize = new ArrayList<>();
                     prize.add(new ItemStack(ModItems.DOUBLOON, purse[i]));
                     if (i == 0) prize.add(new ItemStack(ProfessionItems.FISHING_TROPHY));
-                    ServerPlayerEntity p = server.getPlayerManager().getPlayer(id);
+                    ServerPlayer p = server.getPlayerList().getPlayer(id);
                     if (p != null) {
-                        for (ItemStack s : prize) if (!p.getInventory().insertStack(s)) p.dropItem(s, false);
+                        for (ItemStack s : prize) if (!p.getInventory().add(s)) p.drop(s, false, net.minecraft.util.Prediction.SERVER_ONLY);
                         ProfessionData.addXp(p, Profession.FISHING, 60 - i * 20);
                     } else {
                         prizes.computeIfAbsent(id, k -> new ArrayList<>()).addAll(prize);
                     }
                     news.append(String.format("%d. %s (%s, %.1f lb) ", i + 1, e.name, e.species, e.weight / 10.0));
                 }
-                server.getPlayerManager().broadcast(Text.literal(news.toString().trim()).formatted(Formatting.AQUA), false);
+                server.getPlayerList().broadcastSystemMessage(Component.literal(news.toString().trim()).withStyle(ChatFormatting.AQUA), false);
             }
             entries.clear();
             contest = now;
-            markDirty();
+            setDirty();
         }
 
-        @Override
-        public NbtCompound writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup lookup) {
+                public CompoundTag save(CompoundTag nbt, HolderLookup.Provider lookup) {
             nbt.putLong("Contest", contest);
-            NbtList list = new NbtList();
+            ListTag list = new ListTag();
             entries.forEach((id, e) -> {
-                NbtCompound c = new NbtCompound();
-                c.putUuid("Id", id);
+                CompoundTag c = new CompoundTag();
+                c.store("Id", net.minecraft.core.UUIDUtil.CODEC, id);
                 c.putString("Name", e.name);
                 c.putString("Species", e.species);
                 c.putInt("Weight", e.weight);
                 list.add(c);
             });
             nbt.put("Entries", list);
-            NbtList pz = new NbtList();
+            ListTag pz = new ListTag();
             prizes.forEach((id, stacks) -> {
                 for (ItemStack s : stacks) {
-                    NbtCompound c = new NbtCompound();
-                    c.putUuid("Id", id);
-                    c.put("Item", s.encode(lookup));
+                    CompoundTag c = new CompoundTag();
+                    c.store("Id", net.minecraft.core.UUIDUtil.CODEC, id);
+                    c.put("Item", com.cursedtides.util.Compat.saveStack(s, lookup));
                     pz.add(c);
                 }
             });
@@ -155,19 +153,19 @@ public final class FishingContest {
             return nbt;
         }
 
-        private static State fromNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup lookup) {
+        private static State fromNbt(CompoundTag nbt, HolderLookup.Provider lookup) {
             State s = new State();
-            s.contest = nbt.contains("Contest") ? nbt.getLong("Contest") : -1;
-            NbtList list = nbt.getList("Entries", NbtElement.COMPOUND_TYPE);
+            s.contest = nbt.contains("Contest") ? nbt.getLongOr("Contest", 0L) : -1;
+            ListTag list = nbt.getListOrEmpty("Entries");
             for (int i = 0; i < list.size(); i++) {
-                NbtCompound c = list.getCompound(i);
-                s.entries.put(c.getUuid("Id"), new Entry(c.getString("Name"), c.getString("Species"), c.getInt("Weight")));
+                CompoundTag c = list.getCompoundOrEmpty(i);
+                s.entries.put(c.read("Id", net.minecraft.core.UUIDUtil.CODEC).orElse(null), new Entry(c.getStringOr("Name", ""), c.getStringOr("Species", ""), c.getIntOr("Weight", 0)));
             }
-            NbtList pz = nbt.getList("Prizes", NbtElement.COMPOUND_TYPE);
+            ListTag pz = nbt.getListOrEmpty("Prizes");
             for (int i = 0; i < pz.size(); i++) {
-                NbtCompound c = pz.getCompound(i);
-                ItemStack.fromNbt(lookup, c.get("Item")).ifPresent(st ->
-                        s.prizes.computeIfAbsent(c.getUuid("Id"), k -> new ArrayList<>()).add(st));
+                CompoundTag c = pz.getCompoundOrEmpty(i);
+                com.cursedtides.util.Compat.loadStack(lookup, c.get("Item")).ifPresent(st ->
+                        s.prizes.computeIfAbsent(c.read("Id", net.minecraft.core.UUIDUtil.CODEC).orElse(null), k -> new ArrayList<>()).add(st));
             }
             return s;
         }

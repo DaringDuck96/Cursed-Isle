@@ -1,21 +1,20 @@
 package com.cursedtides.social;
 
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntityTypes;
 import com.cursedtides.CursedTides;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.decoration.DisplayEntity;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.network.RegistryByteBuf;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.codec.PacketCodecs;
-import net.minecraft.network.packet.CustomPayload;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.EntityType;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -47,85 +46,64 @@ public final class QuickChat {
     );
 
     /** Client to server: say phrase [phrase] from category [category]. */
-    public record Say(int category, int phrase) implements CustomPayload {
-        public static final CustomPayload.Id<Say> ID = new CustomPayload.Id<>(CursedTides.id("quick_chat"));
-        public static final PacketCodec<RegistryByteBuf, Say> CODEC = PacketCodec.tuple(
-                PacketCodecs.VAR_INT, Say::category, PacketCodecs.VAR_INT, Say::phrase, Say::new);
+    public record Say(int category, int phrase) implements CustomPacketPayload {
+        public static final CustomPacketPayload.Type<Say> ID = new CustomPacketPayload.Type<>(CursedTides.id("quick_chat"));
+        public static final StreamCodec<RegistryFriendlyByteBuf, Say> CODEC = StreamCodec.composite(
+                ByteBufCodecs.VAR_INT, Say::category, ByteBufCodecs.VAR_INT, Say::phrase, Say::new);
 
         @Override
-        public Id<? extends CustomPayload> getId() { return ID; }
+        public Type<? extends CustomPacketPayload> type() { return ID; }
     }
 
     private static final Map<UUID, Long> LAST = new HashMap<>();
-    private record Bubble(DisplayEntity.TextDisplayEntity display, long until) {}
+    private record Bubble(net.minecraft.world.entity.Display.TextDisplay display, long until) {}
     private static final List<Bubble> BUBBLES = new ArrayList<>();
 
     public static void register() {
-        PayloadTypeRegistry.playC2S().register(Say.ID, Say.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(Say.ID, Say.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(Say.ID, (payload, ctx) -> ctx.server().execute(() -> say(ctx.player(), payload)));
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             if (BUBBLES.isEmpty()) return;
-            long now = server.getOverworld().getTime();
+            long now = server.overworld().getGameTime();
             BUBBLES.removeIf(b -> {
-                if (now < b.until() && b.display().isAlive() && b.display().hasVehicle()) return false;
+                if (now < b.until() && b.display().isAlive() && b.display().isPassenger()) return false;
                 b.display().discard();
                 return true;
             });
         });
     }
 
-    private static void say(ServerPlayerEntity p, Say s) {
+    private static void say(ServerPlayer p, Say s) {
         if (s.category() < 0 || s.category() >= CATEGORIES.size()) return;
         String[] ph = CATEGORIES.get(s.category()).phrases();
         if (s.phrase() < 0 || s.phrase() >= ph.length) return;
-        ServerWorld w = p.getServerWorld();
-        long now = w.getTime();
-        if (now - LAST.getOrDefault(p.getUuid(), -100L) < 30) return;
-        LAST.put(p.getUuid(), now);
+        ServerLevel w = p.level();
+        long now = w.getGameTime();
+        if (now - LAST.getOrDefault(p.getUUID(), -100L) < 30) return;
+        LAST.put(p.getUUID(), now);
         String line = ph[s.phrase()];
-        Text msg = Text.literal(p.getName().getString() + ": ").formatted(Formatting.GOLD)
-                .append(Text.literal(line).formatted(Formatting.WHITE));
-        for (ServerPlayerEntity q : w.getPlayers(q -> q.squaredDistanceTo(p) < 48 * 48)) q.sendMessage(msg, false);
+        Component msg = Component.literal(p.getName().getString() + ": ").withStyle(ChatFormatting.GOLD)
+                .append(Component.literal(line).withStyle(ChatFormatting.WHITE));
+        for (ServerPlayer q : w.getPlayers(q -> q.distanceToSqr(p) < 48 * 48)) q.sendSystemMessage(msg, false);
         bubble(w, p, line);
     }
 
     /** A speech bubble that rides above the speaker's head for four seconds. */
-    private static void bubble(ServerWorld w, ServerPlayerEntity p, String line) {
+    private static void bubble(ServerLevel w, ServerPlayer p, String line) {
         BUBBLES.removeIf(b -> {
             if (b.display().getVehicle() == p) { b.display().discard(); return true; }
             return false;
         });
-        DisplayEntity.TextDisplayEntity d = EntityType.TEXT_DISPLAY.create(w);
+        net.minecraft.world.entity.Display.TextDisplay d = EntityTypes.TEXT_DISPLAY.create(w, EntitySpawnReason.EVENT);
         if (d == null) return;
-        NbtCompound nbt = new NbtCompound();
-        nbt.putString("text", Text.Serialization.toJsonString(Text.literal(line).formatted(Formatting.BLACK), w.getRegistryManager()));
-        nbt.putString("billboard", "center");
-        nbt.putInt("background", 0xE8F4ECD8);
-        nbt.putInt("line_width", 120);
-        NbtCompound t = new NbtCompound();
-        t.put("translation", floats(0, 0.55f, 0));
-        t.put("left_rotation", floats(0, 0, 0, 1));
-        t.put("right_rotation", floats(0, 0, 0, 1));
-        t.put("scale", floats(0.8f, 0.8f, 0.8f));
-        nbt.put("transformation", t);
-        d.readNbt(mergeId(nbt));
-        d.refreshPositionAndAngles(p.getX(), p.getY() + p.getHeight(), p.getZ(), 0, 0);
-        w.spawnEntity(d);
-        d.startRiding(p, true);
-        BUBBLES.add(new Bubble(d, w.getTime() + 80));
-    }
-
-    private static net.minecraft.nbt.NbtList floats(float... v) {
-        net.minecraft.nbt.NbtList l = new net.minecraft.nbt.NbtList();
-        for (float f : v) l.add(net.minecraft.nbt.NbtFloat.of(f));
-        return l;
-    }
-
-    /** readNbt wants the entity's base fields too; give it a fresh position block so it doesn't complain. */
-    private static NbtCompound mergeId(NbtCompound nbt) {
-        net.minecraft.nbt.NbtList pos = new net.minecraft.nbt.NbtList();
-        for (int i = 0; i < 3; i++) pos.add(net.minecraft.nbt.NbtDouble.of(0));
-        nbt.put("Pos", pos);
-        return nbt;
+        d.setText(Component.literal(line).withStyle(ChatFormatting.BLACK));
+        d.setBillboardConstraints(net.minecraft.world.entity.Display.BillboardConstraints.CENTER);
+        d.setBackgroundColor(0xE8F4ECD8);
+        d.setLineWidth(120);
+        d.setTransformation(new com.mojang.math.Transformation(new org.joml.Vector3f(0, 0.55f, 0), null, new org.joml.Vector3f(0.8f, 0.8f, 0.8f), null));
+        d.snapTo(p.getX(), p.getY() + p.getBbHeight(), p.getZ(), 0, 0);
+        w.addFreshEntity(d);
+        d.startRiding(p, true, true);
+        BUBBLES.add(new Bubble(d, w.getGameTime() + 80));
     }
 }

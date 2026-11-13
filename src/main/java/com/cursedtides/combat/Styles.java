@@ -6,22 +6,20 @@ import com.cursedtides.item.HeavyWeaponItem;
 import com.cursedtides.pirate.PirateData;
 import com.cursedtides.pirate.Weapon;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.item.Item;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.registry.tag.DamageTypeTags;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.Vec3d;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.phys.Vec3;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -43,22 +41,22 @@ public final class Styles {
     }
 
     private static boolean allowDamage(LivingEntity victim, DamageSource source, float amount) {
-        if (reapplying || !(source.getAttacker() instanceof ServerPlayerEntity player) || source.getSource() != player) return true;
-        if (source.isIn(DamageTypeTags.IS_PROJECTILE) || source.isIn(DamageTypeTags.IS_EXPLOSION) || victim == player) return true;
-        if (victim.timeUntilRegen > 10) return true; // still flashing from the last blow: let vanilla ignore it
-        Item held = player.getMainHandStack().getItem();
-        long now = player.getServer() == null ? 0 : player.getServer().getTicks();
+        if (reapplying || !(source.getEntity() instanceof ServerPlayer player) || source.getDirectEntity() != player) return true;
+        if (source.is(DamageTypeTags.IS_PROJECTILE) || source.is(DamageTypeTags.IS_EXPLOSION) || victim == player) return true;
+        if (victim.getInvulnerableTime() > 10) return true; // still flashing from the last blow: let vanilla ignore it
+        Item held = player.getMainHandItem().getItem();
+        long now = player.level().getServer() == null ? 0 : player.level().getServer().getTickCount();
         int window = held instanceof DualBladesItem ? 50 : 30;
-        Combo prev = COMBOS.get(player.getUuid());
+        Combo prev = COMBOS.get(player.getUUID());
         int count = prev != null && now - prev.last() <= window ? prev.count() + 1 : 1;
         boolean finisher = count >= 4;
-        COMBOS.put(player.getUuid(), new Combo(finisher ? 0 : count, now));
+        COMBOS.put(player.getUUID(), new Combo(finisher ? 0 : count, now));
 
         float mult = 1f + (count - 1) * 0.1f;
         String label = null;
         if (finisher) { mult = 1.6f; label = "Finishing blow!"; }
 
-        boolean heavy = player.isSneaking();
+        boolean heavy = player.isShiftKeyDown();
         if (heavy) mult *= 1.35f;
         boolean heavyWeapon = held instanceof HeavyWeaponItem;
 
@@ -73,8 +71,8 @@ public final class Styles {
         if (mult <= 1.001f && !heavyWeapon && !heavy) return true;
 
         // Execution: a finisher on a foe under a fifth of its health ends it outright (not bosses)
-        if (finisher && victim.getHealth() < victim.getMaxHealth() * 0.2f && !victim.getCommandTags().contains("cursedtides_boss")
-                && !(victim instanceof ServerPlayerEntity)) {
+        if (finisher && victim.getHealth() < victim.getMaxHealth() * 0.2f && !victim.entityTags().contains("cursedtides_boss")
+                && !(victim instanceof ServerPlayer)) {
             amount = victim.getHealth() + 10;
             label = "Executed!";
         } else {
@@ -83,46 +81,46 @@ public final class Styles {
 
         reapplying = true;
         try {
-            victim.damage(source, amount);
+            victim.hurt(source, amount);
         } finally {
             reapplying = false;
         }
 
-        ServerWorld world = (ServerWorld) player.getWorld();
+        ServerLevel world = (ServerLevel) player.level();
         if (crit) {
-            world.spawnParticles(ParticleTypes.CRIT, victim.getX(), victim.getBodyY(0.6), victim.getZ(), 14, 0.4, 0.4, 0.4, 0.3);
-            world.playSound(null, victim.getBlockPos(), com.cursedtides.sound.ModSounds.CRITICAL.value(), SoundCategory.PLAYERS, 1f, 0.9f + world.random.nextFloat() * 0.2f);
+            world.sendParticles(ParticleTypes.CRIT, victim.getX(), victim.getY(0.6), victim.getZ(), 14, 0.4, 0.4, 0.4, 0.3);
+            world.playSound(null, victim.blockPosition(), com.cursedtides.sound.ModSounds.CRITICAL.value(), SoundSource.PLAYERS, 1f, 0.9f + world.getRandom().nextFloat() * 0.2f);
         }
         if (finisher || heavy || heavyWeapon) {
             stagger(victim, finisher ? 40 : heavyWeapon ? 30 : 20);
-            Vec3d push = victim.getPos().subtract(player.getPos()).multiply(1, 0, 1);
-            if (push.lengthSquared() > 1e-4 && finisher) {
+            Vec3 push = victim.position().subtract(player.position()).multiply(1, 0, 1);
+            if (push.lengthSqr() > 1e-4 && finisher) {
                 push = push.normalize();
-                victim.takeKnockback(1.2, -push.x, -push.z);
+                com.cursedtides.util.Compat.knock(victim, 1.2, -push.x, -push.z);
             }
         }
         if (finisher) {
-            world.spawnParticles(ParticleTypes.SWEEP_ATTACK, victim.getX(), victim.getBodyY(0.5), victim.getZ(), 4, 0.5, 0.3, 0.5, 0);
-            world.playSound(null, victim.getBlockPos(), com.cursedtides.sound.ModSounds.FINISHER.value(), SoundCategory.PLAYERS, 1f, 1f);
+            world.sendParticles(ParticleTypes.SWEEP_ATTACK, victim.getX(), victim.getY(0.5), victim.getZ(), 4, 0.5, 0.3, 0.5, 0);
+            world.playSound(null, victim.blockPosition(), com.cursedtides.sound.ModSounds.FINISHER.value(), SoundSource.PLAYERS, 1f, 1f);
             PirateData.addXp(player, Weapon.CUTLASS, 2);
         }
-        if (heavy) player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 10, 1, false, false));
-        if (label != null) player.sendMessage(Text.literal(label).formatted(crit ? Formatting.YELLOW : Formatting.GOLD), true);
-        else if (count >= 2) player.sendMessage(Text.literal("Combo x" + count).formatted(Formatting.GRAY), true);
+        if (heavy) player.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 10, 1, false, false));
+        if (label != null) player.sendSystemMessage(Component.literal(label).withStyle(crit ? ChatFormatting.YELLOW : ChatFormatting.GOLD), true);
+        else if (count >= 2) player.sendSystemMessage(Component.literal("Combo x" + count).withStyle(ChatFormatting.GRAY), true);
         return false;
     }
 
     /** Knock a foe off balance: slowed, weakened, and (for mobs) brought to a halt. */
     public static void stagger(LivingEntity target, int ticks) {
-        target.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, ticks, 3, false, false));
-        target.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, ticks, 1, false, false));
-        target.addStatusEffect(new StatusEffectInstance(StatusEffects.MINING_FATIGUE, ticks, 2, false, false));
-        if (target instanceof MobEntity mob) {
+        target.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, ticks, 3, false, false));
+        target.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, ticks, 1, false, false));
+        target.addEffect(new MobEffectInstance(MobEffects.MINING_FATIGUE, ticks, 2, false, false));
+        if (target instanceof Mob mob) {
             mob.getNavigation().stop();
-            if (mob.getTarget() != null) mob.getLookControl().lookAt(mob.getTarget());
+            if (mob.getTarget() != null) mob.getLookControl().setLookAt(mob.getTarget());
         }
-        if (target.getWorld() instanceof ServerWorld w) {
-            w.spawnParticles(ParticleTypes.ELECTRIC_SPARK, target.getX(), target.getEyeY() + 0.3, target.getZ(), 6, 0.25, 0.1, 0.25, 0.02);
+        if (target.level() instanceof ServerLevel w) {
+            w.sendParticles(ParticleTypes.ELECTRIC_SPARK, target.getX(), target.getEyeY() + 0.3, target.getZ(), 6, 0.25, 0.1, 0.25, 0.02);
         }
     }
 }

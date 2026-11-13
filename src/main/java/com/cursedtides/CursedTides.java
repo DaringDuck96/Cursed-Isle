@@ -11,7 +11,7 @@ import com.cursedtides.quest.QuestEvents;
 import com.cursedtides.ship.ShipEvents;
 import com.cursedtides.world.ModWorld;
 import net.fabricmc.api.ModInitializer;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,11 +20,12 @@ public class CursedTides implements ModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
     public static Identifier id(String path) {
-        return Identifier.of(MOD_ID, path);
+        return Identifier.fromNamespaceAndPath(MOD_ID, path);
     }
 
     @Override
     public void onInitialize() {
+        net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STARTING.register(com.cursedtides.util.Saved::setServer);
         PirateData.init();
         QuestData.init();
         FactionData.init();

@@ -1,5 +1,7 @@
 package com.cursedtides.ship;
 
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.EntityTypes;
 import com.cursedtides.combat.Levels;
 import com.cursedtides.entity.CursedPirateEntity;
 import com.cursedtides.entity.ModEntities;
@@ -12,42 +14,40 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.attribute.EntityAttributeInstance;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.registry.tag.FluidTags;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.ClickEvent;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Hand;
-import net.minecraft.util.TypedActionResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
-
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.FluidTags;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.Vec3;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static net.minecraft.server.command.CommandManager.literal;
+import static net.minecraft.commands.Commands.literal;
 
 /**
  * Boarding. Batter an enemy ship's hull below half, come alongside and throw a grappling hook: the two ships are
@@ -65,12 +65,12 @@ public final class Boarding {
     private static final class Action {
         final UUID enemy, mine, player;
         final boolean theirs;
-        final Vec3d anchor;
+        final Vec3 anchor;
         final List<BlockPos> gangway = new ArrayList<>();
         int ticks;
         boolean won;
 
-        Action(UUID enemy, UUID mine, UUID player, boolean theirs, Vec3d anchor) {
+        Action(UUID enemy, UUID mine, UUID player, boolean theirs, Vec3 anchor) {
             this.enemy = enemy;
             this.mine = mine;
             this.player = player;
@@ -83,68 +83,68 @@ public final class Boarding {
     private static final Map<UUID, Long> RAIDED = new HashMap<>();
 
     public static boolean isLashed(ShipEntity ship) {
-        UUID id = ship.getUuid();
+        UUID id = ship.getUUID();
         for (Action a : ACTIONS.values()) if (a.enemy.equals(id) || a.mine.equals(id)) return true;
         return false;
     }
 
     /** True while any of this ship's boarding crew still stands. */
     public static boolean defending(ShipEntity ship) {
-        if (!(ship.getWorld() instanceof ServerWorld w)) return false;
-        String tag = DEFENDER + ship.getUuid();
-        return !w.getEntitiesByClass(MobEntity.class, ship.getBoundingBox().expand(24), m -> m.isAlive() && m.getCommandTags().contains(tag)).isEmpty();
+        if (!(ship.level() instanceof ServerLevel w)) return false;
+        String tag = DEFENDER + ship.getUUID();
+        return !w.getEntitiesOfClass(Mob.class, ship.getBoundingBox().inflate(24), m -> m.isAlive() && m.entityTags().contains(tag)).isEmpty();
     }
 
     // ------------------------------------------------------------------ the grappling hook
 
     public static class GrapplingHookItem extends Item {
-        public GrapplingHookItem(Settings settings) {
+        public GrapplingHookItem(Properties settings) {
             super(settings);
         }
 
         @Override
-        public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
-            ItemStack stack = user.getStackInHand(hand);
-            if (world.isClient || !(user instanceof ServerPlayerEntity p) || !(world instanceof ServerWorld w)) {
-                return TypedActionResult.success(stack, world.isClient);
+        public InteractionResult use(Level world, Player user, InteractionHand hand) {
+            ItemStack stack = user.getItemInHand(hand);
+            if (world.isClientSide() || !(user instanceof ServerPlayer p) || !(world instanceof ServerLevel w)) {
+                return InteractionResult.SUCCESS;
             }
             ShipEntity mine = ownShip(w, p);
             if (mine == null) {
-                p.sendMessage(Text.literal("You need a deck under you to throw a grapple from.").formatted(Formatting.GRAY), true);
-                return TypedActionResult.fail(stack);
+                p.sendSystemMessage(Component.literal("You need a deck under you to throw a grapple from.").withStyle(ChatFormatting.GRAY), true);
+                return InteractionResult.FAIL;
             }
             ShipEntity target = null;
             double best = 20 * 20;
-            for (ShipEntity s : w.getEntitiesByClass(ShipEntity.class, mine.getBoundingBox().expand(20), s -> s != mine && s.isHostile())) {
-                double d = s.squaredDistanceTo(mine);
+            for (ShipEntity s : w.getEntitiesOfClass(ShipEntity.class, mine.getBoundingBox().inflate(20), s -> s != mine && s.isHostile())) {
+                double d = s.distanceToSqr(mine);
                 if (d < best) { best = d; target = s; }
             }
             if (target == null) {
-                p.sendMessage(Text.literal("No enemy ship within a grapple's throw (20 blocks).").formatted(Formatting.GRAY), true);
-                return TypedActionResult.fail(stack);
+                p.sendSystemMessage(Component.literal("No enemy ship within a grapple's throw (20 blocks).").withStyle(ChatFormatting.GRAY), true);
+                return InteractionResult.FAIL;
             }
             if (isLashed(target) || isLashed(mine)) {
-                p.sendMessage(Text.literal("Already lashed fast.").formatted(Formatting.GRAY), true);
-                return TypedActionResult.fail(stack);
+                p.sendSystemMessage(Component.literal("Already lashed fast.").withStyle(ChatFormatting.GRAY), true);
+                return InteractionResult.FAIL;
             }
             if (target.getFaction() != ShipFaction.MERCHANT && target.getHull() > target.maxHull() * 0.5f) {
-                p.sendMessage(Text.literal("Her guns are still hot. Batter her hull below half before you board ("
-                        + (int) target.getHull() + "/" + target.maxHull() + ").").formatted(Formatting.RED), true);
-                return TypedActionResult.fail(stack);
+                p.sendSystemMessage(Component.literal("Her guns are still hot. Batter her hull below half before you board ("
+                        + (int) target.getHull() + "/" + target.maxHull() + ").").withStyle(ChatFormatting.RED), true);
+                return InteractionResult.FAIL;
             }
-            p.getItemCooldownManager().set(this, 20 * 8);
-            stack.damage(1, p, hand == Hand.MAIN_HAND ? EquipmentSlot.MAINHAND : EquipmentSlot.OFFHAND);
+            p.getCooldowns().addCooldown(new ItemStack(this), 20 * 8);
+            stack.hurtAndBreak(1, p, hand == InteractionHand.MAIN_HAND ? EquipmentSlot.MAINHAND : EquipmentSlot.OFFHAND);
             begin(w, target, mine, p, false);
-            return TypedActionResult.success(stack);
+            return InteractionResult.SUCCESS;
         }
     }
 
-    private static ShipEntity ownShip(ServerWorld w, ServerPlayerEntity p) {
+    private static ShipEntity ownShip(ServerLevel w, ServerPlayer p) {
         if (p.getVehicle() instanceof ShipEntity s && !s.isHostile()) return s;
         ShipEntity best = null;
         double bestD = 6 * 6;
-        for (ShipEntity s : w.getEntitiesByClass(ShipEntity.class, p.getBoundingBox().expand(6), s -> !s.isHostile())) {
-            double d = s.squaredDistanceTo(p);
+        for (ShipEntity s : w.getEntitiesOfClass(ShipEntity.class, p.getBoundingBox().inflate(6), s -> !s.isHostile())) {
+            double d = s.distanceToSqr(p);
             if (d < bestD) { bestD = d; best = s; }
         }
         return best;
@@ -152,88 +152,88 @@ public final class Boarding {
 
     // ------------------------------------------------------------------ starting a boarding action
 
-    private static void begin(ServerWorld w, ShipEntity enemy, ShipEntity mine, ServerPlayerEntity p, boolean theirs) {
+    private static void begin(ServerLevel w, ShipEntity enemy, ShipEntity mine, ServerPlayer p, boolean theirs) {
         // Haul her in alongside: seven blocks off our beam
-        Vec3d dir = enemy.getPos().subtract(mine.getPos()).multiply(1, 0, 1);
-        if (dir.lengthSquared() < 0.01) dir = new Vec3d(1, 0, 0);
-        Vec3d at = mine.getPos().add(dir.normalize().multiply(7));
-        enemy.refreshPositionAndAngles(at.x, enemy.getY(), at.z, enemy.getYaw(), 0);
-        enemy.setVelocity(Vec3d.ZERO);
-        mine.setVelocity(Vec3d.ZERO);
-        Action a = new Action(enemy.getUuid(), mine.getUuid(), p.getUuid(), theirs, at);
-        ACTIONS.put(enemy.getUuid(), a);
-        layGangway(w, a, mine.getPos(), at);
+        Vec3 dir = enemy.position().subtract(mine.position()).multiply(1, 0, 1);
+        if (dir.lengthSqr() < 0.01) dir = new Vec3(1, 0, 0);
+        Vec3 at = mine.position().add(dir.normalize().scale(7));
+        enemy.snapTo(at.x, enemy.getY(), at.z, enemy.getYRot(), 0);
+        enemy.setDeltaMovement(Vec3.ZERO);
+        mine.setDeltaMovement(Vec3.ZERO);
+        Action a = new Action(enemy.getUUID(), mine.getUUID(), p.getUUID(), theirs, at);
+        ACTIONS.put(enemy.getUUID(), a);
+        layGangway(w, a, mine.position(), at);
 
-        w.playSound(null, enemy.getBlockPos(), SoundEvents.ITEM_TRIDENT_HIT, SoundCategory.PLAYERS, 1.5f, 0.6f);
-        w.playSound(null, enemy.getBlockPos(), SoundEvents.ENTITY_LEASH_KNOT_PLACE, SoundCategory.PLAYERS, 1.5f, 0.7f);
+        w.playSound(null, enemy.blockPosition(), SoundEvents.TRIDENT_HIT, SoundSource.PLAYERS, 1.5f, 0.6f);
+        w.playSound(null, enemy.blockPosition(), SoundEvents.LEAD_TIED, SoundSource.PLAYERS, 1.5f, 0.7f);
         int deck = Archipelago.WATER_TOP + 1;
         if (!theirs) {
             p.stopRiding();
-            p.requestTeleport(at.x + dir.normalize().x * -1.5, deck, at.z + dir.normalize().z * -1.5);
-            p.sendMessage(Text.literal("Grapples bite! You swing across onto the ").append(enemy.shipName())
-                    .append(Text.literal("'s deck. Cut down her crew!")).formatted(Formatting.GOLD, Formatting.BOLD), false);
+            p.teleportTo(at.x + dir.normalize().x * -1.5, deck, at.z + dir.normalize().z * -1.5);
+            p.sendSystemMessage(Component.literal("Grapples bite! You swing across onto the ").append(enemy.shipName())
+                    .append(Component.literal("'s deck. Cut down her crew!")).withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), false);
         } else {
-            p.sendMessage(Text.literal("Grapples bite into your rail! The ").append(enemy.shipName())
-                    .append(Text.literal("'s crew are coming over the side!")).formatted(Formatting.RED, Formatting.BOLD), false);
+            p.sendSystemMessage(Component.literal("Grapples bite into your rail! The ").append(enemy.shipName())
+                    .append(Component.literal("'s crew are coming over the side!")).withStyle(ChatFormatting.RED, ChatFormatting.BOLD), false);
         }
-        musterCrew(w, enemy, a, theirs ? mine.getPos() : at);
+        musterCrew(w, enemy, a, theirs ? mine.position() : at);
     }
 
     /** Planks laid over the water between the two hulls, and under both: the deck you fight on. */
-    private static void layGangway(ServerWorld w, Action a, Vec3d from, Vec3d to) {
+    private static void layGangway(ServerLevel w, Action a, Vec3 from, Vec3 to) {
         int y = Archipelago.WATER_TOP;
         int x1 = (int) Math.floor(Math.min(from.x, to.x)) - 3, x2 = (int) Math.floor(Math.max(from.x, to.x)) + 3;
         int z1 = (int) Math.floor(Math.min(from.z, to.z)) - 3, z2 = (int) Math.floor(Math.max(from.z, to.z)) + 3;
         for (int x = x1; x <= x2; x++) {
             for (int z = z1; z <= z2; z++) {
                 BlockPos pos = new BlockPos(x, y, z);
-                if (!w.getFluidState(pos).isIn(FluidTags.WATER) || !w.getFluidState(pos).isStill() || !w.getBlockState(pos.up()).isAir()) continue;
+                if (!w.getFluidState(pos).is(FluidTags.WATER) || !w.getFluidState(pos).isSource() || !w.getBlockState(pos.above()).isAir()) continue;
                 // Under the hulls, invisible; between them, rough timber
-                boolean underHull = from.squaredDistanceTo(x + 0.5, from.y, z + 0.5) < 9 || to.squaredDistanceTo(x + 0.5, to.y, z + 0.5) < 9;
-                w.setBlockState(pos, underHull ? Blocks.BARRIER.getDefaultState()
-                        : ((x + z) % 3 == 0 ? Blocks.STRIPPED_SPRUCE_WOOD : Blocks.SPRUCE_PLANKS).getDefaultState());
+                boolean underHull = from.distanceToSqr(x + 0.5, from.y, z + 0.5) < 9 || to.distanceToSqr(x + 0.5, to.y, z + 0.5) < 9;
+                w.setBlockAndUpdate(pos, underHull ? Blocks.BARRIER.defaultBlockState()
+                        : ((x + z) % 3 == 0 ? Blocks.STRIPPED_SPRUCE_WOOD : Blocks.SPRUCE_PLANKS).defaultBlockState());
                 a.gangway.add(pos);
             }
         }
     }
 
-    private static void liftGangway(ServerWorld w, Action a) {
+    private static void liftGangway(ServerLevel w, Action a) {
         for (BlockPos pos : a.gangway) {
             var st = w.getBlockState(pos);
-            if (st.isOf(Blocks.BARRIER) || st.isOf(Blocks.SPRUCE_PLANKS) || st.isOf(Blocks.STRIPPED_SPRUCE_WOOD)) {
-                w.setBlockState(pos, Blocks.WATER.getDefaultState());
+            if (st.is(Blocks.BARRIER) || st.is(Blocks.SPRUCE_PLANKS) || st.is(Blocks.STRIPPED_SPRUCE_WOOD)) {
+                w.setBlockAndUpdate(pos, Blocks.WATER.defaultBlockState());
             }
         }
         a.gangway.clear();
     }
 
     /** Her crew leave their stations, and more come up from below, with the captain at their head. */
-    private static void musterCrew(ServerWorld w, ShipEntity enemy, Action a, Vec3d around) {
-        String tag = DEFENDER + enemy.getUuid();
+    private static void musterCrew(ServerLevel w, ShipEntity enemy, Action a, Vec3 around) {
+        String tag = DEFENDER + enemy.getUUID();
         int level = Math.max(1, Levels.levelOf(enemy));
-        for (Entity e : new ArrayList<>(enemy.getPassengerList())) {
-            if (e instanceof MobEntity m) {
+        for (Entity e : new ArrayList<>(enemy.getPassengers())) {
+            if (e instanceof Mob m) {
                 m.stopRiding();
-                m.addCommandTag(tag);
-                m.refreshPositionAndAngles(around.x + w.random.nextGaussian() * 1.5, Archipelago.WATER_TOP + 1, around.z + w.random.nextGaussian() * 1.5, m.getYaw(), 0);
+                m.addTag(tag);
+                m.snapTo(around.x + w.getRandom().nextGaussian() * 1.5, Archipelago.WATER_TOP + 1, around.z + w.getRandom().nextGaussian() * 1.5, m.getYRot(), 0);
             }
         }
         if (enemy.getFaction() == ShipFaction.MERCHANT) {
             // A merchant's few hands put up a token fight
-            for (int i = 0; i < 2; i++) spawnHand(w, enemy, EntityType.VINDICATOR, around, level, tag, null);
+            for (int i = 0; i < 2; i++) spawnHand(w, enemy, EntityTypes.VINDICATOR, around, level, tag, null);
             return;
         }
         int hands = 2 + enemy.shipClass().ordinal() / 2 + enemy.shipClass().cannonsPerSide() / 2;
         for (int i = 0; i < hands; i++) {
-            EntityType<? extends MobEntity> type = switch (enemy.getFaction()) {
+            EntityType<? extends Mob> type = switch (enemy.getFaction()) {
                 case NAVY -> ModEntities.MARINE;
-                case PIRATE -> i % 2 == 0 ? EntityType.VINDICATOR : EntityType.PILLAGER;
+                case PIRATE -> i % 2 == 0 ? EntityTypes.VINDICATOR : EntityTypes.PILLAGER;
                 default -> ModEntities.CURSED_PIRATE;
             };
             spawnHand(w, enemy, type, around, level, tag, null);
         }
         // The captain
-        if (enemy.getCommandTags().contains(com.cursedtides.quest.MusterArc.FLAGSHIP)) {
+        if (enemy.entityTags().contains(com.cursedtides.quest.MusterArc.FLAGSHIP)) {
             com.cursedtides.quest.MusterArc.spawnHale(w, around, level, tag);
             return;
         }
@@ -242,37 +242,37 @@ public final class Boarding {
             case PIRATE -> pick(w, "Captain Red Teague", "Captain Ma Gristle", "Captain One-Ear Dobbs", "Captain Saffron Lyle");
             default -> pick(w, "Captain Hollow Jack", "Captain Weeping Mary", "Captain Bones Barrow", "Captain Cold Annet");
         };
-        EntityType<? extends MobEntity> ct = switch (enemy.getFaction()) {
+        EntityType<? extends Mob> ct = switch (enemy.getFaction()) {
             case NAVY -> ModEntities.MARINE;
-            case PIRATE -> EntityType.VINDICATOR;
+            case PIRATE -> EntityTypes.VINDICATOR;
             default -> ModEntities.CURSED_PIRATE;
         };
-        MobEntity captain = spawnHand(w, enemy, ct, around, level + 2, tag, name);
+        Mob captain = spawnHand(w, enemy, ct, around, level + 2, tag, name);
         if (captain instanceof CursedPirateEntity cp) cp.setVariant(cp.kind(), CursedPirateEntity.Rank.CAPTAIN);
         if (captain != null) {
-            EntityAttributeInstance hp = captain.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
+            AttributeInstance hp = captain.getAttribute(Attributes.MAX_HEALTH);
             if (hp != null) { hp.setBaseValue(hp.getBaseValue() * 3 * Levels.healthFactor(level + 2)); captain.setHealth(captain.getMaxHealth()); }
-            captain.addCommandTag("ct_board_captain");
-            captain.equipStack(EquipmentSlot.MAINHAND, new ItemStack(ModItems.CUTLASS));
+            captain.addTag("ct_board_captain");
+            captain.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(ModItems.CUTLASS));
         }
     }
 
-    private static String pick(ServerWorld w, String... names) { return names[w.random.nextInt(names.length)]; }
+    private static String pick(ServerLevel w, String... names) { return names[w.getRandom().nextInt(names.length)]; }
 
-    private static MobEntity spawnHand(ServerWorld w, ShipEntity enemy, EntityType<? extends MobEntity> type, Vec3d around,
+    private static Mob spawnHand(ServerLevel w, ShipEntity enemy, EntityType<? extends Mob> type, Vec3 around,
                                        int level, String tag, String name) {
-        MobEntity m = type.create(w);
+        Mob m = type.create(w, EntitySpawnReason.EVENT);
         if (m == null) return null;
-        m.refreshPositionAndAngles(around.x + w.random.nextGaussian() * 1.8, Archipelago.WATER_TOP + 1, around.z + w.random.nextGaussian() * 1.8, w.random.nextFloat() * 360, 0);
-        m.initialize(w, w.getLocalDifficulty(m.getBlockPos()), SpawnReason.EVENT, null);
+        m.snapTo(around.x + w.getRandom().nextGaussian() * 1.8, Archipelago.WATER_TOP + 1, around.z + w.getRandom().nextGaussian() * 1.8, w.getRandom().nextFloat() * 360, 0);
+        m.finalizeSpawn(w, w.getCurrentDifficultyAt(m.blockPosition()), EntitySpawnReason.EVENT, null);
         if (name != null) {
-            m.setCustomName(Text.literal(name).formatted(Formatting.RED, Formatting.BOLD));
+            m.setCustomName(Component.literal(name).withStyle(ChatFormatting.RED, ChatFormatting.BOLD));
             m.setCustomNameVisible(true);
         }
         Levels.apply(m, level);
-        m.addCommandTag(tag);
-        w.spawnEntity(m);
-        PlayerEntity near = w.getClosestPlayer(m, 24);
+        m.addTag(tag);
+        w.addFreshEntity(m);
+        Player near = w.getNearestPlayer(m, 24);
         if (near != null) m.setTarget(near);
         return m;
     }
@@ -282,118 +282,118 @@ public final class Boarding {
     public static void register() {
         ServerTickEvents.END_SERVER_TICK.register(Boarding::tick);
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
-            ServerWorld w = server.getOverworld();
+            ServerLevel w = server.overworld();
             for (Action a : ACTIONS.values()) liftGangway(w, a);
             ACTIONS.clear();
         });
         ServerLivingEntityEvents.AFTER_DEATH.register(Boarding::onDeath);
         CommandRegistrationCallback.EVENT.register((d, reg, env) -> d.register(literal("prize")
-                .then(literal("take").executes(ctx -> { settle(ctx.getSource().getPlayerOrThrow(), true); return 1; }))
-                .then(literal("plunder").executes(ctx -> { settle(ctx.getSource().getPlayerOrThrow(), false); return 1; }))));
+                .then(literal("take").executes(ctx -> { settle(ctx.getSource().getPlayerOrException(), true); return 1; }))
+                .then(literal("plunder").executes(ctx -> { settle(ctx.getSource().getPlayerOrException(), false); return 1; }))));
     }
 
     private static void tick(MinecraftServer server) {
-        ServerWorld w = server.getOverworld();
+        ServerLevel w = server.overworld();
         if (!ACTIONS.isEmpty()) {
             for (Action a : List.copyOf(ACTIONS.values())) {
                 a.ticks++;
                 Entity e = w.getEntity(a.enemy), m = w.getEntity(a.mine);
-                ServerPlayerEntity p = server.getPlayerManager().getPlayer(a.player);
+                ServerPlayer p = server.getPlayerList().getPlayer(a.player);
                 boolean gone = !(e instanceof ShipEntity enemy) || !enemy.isAlive() || !(m instanceof ShipEntity mine) || !mine.isAlive();
                 boolean timeout = a.ticks > MAX_TICKS + (a.won ? 20 * 60 : 0);
-                boolean fled = p == null || !p.isAlive() || (e != null && p.squaredDistanceTo(e) > 48 * 48);
+                boolean fled = p == null || !p.isAlive() || (e != null && p.distanceToSqr(e) > 48 * 48);
                 if (gone || timeout || fled) {
                     end(w, a, gone ? null : fled ? "You've left the fight. The lines part and the ships drift apart." : "The lashings give way and the ships drift apart.");
                     continue;
                 }
                 ShipEntity enemy = (ShipEntity) e, mine = (ShipEntity) m;
-                enemy.setVelocity(Vec3d.ZERO);
-                mine.setVelocity(mine.getVelocity().multiply(0, 1, 0));
-                if (enemy.squaredDistanceTo(a.anchor.x, enemy.getY(), a.anchor.z) > 1) {
-                    enemy.refreshPositionAndAngles(a.anchor.x, enemy.getY(), a.anchor.z, enemy.getYaw(), 0);
+                enemy.setDeltaMovement(Vec3.ZERO);
+                mine.setDeltaMovement(mine.getDeltaMovement().multiply(0, 1, 0));
+                if (enemy.distanceToSqr(a.anchor.x, enemy.getY(), a.anchor.z) > 1) {
+                    enemy.snapTo(a.anchor.x, enemy.getY(), a.anchor.z, enemy.getYRot(), 0);
                 }
-                if (!a.won && a.ticks > 40 && a.ticks % 10 == 0 && !defending(enemy) && enemy.getPassengerList().stream().noneMatch(x -> x instanceof MobEntity && x.isAlive())) {
+                if (!a.won && a.ticks > 40 && a.ticks % 10 == 0 && !defending(enemy) && enemy.getPassengers().stream().noneMatch(x -> x instanceof Mob && x.isAlive())) {
                     a.won = true;
                     victory(w, a, enemy, p);
                 }
             }
         }
         // Rival pirates and the cursed board you, if you let them come alongside
-        if (server.getTicks() % 100 != 41) return;
-        for (ServerPlayerEntity p : w.getPlayers()) {
+        if (server.getTickCount() % 100 != 41) return;
+        for (ServerPlayer p : w.players()) {
             if (!(p.getVehicle() instanceof ShipEntity mine) || mine.isHostile() || isLashed(mine)) continue;
-            for (ShipEntity s : w.getEntitiesByClass(ShipEntity.class, mine.getBoundingBox().expand(12),
+            for (ShipEntity s : w.getEntitiesOfClass(ShipEntity.class, mine.getBoundingBox().inflate(12),
                     s -> (s.getFaction() == ShipFaction.PIRATE || s.getFaction() == ShipFaction.DROWNED) && !isLashed(s))) {
-                long last = RAIDED.getOrDefault(s.getUuid(), 0L);
-                if (w.getTime() - last < 20 * 90 || w.random.nextFloat() > 0.3f) continue;
-                if (s.getPassengerList().stream().noneMatch(x -> x instanceof MobEntity)) continue;
-                RAIDED.put(s.getUuid(), w.getTime());
+                long last = RAIDED.getOrDefault(s.getUUID(), 0L);
+                if (w.getGameTime() - last < 20 * 90 || w.getRandom().nextFloat() > 0.3f) continue;
+                if (s.getPassengers().stream().noneMatch(x -> x instanceof Mob)) continue;
+                RAIDED.put(s.getUUID(), w.getGameTime());
                 begin(w, s, mine, p, true);
                 break;
             }
         }
     }
 
-    private static void victory(ServerWorld w, Action a, ShipEntity enemy, ServerPlayerEntity p) {
-        w.playSound(null, enemy.getBlockPos(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundCategory.PLAYERS, 1f, 1f);
+    private static void victory(ServerLevel w, Action a, ShipEntity enemy, ServerPlayer p) {
+        w.playSound(null, enemy.blockPosition(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1f, 1f);
         PirateData.addXp(p, Weapon.CUTLASS, 80);
         PirateData.addXp(p, Weapon.SAILING, 60);
         com.cursedtides.activity.Achievements.grant(p, "boarder");
         com.cursedtides.quest.MusterArc.onBoarded(p, enemy);
-        p.sendMessage(Text.literal("Her colours come down! The ").append(enemy.shipName()).append(Text.literal(" is yours to decide:"))
-                .formatted(Formatting.GOLD, Formatting.BOLD), false);
-        p.sendMessage(Text.literal("  [Take her as a prize]").styled(s -> s.withColor(Formatting.GREEN)
-                        .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/prize take")))
-                .append(Text.literal("   [Strip her hold and scuttle her]").styled(s -> s.withColor(Formatting.RED)
-                        .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/prize plunder")))), false);
+        p.sendSystemMessage(Component.literal("Her colours come down! The ").append(enemy.shipName()).append(Component.literal(" is yours to decide:"))
+                .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), false);
+        p.sendSystemMessage(Component.literal("  [Take her as a prize]").withStyle(s -> s.withColor(ChatFormatting.GREEN)
+                        .withClickEvent(new ClickEvent.RunCommand("/prize take")))
+                .append(Component.literal("   [Strip her hold and scuttle her]").withStyle(s -> s.withColor(ChatFormatting.RED)
+                        .withClickEvent(new ClickEvent.RunCommand("/prize plunder")))), false);
     }
 
-    private static void settle(ServerPlayerEntity p, boolean take) {
-        ServerWorld w = p.getServerWorld();
+    private static void settle(ServerPlayer p, boolean take) {
+        ServerLevel w = p.level();
         for (Action a : List.copyOf(ACTIONS.values())) {
-            if (!a.player.equals(p.getUuid()) || !a.won) continue;
+            if (!a.player.equals(p.getUUID()) || !a.won) continue;
             if (!(w.getEntity(a.enemy) instanceof ShipEntity enemy)) continue;
             end(w, a, null);
             if (take) {
                 enemy.captureBy(p);
             } else {
                 int level = Math.max(1, Levels.levelOf(enemy));
-                for (int i = 0; i < enemy.cargo().size(); i++) {
-                    ItemStack st = enemy.cargo().removeStack(i);
+                for (int i = 0; i < enemy.cargo().getContainerSize(); i++) {
+                    ItemStack st = enemy.cargo().removeItemNoUpdate(i);
                     if (!st.isEmpty()) com.cursedtides.quest.QuestData.give(p, st);
                 }
                 com.cursedtides.quest.QuestData.give(p, com.cursedtides.combat.Loot.container(
                         enemy.shipClass().ordinal() >= 3 ? com.cursedtides.combat.Loot.Tier.SKULL : com.cursedtides.combat.Loot.Tier.CHEST, level));
                 com.cursedtides.trade.Wallet.give(p, (15 + level * 2) * com.cursedtides.trade.Wallet.SILVER_PER_DOUBLOON);
-                p.sendMessage(Text.literal("You strip her hold to the bilges and put a torch to her powder.").formatted(Formatting.GOLD), false);
-                w.spawnParticles(ParticleTypes.EXPLOSION, enemy.getX(), enemy.getY() + 1, enemy.getZ(), 6, 1.5, 0.5, 1.5, 0.1);
+                p.sendSystemMessage(Component.literal("You strip her hold to the bilges and put a torch to her powder.").withStyle(ChatFormatting.GOLD), false);
+                w.sendParticles(ParticleTypes.EXPLOSION, enemy.getX(), enemy.getY() + 1, enemy.getZ(), 6, 1.5, 0.5, 1.5, 0.1);
                 enemy.scuttle(w, p);
             }
             return;
         }
-        p.sendMessage(Text.literal("There's no beaten ship waiting on your word.").formatted(Formatting.GRAY), true);
+        p.sendSystemMessage(Component.literal("There's no beaten ship waiting on your word.").withStyle(ChatFormatting.GRAY), true);
     }
 
-    private static void end(ServerWorld w, Action a, String message) {
+    private static void end(ServerLevel w, Action a, String message) {
         ACTIONS.remove(a.enemy);
         liftGangway(w, a);
         String tag = DEFENDER + a.enemy;
         // Survivors scramble back aboard (or drown trying)
-        for (MobEntity m : w.getEntitiesByClass(MobEntity.class, new net.minecraft.util.math.Box(BlockPos.ofFloored(a.anchor)).expand(40),
-                x -> x.getCommandTags().contains(tag))) {
+        for (Mob m : w.getEntitiesOfClass(Mob.class, new net.minecraft.world.phys.AABB(BlockPos.containing(a.anchor)).inflate(40),
+                x -> x.entityTags().contains(tag))) {
             if (!a.won) m.discard();
         }
-        if (message != null && w.getServer().getPlayerManager().getPlayer(a.player) instanceof ServerPlayerEntity p) {
-            p.sendMessage(Text.literal(message).formatted(Formatting.GRAY), false);
+        if (message != null && w.getServer().getPlayerList().getPlayer(a.player) instanceof ServerPlayer p) {
+            p.sendSystemMessage(Component.literal(message).withStyle(ChatFormatting.GRAY), false);
         }
     }
 
-    private static void onDeath(LivingEntity victim, net.minecraft.entity.damage.DamageSource source) {
-        if (!victim.getCommandTags().contains("ct_board_captain")) return;
-        if (source.getAttacker() instanceof ServerPlayerEntity p) {
-            victim.dropStack(com.cursedtides.combat.Loot.container(com.cursedtides.combat.Loot.Tier.CHEST, Math.max(1, Levels.levelOf(victim))));
-            victim.dropStack(new ItemStack(ModItems.DOUBLOON, 8 + p.getRandom().nextInt(8)));
-            if (p.getRandom().nextInt(4) == 0) victim.dropStack(new ItemStack(Items.SPYGLASS));
+    private static void onDeath(LivingEntity victim, net.minecraft.world.damagesource.DamageSource source) {
+        if (!victim.entityTags().contains("ct_board_captain")) return;
+        if (source.getEntity() instanceof ServerPlayer p) {
+            com.cursedtides.util.Compat.drop(victim, com.cursedtides.combat.Loot.container(com.cursedtides.combat.Loot.Tier.CHEST, Math.max(1, Levels.levelOf(victim))));
+            com.cursedtides.util.Compat.drop(victim, new ItemStack(ModItems.DOUBLOON, 8 + p.getRandom().nextInt(8)));
+            if (p.getRandom().nextInt(4) == 0) com.cursedtides.util.Compat.drop(victim, new ItemStack(Items.SPYGLASS));
         }
     }
 }

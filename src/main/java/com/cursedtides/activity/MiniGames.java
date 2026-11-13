@@ -1,35 +1,34 @@
 package com.cursedtides.activity;
 
+import net.minecraft.world.InteractionResult;
 import com.cursedtides.CursedTides;
 import com.cursedtides.entity.ShipEntity;
 import com.cursedtides.profession.Profession;
 import com.cursedtides.profession.ProfessionData;
 import com.cursedtides.profession.ProfessionItems;
-import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
+import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.item.tooltip.TooltipType;
-import net.minecraft.network.RegistryByteBuf;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.codec.PacketCodecs;
-import net.minecraft.network.packet.CustomPayload;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Hand;
-import net.minecraft.util.TypedActionResult;
-import net.minecraft.world.World;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.level.Level;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,18 +45,18 @@ public final class MiniGames {
     public static final int BREW = 0, REPAIR = 1;
 
     /** Server to client: start a game. For repair, arg is which patch job. */
-    public record Open(int kind, int arg) implements CustomPayload {
-        public static final Id<Open> ID = new Id<>(CursedTides.id("minigame_open"));
-        public static final PacketCodec<RegistryByteBuf, Open> CODEC = PacketCodec.tuple(PacketCodecs.VAR_INT, Open::kind, PacketCodecs.VAR_INT, Open::arg, Open::new);
-        @Override public Id<? extends CustomPayload> getId() { return ID; }
+    public record Open(int kind, int arg) implements CustomPacketPayload {
+        public static final Type<Open> ID = new Type<>(CursedTides.id("minigame_open"));
+        public static final StreamCodec<RegistryFriendlyByteBuf, Open> CODEC = StreamCodec.composite(ByteBufCodecs.VAR_INT, Open::kind, ByteBufCodecs.VAR_INT, Open::arg, Open::new);
+        @Override public Type<? extends CustomPacketPayload> type() { return ID; }
     }
 
     /** Client to server: how it went. For brewing, arg is the tonic chosen. */
-    public record Result(int kind, int arg, int score) implements CustomPayload {
-        public static final Id<Result> ID = new Id<>(CursedTides.id("minigame_result"));
-        public static final PacketCodec<RegistryByteBuf, Result> CODEC = PacketCodec.tuple(PacketCodecs.VAR_INT, Result::kind,
-                PacketCodecs.VAR_INT, Result::arg, PacketCodecs.VAR_INT, Result::score, Result::new);
-        @Override public Id<? extends CustomPayload> getId() { return ID; }
+    public record Result(int kind, int arg, int score) implements CustomPacketPayload {
+        public static final Type<Result> ID = new Type<>(CursedTides.id("minigame_result"));
+        public static final StreamCodec<RegistryFriendlyByteBuf, Result> CODEC = StreamCodec.composite(ByteBufCodecs.VAR_INT, Result::kind,
+                ByteBufCodecs.VAR_INT, Result::arg, ByteBufCodecs.VAR_INT, Result::score, Result::new);
+        @Override public Type<? extends CustomPacketPayload> type() { return ID; }
     }
 
     public static final String[] TONICS = {"Grog", "Sea-Legs Tonic", "Lantern Tonic", "Ironhide Tonic", "Powder-Monkey Tonic", "Voodoo Draught"};
@@ -89,79 +88,81 @@ public final class MiniGames {
 
     public static class KitItem extends Item {
         final int kind;
-        public KitItem(Settings s, int kind) { super(s); this.kind = kind; }
+        public KitItem(Properties s, int kind) { super(s); this.kind = kind; }
 
         @Override
-        public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
-            ItemStack stack = user.getStackInHand(hand);
-            if (!(user instanceof ServerPlayerEntity p)) return TypedActionResult.success(stack, true);
+        public InteractionResult use(Level world, Player user, InteractionHand hand) {
+            ItemStack stack = user.getItemInHand(hand);
+            if (!(user instanceof ServerPlayer p)) return InteractionResult.SUCCESS;
             if (kind == REPAIR) {
                 if (!(p.getVehicle() instanceof ShipEntity ship) || ship.isHostile()) {
-                    p.sendMessage(Text.literal("Use it aboard a ship that needs patching.").formatted(Formatting.GRAY), true);
-                    return TypedActionResult.fail(stack);
+                    p.sendSystemMessage(Component.literal("Use it aboard a ship that needs patching.").withStyle(ChatFormatting.GRAY), true);
+                    return InteractionResult.FAIL;
                 }
                 if (ship.getHull() >= ship.maxHull()) {
-                    p.sendMessage(Text.literal("She's sound. Nothing to patch.").formatted(Formatting.GRAY), true);
-                    return TypedActionResult.fail(stack);
+                    p.sendSystemMessage(Component.literal("She's sound. Nothing to patch.").withStyle(ChatFormatting.GRAY), true);
+                    return InteractionResult.FAIL;
                 }
-                if (READY.getOrDefault(p.getUuid(), 0L) > p.getServerWorld().getTime()) return TypedActionResult.fail(stack);
+                if (READY.getOrDefault(p.getUUID(), 0L) > p.level().getGameTime()) return InteractionResult.FAIL;
             }
             ServerPlayNetworking.send(p, new Open(kind, p.getRandom().nextInt(3)));
-            return TypedActionResult.success(stack);
+            return InteractionResult.SUCCESS;
         }
 
         @Override
-        public void appendTooltip(ItemStack stack, TooltipContext context, List<Text> tooltip, TooltipType type) {
-            tooltip.add(Text.literal(kind == BREW ? "Use to brew a tonic: you'll need a glass bottle and the ingredient."
-                    : "Use aboard a damaged ship to patch her hull.").formatted(Formatting.GRAY));
-        }
+        public void appendHoverText(ItemStack stack, TooltipContext context, net.minecraft.world.item.component.TooltipDisplay display__, java.util.function.Consumer<Component> adder__, TooltipFlag type) {
+        java.util.List<Component> tooltip = new java.util.ArrayList<>();
+            tooltip.add(Component.literal(kind == BREW ? "Use to brew a tonic: you'll need a glass bottle and the ingredient."
+                    : "Use aboard a damaged ship to patch her hull.").withStyle(ChatFormatting.GRAY));
+        tooltip.forEach(adder__);
+    }
     }
 
-    public static final Item BREWERS_KIT = Registry.register(Registries.ITEM, CursedTides.id("brewers_kit"), new KitItem(new Item.Settings().maxCount(1), BREW));
-    public static final Item CARPENTERS_MALLET = Registry.register(Registries.ITEM, CursedTides.id("carpenters_mallet"), new KitItem(new Item.Settings().maxCount(1), REPAIR));
+    public static final Item BREWERS_KIT = Registry.register(BuiltInRegistries.ITEM, com.cursedtides.util.Reg.itemId("brewers_kit"), new KitItem(com.cursedtides.util.Reg.props().stacksTo(1), BREW));
+    public static final Item CARPENTERS_MALLET = Registry.register(BuiltInRegistries.ITEM, com.cursedtides.util.Reg.itemId("carpenters_mallet"), new KitItem(com.cursedtides.util.Reg.props().stacksTo(1), REPAIR));
 
     public static void register() {
-        PayloadTypeRegistry.playS2C().register(Open.ID, Open.CODEC);
-        PayloadTypeRegistry.playC2S().register(Result.ID, Result.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(Open.ID, Open.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(Result.ID, Result.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(Result.ID, (payload, ctx) -> ctx.server().execute(() -> result(ctx.player(), payload)));
-        ItemGroupEvents.modifyEntriesEvent(RegistryKey.of(RegistryKeys.ITEM_GROUP, CursedTides.id("main"))).register(e -> {
-            e.add(BREWERS_KIT);
-            e.add(CARPENTERS_MALLET);
+        CreativeModeTabEvents.modifyOutputEvent(ResourceKey.create(Registries.CREATIVE_MODE_TAB, CursedTides.id("main"))).register(e -> {
+            e.accept(BREWERS_KIT);
+            e.accept(CARPENTERS_MALLET);
         });
     }
 
-    private static void result(ServerPlayerEntity p, Result r) {
+    private static void result(ServerPlayer p, Result r) {
         if (r.kind() == BREW) {
             int t = Math.floorMod(r.arg(), TONICS.length);
             var inv = p.getInventory();
-            if (inv.count(Items.GLASS_BOTTLE) < 1 || inv.count(ingredient(t)) < 1) {
-                p.sendMessage(Text.literal("You need a glass bottle and " + INGREDIENTS[t] + " to brew " + TONICS[t] + ".").formatted(Formatting.RED), false);
+            if (inv.countItem(Items.GLASS_BOTTLE) < 1 || inv.countItem(ingredient(t)) < 1) {
+                p.sendSystemMessage(Component.literal("You need a glass bottle and " + INGREDIENTS[t] + " to brew " + TONICS[t] + ".").withStyle(ChatFormatting.RED), false);
                 return;
             }
-            inv.remove(s -> s.isOf(Items.GLASS_BOTTLE), 1, p.playerScreenHandler.getCraftingInput());
-            inv.remove(s -> s.isOf(ingredient(t)), 1, p.playerScreenHandler.getCraftingInput());
+            com.cursedtides.util.Compat.take(p, s -> s.is(Items.GLASS_BOTTLE), 1);
+            com.cursedtides.util.Compat.take(p, s -> s.is(ingredient(t)), 1);
             int score = Math.max(0, Math.min(10000, r.score()));
             ItemStack out = new ItemStack(tonic(t));
             int q = score >= 2400 ? 2 : score >= 1400 ? 1 : 0;
             if (q > 0) ProfessionItems.setInt(out, "Quality", q);
-            p.giveItemStack(out);
+            p.addItem(out);
             ProfessionData.addXp(p, Profession.BREWING, 10 + score / 150);
-            p.sendMessage(Text.literal("You brew " + (q == 2 ? "a masterwork " : q == 1 ? "a fine " : "a plain ") + TONICS[t] + ".").formatted(Formatting.GOLD), true);
-            p.getWorld().playSound(null, p.getBlockPos(), SoundEvents.BLOCK_BREWING_STAND_BREW, SoundCategory.PLAYERS, 1f, 1.2f);
+            p.sendSystemMessage(Component.literal("You brew " + (q == 2 ? "a masterwork " : q == 1 ? "a fine " : "a plain ") + TONICS[t] + ".").withStyle(ChatFormatting.GOLD), true);
+            p.level().playSound(null, p.blockPosition(), SoundEvents.BREWING_STAND_BREW, SoundSource.PLAYERS, 1f, 1.2f);
         } else if (r.kind() == REPAIR) {
             if (!(p.getVehicle() instanceof ShipEntity ship) || ship.isHostile()) return;
-            long now = p.getServerWorld().getTime();
-            if (READY.getOrDefault(p.getUuid(), 0L) > now) return;
-            READY.put(p.getUuid(), now + 100);
+            long now = p.level().getGameTime();
+            if (READY.getOrDefault(p.getUUID(), 0L) > now) return;
+            READY.put(p.getUUID(), now + 100);
             if (r.score() <= 0) {
-                p.sendMessage(Text.literal("The patch doesn't hold.").formatted(Formatting.GRAY), true);
+                p.sendSystemMessage(Component.literal("The patch doesn't hold.").withStyle(ChatFormatting.GRAY), true);
                 return;
             }
             float mend = 6 + com.cursedtides.pirate.PirateData.level(p, com.cursedtides.pirate.Weapon.SAILING) / 3f
                     + ProfessionData.level(p, Profession.LEADERSHIP) / 5f;
             ship.setHull(Math.min(ship.maxHull(), ship.getHull() + mend));
-            p.getWorld().playSound(null, p.getBlockPos(), SoundEvents.BLOCK_WOOD_PLACE, SoundCategory.PLAYERS, 1f, 0.9f);
-            p.sendMessage(Text.literal("Patched! Hull " + (int) ship.getHull() + "/" + ship.maxHull()).formatted(Formatting.GREEN), true);
+            p.level().playSound(null, p.blockPosition(), SoundEvents.WOOD_PLACE, SoundSource.PLAYERS, 1f, 0.9f);
+            p.sendSystemMessage(Component.literal("Patched! Hull " + (int) ship.getHull() + "/" + ship.maxHull()).withStyle(ChatFormatting.GREEN), true);
             com.cursedtides.pirate.PirateData.addXp(p, com.cursedtides.pirate.Weapon.SAILING, 5);
         }
     }

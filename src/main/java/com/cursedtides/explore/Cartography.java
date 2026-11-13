@@ -1,5 +1,6 @@
 package com.cursedtides.explore;
 
+import net.minecraft.world.InteractionResult;
 import com.cursedtides.CursedTides;
 import com.cursedtides.dialogue.Specials;
 import com.cursedtides.profession.Profession;
@@ -9,29 +10,27 @@ import com.mojang.serialization.Codec;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.NbtComponent;
-import net.minecraft.entity.ItemEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.tooltip.TooltipType;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Hand;
-import net.minecraft.util.Rarity;
-import net.minecraft.util.TypedActionResult;
-import net.minecraft.world.World;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.Registry;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Rarity;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import java.util.List;
 
 /**
@@ -50,150 +49,153 @@ public final class Cartography {
     /** An item that teaches its trade when crafted. */
     public static class CraftedItem extends Item {
         final Profession trade; final int xp; final String hint;
-        public CraftedItem(Settings settings, Profession trade, int xp, String hint) {
+        public CraftedItem(Properties settings, Profession trade, int xp, String hint) {
             super(settings);
             this.trade = trade; this.xp = xp; this.hint = hint;
         }
 
         @Override
-        public void onCraftByPlayer(ItemStack stack, World world, PlayerEntity player) {
-            if (!world.isClient && player instanceof ServerPlayerEntity sp) ProfessionData.addXp(sp, trade, xp * Math.max(1, stack.getCount()));
+        public void onCraftedBy(ItemStack stack, Player player) {
+        Level world = player.level();
+            if (!world.isClientSide() && player instanceof ServerPlayer sp) ProfessionData.addXp(sp, trade, xp * Math.max(1, stack.getCount()));
         }
 
         @Override
-        public void appendTooltip(ItemStack stack, TooltipContext context, List<Text> tooltip, TooltipType type) {
-            if (!hint.isEmpty()) tooltip.add(Text.literal(hint).formatted(Formatting.GRAY));
-        }
+        public void appendHoverText(ItemStack stack, TooltipContext context, net.minecraft.world.item.component.TooltipDisplay display__, java.util.function.Consumer<Component> adder__, TooltipFlag type) {
+        java.util.List<Component> tooltip = new java.util.ArrayList<>();
+            if (!hint.isEmpty()) tooltip.add(Component.literal(hint).withStyle(ChatFormatting.GRAY));
+        tooltip.forEach(adder__);
+    }
     }
 
     public static class BlankChartItem extends CraftedItem {
-        public BlankChartItem(Settings s) { super(s, Profession.CARTOGRAPHY, 4, "Use on an island you haven't surveyed to chart it."); }
+        public BlankChartItem(Properties s) { super(s, Profession.CARTOGRAPHY, 4, "Use on an island you haven't surveyed to chart it."); }
 
         @Override
-        public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
-            ItemStack stack = user.getStackInHand(hand);
-            if (!(user instanceof ServerPlayerEntity p)) return TypedActionResult.success(stack, true);
+        public InteractionResult use(Level world, Player user, InteractionHand hand) {
+            ItemStack stack = user.getItemInHand(hand);
+            if (!(user instanceof ServerPlayer p)) return InteractionResult.SUCCESS;
             int i = Archipelago.islandIndexAt(p.getBlockX(), p.getBlockZ());
             if (i < 0) {
-                p.sendMessage(Text.literal("Nothing but water to draw here.").formatted(Formatting.GRAY), true);
-                return TypedActionResult.fail(stack);
+                p.sendSystemMessage(Component.literal("Nothing but water to draw here.").withStyle(ChatFormatting.GRAY), true);
+                return InteractionResult.FAIL;
             }
             int mask = p.getAttachedOrElse(SURVEYED, 0);
             if ((mask & (1 << i)) != 0) {
-                p.sendMessage(Text.literal("You've already surveyed " + Archipelago.ISLANDS.get(i).name() + ".").formatted(Formatting.GRAY), true);
-                return TypedActionResult.fail(stack);
+                p.sendSystemMessage(Component.literal("You've already surveyed " + Archipelago.ISLANDS.get(i).name() + ".").withStyle(ChatFormatting.GRAY), true);
+                return InteractionResult.FAIL;
             }
             p.setAttached(SURVEYED, mask | (1 << i));
-            stack.decrement(1);
+            stack.shrink(1);
             ItemStack survey = new ItemStack(SURVEY);
-            NbtCompound n = new NbtCompound();
+            CompoundTag n = new CompoundTag();
             n.putInt("Island", i);
-            survey.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(n));
-            survey.set(DataComponentTypes.ITEM_NAME, Text.literal("Survey of " + Archipelago.ISLANDS.get(i).name()));
-            p.giveItemStack(survey);
+            survey.set(DataComponents.CUSTOM_DATA, CustomData.of(n));
+            survey.set(DataComponents.ITEM_NAME, Component.literal("Survey of " + Archipelago.ISLANDS.get(i).name()));
+            p.addItem(survey);
             int level = ProfessionData.level(p, Profession.CARTOGRAPHY);
             ProfessionData.addXp(p, Profession.CARTOGRAPHY, 30);
             if (level >= 15 && p.getRandom().nextFloat() < 0.3f) {
-                p.giveItemStack(new ItemStack(com.cursedtides.item.ModItems.TREASURE_MAP));
-                p.sendMessage(Text.literal("Your sharp eye picks out a likely spot for buried treasure. You mark it on a second sheet.").formatted(Formatting.GOLD), false);
+                p.addItem(new ItemStack(com.cursedtides.item.ModItems.TREASURE_MAP));
+                p.sendSystemMessage(Component.literal("Your sharp eye picks out a likely spot for buried treasure. You mark it on a second sheet.").withStyle(ChatFormatting.GOLD), false);
             }
-            world.playSound(null, p.getBlockPos(), SoundEvents.UI_CARTOGRAPHY_TABLE_TAKE_RESULT, SoundCategory.PLAYERS, 1f, 1f);
-            p.sendMessage(Text.literal("You chart " + Archipelago.ISLANDS.get(i).name() + ".").formatted(Formatting.GREEN), true);
-            return TypedActionResult.success(stack);
+            world.playSound(null, p.blockPosition(), SoundEvents.UI_CARTOGRAPHY_TABLE_TAKE_RESULT, SoundSource.PLAYERS, 1f, 1f);
+            p.sendSystemMessage(Component.literal("You chart " + Archipelago.ISLANDS.get(i).name() + ".").withStyle(ChatFormatting.GREEN), true);
+            return InteractionResult.SUCCESS;
         }
     }
 
     public static class HiddenChartItem extends CraftedItem {
-        public HiddenChartItem(Settings s) { super(s, Profession.CARTOGRAPHY, 25, "Needs Cartography 10. Use to reveal an island that isn't on any chart."); }
+        public HiddenChartItem(Properties s) { super(s, Profession.CARTOGRAPHY, 25, "Needs Cartography 10. Use to reveal an island that isn't on any chart."); }
 
         @Override
-        public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
-            ItemStack stack = user.getStackInHand(hand);
-            if (!(user instanceof ServerPlayerEntity p)) return TypedActionResult.success(stack, true);
+        public InteractionResult use(Level world, Player user, InteractionHand hand) {
+            ItemStack stack = user.getItemInHand(hand);
+            if (!(user instanceof ServerPlayer p)) return InteractionResult.SUCCESS;
             int level = ProfessionData.level(p, Profession.CARTOGRAPHY);
             if (level < 10) {
-                p.sendMessage(Text.literal("The lines swim. You'll need more skill at cartography (10) to read this.").formatted(Formatting.GRAY), true);
-                return TypedActionResult.fail(stack);
+                p.sendSystemMessage(Component.literal("The lines swim. You'll need more skill at cartography (10) to read this.").withStyle(ChatFormatting.GRAY), true);
+                return InteractionResult.FAIL;
             }
             for (Archipelago.Island is : Archipelago.HIDDEN) {
                 if (is == Archipelago.KINGSREST && level < 25 && com.cursedtides.quest.CrownArc.stage(p) < com.cursedtides.quest.CrownArc.CONFRONT) continue;
                 if (revealed(p, is)) continue;
-                stack.decrement(1);
+                stack.shrink(1);
                 reveal(p, is);
                 ProfessionData.addXp(p, Profession.CARTOGRAPHY, 60);
-                return TypedActionResult.success(stack);
+                return InteractionResult.SUCCESS;
             }
-            p.sendMessage(Text.literal("Every secret this chart could tell, you already know.").formatted(Formatting.GRAY), true);
-            return TypedActionResult.fail(stack);
+            p.sendSystemMessage(Component.literal("Every secret this chart could tell, you already know.").withStyle(ChatFormatting.GRAY), true);
+            return InteractionResult.FAIL;
         }
     }
 
-    public static final Item BLANK_CHART = Registry.register(Registries.ITEM, CursedTides.id("blank_chart"), new BlankChartItem(new Item.Settings()));
-    public static final Item SURVEY = Registry.register(Registries.ITEM, CursedTides.id("island_survey"),
-            new CraftedItem(new Item.Settings().maxCount(16), Profession.CARTOGRAPHY, 0, "The archivist buys surveys."));
-    public static final Item HIDDEN_CHART = Registry.register(Registries.ITEM, CursedTides.id("hidden_chart"),
-            new HiddenChartItem(new Item.Settings().maxCount(1).rarity(Rarity.RARE)));
-    public static final Item ROUGH_GEM = Registry.register(Registries.ITEM, CursedTides.id("rough_gem"),
-            new Item(new Item.Settings().rarity(Rarity.UNCOMMON)));
-    public static final Item CUT_GEM = Registry.register(Registries.ITEM, CursedTides.id("cut_gem"),
-            new CraftedItem(new Item.Settings().rarity(Rarity.RARE), Profession.JEWELCRAFTING, 15, "Set it in a ring or a pendant."));
-    public static final Item SAILCLOTH = Registry.register(Registries.ITEM, CursedTides.id("sailcloth"),
-            new CraftedItem(new Item.Settings(), Profession.TAILORING, 3, "Good for bandanas, cloaks and sails."));
+    public static final Item BLANK_CHART = Registry.register(BuiltInRegistries.ITEM, com.cursedtides.util.Reg.itemId("blank_chart"), new BlankChartItem(com.cursedtides.util.Reg.props()));
+    public static final Item SURVEY = Registry.register(BuiltInRegistries.ITEM, com.cursedtides.util.Reg.itemId("island_survey"),
+            new CraftedItem(com.cursedtides.util.Reg.props().stacksTo(16), Profession.CARTOGRAPHY, 0, "The archivist buys surveys."));
+    public static final Item HIDDEN_CHART = Registry.register(BuiltInRegistries.ITEM, com.cursedtides.util.Reg.itemId("hidden_chart"),
+            new HiddenChartItem(com.cursedtides.util.Reg.props().stacksTo(1).rarity(Rarity.RARE)));
+    public static final Item ROUGH_GEM = Registry.register(BuiltInRegistries.ITEM, com.cursedtides.util.Reg.itemId("rough_gem"),
+            new Item(com.cursedtides.util.Reg.props().rarity(Rarity.UNCOMMON)));
+    public static final Item CUT_GEM = Registry.register(BuiltInRegistries.ITEM, com.cursedtides.util.Reg.itemId("cut_gem"),
+            new CraftedItem(com.cursedtides.util.Reg.props().rarity(Rarity.RARE), Profession.JEWELCRAFTING, 15, "Set it in a ring or a pendant."));
+    public static final Item SAILCLOTH = Registry.register(BuiltInRegistries.ITEM, com.cursedtides.util.Reg.itemId("sailcloth"),
+            new CraftedItem(com.cursedtides.util.Reg.props(), Profession.TAILORING, 3, "Good for bandanas, cloaks and sails."));
 
-    public static boolean revealed(PlayerEntity p, Archipelago.Island is) {
+    public static boolean revealed(Player p, Archipelago.Island is) {
         int i = Archipelago.ISLANDS.indexOf(is);
         return (p.getAttachedOrElse(REVEALED, 0) & (1 << i)) != 0;
     }
 
-    public static int revealedMask(PlayerEntity p) {
+    public static int revealedMask(Player p) {
         return p.getAttachedOrElse(REVEALED, 0);
     }
 
-    public static void reveal(ServerPlayerEntity p, Archipelago.Island is) {
+    public static void reveal(ServerPlayer p, Archipelago.Island is) {
         int i = Archipelago.ISLANDS.indexOf(is);
         p.setAttached(REVEALED, revealedMask(p) | (1 << i));
-        p.sendMessage(Text.literal("A new island on your chart: " + is.name() + ", near " + is.cx() + ", " + is.cz() + ".")
-                .formatted(Formatting.LIGHT_PURPLE, Formatting.BOLD), false);
-        p.getWorld().playSound(null, p.getBlockPos(), SoundEvents.UI_CARTOGRAPHY_TABLE_TAKE_RESULT, SoundCategory.PLAYERS, 1f, 0.8f);
+        p.sendSystemMessage(Component.literal("A new island on your chart: " + is.name() + ", near " + is.cx() + ", " + is.cz() + ".")
+                .withStyle(ChatFormatting.LIGHT_PURPLE, ChatFormatting.BOLD), false);
+        p.level().playSound(null, p.blockPosition(), SoundEvents.UI_CARTOGRAPHY_TABLE_TAKE_RESULT, SoundSource.PLAYERS, 1f, 0.8f);
         com.cursedtides.activity.Achievements.grant(p, "hidden_isle");
     }
 
     public static void register() {
-        net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents.modifyEntriesEvent(net.minecraft.registry.RegistryKey.of(
-                net.minecraft.registry.RegistryKeys.ITEM_GROUP, CursedTides.id("main"))).register(e -> {
-            e.add(BLANK_CHART);
-            e.add(HIDDEN_CHART);
-            e.add(ROUGH_GEM);
-            e.add(CUT_GEM);
-            e.add(SAILCLOTH);
+        net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents.modifyOutputEvent(net.minecraft.resources.ResourceKey.create(
+                net.minecraft.core.registries.Registries.CREATIVE_MODE_TAB, CursedTides.id("main"))).register(e -> {
+            e.accept(BLANK_CHART);
+            e.accept(HIDDEN_CHART);
+            e.accept(ROUGH_GEM);
+            e.accept(CUT_GEM);
+            e.accept(SAILCLOTH);
         });
         // Rough gems turn up in rock now and then
         PlayerBlockBreakEvents.AFTER.register((world, player, pos, state, be) -> {
-            if (world.isClient || !stony(state) || world.random.nextFloat() > 0.006f) return;
+            if (world.isClientSide() || !stony(state) || world.getRandom().nextFloat() > 0.006f) return;
             ItemEntity gem = new ItemEntity(world, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, new ItemStack(ROUGH_GEM));
-            world.spawnEntity(gem);
-            if (player instanceof ServerPlayerEntity sp) sp.sendMessage(Text.literal("Something glitters in the rubble.").formatted(Formatting.AQUA), true);
+            world.addFreshEntity(gem);
+            if (player instanceof ServerPlayer sp) sp.sendSystemMessage(Component.literal("Something glitters in the rubble.").withStyle(ChatFormatting.AQUA), true);
         });
         Specials.register("sell_surveys", (p, npc) -> {
-            int n = p.getInventory().count(SURVEY);
+            int n = p.getInventory().countItem(SURVEY);
             if (n == 0) return List.of("No surveys? Take a blank chart to an island you haven't drawn, and use it there.");
-            p.getInventory().remove(s -> s.isOf(SURVEY), n, p.playerScreenHandler.getCraftingInput());
+            com.cursedtides.util.Compat.take(p, s -> s.is(SURVEY), n);
             com.cursedtides.trade.Wallet.give(p, n * 50);
             ProfessionData.addXp(p, Profession.CARTOGRAPHY, n * 5);
             return List.of(n + " survey" + (n == 1 ? "" : "s") + "! The archive thanks you. " + (n * 5) + " doubloons.");
         });
         Specials.register("buy_charts", (p, npc) -> {
             if (!com.cursedtides.trade.Wallet.pay(p, 20)) return List.of("Two doubloons for a sheaf of blank charts.");
-            p.giveItemStack(new ItemStack(BLANK_CHART, 4));
+            p.addItem(new ItemStack(BLANK_CHART, 4));
             return List.of("Four blank charts. Fill them with something I haven't seen.");
         });
     }
 
     private static boolean stony(BlockState s) {
-        return s.isOf(Blocks.STONE) || s.isOf(Blocks.DEEPSLATE) || s.isOf(Blocks.ANDESITE) || s.isOf(Blocks.DIORITE) || s.isOf(Blocks.GRANITE)
-                || s.isOf(Blocks.TUFF) || s.isOf(Blocks.BASALT) || s.isOf(Blocks.BLACKSTONE) || s.isOf(Blocks.SANDSTONE) || s.isOf(Blocks.CALCITE);
+        return s.is(Blocks.STONE) || s.is(Blocks.DEEPSLATE) || s.is(Blocks.ANDESITE) || s.is(Blocks.DIORITE) || s.is(Blocks.GRANITE)
+                || s.is(Blocks.TUFF) || s.is(Blocks.BASALT) || s.is(Blocks.BLACKSTONE) || s.is(Blocks.SANDSTONE) || s.is(Blocks.CALCITE);
     }
 
     @SuppressWarnings("unused")
-    private static boolean serverSide(World w) { return w instanceof ServerWorld; }
+    private static boolean serverSide(Level w) { return w instanceof ServerLevel; }
 }

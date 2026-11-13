@@ -1,15 +1,14 @@
 package com.cursedtides.poker;
 
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtString;
-
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
 import java.util.Random;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
 
 /**
  * One no-limit Texas Hold'em table: the player in seat 0 and three NPC opponents. Rotating
@@ -550,19 +549,19 @@ public final class PokerGame {
 
     // ================================================================== state for the screen
 
-    public NbtCompound toNbt() {
+    public CompoundTag toNbt() {
         return toNbt(0);
     }
 
     /** The table as seen from one seat: that seat is drawn at the bottom (index 0) and only its cards show. */
-    public NbtCompound toNbt(int viewer) {
-        NbtCompound nbt = new NbtCompound();
-        NbtList names = new NbtList();
+    public CompoundTag toNbt(int viewer) {
+        CompoundTag nbt = new CompoundTag();
+        ListTag names = new ListTag();
         int[] stacks = new int[SEATS], bets = new int[SEATS], flags = new int[SEATS], shown = new int[SEATS * 2];
         for (int d = 0; d < SEATS; d++) {
             int i = (viewer + d) % SEATS;
             Seat s = seats[i];
-            names.add(NbtString.of(s.name + (s.human && i != viewer ? " ★" : "")));
+            names.add(StringTag.valueOf(s.name + (s.human && i != viewer ? " ★" : "")));
             stacks[d] = s.stack;
             bets[d] = s.bet;
             flags[d] = (s.folded ? 1 : 0) | (s.allIn ? 2 : 0);

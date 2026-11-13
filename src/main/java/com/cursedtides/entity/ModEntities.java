@@ -4,122 +4,122 @@ import com.cursedtides.CursedTides;
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.SpawnGroup;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.registry.tag.BiomeTags;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.tags.BiomeTags;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 
 public final class ModEntities {
     private ModEntities() {}
 
     public static final EntityType<CursedPirateEntity> CURSED_PIRATE = Registry.register(
-            Registries.ENTITY_TYPE, CursedTides.id("cursed_pirate"),
-            EntityType.Builder.<CursedPirateEntity>create(CursedPirateEntity::new, SpawnGroup.MONSTER)
-                    .dimensions(0.6f, 1.99f)
+            BuiltInRegistries.ENTITY_TYPE, CursedTides.id("cursed_pirate"),
+            EntityType.Builder.<CursedPirateEntity>of(CursedPirateEntity::new, MobCategory.MONSTER)
+                    .sized(0.6f, 1.99f)
                     .eyeHeight(1.74f)
-                    .maxTrackingRange(8)
-                    .build("cursed_pirate"));
+                    .clientTrackingRange(8)
+                    .build(com.cursedtides.util.Reg.entity("cursed_pirate")));
 
     public static final EntityType<QuartermasterEntity> QUARTERMASTER = Registry.register(
-            Registries.ENTITY_TYPE, CursedTides.id("quartermaster"),
-            EntityType.Builder.<QuartermasterEntity>create(QuartermasterEntity::new, SpawnGroup.CREATURE)
-                    .dimensions(0.6f, 1.95f)
+            BuiltInRegistries.ENTITY_TYPE, CursedTides.id("quartermaster"),
+            EntityType.Builder.<QuartermasterEntity>of(QuartermasterEntity::new, MobCategory.CREATURE)
+                    .sized(0.6f, 1.95f)
                     .eyeHeight(1.62f)
-                    .maxTrackingRange(10)
-                    .build("quartermaster"));
+                    .clientTrackingRange(10)
+                    .build(com.cursedtides.util.Reg.entity("quartermaster")));
 
     public static final EntityType<StoryNpcEntity> STORY_NPC = Registry.register(
-            Registries.ENTITY_TYPE, CursedTides.id("story_npc"),
-            EntityType.Builder.<StoryNpcEntity>create(StoryNpcEntity::new, SpawnGroup.MISC)
-                    .dimensions(0.6f, 1.95f)
+            BuiltInRegistries.ENTITY_TYPE, CursedTides.id("story_npc"),
+            EntityType.Builder.<StoryNpcEntity>of(StoryNpcEntity::new, MobCategory.MISC)
+                    .sized(0.6f, 1.95f)
                     .eyeHeight(1.62f)
-                    .maxTrackingRange(10)
-                    .build("story_npc"));
+                    .clientTrackingRange(10)
+                    .build(com.cursedtides.util.Reg.entity("story_npc")));
 
     public static final EntityType<DrownedCaptainEntity> DROWNED_CAPTAIN = Registry.register(
-            Registries.ENTITY_TYPE, CursedTides.id("drowned_captain"),
-            EntityType.Builder.<DrownedCaptainEntity>create(DrownedCaptainEntity::new, SpawnGroup.MONSTER)
-                    .dimensions(0.75f, 2.5f)
+            BuiltInRegistries.ENTITY_TYPE, CursedTides.id("drowned_captain"),
+            EntityType.Builder.<DrownedCaptainEntity>of(DrownedCaptainEntity::new, MobCategory.MONSTER)
+                    .sized(0.75f, 2.5f)
                     .eyeHeight(2.15f)
-                    .maxTrackingRange(10)
-                    .build("drowned_captain"));
+                    .clientTrackingRange(10)
+                    .build(com.cursedtides.util.Reg.entity("drowned_captain")));
 
     public static final EntityType<ShipEntity> SHIP = Registry.register(
-            Registries.ENTITY_TYPE, CursedTides.id("ship"),
-            EntityType.Builder.<ShipEntity>create(ShipEntity::new, SpawnGroup.MISC)
-                    .dimensions(2.4f, 0.5f)
-                    .maxTrackingRange(12)
-                    .build("ship"));
+            BuiltInRegistries.ENTITY_TYPE, CursedTides.id("ship"),
+            EntityType.Builder.<ShipEntity>of(ShipEntity::new, MobCategory.MISC)
+                    .sized(2.4f, 0.5f)
+                    .clientTrackingRange(12)
+                    .build(com.cursedtides.util.Reg.entity("ship")));
 
     public static final EntityType<ShipwrightEntity> SHIPWRIGHT = Registry.register(
-            Registries.ENTITY_TYPE, CursedTides.id("shipwright"),
-            EntityType.Builder.<ShipwrightEntity>create(ShipwrightEntity::new, SpawnGroup.MISC)
-                    .dimensions(0.6f, 1.95f)
+            BuiltInRegistries.ENTITY_TYPE, CursedTides.id("shipwright"),
+            EntityType.Builder.<ShipwrightEntity>of(ShipwrightEntity::new, MobCategory.MISC)
+                    .sized(0.6f, 1.95f)
                     .eyeHeight(1.62f)
-                    .maxTrackingRange(10)
-                    .build("shipwright"));
+                    .clientTrackingRange(10)
+                    .build(com.cursedtides.util.Reg.entity("shipwright")));
 
     public static final EntityType<MarineEntity> MARINE = Registry.register(
-            Registries.ENTITY_TYPE, CursedTides.id("marine"),
-            EntityType.Builder.<MarineEntity>create(MarineEntity::new, SpawnGroup.MISC)
-                    .dimensions(0.6f, 1.95f)
+            BuiltInRegistries.ENTITY_TYPE, CursedTides.id("marine"),
+            EntityType.Builder.<MarineEntity>of(MarineEntity::new, MobCategory.MISC)
+                    .sized(0.6f, 1.95f)
                     .eyeHeight(1.62f)
-                    .maxTrackingRange(10)
-                    .build("marine"));
+                    .clientTrackingRange(10)
+                    .build(com.cursedtides.util.Reg.entity("marine")));
 
     public static final EntityType<CrewmateEntity> CREWMATE = Registry.register(
-            Registries.ENTITY_TYPE, CursedTides.id("crewmate"),
-            EntityType.Builder.<CrewmateEntity>create(CrewmateEntity::new, SpawnGroup.MISC)
-                    .dimensions(0.6f, 1.95f)
+            BuiltInRegistries.ENTITY_TYPE, CursedTides.id("crewmate"),
+            EntityType.Builder.<CrewmateEntity>of(CrewmateEntity::new, MobCategory.MISC)
+                    .sized(0.6f, 1.95f)
                     .eyeHeight(1.62f)
-                    .maxTrackingRange(10)
-                    .build("crewmate"));
+                    .clientTrackingRange(10)
+                    .build(com.cursedtides.util.Reg.entity("crewmate")));
 
     public static final EntityType<ThrowingKnifeEntity> THROWING_KNIFE = Registry.register(
-            Registries.ENTITY_TYPE, CursedTides.id("throwing_knife"),
-            EntityType.Builder.<ThrowingKnifeEntity>create(ThrowingKnifeEntity::new, SpawnGroup.MISC)
-                    .dimensions(0.25f, 0.25f)
-                    .maxTrackingRange(4)
-                    .trackingTickInterval(10)
-                    .build("throwing_knife"));
+            BuiltInRegistries.ENTITY_TYPE, CursedTides.id("throwing_knife"),
+            EntityType.Builder.<ThrowingKnifeEntity>of(ThrowingKnifeEntity::new, MobCategory.MISC)
+                    .sized(0.25f, 0.25f)
+                    .clientTrackingRange(4)
+                    .updateInterval(10)
+                    .build(com.cursedtides.util.Reg.entity("throwing_knife")));
 
     public static final EntityType<CannonballEntity> CANNONBALL = Registry.register(
-            Registries.ENTITY_TYPE, CursedTides.id("cannonball"),
-            EntityType.Builder.<CannonballEntity>create(CannonballEntity::new, SpawnGroup.MISC)
-                    .dimensions(0.4f, 0.4f)
-                    .maxTrackingRange(8)
-                    .trackingTickInterval(5)
-                    .build("cannonball"));
+            BuiltInRegistries.ENTITY_TYPE, CursedTides.id("cannonball"),
+            EntityType.Builder.<CannonballEntity>of(CannonballEntity::new, MobCategory.MISC)
+                    .sized(0.4f, 0.4f)
+                    .clientTrackingRange(8)
+                    .updateInterval(5)
+                    .build(com.cursedtides.util.Reg.entity("cannonball")));
 
     public static final EntityType<HexBoltEntity> HEX_BOLT = Registry.register(
-            Registries.ENTITY_TYPE, CursedTides.id("hex_bolt"),
-            EntityType.Builder.<HexBoltEntity>create(HexBoltEntity::new, SpawnGroup.MISC)
-                    .dimensions(0.3f, 0.3f)
-                    .maxTrackingRange(8)
-                    .trackingTickInterval(2)
-                    .build("hex_bolt"));
+            BuiltInRegistries.ENTITY_TYPE, CursedTides.id("hex_bolt"),
+            EntityType.Builder.<HexBoltEntity>of(HexBoltEntity::new, MobCategory.MISC)
+                    .sized(0.3f, 0.3f)
+                    .clientTrackingRange(8)
+                    .updateInterval(2)
+                    .build(com.cursedtides.util.Reg.entity("hex_bolt")));
 
     public static void register() {
         FabricDefaultAttributeRegistry.register(CURSED_PIRATE, CursedPirateEntity.createPirateAttributes());
-        FabricDefaultAttributeRegistry.register(QUARTERMASTER, MobEntity.createMobAttributes()
-                .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.5));
-        FabricDefaultAttributeRegistry.register(STORY_NPC, MobEntity.createMobAttributes()
-                .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.5));
+        FabricDefaultAttributeRegistry.register(QUARTERMASTER, Mob.createMobAttributes()
+                .add(Attributes.MOVEMENT_SPEED, 0.5));
+        FabricDefaultAttributeRegistry.register(STORY_NPC, Mob.createMobAttributes()
+                .add(Attributes.MOVEMENT_SPEED, 0.5));
         FabricDefaultAttributeRegistry.register(DROWNED_CAPTAIN, DrownedCaptainEntity.createCaptainAttributes());
         FabricDefaultAttributeRegistry.register(MARINE, MarineEntity.createMarineAttributes());
         FabricDefaultAttributeRegistry.register(CREWMATE, CrewmateEntity.createCrewAttributes());
-        FabricDefaultAttributeRegistry.register(SHIPWRIGHT, MobEntity.createMobAttributes()
-                .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.5));
+        FabricDefaultAttributeRegistry.register(SHIPWRIGHT, Mob.createMobAttributes()
+                .add(Attributes.MOVEMENT_SPEED, 0.5));
     }
 
     /** Cursed crews wash up on beaches at night; quartermasters set up shop on some beaches. */
     public static void registerSpawns() {
         BiomeModifications.addSpawn(BiomeSelectors.tag(BiomeTags.IS_BEACH),
-                SpawnGroup.MONSTER, CURSED_PIRATE, 60, 2, 4);
+                MobCategory.MONSTER, CURSED_PIRATE, 60, 2, 4);
         BiomeModifications.addSpawn(BiomeSelectors.tag(BiomeTags.IS_BEACH),
-                SpawnGroup.CREATURE, QUARTERMASTER, 4, 1, 1);
+                MobCategory.CREATURE, QUARTERMASTER, 4, 1, 1);
     }
 }

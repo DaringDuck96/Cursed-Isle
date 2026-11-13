@@ -4,7 +4,7 @@ import com.cursedtides.CursedTides;
 import com.mojang.serialization.Codec;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
 
 /**
  * The proficiencies a pirate can master, each with its own saved XP. Weapon skills
@@ -12,18 +12,18 @@ import net.minecraft.util.Formatting;
  * (Kept under the name "Weapon" so older saves keep their data.)
  */
 public enum Weapon {
-    CUTLASS("cutlass", Formatting.WHITE),
-    PISTOL("pistol", Formatting.GOLD),
-    CANNON("cannon", Formatting.DARK_GRAY),
-    HEX("hex", Formatting.DARK_AQUA),
-    SAILING("sailing", Formatting.AQUA),
-    EXPLORATION("exploration", Formatting.GREEN);
+    CUTLASS("cutlass", ChatFormatting.WHITE),
+    PISTOL("pistol", ChatFormatting.GOLD),
+    CANNON("cannon", ChatFormatting.DARK_GRAY),
+    HEX("hex", ChatFormatting.DARK_AQUA),
+    SAILING("sailing", ChatFormatting.AQUA),
+    EXPLORATION("exploration", ChatFormatting.GREEN);
 
     private final String key;
-    private final Formatting color;
+    private final ChatFormatting color;
     private final AttachmentType<Integer> xpType;
 
-    Weapon(String key, Formatting color) {
+    Weapon(String key, ChatFormatting color) {
         this.key = key;
         this.color = color;
         this.xpType = AttachmentRegistry.<Integer>builder()
@@ -37,7 +37,7 @@ public enum Weapon {
         return "mastery.cursedtides." + key;
     }
 
-    public Formatting color() {
+    public ChatFormatting color() {
         return color;
     }
 

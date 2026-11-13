@@ -4,12 +4,12 @@ import com.cursedtides.CursedTides;
 import com.mojang.serialization.Codec;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.player.Player;
 
 /**
  * Pirate progression: per-weapon mastery (level 0-30), notoriety (overall level 1-50 from all reputation;
@@ -53,18 +53,18 @@ public final class PirateData {
         return level * level * 8;
     }
 
-    public static int xp(PlayerEntity player, Weapon weapon) {
+    public static int xp(Player player, Weapon weapon) {
         return player.getAttachedOrElse(weapon.xpType(), 0);
     }
 
-    public static int level(PlayerEntity player, Weapon weapon) {
+    public static int level(Player player, Weapon weapon) {
         return levelForXp(xp(player, weapon));
     }
 
     public static final int MAX_NOTORIETY = 50;
 
     /** All reputation earned, across every skill. */
-    public static int totalXp(PlayerEntity player) {
+    public static int totalXp(Player player) {
         int total = 0;
         for (Weapon w : Weapon.values()) {
             total += xp(player, w);
@@ -73,7 +73,7 @@ public final class PirateData {
     }
 
     /** Notoriety: the pirate's overall level (1-50), set by all the reputation they've earned. */
-    public static int notoriety(PlayerEntity player) {
+    public static int notoriety(Player player) {
         return Math.min(MAX_NOTORIETY, 1 + (int) Math.floor(Math.sqrt(totalXp(player) / 18.0)));
     }
 
@@ -81,17 +81,17 @@ public final class PirateData {
         return 18 * (level - 1) * (level - 1);
     }
 
-    public static Text title(int notoriety) {
+    public static Component title(int notoriety) {
         int index = 0;
         for (int i = 0; i < TITLE_THRESHOLDS.length; i++) {
             if (notoriety >= TITLE_THRESHOLDS[i]) {
                 index = i;
             }
         }
-        return Text.translatable(TITLES[index]);
+        return Component.translatable(TITLES[index]);
     }
 
-    public static void addXp(ServerPlayerEntity player, Weapon weapon, int amount) {
+    public static void addXp(ServerPlayer player, Weapon weapon, int amount) {
         int oldXp = xp(player, weapon);
         int oldLevel = levelForXp(oldXp);
         int oldNotoriety = notoriety(player);
@@ -106,38 +106,38 @@ public final class PirateData {
 
         int newNotoriety = notoriety(player);
         if (newNotoriety > oldNotoriety) {
-            player.sendMessage(Text.literal("Notoriety " + newNotoriety + "! Your health rises.")
-                    .formatted(Formatting.GOLD, Formatting.BOLD), false);
-            player.getWorld().playSound(null, player.getX(), player.getY(), player.getZ(),
-                    SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundCategory.PLAYERS, 0.6f, 1.3f);
+            player.sendSystemMessage(Component.literal("Notoriety " + newNotoriety + "! Your health rises.")
+                    .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), false);
+            player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                    SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.6f, 1.3f);
             com.cursedtides.combat.Levels.refreshPlayer(player);
             player.setHealth(player.getMaxHealth());
             if (!title(oldNotoriety).equals(title(newNotoriety))) {
-                player.sendMessage(Text.translatable("message.cursedtides.new_title",
-                        title(newNotoriety).copy().formatted(Formatting.GOLD, Formatting.BOLD)), false);
+                player.sendSystemMessage(Component.translatable("message.cursedtides.new_title",
+                        title(newNotoriety).copy().withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)), false);
             }
         }
         int newLevel = level(player, weapon);
         if (newLevel > oldLevel) {
-            player.sendMessage(Text.translatable("message.cursedtides.mastery_up",
-                    Text.translatable(weapon.translationKey()).formatted(weapon.color(), Formatting.BOLD),
-                    newLevel).formatted(Formatting.YELLOW), false);
-            player.getWorld().playSound(null, player.getX(), player.getY(), player.getZ(),
-                    SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.8f, 1.2f);
+            player.sendSystemMessage(Component.translatable("message.cursedtides.mastery_up",
+                    Component.translatable(weapon.translationKey()).withStyle(weapon.color(), ChatFormatting.BOLD),
+                    newLevel).withStyle(ChatFormatting.YELLOW), false);
+            player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                    SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.8f, 1.2f);
 
             if (weapon == Weapon.CUTLASS && oldLevel < 5 && newLevel >= 5) {
-                player.sendMessage(Text.translatable("message.cursedtides.unlock_whirl")
-                        .formatted(Formatting.AQUA), false);
+                player.sendSystemMessage(Component.translatable("message.cursedtides.unlock_whirl")
+                        .withStyle(ChatFormatting.AQUA), false);
             }
             if (weapon == Weapon.HEX && oldLevel < 5 && newLevel >= 5) {
-                player.sendMessage(Text.translatable("message.cursedtides.unlock_wither")
-                        .formatted(Formatting.AQUA), false);
+                player.sendSystemMessage(Component.translatable("message.cursedtides.unlock_wither")
+                        .withStyle(ChatFormatting.AQUA), false);
             }
             for (int tier = 0; tier < Perk.TIER_LEVELS.length; tier++) {
                 if (oldLevel < Perk.TIER_LEVELS[tier] && newLevel >= Perk.TIER_LEVELS[tier]) {
-                    player.sendMessage(Text.literal("A new perk tier is open in your "
-                            + Text.translatable(weapon.translationKey()).getString() + " tree. Press K to choose.")
-                            .formatted(Formatting.AQUA), false);
+                    player.sendSystemMessage(Component.literal("A new perk tier is open in your "
+                            + Component.translatable(weapon.translationKey()).getString() + " tree. Press K to choose.")
+                            .withStyle(ChatFormatting.AQUA), false);
                 }
             }
         }
@@ -145,16 +145,16 @@ public final class PirateData {
 
     // ---- Voodoo energy ----
 
-    public static int maxVoodoo(PlayerEntity player) {
+    public static int maxVoodoo(Player player) {
         return 100 + level(player, Weapon.HEX) * 5;
     }
 
-    public static int voodoo(PlayerEntity player) {
+    public static int voodoo(Player player) {
         return player.getAttachedOrElse(VOODOO, 100);
     }
 
-    public static boolean spendVoodoo(PlayerEntity player, int cost) {
-        if (player.getAbilities().creativeMode) {
+    public static boolean spendVoodoo(Player player, int cost) {
+        if (player.getAbilities().instabuild) {
             return true;
         }
         int current = voodoo(player);
@@ -165,7 +165,7 @@ public final class PirateData {
         return true;
     }
 
-    public static void regenVoodoo(PlayerEntity player, int amount) {
+    public static void regenVoodoo(Player player, int amount) {
         int max = maxVoodoo(player);
         int current = voodoo(player);
         if (current < max) {

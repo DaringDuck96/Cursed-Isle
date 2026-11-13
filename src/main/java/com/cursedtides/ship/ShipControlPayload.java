@@ -1,13 +1,13 @@
 package com.cursedtides.ship;
 
 import com.cursedtides.CursedTides;
-import net.minecraft.network.RegistryByteBuf;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.codec.PacketCodecs;
-import net.minecraft.network.packet.CustomPayload;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
 /** Client to server: a ship order from the keyboard. */
-public record ShipControlPayload(int action) implements CustomPayload {
+public record ShipControlPayload(int action) implements CustomPacketPayload {
     public static final int SAILS_UP = 0;
     public static final int SAILS_DOWN = 1;
     public static final int FIRE_PORT = 2;
@@ -28,12 +28,12 @@ public record ShipControlPayload(int action) implements CustomPayload {
     public static final int ANCHOR = 14;
     public static final int ULTIMATE = 15;
 
-    public static final CustomPayload.Id<ShipControlPayload> ID = new CustomPayload.Id<>(CursedTides.id("ship_control"));
-    public static final PacketCodec<RegistryByteBuf, ShipControlPayload> CODEC =
-            PacketCodec.tuple(PacketCodecs.VAR_INT, ShipControlPayload::action, ShipControlPayload::new);
+    public static final CustomPacketPayload.Type<ShipControlPayload> ID = new CustomPacketPayload.Type<>(CursedTides.id("ship_control"));
+    public static final StreamCodec<RegistryFriendlyByteBuf, ShipControlPayload> CODEC =
+            StreamCodec.composite(ByteBufCodecs.VAR_INT, ShipControlPayload::action, ShipControlPayload::new);
 
     @Override
-    public Id<? extends CustomPayload> getId() {
+    public Type<? extends CustomPacketPayload> type() {
         return ID;
     }
 }

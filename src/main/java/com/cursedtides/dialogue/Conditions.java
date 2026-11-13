@@ -13,15 +13,14 @@ import com.cursedtides.quest.QuestData;
 import com.cursedtides.quest.SideQuests;
 import com.cursedtides.social.CrewState;
 import com.cursedtides.world.ModWorld;
-import net.minecraft.entity.Entity;
-import net.minecraft.registry.Registries;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.Identifier;
-import net.minecraft.world.World;
-
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.Level;
 
 /**
  * The tests a line or a reply can depend on. Each is a short token; "!" in front negates it.
@@ -38,17 +37,17 @@ public final class Conditions {
 
     private static final Pattern COMPARE = Pattern.compile("([a-z_]+)(>=|<=|==|!=|>|<)(-?\\d+)");
 
-    public static boolean all(List<String> tests, ServerPlayerEntity p, Entity npc) {
+    public static boolean all(List<String> tests, ServerPlayer p, Entity npc) {
         if (tests == null) return true;
         for (String t : tests) if (!test(t, p, npc)) return false;
         return true;
     }
 
-    public static boolean test(String token, ServerPlayerEntity p, Entity npc) {
+    public static boolean test(String token, ServerPlayer p, Entity npc) {
         token = token.trim();
         if (token.startsWith("!")) return !test(token.substring(1), p, npc);
-        World w = p.getWorld();
-        long time = w.getTimeOfDay() % 24000;
+        Level w = p.level();
+        long time = w.getOverworldClockTime() % 24000;
         switch (token) {
             case "dawn": return time >= 23000 || time < 1000;
             case "day": return time >= 1000 && time < 12000;
@@ -58,8 +57,8 @@ public final class Conditions {
             case "raining": return w.isRaining() && !w.isThundering();
             case "thundering": return w.isThundering();
             case "wanted": return FactionData.isWanted(p);
-            case "crew": return p.getServer() != null && CrewState.get(p.getServer()).crewOf(p.getUuid()) != null;
-            case "gate": return HorizonArc.gateOpened(p.getServer());
+            case "crew": return p.level().getServer() != null && CrewState.get(p.level().getServer()).crewOf(p.getUUID()) != null;
+            case "gate": return HorizonArc.gateOpened(p.level().getServer());
             case "archipelago": return ModWorld.isArchipelago();
             case "festival": return com.cursedtides.living.Festivals.current() != null;
             case "open": return npc == null || com.cursedtides.living.Hours.isOpen(npc);
@@ -72,17 +71,17 @@ public final class Conditions {
             switch (kind) {
                 case "chance": return p.getRandom().nextFloat() < Float.parseFloat(arg);
                 case "holding": {
-                    var held = p.getMainHandStack();
+                    var held = p.getMainHandItem();
                     if (arg.equals("deed")) return held.getItem() instanceof com.cursedtides.item.ShipDeedItem;
                     if (arg.equals("fish")) return held.getItem() instanceof com.cursedtides.profession.CatchItem;
                     Identifier id = Identifier.tryParse(arg);
-                    return id != null && held.isOf(Registries.ITEM.get(id));
+                    return id != null && held.is(BuiltInRegistries.ITEM.getValue(id));
                 }
                 case "has": {
                     Identifier id = Identifier.tryParse(arg);
-                    return id != null && QuestData.has(p, Registries.ITEM.get(id));
+                    return id != null && QuestData.has(p, BuiltInRegistries.ITEM.getValue(id));
                 }
-                case "flag": return p.getCommandTags().contains(Dialogue.flagTag(arg));
+                case "flag": return p.entityTags().contains(Dialogue.flagTag(arg));
                 case "relic": return HorizonArc.hasRelic(p, arg);
                 case "arcflag": return HorizonArc.hasFlag(p, arg);
                 case "ending": return HorizonArc.endingName(p).equals(arg);
@@ -110,7 +109,7 @@ public final class Conditions {
         };
     }
 
-    private static int value(String name, ServerPlayerEntity p) {
+    private static int value(String name, ServerPlayer p) {
         switch (name) {
             case "navy": return FactionData.rep(p, Faction.NAVY);
             case "brethren": return FactionData.rep(p, Faction.BRETHREN);
@@ -127,7 +126,7 @@ public final class Conditions {
             case "contracts": return p.getAttachedOrElse(com.cursedtides.quest.Contracts.DONE, 0);
             case "crownshards": return com.cursedtides.quest.CrownArc.shardCount(p);
             case "crownending": return com.cursedtides.quest.CrownArc.ending(p);
-            case "prosperity": return com.cursedtides.living.Prosperity.at(p.getServer(), p.getBlockX(), p.getBlockZ());
+            case "prosperity": return com.cursedtides.living.Prosperity.at(p.level().getServer(), p.getBlockX(), p.getBlockZ());
             case "collected": return com.cursedtides.explore.Collectibles.count(p);
             case "achievements": return com.cursedtides.activity.Achievements.count(p);
             case "tavern_wins": return com.cursedtides.activity.Leaderboards.score(p, "drinking");

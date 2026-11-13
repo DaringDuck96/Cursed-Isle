@@ -1,5 +1,6 @@
 package com.cursedtides.home;
 
+import net.minecraft.world.entity.EntitySpawnReason;
 import com.cursedtides.CursedTides;
 import com.cursedtides.dialogue.Specials;
 import com.cursedtides.social.CrewState;
@@ -7,24 +8,24 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Rarity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.PersistentState;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Rarity;
+import net.minecraft.world.level.saveddata.SavedData;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -33,14 +34,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static net.minecraft.server.command.CommandManager.literal;
+import static net.minecraft.commands.Commands.literal;
 
 /**
  * Places of your own. A deed raises a house, a hideout, a tavern or a crew headquarters, and claims the ground:
  * only you (and, for a headquarters, your crew) can break or open things inside. Taverns earn a little every day,
  * more in a thriving port. /home to see what you own, /home go to walk home, /home collect to empty the till.
  */
-public class Homes extends PersistentState {
+public class Homes extends SavedData {
     public enum Kind { HOUSE("House"), HIDEOUT("Hideout"), TAVERN("Tavern"), HQ("Crew Headquarters");
         public final String title;
         Kind(String title) { this.title = title; }
@@ -61,10 +62,10 @@ public class Homes extends PersistentState {
     private final List<Home> homes = new ArrayList<>();
     private static final Map<UUID, Long> LAST_GO = new HashMap<>();
 
-    private static final Type<Homes> TYPE = new Type<>(Homes::new, Homes::fromNbt, null);
+    private static final net.minecraft.world.level.saveddata.SavedDataType<Homes> TYPE = com.cursedtides.util.Saved.type("cursedtides_homes", Homes::new, Homes::fromNbt, (st__, l__) -> st__.save(new CompoundTag(), l__));
 
     public static Homes get(MinecraftServer server) {
-        return server.getOverworld().getPersistentStateManager().getOrCreate(TYPE, "cursedtides_homes");
+        return server.overworld().getDataStorage().computeIfAbsent(TYPE);
     }
 
     public static final Item HOUSE_DEED = deed("house_deed", Kind.HOUSE, Rarity.UNCOMMON);
@@ -73,7 +74,7 @@ public class Homes extends PersistentState {
     public static final Item HQ_DEED = deed("hq_deed", Kind.HQ, Rarity.EPIC);
 
     private static Item deed(String name, Kind kind, Rarity r) {
-        return Registry.register(Registries.ITEM, CursedTides.id(name), new HomeDeedItem(new Item.Settings().maxCount(1).rarity(r), kind));
+        return Registry.register(BuiltInRegistries.ITEM, com.cursedtides.util.Reg.itemId(name), new HomeDeedItem(com.cursedtides.util.Reg.props().stacksTo(1).rarity(r), kind));
     }
 
     public static int price(Kind k) {
@@ -82,8 +83,8 @@ public class Homes extends PersistentState {
 
     // ------------------------------------------------------------------ queries
 
-    public static boolean ownsAny(ServerPlayerEntity p) {
-        return p.getServer() != null && get(p.getServer()).homes.stream().anyMatch(h -> h.owner.equals(p.getUuid()));
+    public static boolean ownsAny(ServerPlayer p) {
+        return p.level().getServer() != null && get(p.level().getServer()).homes.stream().anyMatch(h -> h.owner.equals(p.getUUID()));
     }
 
     @Nullable
@@ -99,79 +100,78 @@ public class Homes extends PersistentState {
         return false;
     }
 
-    static boolean mayUse(MinecraftServer server, Home h, PlayerEntity p) {
-        if (p.getUuid().equals(h.owner) || p.hasPermissionLevel(2)) return true;
+    static boolean mayUse(MinecraftServer server, Home h, Player p) {
+        if (p.getUUID().equals(h.owner) || p.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER)) return true;
         if (h.kind == Kind.TAVERN) return false; // anyone may walk in (doors aren't blocked), but not open the stores
-        CrewState.Crew crew = CrewState.get(server).crewOf(p.getUuid());
+        CrewState.Crew crew = CrewState.get(server).crewOf(p.getUUID());
         if (crew == null) return false;
-        return CrewState.shipmates(server, h.owner, p.getUuid()) || (h.crew != null && h.crew.equals(crew.name.toLowerCase()));
+        return CrewState.shipmates(server, h.owner, p.getUUID()) || (h.crew != null && h.crew.equals(crew.name.toLowerCase()));
     }
 
     // ------------------------------------------------------------------ placing
 
-    static boolean place(ServerPlayerEntity p, Kind kind, BlockPos clicked) {
-        MinecraftServer server = p.getServer();
-        if (server == null || p.getWorld() != server.getOverworld()) {
-            p.sendMessage(Text.literal("Deeds only hold good in the archipelago.").formatted(Formatting.RED), false);
+    static boolean place(ServerPlayer p, Kind kind, BlockPos clicked) {
+        MinecraftServer server = p.level().getServer();
+        if (server == null || p.level() != server.overworld()) {
+            p.sendSystemMessage(Component.literal("Deeds only hold good in the archipelago.").withStyle(ChatFormatting.RED), false);
             return false;
         }
         Homes s = get(server);
-        long owned = s.homes.stream().filter(h -> h.owner.equals(p.getUuid())).count();
+        long owned = s.homes.stream().filter(h -> h.owner.equals(p.getUUID())).count();
         if (owned >= 3) {
-            p.sendMessage(Text.literal("You already hold three properties. /home sell one first.").formatted(Formatting.RED), false);
+            p.sendSystemMessage(Component.literal("You already hold three properties. /home sell one first.").withStyle(ChatFormatting.RED), false);
             return false;
         }
         Blueprints.Size size = Blueprints.size(kind);
-        BlockPos origin = clicked.up().add(-size.w() / 2, 0, -size.d() / 2);
-        BlockPos min = origin.add(-1, -1, -1), max = origin.add(size.w(), size.h() + 2, size.d());
+        BlockPos origin = clicked.above().offset(-size.w() / 2, 0, -size.d() / 2);
+        BlockPos min = origin.offset(-1, -1, -1), max = origin.offset(size.w(), size.h() + 2, size.d());
         for (int x = min.getX(); x <= max.getX(); x++) {
             for (int z = min.getZ(); z <= max.getZ(); z++) {
                 if (com.cursedtides.world.Builds.blocksPlants(x, z)) {
-                    p.sendMessage(Text.literal("That ground's spoken for. Build away from the town's own buildings.").formatted(Formatting.RED), false);
+                    p.sendSystemMessage(Component.literal("That ground's spoken for. Build away from the town's own buildings.").withStyle(ChatFormatting.RED), false);
                     return false;
                 }
             }
         }
         if (s.overlaps(min, max)) {
-            p.sendMessage(Text.literal("Too close to someone else's property.").formatted(Formatting.RED), false);
+            p.sendSystemMessage(Component.literal("Too close to someone else's property.").withStyle(ChatFormatting.RED), false);
             return false;
         }
-        if (Math.abs(clicked.getY() - p.getBlockY()) > 3 || p.getServerWorld().getFluidState(clicked.up()).isStill()) {
-            p.sendMessage(Text.literal("Stand on the plot and pick a spot on dry ground.").formatted(Formatting.RED), false);
+        if (Math.abs(clicked.getY() - p.getBlockY()) > 3 || p.level().getFluidState(clicked.above()).isSource()) {
+            p.sendSystemMessage(Component.literal("Stand on the plot and pick a spot on dry ground.").withStyle(ChatFormatting.RED), false);
             return false;
         }
-        ServerWorld w = p.getServerWorld();
+        ServerLevel w = p.level();
         BlockPos door = Blueprints.build(w, kind, origin);
-        CrewState.Crew crew = CrewState.get(server).crewOf(p.getUuid());
-        Home h = new Home(kind, p.getUuid(), p.getName().getString(), kind == Kind.HQ && crew != null ? crew.name.toLowerCase() : null, min, max, door);
-        h.lastPaid = w.getTime();
+        CrewState.Crew crew = CrewState.get(server).crewOf(p.getUUID());
+        Home h = new Home(kind, p.getUUID(), p.getName().getString(), kind == Kind.HQ && crew != null ? crew.name.toLowerCase() : null, min, max, door);
+        h.lastPaid = w.getGameTime();
         s.homes.add(h);
-        s.markDirty();
+        s.setDirty();
         if (kind == Kind.TAVERN) {
-            var keep = com.cursedtides.entity.ModEntities.QUARTERMASTER.create(w);
+            var keep = com.cursedtides.entity.ModEntities.QUARTERMASTER.create(w, EntitySpawnReason.EVENT);
             if (keep != null) {
-                keep.setCustomName(Text.literal("Barkeep (cook)"));
+                keep.setCustomName(Component.literal("Barkeep (cook)"));
                 keep.setCustomNameVisible(true);
-                keep.refreshPositionAndAngles(origin.getX() + size.w() / 2 + 0.5, origin.getY(), origin.getZ() + 3.5, 180, 0);
-                keep.setPersistent();
-                w.spawnEntity(keep);
+                keep.snapTo(origin.getX() + size.w() / 2 + 0.5, origin.getY(), origin.getZ() + 3.5, 180, 0);
+                keep.setPersistenceRequired();
+                w.addFreshEntity(keep);
             }
         }
         com.cursedtides.activity.Achievements.grant(p, "homeowner");
-        p.sendMessage(Text.literal("Your " + kind.title.toLowerCase() + " stands! It's yours: nobody else can break or open anything inside.")
-                .formatted(Formatting.GOLD), false);
+        p.sendSystemMessage(Component.literal("Your " + kind.title.toLowerCase() + " stands! It's yours: nobody else can break or open anything inside.")
+                .withStyle(ChatFormatting.GOLD), false);
         return true;
     }
 
     // ------------------------------------------------------------------ save / load
 
-    @Override
-    public NbtCompound writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup lookup) {
-        NbtList list = new NbtList();
+        public CompoundTag save(CompoundTag nbt, HolderLookup.Provider lookup) {
+        ListTag list = new ListTag();
         for (Home h : homes) {
-            NbtCompound c = new NbtCompound();
+            CompoundTag c = new CompoundTag();
             c.putString("Kind", h.kind.name());
-            c.putUuid("Owner", h.owner);
+            c.store("Owner", net.minecraft.core.UUIDUtil.CODEC, h.owner);
             c.putString("Name", h.ownerName);
             if (h.crew != null) c.putString("Crew", h.crew);
             c.putIntArray("Box", new int[]{h.min.getX(), h.min.getY(), h.min.getZ(), h.max.getX(), h.max.getY(), h.max.getZ(),
@@ -184,19 +184,19 @@ public class Homes extends PersistentState {
         return nbt;
     }
 
-    private static Homes fromNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup lookup) {
+    private static Homes fromNbt(CompoundTag nbt, HolderLookup.Provider lookup) {
         Homes s = new Homes();
-        NbtList list = nbt.getList("Homes", NbtElement.COMPOUND_TYPE);
+        ListTag list = nbt.getListOrEmpty("Homes");
         for (int i = 0; i < list.size(); i++) {
-            NbtCompound c = list.getCompound(i);
-            int[] b = c.getIntArray("Box");
+            CompoundTag c = list.getCompoundOrEmpty(i);
+            int[] b = c.getIntArray("Box").orElse(new int[0]);
             if (b.length < 9) continue;
             Kind kind;
-            try { kind = Kind.valueOf(c.getString("Kind")); } catch (IllegalArgumentException e) { continue; }
-            Home h = new Home(kind, c.getUuid("Owner"), c.getString("Name"), c.contains("Crew") ? c.getString("Crew") : null,
+            try { kind = Kind.valueOf(c.getStringOr("Kind", "")); } catch (IllegalArgumentException e) { continue; }
+            Home h = new Home(kind, c.read("Owner", net.minecraft.core.UUIDUtil.CODEC).orElse(null), c.getStringOr("Name", ""), c.contains("Crew") ? c.getStringOr("Crew", "") : null,
                     new BlockPos(b[0], b[1], b[2]), new BlockPos(b[3], b[4], b[5]), new BlockPos(b[6], b[7], b[8]));
-            h.till = c.getInt("Till");
-            h.lastPaid = c.getLong("Paid");
+            h.till = c.getIntOr("Till", 0);
+            h.lastPaid = c.getLongOr("Paid", 0L);
             s.homes.add(h);
         }
         return s;
@@ -205,138 +205,138 @@ public class Homes extends PersistentState {
     // ------------------------------------------------------------------ events and commands
 
     public static void register() {
-        net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents.modifyEntriesEvent(net.minecraft.registry.RegistryKey.of(
-                net.minecraft.registry.RegistryKeys.ITEM_GROUP, CursedTides.id("main"))).register(entries -> {
-            entries.add(HOUSE_DEED);
-            entries.add(HIDEOUT_DEED);
-            entries.add(TAVERN_DEED);
-            entries.add(HQ_DEED);
-            entries.add(com.cursedtides.explore.Diving.HELMET);
-            entries.add(com.cursedtides.activity.Deliveries.PARCEL);
-            for (var e : com.cursedtides.explore.Collectibles.ALL) entries.add(com.cursedtides.explore.Collectibles.stack(e));
+        net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents.modifyOutputEvent(net.minecraft.resources.ResourceKey.create(
+                net.minecraft.core.registries.Registries.CREATIVE_MODE_TAB, CursedTides.id("main"))).register(entries -> {
+            entries.accept(HOUSE_DEED);
+            entries.accept(HIDEOUT_DEED);
+            entries.accept(TAVERN_DEED);
+            entries.accept(HQ_DEED);
+            entries.accept(com.cursedtides.explore.Diving.HELMET);
+            entries.accept(com.cursedtides.activity.Deliveries.PARCEL);
+            for (var e : com.cursedtides.explore.Collectibles.ALL) entries.accept(com.cursedtides.explore.Collectibles.stack(e));
         });
         PlayerBlockBreakEvents.BEFORE.register((world, player, pos, state, be) -> {
-            if (world.isClient || world.getServer() == null || world != world.getServer().getOverworld()) return true;
+            if (world.isClientSide() || world.getServer() == null || world != world.getServer().overworld()) return true;
             Home h = get(world.getServer()).at(pos);
             if (h == null || mayUse(world.getServer(), h, player)) return true;
-            player.sendMessage(Text.literal("This is " + h.ownerName + "'s " + h.kind.title.toLowerCase() + ". Hands off.").formatted(Formatting.RED), true);
+            com.cursedtides.util.Compat.tell(player, Component.literal("This is " + h.ownerName + "'s " + h.kind.title.toLowerCase() + ". Hands off.").withStyle(ChatFormatting.RED), true);
             return false;
         });
         UseBlockCallback.EVENT.register((player, world, hand, hit) -> {
-            if (world.isClient || world.getServer() == null || world != world.getServer().getOverworld()) return ActionResult.PASS;
+            if (world.isClientSide() || world.getServer() == null || world != world.getServer().overworld()) return InteractionResult.PASS;
             BlockPos pos = hit.getBlockPos();
             Home h = get(world.getServer()).at(pos);
-            if (h == null || mayUse(world.getServer(), h, player)) return ActionResult.PASS;
+            if (h == null || mayUse(world.getServer(), h, player)) return InteractionResult.PASS;
             var state = world.getBlockState(pos);
-            boolean doorish = state.getBlock() instanceof net.minecraft.block.DoorBlock || state.getBlock() instanceof net.minecraft.block.BedBlock
-                    || state.isOf(net.minecraft.block.Blocks.OAK_PRESSURE_PLATE) || state.isOf(net.minecraft.block.Blocks.JUKEBOX);
-            if (doorish && h.kind != Kind.HIDEOUT) return ActionResult.PASS; // guests can come in and sit
-            player.sendMessage(Text.literal("That belongs to " + h.ownerName + ".").formatted(Formatting.RED), true);
-            return ActionResult.FAIL;
+            boolean doorish = state.getBlock() instanceof net.minecraft.world.level.block.DoorBlock || state.getBlock() instanceof net.minecraft.world.level.block.BedBlock
+                    || state.is(net.minecraft.world.level.block.Blocks.OAK_PRESSURE_PLATE) || state.is(net.minecraft.world.level.block.Blocks.JUKEBOX);
+            if (doorish && h.kind != Kind.HIDEOUT) return InteractionResult.PASS; // guests can come in and sit
+            com.cursedtides.util.Compat.tell(player, Component.literal("That belongs to " + h.ownerName + ".").withStyle(ChatFormatting.RED), true);
+            return InteractionResult.FAIL;
         });
         ServerTickEvents.END_SERVER_TICK.register(server -> {
-            if (server.getTicks() % 1200 != 0) return;
+            if (server.getTickCount() % 1200 != 0) return;
             Homes s = get(server);
-            long now = server.getOverworld().getTime();
+            long now = server.overworld().getGameTime();
             for (Home h : s.homes) {
                 if (h.kind != Kind.TAVERN || now - h.lastPaid < 24000) continue;
                 int mood = com.cursedtides.living.Prosperity.at(server, h.door.getX(), h.door.getZ());
                 int takings = 30 + mood / 2 + (com.cursedtides.living.Festivals.current() != null ? 20 : 0); // silver
                 h.till = Math.min(h.till + takings, 2000);
                 h.lastPaid = now;
-                s.markDirty();
-                ServerPlayerEntity owner = server.getPlayerManager().getPlayer(h.owner);
-                if (owner != null) owner.sendMessage(Text.literal("Your tavern took " + com.cursedtides.trade.Wallet.format(takings)
-                        + " today. Till: " + com.cursedtides.trade.Wallet.format(h.till) + ". /home collect").formatted(Formatting.GOLD), false);
+                s.setDirty();
+                ServerPlayer owner = server.getPlayerList().getPlayer(h.owner);
+                if (owner != null) owner.sendSystemMessage(Component.literal("Your tavern took " + com.cursedtides.trade.Wallet.format(takings)
+                        + " today. Till: " + com.cursedtides.trade.Wallet.format(h.till) + ". /home collect").withStyle(ChatFormatting.GOLD), false);
             }
         });
         CommandRegistrationCallback.EVENT.register((dispatcher, access, env) -> dispatcher.register(literal("home")
-                .executes(ctx -> list(ctx.getSource().getPlayerOrThrow()))
-                .then(literal("go").executes(ctx -> go(ctx.getSource().getPlayerOrThrow())))
-                .then(literal("collect").executes(ctx -> collect(ctx.getSource().getPlayerOrThrow())))
-                .then(literal("sell").executes(ctx -> sell(ctx.getSource().getPlayerOrThrow())))));
+                .executes(ctx -> list(ctx.getSource().getPlayerOrException()))
+                .then(literal("go").executes(ctx -> go(ctx.getSource().getPlayerOrException())))
+                .then(literal("collect").executes(ctx -> collect(ctx.getSource().getPlayerOrException())))
+                .then(literal("sell").executes(ctx -> sell(ctx.getSource().getPlayerOrException())))));
 
         Specials.register("buy_house", (p, npc) -> buy(p, Kind.HOUSE));
         Specials.register("buy_hideout", (p, npc) -> buy(p, Kind.HIDEOUT));
         Specials.register("buy_tavern", (p, npc) -> buy(p, Kind.TAVERN));
         Specials.register("buy_hq", (p, npc) -> {
-            CrewState.Crew crew = p.getServer() == null ? null : CrewState.get(p.getServer()).crewOf(p.getUuid());
-            if (crew == null || crew.rank(p.getUuid()) < 3) return List.of("Headquarters are sold to captains of a crew, and only captains.");
+            CrewState.Crew crew = p.level().getServer() == null ? null : CrewState.get(p.level().getServer()).crewOf(p.getUUID());
+            if (crew == null || crew.rank(p.getUUID()) < 3) return List.of("Headquarters are sold to captains of a crew, and only captains.");
             if (crew.bank < price(Kind.HQ) * 10) return List.of("That's paid from the crew chest: " + price(Kind.HQ) + " doubloons. Your chest holds "
                     + com.cursedtides.trade.Wallet.format(crew.bank) + ".");
             crew.bank -= price(Kind.HQ) * 10;
-            CrewState.get(p.getServer()).markDirty();
-            p.giveItemStack(new ItemStack(HQ_DEED));
+            CrewState.get(p.level().getServer()).setDirty();
+            p.addItem(new ItemStack(HQ_DEED));
             return List.of("Signed, witnessed and stamped. Plant it somewhere defensible.");
         });
     }
 
-    private static List<String> buy(ServerPlayerEntity p, Kind kind) {
+    private static List<String> buy(ServerPlayer p, Kind kind) {
         if (!com.cursedtides.trade.Wallet.pay(p, price(kind) * 10)) {
             return List.of("A " + kind.title.toLowerCase() + " deed is " + price(kind) + " doubloons. Come back when your purse agrees.");
         }
-        p.giveItemStack(new ItemStack(switch (kind) { case HOUSE -> HOUSE_DEED; case HIDEOUT -> HIDEOUT_DEED; case TAVERN -> TAVERN_DEED; case HQ -> HQ_DEED; }));
+        p.addItem(new ItemStack(switch (kind) { case HOUSE -> HOUSE_DEED; case HIDEOUT -> HIDEOUT_DEED; case TAVERN -> TAVERN_DEED; case HQ -> HQ_DEED; }));
         return List.of("A fine investment. Stand on open ground where you want it and use the deed. The builders work fast. Suspiciously fast.");
     }
 
-    private static int list(ServerPlayerEntity p) {
-        List<Home> mine = get(p.getServer()).homes.stream().filter(h -> h.owner.equals(p.getUuid())).toList();
+    private static int list(ServerPlayer p) {
+        List<Home> mine = get(p.level().getServer()).homes.stream().filter(h -> h.owner.equals(p.getUUID())).toList();
         if (mine.isEmpty()) {
-            p.sendMessage(Text.literal("You own nothing but your boots. See a land agent about a deed.").formatted(Formatting.GRAY), false);
+            p.sendSystemMessage(Component.literal("You own nothing but your boots. See a land agent about a deed.").withStyle(ChatFormatting.GRAY), false);
             return 1;
         }
         for (Home h : mine) {
-            p.sendMessage(Text.literal(h.kind.title + " at " + h.door.getX() + ", " + h.door.getY() + ", " + h.door.getZ()
-                    + (h.kind == Kind.TAVERN ? "  (till: " + com.cursedtides.trade.Wallet.format(h.till) + ")" : "")).formatted(Formatting.GOLD), false);
+            p.sendSystemMessage(Component.literal(h.kind.title + " at " + h.door.getX() + ", " + h.door.getY() + ", " + h.door.getZ()
+                    + (h.kind == Kind.TAVERN ? "  (till: " + com.cursedtides.trade.Wallet.format(h.till) + ")" : "")).withStyle(ChatFormatting.GOLD), false);
         }
         return 1;
     }
 
-    private static int go(ServerPlayerEntity p) {
-        Homes s = get(p.getServer());
-        Home home = s.homes.stream().filter(h -> h.owner.equals(p.getUuid())).findFirst().orElse(null);
+    private static int go(ServerPlayer p) {
+        Homes s = get(p.level().getServer());
+        Home home = s.homes.stream().filter(h -> h.owner.equals(p.getUUID())).findFirst().orElse(null);
         if (home == null) {
-            CrewState.Crew crew = CrewState.get(p.getServer()).crewOf(p.getUuid());
+            CrewState.Crew crew = CrewState.get(p.level().getServer()).crewOf(p.getUUID());
             if (crew != null) home = s.homes.stream().filter(h -> crew.name.toLowerCase().equals(h.crew)).findFirst().orElse(null);
         }
         if (home == null) return fail(p, "You have no home to go to.");
-        long now = p.getServerWorld().getTime();
-        if (LAST_GO.getOrDefault(p.getUuid(), -100000L) > now - 12000) return fail(p, "You walked home not long ago. Give it a while.");
-        if (com.cursedtides.faction.FactionData.isWanted(p) || p.hasVehicle()) return fail(p, "Not with the Tidewatch on your heels, or from a deck.");
-        LAST_GO.put(p.getUuid(), now);
+        long now = p.level().getGameTime();
+        if (LAST_GO.getOrDefault(p.getUUID(), -100000L) > now - 12000) return fail(p, "You walked home not long ago. Give it a while.");
+        if (com.cursedtides.faction.FactionData.isWanted(p) || p.isPassenger()) return fail(p, "Not with the Tidewatch on your heels, or from a deck.");
+        LAST_GO.put(p.getUUID(), now);
         BlockPos in = home.door.north();
-        p.teleport(p.getServer().getOverworld(), in.getX() + 0.5, in.getY(), in.getZ() + 0.5, p.getYaw(), p.getPitch());
-        p.sendMessage(Text.literal("Home again.").formatted(Formatting.GOLD), true);
+        com.cursedtides.util.Compat.teleport(p, p.level().getServer().overworld(), in.getX() + 0.5, in.getY(), in.getZ() + 0.5, p.getYRot(), p.getXRot());
+        p.sendSystemMessage(Component.literal("Home again.").withStyle(ChatFormatting.GOLD), true);
         return 1;
     }
 
-    private static int collect(ServerPlayerEntity p) {
-        Homes s = get(p.getServer());
+    private static int collect(ServerPlayer p) {
+        Homes s = get(p.level().getServer());
         int total = 0;
         for (Home h : s.homes) {
-            if (h.owner.equals(p.getUuid()) && h.kind == Kind.TAVERN) { total += h.till; h.till = 0; }
+            if (h.owner.equals(p.getUUID()) && h.kind == Kind.TAVERN) { total += h.till; h.till = 0; }
         }
         if (total == 0) return fail(p, "The till's empty.");
-        s.markDirty();
+        s.setDirty();
         com.cursedtides.trade.Wallet.give(p, total);
-        p.sendMessage(Text.literal("You empty the till: " + com.cursedtides.trade.Wallet.format(total) + ".").formatted(Formatting.GOLD), false);
+        p.sendSystemMessage(Component.literal("You empty the till: " + com.cursedtides.trade.Wallet.format(total) + ".").withStyle(ChatFormatting.GOLD), false);
         return 1;
     }
 
-    private static int sell(ServerPlayerEntity p) {
-        Homes s = get(p.getServer());
-        Home h = s.at(p.getBlockPos());
-        if (h == null || !h.owner.equals(p.getUuid())) return fail(p, "Stand inside the property you want to sell.");
+    private static int sell(ServerPlayer p) {
+        Homes s = get(p.level().getServer());
+        Home h = s.at(p.blockPosition());
+        if (h == null || !h.owner.equals(p.getUUID())) return fail(p, "Stand inside the property you want to sell.");
         s.homes.remove(h);
-        s.markDirty();
+        s.setDirty();
         com.cursedtides.trade.Wallet.give(p, price(h.kind) * 5);
-        p.sendMessage(Text.literal("Sold back to the land office for " + price(h.kind) / 2 + " doubloons. The building stays; the claim doesn't.")
-                .formatted(Formatting.GOLD), false);
+        p.sendSystemMessage(Component.literal("Sold back to the land office for " + price(h.kind) / 2 + " doubloons. The building stays; the claim doesn't.")
+                .withStyle(ChatFormatting.GOLD), false);
         return 1;
     }
 
-    private static int fail(ServerPlayerEntity p, String msg) {
-        p.sendMessage(Text.literal(msg).formatted(Formatting.RED), false);
+    private static int fail(ServerPlayer p, String msg) {
+        p.sendSystemMessage(Component.literal(msg).withStyle(ChatFormatting.RED), false);
         return 0;
     }
 }

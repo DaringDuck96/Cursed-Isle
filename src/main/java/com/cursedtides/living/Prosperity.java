@@ -2,12 +2,12 @@ package com.cursedtides.living;
 
 import com.cursedtides.trade.Ports;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.world.PersistentState;
+import net.minecraft.world.level.saveddata.SavedData;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -15,28 +15,27 @@ import org.jetbrains.annotations.Nullable;
  * the cursed coming ashore drag it down. A thriving port sells cheaper and talks happier; a struggling one pays more
  * for what it lacks. Everything drifts back toward 50 over the days.
  */
-public class Prosperity extends PersistentState {
+public class Prosperity extends SavedData {
     private final int[] values = new int[Ports.ALL.size()];
 
     private Prosperity() {
         java.util.Arrays.fill(values, 50);
     }
 
-    private static final Type<Prosperity> TYPE = new Type<>(Prosperity::new, Prosperity::fromNbt, null);
+    private static final net.minecraft.world.level.saveddata.SavedDataType<Prosperity> TYPE = com.cursedtides.util.Saved.type("cursedtides_prosperity", Prosperity::new, Prosperity::fromNbt, (st__, l__) -> st__.save(new CompoundTag(), l__));
 
     public static Prosperity get(MinecraftServer server) {
-        return server.getOverworld().getPersistentStateManager().getOrCreate(TYPE, "cursedtides_prosperity");
+        return server.overworld().getDataStorage().computeIfAbsent(TYPE);
     }
 
-    @Override
-    public NbtCompound writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup lookup) {
+        public CompoundTag save(CompoundTag nbt, HolderLookup.Provider lookup) {
         nbt.putIntArray("Values", values);
         return nbt;
     }
 
-    private static Prosperity fromNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup lookup) {
+    private static Prosperity fromNbt(CompoundTag nbt, HolderLookup.Provider lookup) {
         Prosperity p = new Prosperity();
-        int[] saved = nbt.getIntArray("Values");
+        int[] saved = nbt.getIntArray("Values").orElse(new int[0]);
         System.arraycopy(saved, 0, p.values, 0, Math.min(saved.length, p.values.length));
         return p;
     }
@@ -81,22 +80,22 @@ public class Prosperity extends PersistentState {
         int i = Ports.ALL.indexOf(port);
         int before = s.values[i];
         s.values[i] = Math.max(0, Math.min(100, before + delta));
-        s.markDirty();
+        s.setDirty();
         if (why != null && before / 20 != s.values[i] / 20) {
-            server.getPlayerManager().broadcast(Text.literal(port.island().name() + " is " + mood(server, port.island().cx(), port.island().cz())
-                    + " (" + why + ").").formatted(delta > 0 ? Formatting.GREEN : Formatting.RED), false);
+            server.getPlayerList().broadcastSystemMessage(Component.literal(port.island().name() + " is " + mood(server, port.island().cx(), port.island().cz())
+                    + " (" + why + ").").withStyle(delta > 0 ? ChatFormatting.GREEN : ChatFormatting.RED), false);
         }
     }
 
     public static void register() {
         ServerTickEvents.END_SERVER_TICK.register(server -> {
-            if (server.getTicks() % 24000 != 0 || server.getTicks() == 0) return;
+            if (server.getTickCount() % 24000 != 0 || server.getTickCount() == 0) return;
             Prosperity s = get(server);
             for (int i = 0; i < s.values.length; i++) {
                 if (s.values[i] > 50) s.values[i] -= 2;
                 else if (s.values[i] < 50) s.values[i] += 2;
             }
-            s.markDirty();
+            s.setDirty();
         });
     }
 }

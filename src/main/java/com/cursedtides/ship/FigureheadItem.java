@@ -1,18 +1,17 @@
 package com.cursedtides.ship;
 
 import com.cursedtides.CursedTides;
-import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.tooltip.TooltipType;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Rarity;
-
+import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Rarity;
+import net.minecraft.world.item.TooltipFlag;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,14 +38,14 @@ public class FigureheadItem extends Item {
 
     public final Kind kind;
 
-    public FigureheadItem(Settings settings, Kind kind) {
+    public FigureheadItem(Properties settings, Kind kind) {
         super(settings);
         this.kind = kind;
     }
 
     private static Item reg(Kind kind) {
-        Item item = Registry.register(Registries.ITEM, CursedTides.id("figurehead_" + kind.name().toLowerCase()),
-                new FigureheadItem(new Item.Settings().maxCount(1).rarity(Rarity.RARE), kind));
+        Item item = Registry.register(BuiltInRegistries.ITEM, com.cursedtides.util.Reg.itemId("figurehead_" + kind.name().toLowerCase()),
+                new FigureheadItem(com.cursedtides.util.Reg.props().stacksTo(1).rarity(Rarity.RARE), kind));
         ALL.add(item);
         return item;
     }
@@ -63,12 +62,14 @@ public class FigureheadItem extends Item {
     }
 
     public static void register() {
-        ItemGroupEvents.modifyEntriesEvent(RegistryKey.of(RegistryKeys.ITEM_GROUP, CursedTides.id("main"))).register(e -> ALL.forEach(e::add));
+        CreativeModeTabEvents.modifyOutputEvent(ResourceKey.create(Registries.CREATIVE_MODE_TAB, CursedTides.id("main"))).register(e -> ALL.forEach(e::accept));
     }
 
     @Override
-    public void appendTooltip(ItemStack stack, TooltipContext context, List<Text> tooltip, TooltipType type) {
-        tooltip.add(Text.literal(kind.effect).formatted(Formatting.BLUE));
-        tooltip.add(Text.literal("Use on your own ship to mount it at the bow.").formatted(Formatting.DARK_GRAY));
+    public void appendHoverText(ItemStack stack, TooltipContext context, net.minecraft.world.item.component.TooltipDisplay display__, java.util.function.Consumer<Component> adder__, TooltipFlag type) {
+        java.util.List<Component> tooltip = new java.util.ArrayList<>();
+        tooltip.add(Component.literal(kind.effect).withStyle(ChatFormatting.BLUE));
+        tooltip.add(Component.literal("Use on your own ship to mount it at the bow.").withStyle(ChatFormatting.DARK_GRAY));
+        tooltip.forEach(adder__);
     }
 }

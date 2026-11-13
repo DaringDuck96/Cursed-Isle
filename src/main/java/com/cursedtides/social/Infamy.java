@@ -5,10 +5,9 @@ import com.mojang.serialization.Codec;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,40 +36,40 @@ public final class Infamy {
         return r;
     }
 
-    public static int landRank(ServerPlayerEntity p) { return rank(p.getAttachedOrElse(LAND, 0)); }
-    public static int seaRank(ServerPlayerEntity p) { return rank(p.getAttachedOrElse(SEA, 0)); }
+    public static int landRank(ServerPlayer p) { return rank(p.getAttachedOrElse(LAND, 0)); }
+    public static int seaRank(ServerPlayer p) { return rank(p.getAttachedOrElse(SEA, 0)); }
 
     public static void register() {
         LAND.identifier();
         SEA.identifier();
         // Besting another pirate outside a duel (crewmates can't hurt each other; see Nameplates)
         ServerLivingEntityEvents.AFTER_DEATH.register((victim, source) -> {
-            if (victim instanceof ServerPlayerEntity v && source.getAttacker() instanceof ServerPlayerEntity a && a != v) land(a, 10);
+            if (victim instanceof ServerPlayer v && source.getEntity() instanceof ServerPlayer a && a != v) land(a, 10);
         });
     }
 
-    public static void land(ServerPlayerEntity p, int points) { add(p, LAND, points, LAND_RANKS, "land"); }
+    public static void land(ServerPlayer p, int points) { add(p, LAND, points, LAND_RANKS, "land"); }
 
-    public static void sea(ServerPlayerEntity p, int points) { add(p, SEA, points, SEA_RANKS, "sea"); }
+    public static void sea(ServerPlayer p, int points) { add(p, SEA, points, SEA_RANKS, "sea"); }
 
-    private static void add(ServerPlayerEntity p, AttachmentType<Integer> type, int points, String[] names, String what) {
+    private static void add(ServerPlayer p, AttachmentType<Integer> type, int points, String[] names, String what) {
         int before = p.getAttachedOrElse(type, 0), after = before + points;
         p.setAttached(type, after);
-        p.sendMessage(Text.literal("+" + points + " " + what + " infamy").formatted(Formatting.DARK_RED), true);
+        p.sendSystemMessage(Component.literal("+" + points + " " + what + " infamy").withStyle(ChatFormatting.DARK_RED), true);
         if (rank(after) > rank(before)) {
-            p.sendMessage(Text.literal("Your " + what + " infamy rises: you're known as a " + names[rank(after)] + "!")
-                    .formatted(Formatting.DARK_RED, Formatting.BOLD), false);
+            p.sendSystemMessage(Component.literal("Your " + what + " infamy rises: you're known as a " + names[rank(after)] + "!")
+                    .withStyle(ChatFormatting.DARK_RED, ChatFormatting.BOLD), false);
             Nameplates.refresh(p);
         }
     }
 
     /** The little badges that go after your level: a sword and an anchor, with your rank. */
-    public static String badges(ServerPlayerEntity p) {
+    public static String badges(ServerPlayer p) {
         int l = landRank(p), s = seaRank(p);
         return (l > 0 ? " ⚔" + l : "") + (s > 0 ? " ⚓" + s : "");
     }
 
-    public static List<String> journal(ServerPlayerEntity p) {
+    public static List<String> journal(ServerPlayer p) {
         List<String> lines = new ArrayList<>();
         int lp = p.getAttachedOrElse(LAND, 0), sp = p.getAttachedOrElse(SEA, 0);
         int l = rank(lp), s = rank(sp);

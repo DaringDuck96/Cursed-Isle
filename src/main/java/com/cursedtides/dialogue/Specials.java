@@ -1,11 +1,10 @@
 package com.cursedtides.dialogue;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.server.network.ServerPlayerEntity;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 
 /**
  * Named bits of business a conversation can start: "action": "special:arena" and so on.
@@ -16,7 +15,7 @@ public final class Specials {
     private Specials() {}
 
     public interface Handler {
-        List<String> run(ServerPlayerEntity player, Entity npc);
+        List<String> run(ServerPlayer player, Entity npc);
     }
 
     private static final Map<String, Handler> HANDLERS = new HashMap<>();
@@ -25,7 +24,7 @@ public final class Specials {
         HANDLERS.put(id, handler);
     }
 
-    static List<String> run(String id, ServerPlayerEntity player, Entity npc) {
+    static List<String> run(String id, ServerPlayer player, Entity npc) {
         Handler h = HANDLERS.get(id);
         return h == null ? List.of("(Nothing comes of it.)") : h.run(player, npc);
     }

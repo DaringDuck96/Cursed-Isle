@@ -6,16 +6,14 @@ import com.cursedtides.world.Canvas;
 import com.cursedtides.world.ModWorld;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.LanternBlock;
-import net.minecraft.block.PaneBlock;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.world.GameRules;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.gamerules.GameRules;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.IronBarsBlock;
+import net.minecraft.world.level.block.LanternBlock;
+import net.minecraft.world.level.block.state.BlockState;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,8 +51,8 @@ public final class Gaols {
         built = List.copyOf(list);
     }
 
-    private static BlockState s(net.minecraft.block.Block b) {
-        return b.getDefaultState();
+    private static BlockState s(net.minecraft.world.level.block.Block b) {
+        return b.defaultBlockState();
     }
 
     /** A squat stone gaolhouse: a barred cell (door gone), a guard's corner, a door out. */
@@ -68,7 +66,7 @@ public final class Gaols {
         for (int[] k : new int[][]{{-4, -3}, {-4, 3}, {4, -3}, {4, 3}}) {
             c.fill(x + k[0], y, z + k[1], x + k[0], y + 3, z + k[1], s(Blocks.MOSSY_STONE_BRICKS));
         }
-        BlockState barsX = s(Blocks.IRON_BARS).with(PaneBlock.NORTH, true).with(PaneBlock.SOUTH, true);
+        BlockState barsX = s(Blocks.IRON_BARS).setValue(IronBarsBlock.NORTH, true).setValue(IronBarsBlock.SOUTH, true);
         // The cell's bars, with the door long gone
         for (int dz = -2; dz <= 2; dz++) {
             if (dz == 0) continue;
@@ -76,7 +74,7 @@ public final class Gaols {
         }
         c.set(x, y + 3, z, s(Blocks.STONE_BRICKS));
         // Windows
-        BlockState barsZ = s(Blocks.IRON_BARS).with(PaneBlock.EAST, true).with(PaneBlock.WEST, true);
+        BlockState barsZ = s(Blocks.IRON_BARS).setValue(IronBarsBlock.EAST, true).setValue(IronBarsBlock.WEST, true);
         c.set(x - 2, y + 2, z - 3, barsZ);
         c.set(x - 2, y + 2, z + 3, barsZ);
         c.set(x + 2, y + 2, z - 3, barsZ);
@@ -86,29 +84,29 @@ public final class Gaols {
         // Cell furnishings
         c.set(x - 3, y, z - 2, s(Blocks.HAY_BLOCK));
         c.set(x - 3, y, z + 2, s(Blocks.CAULDRON));
-        c.set(x - 2, y + 3, z, s(Blocks.LANTERN).with(LanternBlock.HANGING, true));
+        c.set(x - 2, y + 3, z, s(Blocks.LANTERN).setValue(LanternBlock.HANGING, true));
         // The gaoler's corner
         c.set(x + 3, y, z - 2, s(Blocks.BARREL));
         c.set(x + 2, y, z - 2, s(Blocks.SPRUCE_STAIRS));
-        c.set(x + 3, y + 3, z + 2, s(Blocks.LANTERN).with(LanternBlock.HANGING, true));
+        c.set(x + 3, y + 3, z + 2, s(Blocks.LANTERN).setValue(LanternBlock.HANGING, true));
     }
 
     /** The port's warp stone on a little paved stand beside the gaol door, with two lamps. */
     private static void stone(Canvas c, Gaol g) {
-        net.minecraft.util.math.BlockPos p = Totems.stone(g);
+        net.minecraft.core.BlockPos p = Totems.stone(g);
         int x = p.getX(), y = p.getY(), z = p.getZ();
         c.foundation(x - 1, z - 1, x + 1, z + 1, y, s(Blocks.COBBLESTONE));
         c.fill(x - 1, y - 1, z - 1, x + 1, y - 1, z + 1, s(Blocks.CHISELED_STONE_BRICKS));
-        c.set(x, y, z, com.cursedtides.block.ModBlocks.WARP_TOTEM.getDefaultState());
+        c.set(x, y, z, com.cursedtides.block.ModBlocks.WARP_TOTEM.defaultBlockState());
         c.set(x, y + 1, z, s(Blocks.AMETHYST_CLUSTER));
         for (int dx : new int[]{-1, 1}) {
             c.set(x + dx, y, z - 1, s(Blocks.SPRUCE_FENCE));
             c.set(x + dx, y + 1, z - 1, s(Blocks.SOUL_LANTERN));
         }
         // The notice board, papered with contracts
-        net.minecraft.util.math.BlockPos b = com.cursedtides.quest.Contracts.boardPos(g);
+        net.minecraft.core.BlockPos b = com.cursedtides.quest.Contracts.boardPos(g);
         c.set(b.getX(), b.getY() - 1, b.getZ(), s(Blocks.COBBLESTONE));
-        c.set(b.getX(), b.getY(), b.getZ(), com.cursedtides.block.ModBlocks.NOTICE_BOARD.getDefaultState());
+        c.set(b.getX(), b.getY(), b.getZ(), com.cursedtides.block.ModBlocks.NOTICE_BOARD.defaultBlockState());
         c.set(b.getX(), b.getY() + 1, b.getZ(), s(Blocks.SPRUCE_SLAB));
     }
 
@@ -125,8 +123,8 @@ public final class Gaols {
     /** Registered late (after the world type is known on start-up). */
     public static void registerKeepInventory() {
         ServerLifecycleEvents.SERVER_STARTED.register(server -> {
-            if (ModWorld.isArchipelago() && !server.getGameRules().getBoolean(GameRules.KEEP_INVENTORY)) {
-                server.getGameRules().get(GameRules.KEEP_INVENTORY).set(true, server);
+            if (ModWorld.isArchipelago() && !server.overworld().getGameRules().get(GameRules.KEEP_INVENTORY)) {
+                server.overworld().getGameRules().set(GameRules.KEEP_INVENTORY, true, server);
                 com.cursedtides.CursedTides.LOGGER.info("Cursed Tides: defeated pirates keep their belongings (keepInventory on)");
             }
         });
@@ -135,14 +133,14 @@ public final class Gaols {
     public static void register() {
         ServerPlayerEvents.AFTER_RESPAWN.register((oldP, p, alive) -> {
             if (alive || !ModWorld.isArchipelago()) return;
-            ServerWorld overworld = p.getServer().getOverworld();
-            if (oldP.getWorld() != overworld) return;
+            ServerLevel overworld = p.level().getServer().overworld();
+            if (oldP.level() != overworld) return;
             Gaol g = nearest(oldP.getX(), oldP.getZ());
             if (g == null) return;
-            p.teleport(overworld, g.x() - 1.5, g.y(), g.z() + 0.5, 270f, 0f);
+            com.cursedtides.util.Compat.teleport(p, overworld, g.x() - 1.5, g.y(), g.z() + 0.5, 270f, 0f);
             p.setHealth(p.getMaxHealth());
-            p.sendMessage(Text.literal("Defeated! You come to in the " + g.island().name() + " gaol, patched up and none the poorer. "
-                    + "The cell door hangs open.").formatted(Formatting.GOLD), false);
+            p.sendSystemMessage(Component.literal("Defeated! You come to in the " + g.island().name() + " gaol, patched up and none the poorer. "
+                    + "The cell door hangs open.").withStyle(ChatFormatting.GOLD), false);
         });
     }
 }

@@ -1,5 +1,6 @@
 package com.cursedtides.quest;
 
+import net.minecraft.world.entity.EntityTypes;
 import com.cursedtides.CursedTides;
 import com.cursedtides.combat.Levels;
 import com.cursedtides.entity.StoryNpcEntity;
@@ -12,37 +13,36 @@ import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.attribute.EntityAttributeInstance;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.s2c.play.SubtitleS2CPacket;
-import net.minecraft.network.packet.s2c.play.TitleFadeS2CPacket;
-import net.minecraft.network.packet.s2c.play.TitleS2CPacket;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
+import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
+import net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.ClickEvent;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
-import static net.minecraft.server.command.CommandManager.literal;
+import static net.minecraft.commands.Commands.literal;
 
 /**
  * Act four, "The Drowned Lights". With the crown settled, every lighthouse in the Reach flickers red at once.
@@ -65,16 +65,16 @@ public final class LanternArc {
     public static final AttachmentType<Integer> ENDING = AttachmentRegistry.<Integer>builder()
             .persistent(Codec.INT).copyOnDeath().initializer(() -> 0).buildAndRegister(CursedTides.id("lantern_ending"));
 
-    public static int stage(ServerPlayerEntity p) { return p.getAttachedOrElse(STAGE, 0); }
+    public static int stage(ServerPlayer p) { return p.getAttachedOrElse(STAGE, 0); }
 
     // ------------------------------------------------------------------ the three lights
 
     public record Light(String name, Archipelago.Island island, String keeper, Supplier<EntityType<?>> keeperType, int bit) {}
 
     public static final List<Light> LIGHTS_LIST = List.of(
-            new Light("the Storm Light", Archipelago.STORMBREAK_ISLE, "Brannoch, Who Drowned the Fire", () -> EntityType.DROWNED, 1),
-            new Light("the Widow's Light", Archipelago.WIDOWS_ROCK, "The Grey Lamplighter", () -> EntityType.WITHER_SKELETON, 2),
-            new Light("the Gull Light", Archipelago.GULLSCREAM_ROCK, "Mother of Gulls", () -> EntityType.EVOKER, 4));
+            new Light("the Storm Light", Archipelago.STORMBREAK_ISLE, "Brannoch, Who Drowned the Fire", () -> EntityTypes.DROWNED, 1),
+            new Light("the Widow's Light", Archipelago.WIDOWS_ROCK, "The Grey Lamplighter", () -> EntityTypes.WITHER_SKELETON, 2),
+            new Light("the Gull Light", Archipelago.GULLSCREAM_ROCK, "Mother of Gulls", () -> EntityTypes.EVOKER, 4));
 
     private static volatile List<BlockPos> towers;
 
@@ -100,7 +100,7 @@ public final class LanternArc {
         towers = List.copyOf(list);
     }
 
-    private static BlockState s(net.minecraft.block.Block b) { return b.getDefaultState(); }
+    private static BlockState s(net.minecraft.world.level.block.Block b) { return b.defaultBlockState(); }
 
     private static void tower(Canvas c, BlockPos base) {
         int x = base.getX(), y = base.getY(), z = base.getZ();
@@ -117,7 +117,7 @@ public final class LanternArc {
         }
         c.set(x, y, z + 3, s(Blocks.AIR));
         c.set(x, y + 1, z + 3, s(Blocks.AIR));
-        BlockState ladder = s(Blocks.LADDER).with(net.minecraft.block.LadderBlock.FACING, net.minecraft.util.math.Direction.SOUTH);
+        BlockState ladder = s(Blocks.LADDER).setValue(net.minecraft.world.level.block.LadderBlock.FACING, net.minecraft.core.Direction.SOUTH);
         for (int k = 0; k <= 16; k++) c.set(x, y + k, z - 2 + (k >= 10 ? 1 : 0), ladder);
         c.fill(x - 2, y + 16, z - 2, x + 2, y + 16, z + 2, s(Blocks.STONE_BRICKS));
         c.set(x, y + 17, z, s(Blocks.CAULDRON)); // the cold brazier
@@ -125,14 +125,14 @@ public final class LanternArc {
 
     // ------------------------------------------------------------------ talking
 
-    private static void say(String who, ServerPlayerEntity p, String... lines) {
+    private static void say(String who, ServerPlayer p, String... lines) {
         for (String l : lines) {
-            p.sendMessage(Text.literal("[" + who + "] ").formatted(Formatting.GOLD).append(Text.literal(l).formatted(Formatting.WHITE)), false);
+            p.sendSystemMessage(Component.literal("[" + who + "] ").withStyle(ChatFormatting.GOLD).append(Component.literal(l).withStyle(ChatFormatting.WHITE)), false);
         }
     }
 
     /** Wren's part; true if she had something to say about it. */
-    public static boolean wren(StoryNpcEntity npc, ServerPlayerEntity p) {
+    public static boolean wren(StoryNpcEntity npc, ServerPlayer p) {
         int st = stage(p);
         if (st == SEE_WREN) {
             say("Keeper Wren", p, "You saw them too. Every light in the Reach, red, all at once. My own lamp did it. I've never been so frightened.",
@@ -145,10 +145,10 @@ public final class LanternArc {
         if (st == CHOOSE) {
             say("Keeper Wren", p, "You're alive! And that... that's its heart, isn't it. Still beating.",
                     "Give it back to the deep and it sleeps again, for a thousand years maybe. Keep it, and gods know what it gives you.");
-            p.sendMessage(Text.literal("  [Return the heart to the deep]").styled(s -> s.withColor(Formatting.AQUA)
-                    .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/drownedlights return")))
-                    .append(Text.literal("   [Keep the heart]").styled(s -> s.withColor(Formatting.DARK_RED)
-                            .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/drownedlights keep")))), false);
+            p.sendSystemMessage(Component.literal("  [Return the heart to the deep]").withStyle(s -> s.withColor(ChatFormatting.AQUA)
+                    .withClickEvent(new ClickEvent.RunCommand("/drownedlights return")))
+                    .append(Component.literal("   [Keep the heart]").withStyle(s -> s.withColor(ChatFormatting.DARK_RED)
+                            .withClickEvent(new ClickEvent.RunCommand("/drownedlights keep")))), false);
             return true;
         }
         if (st == DONE) {
@@ -163,7 +163,7 @@ public final class LanternArc {
         return false;
     }
 
-    public static boolean scholar(StoryNpcEntity npc, ServerPlayerEntity p) {
+    public static boolean scholar(StoryNpcEntity npc, ServerPlayer p) {
         if (stage(p) != SEE_SCHOLAR) return false;
         say("Professor Ansel Thwaite", p, "Red lights? Oh dear. Oh, dear, dear. Sit down. No, stand, there isn't time.",
                 "The tablets call it the Abyssal. Not a god; a hunger. The First People sank it under the Reach and lit three fires to keep it dreaming.",
@@ -171,20 +171,20 @@ public final class LanternArc {
                 "Light them again. Take this: First-Wick, from the observatory stores. It'll take a flame where nothing else will.",
                 "And captain: whoever let them go out had reasons. They may still be there, keeping them dark.");
         ItemStack wick = new ItemStack(Items.BLAZE_POWDER);
-        wick.set(net.minecraft.component.DataComponentTypes.CUSTOM_NAME, Text.literal("First-Wick").formatted(Formatting.GOLD));
+        wick.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, Component.literal("First-Wick").withStyle(ChatFormatting.GOLD));
         QuestData.give(p, wick);
         p.setAttached(STAGE, LIGHTS);
         title(p, "The Drowned Lights", "Relight the three fires");
         return true;
     }
 
-    private static void title(ServerPlayerEntity p, String t, String sub) {
-        p.networkHandler.sendPacket(new TitleFadeS2CPacket(10, 70, 20));
-        p.networkHandler.sendPacket(new SubtitleS2CPacket(Text.literal(sub).formatted(Formatting.GRAY)));
-        p.networkHandler.sendPacket(new TitleS2CPacket(Text.literal(t).formatted(Formatting.GOLD)));
+    private static void title(ServerPlayer p, String t, String sub) {
+        p.connection.send(new ClientboundSetTitlesAnimationPacket(10, 70, 20));
+        p.connection.send(new ClientboundSetSubtitleTextPacket(Component.literal(sub).withStyle(ChatFormatting.GRAY)));
+        p.connection.send(new ClientboundSetTitleTextPacket(Component.literal(t).withStyle(ChatFormatting.GOLD)));
     }
 
-    public static String objective(ServerPlayerEntity p) {
+    public static String objective(ServerPlayer p) {
         return switch (stage(p)) {
             case SEE_WREN -> "Every light in the Reach burned red. Ask Keeper Wren on Driftwood what it means.";
             case SEE_SCHOLAR -> "Ask Professor Thwaite on the Forgotten Keys about the First People's watch-fires.";
@@ -202,13 +202,13 @@ public final class LanternArc {
         };
     }
 
-    public static List<String> journal(ServerPlayerEntity p) {
+    public static List<String> journal(ServerPlayer p) {
         return List.of("§f" + objective(p));
     }
 
-    public static int ending(ServerPlayerEntity p) { return p.getAttachedOrElse(ENDING, 0); }
+    public static int ending(ServerPlayer p) { return p.getAttachedOrElse(ENDING, 0); }
 
-    public static int[] target(ServerPlayerEntity p) {
+    public static int[] target(ServerPlayer p) {
         switch (stage(p)) {
             case SEE_WREN, CHOOSE -> { return spot(StoryNpcEntity.Role.KEEPER); }
             case SEE_SCHOLAR -> { return spot(StoryNpcEntity.Role.SCHOLAR); }
@@ -225,7 +225,7 @@ public final class LanternArc {
         }
     }
 
-    public static String targetLabel(ServerPlayerEntity p) {
+    public static String targetLabel(ServerPlayer p) {
         return switch (stage(p)) {
             case SEE_WREN, CHOOSE -> "Keeper Wren";
             case SEE_SCHOLAR -> "Professor Thwaite";
@@ -252,20 +252,20 @@ public final class LanternArc {
         ServerTickEvents.END_SERVER_TICK.register(LanternArc::tick);
         ServerLivingEntityEvents.AFTER_DEATH.register(LanternArc::onDeath);
         CommandRegistrationCallback.EVENT.register((d, a, e) -> d.register(literal("drownedlights")
-                .then(literal("return").executes(ctx -> { choose(ctx.getSource().getPlayerOrThrow(), RETURNED); return 1; }))
-                .then(literal("keep").executes(ctx -> { choose(ctx.getSource().getPlayerOrThrow(), KEPT); return 1; }))));
+                .then(literal("return").executes(ctx -> { choose(ctx.getSource().getPlayerOrException(), RETURNED); return 1; }))
+                .then(literal("keep").executes(ctx -> { choose(ctx.getSource().getPlayerOrException(), KEPT); return 1; }))));
     }
 
     private static void tick(MinecraftServer server) {
-        if (server.getTicks() % 20 != 17) return;
-        ServerWorld w = server.getOverworld();
-        for (ServerPlayerEntity p : w.getPlayers()) {
+        if (server.getTickCount() % 20 != 17) return;
+        ServerLevel w = server.overworld();
+        for (ServerPlayer p : w.players()) {
             int st = stage(p);
             if (st == NONE) {
-                if (CrownArc.stage(p) == CrownArc.DONE && w.isNight()) {
+                if (CrownArc.stage(p) == CrownArc.DONE && w.isDarkOutside()) {
                     p.setAttached(STAGE, SEE_WREN);
-                    p.sendMessage(Text.literal("Out across the water, every lighthouse in sight flares red at the same moment, and goes dark.")
-                            .formatted(Formatting.DARK_RED, Formatting.ITALIC), false);
+                    p.sendSystemMessage(Component.literal("Out across the water, every lighthouse in sight flares red at the same moment, and goes dark.")
+                            .withStyle(ChatFormatting.DARK_RED, ChatFormatting.ITALIC), false);
                     title(p, "The Drowned Lights", "A new tale begins");
                 }
                 continue;
@@ -277,30 +277,30 @@ public final class LanternArc {
                     Light l = LIGHTS_LIST.get(i);
                     if ((lit & l.bit()) != 0) continue;
                     BlockPos base = t.get(i);
-                    if (p.squaredDistanceTo(base.getX() + 0.5, base.getY(), base.getZ() + 0.5) > 28 * 28) continue;
+                    if (p.distanceToSqr(base.getX() + 0.5, base.getY(), base.getZ() + 0.5) > 28 * 28) continue;
                     final String tag = KEEPER_TAG + i;
-                    if (w.getEntitiesByClass(MobEntity.class, new Box(base).expand(48), m -> m.getCommandTags().contains(tag)).isEmpty()) {
+                    if (w.getEntitiesOfClass(Mob.class, new AABB(base).inflate(48), m -> m.entityTags().contains(tag)).isEmpty()) {
                         spawnKeeper(w, p, l, i, base);
                     }
                 }
             }
-            if (st == THE_DEEP && p.squaredDistanceTo(deepX(), p.getY(), deepZ()) < 70 * 70) {
-                boolean risen = !w.getEntitiesByClass(MobEntity.class, new Box(new BlockPos(deepX(), 50, deepZ())).expand(120),
-                        m -> m.getCommandTags().contains(ABYSSAL_TAG)).isEmpty();
+            if (st == THE_DEEP && p.distanceToSqr(deepX(), p.getY(), deepZ()) < 70 * 70) {
+                boolean risen = !w.getEntitiesOfClass(Mob.class, new AABB(new BlockPos(deepX(), 50, deepZ())).inflate(120),
+                        m -> m.entityTags().contains(ABYSSAL_TAG)).isEmpty();
                 if (!risen) rise(w, p);
             }
         }
     }
 
-    private static MobEntity boss(ServerWorld w, Entity e, double x, double y, double z, String name, int level, double hpMult) {
-        if (!(e instanceof MobEntity m)) return null;
-        m.refreshPositionAndAngles(x, y, z, w.random.nextFloat() * 360, 0);
-        m.initialize(w, w.getLocalDifficulty(BlockPos.ofFloored(x, y, z)), SpawnReason.EVENT, null);
-        m.setCustomName(Text.literal(name).formatted(Formatting.DARK_RED, Formatting.BOLD));
+    private static Mob boss(ServerLevel w, Entity e, double x, double y, double z, String name, int level, double hpMult) {
+        if (!(e instanceof Mob m)) return null;
+        m.snapTo(x, y, z, w.getRandom().nextFloat() * 360, 0);
+        m.finalizeSpawn(w, w.getCurrentDifficultyAt(BlockPos.containing(x, y, z)), EntitySpawnReason.EVENT, null);
+        m.setCustomName(Component.literal(name).withStyle(ChatFormatting.DARK_RED, ChatFormatting.BOLD));
         m.setCustomNameVisible(true);
-        m.setPersistent();
+        m.setPersistenceRequired();
         Levels.apply(m, level);
-        EntityAttributeInstance hp = m.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
+        AttributeInstance hp = m.getAttribute(Attributes.MAX_HEALTH);
         if (hp != null) {
             hp.setBaseValue(hp.getBaseValue() * hpMult * Levels.healthFactor(level));
             m.setHealth(m.getMaxHealth());
@@ -308,41 +308,41 @@ public final class LanternArc {
         return m;
     }
 
-    private static void spawnKeeper(ServerWorld w, ServerPlayerEntity p, Light l, int i, BlockPos base) {
+    private static void spawnKeeper(ServerLevel w, ServerPlayer p, Light l, int i, BlockPos base) {
         int level = Math.min(50, Levels.band(l.island())[1] + 3);
         BlockPos at = com.cursedtides.living.Residents.openGround(w, base.getX() + 6, base.getZ() + 2, 6);
-        if (at == null) at = base.up();
-        MobEntity m = boss(w, l.keeperType().get().create(w), at.getX() + 0.5, at.getY(), at.getZ() + 0.5, l.keeper(), level, 6);
+        if (at == null) at = base.above();
+        Mob m = boss(w, l.keeperType().get().create(w, EntitySpawnReason.EVENT), at.getX() + 0.5, at.getY(), at.getZ() + 0.5, l.keeper(), level, 6);
         if (m == null) return;
-        m.addCommandTag(KEEPER_TAG + i);
+        m.addTag(KEEPER_TAG + i);
         m.setTarget(p);
-        w.spawnEntity(m);
+        w.addFreshEntity(m);
         say(l.keeper(), p, i == 0 ? "The fire is out because I put it out. Let him sleep, let him sleep, LET HIM SLEEP."
                 : i == 1 ? "Every widow on this rock lit that lamp for a man who never came home. No more. No more lights."
                 : "My children nest in the cold brazier. You will not burn them out.");
     }
 
-    private static void rise(ServerWorld w, ServerPlayerEntity p) {
+    private static void rise(ServerLevel w, ServerPlayer p) {
         double x = deepX() + 0.5, z = deepZ() + 0.5;
-        MobEntity maw = boss(w, EntityType.ELDER_GUARDIAN.create(w), x, Archipelago.WATER_TOP - 6, z, "The Abyssal", 50, 4);
+        Mob maw = boss(w, EntityTypes.ELDER_GUARDIAN.create(w, EntitySpawnReason.EVENT), x, Archipelago.WATER_TOP - 6, z, "The Abyssal", 50, 4);
         if (maw == null) return;
-        maw.addCommandTag(ABYSSAL_TAG);
-        w.spawnEntity(maw);
+        maw.addTag(ABYSSAL_TAG);
+        w.addFreshEntity(maw);
         for (int k = 0; k < 6; k++) {
             double a = Math.PI * 2 * k / 6;
-            Entity t = com.cursedtides.sea.Leviathan.TENTACLE.create(w);
-            if (t instanceof MobEntity tm) {
-                tm.refreshPositionAndAngles(x + Math.cos(a) * 14, Archipelago.WATER_TOP - 4, z + Math.sin(a) * 14, 0, 0);
-                tm.addCommandTag(ABYSSAL_TAG + "_arm");
-                w.spawnEntity(tm);
+            Entity t = com.cursedtides.sea.Leviathan.TENTACLE.create(w, EntitySpawnReason.EVENT);
+            if (t instanceof Mob tm) {
+                tm.snapTo(x + Math.cos(a) * 14, Archipelago.WATER_TOP - 4, z + Math.sin(a) * 14, 0, 0);
+                tm.addTag(ABYSSAL_TAG + "_arm");
+                w.addFreshEntity(tm);
             }
         }
-        for (ServerPlayerEntity near : w.getPlayers(q -> q.squaredDistanceTo(x, q.getY(), z) < 150 * 150)) {
+        for (ServerPlayer near : w.getPlayers(q -> q.distanceToSqr(x, q.getY(), z) < 150 * 150)) {
             title(near, "The Abyssal", "rises from the deep");
         }
-        w.playSound(null, BlockPos.ofFloored(x, 62, z), SoundEvents.ENTITY_ELDER_GUARDIAN_CURSE, SoundCategory.HOSTILE, 3f, 0.5f);
-        w.setWeather(0, 6000, true, true);
-        net.minecraft.util.math.Vec3d at = new net.minecraft.util.math.Vec3d(x, Archipelago.WATER_TOP, z);
+        w.playSound(null, BlockPos.containing(x, 62, z), SoundEvents.ELDER_GUARDIAN_CURSE, SoundSource.HOSTILE, 3f, 0.5f);
+        w.getServer().setWeatherParameters(0, 6000, true, true);
+        net.minecraft.world.phys.Vec3 at = new net.minecraft.world.phys.Vec3(x, Archipelago.WATER_TOP, z);
         Cutscenes.playNear(w, at, 150, "The Abyssal", List.of(
                 Cutscenes.orbit(at, 34, 14, 0, 110, 110, "Where the three beams cross, the sea draws back like a held breath."),
                 new Cutscenes.Shot(at.add(0, 4, -40), at.add(0, 2, -22), at.add(0, 3, 0), 90,
@@ -350,19 +350,19 @@ public final class LanternArc {
     }
 
     private static void onDeath(LivingEntity victim, DamageSource source) {
-        if (!(victim.getWorld() instanceof ServerWorld w)) return;
-        for (String tag : victim.getCommandTags()) {
+        if (!(victim.level() instanceof ServerLevel w)) return;
+        for (String tag : victim.entityTags()) {
             if (tag.startsWith(KEEPER_TAG)) {
                 int i = Integer.parseInt(tag.substring(KEEPER_TAG.length()));
                 Light l = LIGHTS_LIST.get(i);
                 BlockPos base = towers().get(i);
-                w.setBlockState(base.up(17), Blocks.CAMPFIRE.getDefaultState());
-                w.setBlockState(base.up(16), Blocks.MAGMA_BLOCK.getDefaultState());
-                for (ServerPlayerEntity p : w.getPlayers(q -> q.squaredDistanceTo(victim) < 64 * 64 && stage(q) == LIGHTS)) {
+                w.setBlockAndUpdate(base.above(17), Blocks.CAMPFIRE.defaultBlockState());
+                w.setBlockAndUpdate(base.above(16), Blocks.MAGMA_BLOCK.defaultBlockState());
+                for (ServerPlayer p : w.getPlayers(q -> q.distanceToSqr(victim) < 64 * 64 && stage(q) == LIGHTS)) {
                     int lit = p.getAttachedOrElse(LIT, 0) | l.bit();
                     p.setAttached(LIT, lit);
-                    p.sendMessage(Text.literal("The First-Wick catches. " + cap(l.name()) + " burns again, and its beam swings out to sea.")
-                            .formatted(Formatting.GOLD), false);
+                    p.sendSystemMessage(Component.literal("The First-Wick catches. " + cap(l.name()) + " burns again, and its beam swings out to sea.")
+                            .withStyle(ChatFormatting.GOLD), false);
                     if (lit == 7) {
                         p.setAttached(STAGE, THE_DEEP);
                         title(p, "Three lights burn", "Their beams cross far to the south");
@@ -371,19 +371,19 @@ public final class LanternArc {
                 return;
             }
             if (tag.equals(ABYSSAL_TAG)) {
-                for (Entity arm : w.getEntitiesByClass(MobEntity.class, victim.getBoundingBox().expand(60), m -> m.getCommandTags().contains(ABYSSAL_TAG + "_arm"))) {
+                for (Entity arm : w.getEntitiesOfClass(Mob.class, victim.getBoundingBox().inflate(60), m -> m.entityTags().contains(ABYSSAL_TAG + "_arm"))) {
                     arm.discard();
                 }
-                for (ServerPlayerEntity p : w.getPlayers(q -> q.squaredDistanceTo(victim) < 120 * 120 && stage(q) == THE_DEEP)) {
+                for (ServerPlayer p : w.getPlayers(q -> q.distanceToSqr(victim) < 120 * 120 && stage(q) == THE_DEEP)) {
                     p.setAttached(STAGE, CHOOSE);
                     title(p, "The Abyssal falls", "Its heart still beats");
                     ItemStack heart = new ItemStack(Items.HEART_OF_THE_SEA);
-                    heart.set(net.minecraft.component.DataComponentTypes.CUSTOM_NAME, Text.literal("Heart of the Abyssal").formatted(Formatting.DARK_AQUA));
+                    heart.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, Component.literal("Heart of the Abyssal").withStyle(ChatFormatting.DARK_AQUA));
                     QuestData.give(p, heart);
-                    p.sendMessage(Text.literal("Something rises in the churned water: a heart the size of a barrel, still beating. Wren will know what to do.")
-                            .formatted(Formatting.AQUA), false);
+                    p.sendSystemMessage(Component.literal("Something rises in the churned water: a heart the size of a barrel, still beating. Wren will know what to do.")
+                            .withStyle(ChatFormatting.AQUA), false);
                 }
-                w.setWeather(6000, 0, false, false);
+                w.getServer().setWeatherParameters(6000, 0, false, false);
                 return;
             }
         }
@@ -391,7 +391,7 @@ public final class LanternArc {
 
     private static String cap(String s) { return Character.toUpperCase(s.charAt(0)) + s.substring(1); }
 
-    private static void choose(ServerPlayerEntity p, int ending) {
+    private static void choose(ServerPlayer p, int ending) {
         if (stage(p) != CHOOSE) return;
         p.setAttached(ENDING, ending);
         p.setAttached(STAGE, DONE);
@@ -405,9 +405,9 @@ public final class LanternArc {
         } else {
             say("Keeper Wren", p, "You're keeping it. Of course you are.",
                     "Hold it close, then. The sea will move for you now. Just remember that it's always listening.");
-            p.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(net.minecraft.entity.effect.StatusEffects.CONDUIT_POWER, 20 * 60 * 20, 0));
+            p.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.CONDUIT_POWER, 20 * 60 * 20, 0));
             com.cursedtides.faction.FactionData.adjust(p, com.cursedtides.faction.Faction.BRETHREN, 150);
-            QuestData.give(p, com.cursedtides.combat.GearRarity.randomWeapon(p.getServerWorld(), p.getRandom(), 5));
+            QuestData.give(p, com.cursedtides.combat.GearRarity.randomWeapon(p.level(), p.getRandom(), 5));
             title(p, "Heart of the Abyss", "The Drowned Lights: complete");
         }
         com.cursedtides.activity.Achievements.grant(p, "drowned_lights");

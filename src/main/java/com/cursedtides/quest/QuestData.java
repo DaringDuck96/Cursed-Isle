@@ -4,10 +4,10 @@ import com.cursedtides.CursedTides;
 import com.mojang.serialization.Codec;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
 /** Main story: "The Drowned Bell". Progress is saved per player. */
 public final class QuestData {
@@ -29,16 +29,16 @@ public final class QuestData {
         STAGE.identifier();
     }
 
-    public static int stage(PlayerEntity player) {
+    public static int stage(Player player) {
         return player.getAttachedOrElse(STAGE, START);
     }
 
-    public static void setStage(PlayerEntity player, int stage) {
+    public static void setStage(Player player, int stage) {
         player.setAttached(STAGE, stage);
     }
 
-    public static Text objective(int stage) {
-        return Text.literal(switch (stage) {
+    public static Component objective(int stage) {
+        return Component.literal(switch (stage) {
             case START -> "Find Keeper Wren beside the lighthouse on Driftwood Island.";
             case FIND_YSOLDE -> "Row east to Saltmarrow (" + at(com.cursedtides.world.Archipelago.SALTMARROW) + ") and find Harbormistress Ysolde Vane.";
             case FIND_SHARDS -> "Recover the Reef Shard (The Sunken Reach, " + at(com.cursedtides.world.Archipelago.SUNKEN_REACH) + ") and the Ember Shard "
@@ -49,31 +49,31 @@ public final class QuestData {
     }
 
     /** The objective as this player sees it (during Wren's lessons, the current lesson). */
-    public static Text objective(PlayerEntity player) {
+    public static Component objective(Player player) {
         int stage = stage(player);
-        if (stage == START && player instanceof net.minecraft.server.network.ServerPlayerEntity sp
+        if (stage == START && player instanceof net.minecraft.server.level.ServerPlayer sp
                 && Lessons.step(sp) != Lessons.Step.TALK) return Lessons.objective(sp);
         return objective(stage);
     }
 
-    public static boolean has(PlayerEntity player, Item item) {
-        return player.getInventory().count(item) > 0;
+    public static boolean has(Player player, Item item) {
+        return player.getInventory().countItem(item) > 0;
     }
 
-    public static void take(PlayerEntity player, Item item) {
+    public static void take(Player player, Item item) {
         var inv = player.getInventory();
-        for (int i = 0; i < inv.size(); i++) {
-            ItemStack stack = inv.getStack(i);
-            if (stack.isOf(item)) {
-                stack.decrement(1);
+        for (int i = 0; i < inv.getContainerSize(); i++) {
+            ItemStack stack = inv.getItem(i);
+            if (stack.is(item)) {
+                stack.shrink(1);
                 return;
             }
         }
     }
 
-    public static void give(PlayerEntity player, ItemStack stack) {
-        if (!player.getInventory().insertStack(stack)) {
-            player.dropItem(stack, false);
+    public static void give(Player player, ItemStack stack) {
+        if (!player.getInventory().add(stack)) {
+            player.drop(stack, false, net.minecraft.util.Prediction.SERVER_ONLY);
         }
     }
 

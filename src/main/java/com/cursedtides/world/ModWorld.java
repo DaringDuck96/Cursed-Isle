@@ -11,25 +11,23 @@ import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
-import net.minecraft.entity.vehicle.BoatEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.packet.s2c.play.SubtitleS2CPacket;
-import net.minecraft.network.packet.s2c.play.TitleS2CPacket;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
+import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.gen.chunk.FlatChunkGenerator;
-import net.minecraft.world.gen.feature.DefaultFeatureConfig;
-import net.minecraft.world.gen.feature.Feature;
-
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.vehicle.boat.Boat;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.levelgen.FlatLevelSource;
+import net.minecraft.world.level.levelgen.feature.Feature;
+import net.minecraft.world.phys.Vec3;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -38,8 +36,8 @@ import java.util.UUID;
 public final class ModWorld {
     private ModWorld() {}
 
-    public static final Feature<DefaultFeatureConfig> ARCHIPELAGO = Registry.register(Registries.FEATURE,
-            CursedTides.id("archipelago"), new ArchipelagoFeature(DefaultFeatureConfig.CODEC));
+    public static final com.mojang.serialization.MapCodec<? extends Feature> ARCHIPELAGO = Registry.register(BuiltInRegistries.FEATURE_TYPE,
+            CursedTides.id("archipelago"), ArchipelagoFeature.CODEC);
 
     /** Bit i set = island i of Archipelago.ISLANDS discovered. */
     public static final AttachmentType<Integer> DISCOVERED = AttachmentRegistry.<Integer>builder()
@@ -49,7 +47,7 @@ public final class ModWorld {
             .buildAndRegister(CursedTides.id("discovered_islands"));
 
     private static boolean archipelago = false;
-    private static final Map<UUID, Vec3d> lastBoatPos = new HashMap<>();
+    private static final Map<UUID, Vec3> lastBoatPos = new HashMap<>();
     private static final Map<UUID, Double> sailedMeters = new HashMap<>();
 
     public static boolean isArchipelago() {
@@ -58,13 +56,13 @@ public final class ModWorld {
 
     public static void register() {
         ServerLifecycleEvents.SERVER_STARTED.register(server -> {
-            ServerWorld overworld = server.getOverworld();
-            archipelago = overworld.getChunkManager().getChunkGenerator() instanceof FlatChunkGenerator flat
-                    && flat.getConfig().getBiome().matchesKey(Archipelago.BIOME);
+            ServerLevel overworld = server.overworld();
+            archipelago = overworld.getChunkSource().getGenerator() instanceof FlatLevelSource flat
+                    && flat.settings().getBiome().is(Archipelago.BIOME);
             if (archipelago) {
                 BlockPos spawn = new BlockPos(Archipelago.SPAWN_X,
                         Archipelago.standY(Archipelago.SPAWN_X, Archipelago.SPAWN_Z), Archipelago.SPAWN_Z);
-                overworld.setSpawnPos(spawn, 0.0f);
+                overworld.setRespawnData(net.minecraft.world.level.storage.LevelData.RespawnData.of(overworld.dimension(), spawn, 0.0f, 0.0f));
                 CursedTides.LOGGER.info("Cursed Archipelago detected; spawn set to Driftwood Island");
             }
         });
@@ -75,12 +73,12 @@ public final class ModWorld {
         });
 
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
-            ServerPlayerEntity player = handler.getPlayer();
+            ServerPlayer player = handler.getPlayer();
             if (archipelago && QuestData.stage(player) == QuestData.START) {
-                player.sendMessage(Text.literal("You wake on warm sand, salt in your mouth. Somewhere nearby, a lighthouse...")
-                        .formatted(Formatting.GRAY, Formatting.ITALIC), false);
-                player.sendMessage(Text.literal("Find the keeper of Driftwood Island. (Type /pirate any time to see your goal.)")
-                        .formatted(Formatting.YELLOW), false);
+                player.sendSystemMessage(Component.literal("You wake on warm sand, salt in your mouth. Somewhere nearby, a lighthouse...")
+                        .withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC), false);
+                player.sendSystemMessage(Component.literal("Find the keeper of Driftwood Island. (Type /pirate any time to see your goal.)")
+                        .withStyle(ChatFormatting.YELLOW), false);
             }
         });
 
@@ -88,26 +86,26 @@ public final class ModWorld {
     }
 
     private static void tick(MinecraftServer server) {
-        if (server.getTicks() % 20 != 0) {
+        if (server.getTickCount() % 20 != 0) {
             return;
         }
-        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             trackSailing(player);
-            if (archipelago && player.getWorld() == server.getOverworld()) {
+            if (archipelago && player.level() == server.overworld()) {
                 checkDiscovery(player);
             }
         }
     }
 
     /** Every 25 blocks sailed earns 1 Sailing XP (any world, any boat). */
-    private static void trackSailing(ServerPlayerEntity player) {
-        UUID id = player.getUuid();
-        if (!(player.getVehicle() instanceof BoatEntity boat)) {
+    private static void trackSailing(ServerPlayer player) {
+        UUID id = player.getUUID();
+        if (!(player.getVehicle() instanceof Boat boat)) {
             lastBoatPos.remove(id);
             return;
         }
-        Vec3d now = boat.getPos();
-        Vec3d before = lastBoatPos.put(id, now);
+        Vec3 now = boat.position();
+        Vec3 before = lastBoatPos.put(id, now);
         if (before == null) {
             return;
         }
@@ -123,7 +121,7 @@ public final class ModWorld {
         }
     }
 
-    private static void checkDiscovery(ServerPlayerEntity player) {
+    private static void checkDiscovery(ServerPlayer player) {
         int index = Archipelago.islandIndexAt(player.getBlockX(), player.getBlockZ());
         if (index < 0) {
             return;
@@ -135,22 +133,22 @@ public final class ModWorld {
         player.setAttached(DISCOVERED, mask | (1 << index));
         if (Integer.bitCount(mask | (1 << index)) >= Archipelago.ISLANDS.size()) com.cursedtides.activity.Achievements.grant(player, "all_islands");
         Archipelago.Island island = Archipelago.ISLANDS.get(index);
-        player.networkHandler.sendPacket(new TitleS2CPacket(Text.literal(island.name()).formatted(Formatting.GOLD)));
-        player.networkHandler.sendPacket(new SubtitleS2CPacket(Text.literal("Island discovered").formatted(Formatting.GRAY)));
-        player.getWorld().playSound(null, player.getX(), player.getY(), player.getZ(),
-                SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundCategory.PLAYERS, 0.6f, 1.0f);
+        player.connection.send(new ClientboundSetTitleTextPacket(Component.literal(island.name()).withStyle(ChatFormatting.GOLD)));
+        player.connection.send(new ClientboundSetSubtitleTextPacket(Component.literal("Island discovered").withStyle(ChatFormatting.GRAY)));
+        player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.6f, 1.0f);
         int discovered = Integer.bitCount(mask | (1 << index));
-        player.sendMessage(Text.literal("Discovered " + island.name() + " (" + discovered + "/" + Archipelago.ISLANDS.size()
-                + "). +5 doubloons").formatted(Formatting.GREEN), false);
+        player.sendSystemMessage(Component.literal("Discovered " + island.name() + " (" + discovered + "/" + Archipelago.ISLANDS.size()
+                + "). +5 doubloons").withStyle(ChatFormatting.GREEN), false);
         ItemStack coins = new ItemStack(ModItems.DOUBLOON, 5 + (int) com.cursedtides.pirate.PerkData.stat(player,
                 com.cursedtides.pirate.Perk.Stat.FINDERS_FEE));
-        if (!player.getInventory().insertStack(coins)) {
-            player.dropItem(coins, false);
+        if (!player.getInventory().add(coins)) {
+            player.drop(coins, false, net.minecraft.util.Prediction.SERVER_ONLY);
         }
         PirateData.addXp(player, Weapon.EXPLORATION, 60);
     }
 
-    public static boolean hasDiscovered(ServerPlayerEntity player, int index) {
+    public static boolean hasDiscovered(ServerPlayer player, int index) {
         return (player.getAttachedOrElse(DISCOVERED, 0) & (1 << index)) != 0;
     }
 }

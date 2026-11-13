@@ -3,10 +3,10 @@ package com.cursedtides.client;
 import com.cursedtides.entity.ShipEntity;
 import com.cursedtides.sound.ModSounds;
 import com.cursedtides.world.Archipelago;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.sound.MusicSound;
-import net.minecraft.sound.SoundEvent;
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.Holder;
+import net.minecraft.sounds.Music;
+import net.minecraft.sounds.SoundEvent;
 
 /**
  * Music by place, as the old pirate games had it: a march in the navy towns, a hornpipe or a reel in the free
@@ -18,14 +18,14 @@ public final class AreaMusic {
 
     private static final int GAP_MIN = 20 * 20, GAP_MAX = 20 * 70;
 
-    private static MusicSound calm(RegistryEntry<SoundEvent> s) {
-        return new MusicSound(s, GAP_MIN, GAP_MAX, false);
+    private static Music calm(Holder<SoundEvent> s) {
+        return new Music(s, GAP_MIN, GAP_MAX, false);
     }
 
     /** What should play now, or null to leave it to the game. */
-    public static MusicSound choose(MinecraftClient mc) {
-        if (mc.player == null || mc.world == null || !CombatHud.enabled()) return null;
-        if (System.currentTimeMillis() - CombatHud.lastFight < 8000) return new MusicSound(ModSounds.STEEL_AND_POWDER, 0, 0, true);
+    public static Music choose(Minecraft mc) {
+        if (mc.player == null || mc.level == null || !CombatHud.enabled()) return null;
+        if (System.currentTimeMillis() - CombatHud.lastFight < 8000) return new Music(ModSounds.STEEL_AND_POWDER, 0, 0, true);
         double x = mc.player.getX(), z = mc.player.getZ();
         if (mc.player.getY() < 30) return calm(ModSounds.LANTERNS_DROWN); // the caverns and dungeons
         Archipelago.Island near = null;

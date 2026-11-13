@@ -14,19 +14,18 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.DyedColorComponent;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.DyeColor;
-import net.minecraft.util.Formatting;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.DyedItemColor;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -48,61 +47,61 @@ public final class CharacterData {
     private static final Map<UUID, Integer> pendingOpen = new HashMap<>();
 
     public static void register() {
-        PayloadTypeRegistry.playS2C().register(CharacterPayloads.Open.ID, CharacterPayloads.Open.CODEC);
-        PayloadTypeRegistry.playC2S().register(CharacterPayloads.Create.ID, CharacterPayloads.Create.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(CharacterPayloads.Open.ID, CharacterPayloads.Open.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(CharacterPayloads.Create.ID, CharacterPayloads.Create.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(CharacterPayloads.Create.ID, (payload, context) ->
                 context.server().execute(() -> create(context.player(), payload)));
 
         // Give the world a moment to finish loading before the screen opens
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             if (!isCreated(handler.getPlayer())) {
-                pendingOpen.put(handler.getPlayer().getUuid(), server.getTicks() + 40);
+                pendingOpen.put(handler.getPlayer().getUUID(), server.getTickCount() + 40);
             }
         });
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             if (pendingOpen.isEmpty()) return;
             pendingOpen.entrySet().removeIf(entry -> {
-                if (entry.getValue() > server.getTicks()) return false;
-                ServerPlayerEntity player = server.getPlayerManager().getPlayer(entry.getKey());
+                if (entry.getValue() > server.getTickCount()) return false;
+                ServerPlayer player = server.getPlayerList().getPlayer(entry.getKey());
                 if (player != null && !isCreated(player)) openScreen(player);
                 return true;
             });
         });
     }
 
-    public static boolean isCreated(PlayerEntity player) {
+    public static boolean isCreated(Player player) {
         return player.getAttachedOrElse(CREATED, false);
     }
 
-    public static String pirateName(PlayerEntity player) {
+    public static String pirateName(Player player) {
         String name = player.getAttachedOrElse(NAME, "");
         return name.isEmpty() ? player.getName().getString() : name;
     }
 
-    public static Background background(PlayerEntity player) {
+    public static Background background(Player player) {
         return Background.byIndex(player.getAttachedOrElse(BACKGROUND, 0));
     }
 
-    public static void openScreen(ServerPlayerEntity player) {
+    public static void openScreen(ServerPlayer player) {
         ServerPlayNetworking.send(player, new CharacterPayloads.Open(!isCreated(player), pirateName(player),
                 player.getAttachedOrElse(BACKGROUND, 0)));
     }
 
-    private static String clean(String raw, ServerPlayerEntity player) {
+    private static String clean(String raw, ServerPlayer player) {
         String name = raw == null ? "" : raw.replaceAll("[^A-Za-z '\\-]", "").trim().replaceAll(" +", " ");
         if (name.length() > 28) name = name.substring(0, 28).trim();
         return name.length() < 2 ? player.getName().getString() : name;
     }
 
-    private static void create(ServerPlayerEntity player, CharacterPayloads.Create choice) {
+    private static void create(ServerPlayer player, CharacterPayloads.Create choice) {
         String name = clean(choice.name(), player);
         player.setAttached(NAME, name);
         if (isCreated(player)) {
-            player.sendMessage(Text.literal("You'll be known as " + name + " from now on.").formatted(Formatting.GOLD), false);
+            player.sendSystemMessage(Component.literal("You'll be known as " + name + " from now on.").withStyle(ChatFormatting.GOLD), false);
             return;
         }
         Background bg = Background.byIndex(choice.background());
-        int rgb = DyeColor.byId(Math.max(0, Math.min(15, choice.color()))).getEntityColor();
+        int rgb = DyeColor.byId(Math.max(0, Math.min(15, choice.color()))).getTextureDiffuseColor();
         player.setAttached(CREATED, true);
         player.setAttached(BACKGROUND, bg.ordinal());
 
@@ -142,23 +141,23 @@ public final class CharacterData {
                 PirateData.addXp(player, Weapon.HEX, 150);
             }
         }
-        player.getWorld().playSound(null, player.getX(), player.getY(), player.getZ(),
-                SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundCategory.PLAYERS, 0.6f, 1.2f);
-        player.sendMessage(Text.literal("Welcome to the Shattered Reach, " + name + ", " + bg.title() + ".")
-                .formatted(Formatting.GOLD), false);
-        player.sendMessage(Text.literal("Your gear is in your pockets: put the clothes on! Press J for your journal, M for the chart.")
-                .formatted(Formatting.GRAY), false);
+        player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.6f, 1.2f);
+        player.sendSystemMessage(Component.literal("Welcome to the Shattered Reach, " + name + ", " + bg.title() + ".")
+                .withStyle(ChatFormatting.GOLD), false);
+        player.sendSystemMessage(Component.literal("Your gear is in your pockets: put the clothes on! Press J for your journal, M for the chart.")
+                .withStyle(ChatFormatting.GRAY), false);
     }
 
-    private static void dyed(PlayerEntity player, Item item, int rgb) {
+    private static void dyed(Player player, Item item, int rgb) {
         ItemStack stack = new ItemStack(item);
-        stack.set(DataComponentTypes.DYED_COLOR, new DyedColorComponent(rgb, true));
+        stack.set(DataComponents.DYED_COLOR, new DyedItemColor(rgb));
         give(player, stack);
     }
 
-    private static void give(PlayerEntity player, ItemStack stack) {
-        if (!player.getInventory().insertStack(stack)) {
-            player.dropItem(stack, false);
+    private static void give(Player player, ItemStack stack) {
+        if (!player.getInventory().add(stack)) {
+            player.drop(stack, false, net.minecraft.util.Prediction.SERVER_ONLY);
         }
     }
 }

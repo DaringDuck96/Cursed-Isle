@@ -6,16 +6,16 @@ import com.cursedtides.faction.Faction;
 import com.cursedtides.faction.FactionData;
 import com.cursedtides.item.ModClothing;
 import com.cursedtides.item.ModItems;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.screen.GenericContainerScreenHandler;
-import net.minecraft.screen.SimpleNamedScreenHandlerFactory;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.inventory.ChestMenu;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
 /** The characters of the outer reaches. */
 public final class OuterDialogue {
@@ -26,8 +26,8 @@ public final class OuterDialogue {
     private static final String BLESSED = "cursedtides_blessed_";
 
     /** The Bank of Kingsport keeps your strongbox: the same one your ender chests open. */
-    static void banker(StoryNpcEntity npc, ServerPlayerEntity player) {
-        ItemStack held = player.getMainHandStack();
+    static void banker(StoryNpcEntity npc, ServerPlayer player) {
+        ItemStack held = player.getMainHandItem();
         if (held.getItem() instanceof com.cursedtides.item.ShipDeedItem deed) {
             int premium = com.cursedtides.trade.Insurance.premium(deed.shipClass());
             StoryDialogue.say(npc, player, "A policy on a " + deed.shipClass().displayName().toLowerCase() + "? " + premium
@@ -40,31 +40,31 @@ public final class OuterDialogue {
         }
         StoryDialogue.say(npc, player, "Your strongbox, captain. Whatever you leave with the Bank of Kingsport is safe from thieves and storms alike.",
                 "(Hold a ship's deed when you talk to me to insure her.)");
-        player.openHandledScreen(new SimpleNamedScreenHandlerFactory(
-                (syncId, inventory, p) -> GenericContainerScreenHandler.createGeneric9x3(syncId, inventory, p.getEnderChestInventory()),
-                Text.literal("Strongbox, Bank of Kingsport")));
+        player.openMenu(new SimpleMenuProvider(
+                (syncId, inventory, p) -> ChestMenu.threeRows(syncId, inventory, p.getEnderChestInventory()),
+                Component.literal("Strongbox, Bank of Kingsport")));
     }
 
     /** Mends anyone who asks, once in a while: full health, and poison or worse drawn out. */
-    static void abbess(StoryNpcEntity npc, ServerPlayerEntity player) {
-        long day = player.getWorld().getTimeOfDay() / 6000; // a quarter-day
+    static void abbess(StoryNpcEntity npc, ServerPlayer player) {
+        long day = player.level().getOverworldClockTime() / 6000; // a quarter-day
         String tag = BLESSED + day;
-        if (player.getCommandTags().contains(tag)) {
+        if (player.entityTags().contains(tag)) {
             StoryDialogue.say(npc, player, "Rest a while, child. I've done what I can for today. Come back after the bells.");
             return;
         }
-        player.getCommandTags().removeIf(t -> t.startsWith(BLESSED));
-        player.addCommandTag(tag);
+        player.entityTags().removeIf(t -> t.startsWith(BLESSED));
+        player.addTag(tag);
         player.setHealth(player.getMaxHealth());
-        player.getHungerManager().setFoodLevel(20);
-        player.removeStatusEffect(StatusEffects.POISON);
-        player.removeStatusEffect(StatusEffects.WITHER);
-        player.removeStatusEffect(StatusEffects.WEAKNESS);
-        player.removeStatusEffect(StatusEffects.SLOWNESS);
-        player.removeStatusEffect(StatusEffects.NAUSEA);
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.REGENERATION, 20 * 30, 0));
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 20 * 120, 0));
-        player.getWorld().playSound(null, player.getBlockPos(), SoundEvents.BLOCK_BELL_RESONATE, SoundCategory.NEUTRAL, 0.5f, 1.4f);
+        player.getFoodData().setFoodLevel(20);
+        player.removeEffect(MobEffects.POISON);
+        player.removeEffect(MobEffects.WITHER);
+        player.removeEffect(MobEffects.WEAKNESS);
+        player.removeEffect(MobEffects.SLOWNESS);
+        player.removeEffect(MobEffects.NAUSEA);
+        player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 20 * 30, 0));
+        player.addEffect(new MobEffectInstance(MobEffects.RESISTANCE, 20 * 120, 0));
+        player.level().playSound(null, player.blockPosition(), SoundEvents.BELL_RESONATE, SoundSource.NEUTRAL, 0.5f, 1.4f);
         if (FactionData.isWanted(player)) {
             StoryDialogue.say(npc, player, "I know that face from the posters. Sanctuary is sanctuary. Be mended, and go gently.");
         } else {
@@ -73,7 +73,7 @@ public final class OuterDialogue {
     }
 
     /** The head of the Tidewatch: contracts like the Commodore, and a commission for the loyal. */
-    static void admiral(StoryNpcEntity npc, ServerPlayerEntity player) {
+    static void admiral(StoryNpcEntity npc, ServerPlayer player) {
         if (HorizonArc.admiral(npc, player)) return;
         if (MusterArc.admiral(npc, player)) return;
         int navy = FactionData.rep(player, Faction.NAVY);
@@ -81,15 +81,15 @@ public final class OuterDialogue {
             StoryDialogue.say(npc, player, "A wanted pirate in Crownwatch? Pay your bounty to Commodore Vey at Ironwatch, then we'll talk. Guards!");
             return;
         }
-        if (navy >= 600 && !player.getCommandTags().contains(COMMISSION)) {
-            player.addCommandTag(COMMISSION);
+        if (navy >= 600 && !player.entityTags().contains(COMMISSION)) {
+            player.addTag(COMMISSION);
             StoryDialogue.say(npc, player,
                     "Your record reached my desk, captain. Ghost ships sunk, the cursed driven off, contracts fulfilled.",
                     "By order of the Admiralty you hold a Tidewatch commission. Take this deed: a galleon of the line.",
                     "And dress the part. The Tidewatch looks after its own.");
             QuestData.give(player, new ItemStack(ModItems.GALLEON_DEED));
             for (Item piece : ModClothing.NAVY_SET) QuestData.give(player, new ItemStack(piece));
-            player.getWorld().playSound(null, player.getBlockPos(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundCategory.PLAYERS, 0.8f, 1.0f);
+            player.level().playSound(null, player.blockPosition(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.8f, 1.0f);
             return;
         }
         if (navy < 100) {
@@ -100,14 +100,14 @@ public final class OuterDialogue {
         StoryDialogue.contractBoard(npc, player, Faction.NAVY);
     }
 
-    static void racemaster(StoryNpcEntity npc, ServerPlayerEntity player) {
+    static void racemaster(StoryNpcEntity npc, ServerPlayer player) {
         Regatta.talk(npc, player);
     }
 
     /** At the edge of the chart: the gate, and what it waits for. */
-    static void wayfarer(StoryNpcEntity npc, ServerPlayerEntity player) {
-        if (!player.getCommandTags().contains(WAYFARER_GIFT)) {
-            player.addCommandTag(WAYFARER_GIFT);
+    static void wayfarer(StoryNpcEntity npc, ServerPlayer player) {
+        if (!player.entityTags().contains(WAYFARER_GIFT)) {
+            player.addTag(WAYFARER_GIFT);
             StoryDialogue.say(npc, player,
                     "You sailed off the edge of every chart in Saltmarrow to get here. Good. Most turn back at Stormbreak.",
                     "That gate on the summit was old when the first ships came. The people who built it lived on the Keys, before the sea rose.",
@@ -122,7 +122,7 @@ public final class OuterDialogue {
     }
 
     /** Raven's Landing's queen of contraband: smuggling contracts for those the Tidewatch doesn't own. */
-    static void smugglerQueen(StoryNpcEntity npc, ServerPlayerEntity player) {
+    static void smugglerQueen(StoryNpcEntity npc, ServerPlayer player) {
         if (MusterArc.queen(npc, player)) return;
         int navy = FactionData.rep(player, Faction.NAVY);
         int smugglers = FactionData.rep(player, Faction.SMUGGLERS);

@@ -1,32 +1,34 @@
 package com.cursedtides.world;
 
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.entity.EntityTypes;
 import com.cursedtides.CursedTides;
 import com.cursedtides.entity.ModEntities;
 import com.cursedtides.entity.StoryNpcEntity;
 import com.cursedtides.item.ModItems;
-import net.minecraft.block.BedBlock;
-import net.minecraft.block.BellBlock;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.FurnaceBlock;
-import net.minecraft.block.LadderBlock;
-import net.minecraft.block.LanternBlock;
-import net.minecraft.block.PillarBlock;
-import net.minecraft.block.enums.Attachment;
-import net.minecraft.block.enums.BedPart;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.vehicle.BoatEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.loot.LootTable;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.Direction;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import net.minecraft.core.Direction;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.vehicle.boat.Boat;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.BedBlock;
+import net.minecraft.world.level.block.BellBlock;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.FurnaceBlock;
+import net.minecraft.world.level.block.LadderBlock;
+import net.minecraft.world.level.block.LanternBlock;
+import net.minecraft.world.level.block.RotatedPillarBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BedPart;
+import net.minecraft.world.level.block.state.properties.BellAttachType;
+import net.minecraft.world.level.storage.loot.LootTable;
 
 /** Every prebuilt structure in the Shattered Reach, at fixed coordinates. */
 public final class Builds {
@@ -40,11 +42,11 @@ public final class Builds {
 
     public static final List<Build> ALL = new ArrayList<>();
 
-    static final RegistryKey<LootTable> TREASURE = RegistryKey.of(RegistryKeys.LOOT_TABLE, CursedTides.id("chests/island_treasure"));
-    static final RegistryKey<LootTable> TAVERN = RegistryKey.of(RegistryKeys.LOOT_TABLE, CursedTides.id("chests/tavern_stores"));
+    static final ResourceKey<LootTable> TREASURE = ResourceKey.create(Registries.LOOT_TABLE, CursedTides.id("chests/island_treasure"));
+    static final ResourceKey<LootTable> TAVERN = ResourceKey.create(Registries.LOOT_TABLE, CursedTides.id("chests/tavern_stores"));
 
     static BlockState s(Block b) {
-        return b.getDefaultState();
+        return b.defaultBlockState();
     }
 
     static void add(int x1, int z1, int x2, int z2, Consumer<Canvas> placer) {
@@ -57,7 +59,7 @@ public final class Builds {
         add(-14, 1, -2, 10, c -> shack(c));
         add(-3, 16, 5, 50, c -> {
             pier(c, 0, 16, 48, 1);
-            c.spawn(3.5, 63, 44.5, 0, w -> new BoatEntity(w, 0, 0, 0));
+            c.spawn(3.5, 63, 44.5, 0, w -> EntityTypes.OAK_BOAT.create(w, EntitySpawnReason.STRUCTURE));
         });
         add(-26, 10, -16, 22, c -> wreckedRaft(c, -21, 16));
         // Wren's sailing and gunnery lessons: a marker buoy and an old hulk off the south shore
@@ -75,8 +77,8 @@ public final class Builds {
         add(sx - 6, sz + 14, sx + 6, sz + 26, c -> harborHouse(c, sx, sz + 20));
         add(sx - 4, sz + 25, sx + 8, sz + 92, c -> {
             pier(c, sx, sz + 25, sz + 90, 2);
-            c.spawn(sx + 4.5, 63, sz + 82.5, 0, w -> new BoatEntity(w, 0, 0, 0));
-            c.spawn(sx - 3.5, 63, sz + 70.5, 90, w -> new BoatEntity(w, 0, 0, 0));
+            c.spawn(sx + 4.5, 63, sz + 82.5, 0, w -> EntityTypes.OAK_BOAT.create(w, EntitySpawnReason.STRUCTURE));
+            c.spawn(sx - 3.5, 63, sz + 70.5, 90, w -> EntityTypes.OAK_BOAT.create(w, EntitySpawnReason.STRUCTURE));
         });
         int[][] houses = {{-24, -14}, {-24, 8}, {-8, -26}, {10, -26}, {30, -18}, {16, 18}, {-34, -2}};
         for (int[] h : houses) {
@@ -118,8 +120,8 @@ public final class Builds {
         add(px - 3, pz + 27, px + 3, pz + 92, c -> pier(c, px, pz + 28, pz + 90, 2));
         add(px - 6, pz - 6, px + 6, pz + 6, c -> {
             int y = Archipelago.column(px, pz).top() + 1;
-            c.spawn(px - 5.5, y, pz + 6.5, 0, w -> ModEntities.MARINE.create(w));
-            c.spawn(px + 6.5, y, pz - 5.5, 0, w -> ModEntities.MARINE.create(w));
+            c.spawn(px - 5.5, y, pz + 6.5, 0, w -> ModEntities.MARINE.create(w, EntitySpawnReason.EVENT));
+            c.spawn(px + 6.5, y, pz - 5.5, 0, w -> ModEntities.MARINE.create(w, EntitySpawnReason.EVENT));
         });
 
         // ===== Blackthorn Isle: the Brethren's hideout =====
@@ -289,13 +291,13 @@ public final class Builds {
     }
 
     static BlockState hangingLantern() {
-        return s(Blocks.LANTERN).with(LanternBlock.HANGING, true);
+        return s(Blocks.LANTERN).setValue(LanternBlock.HANGING, true);
     }
 
     static void bed(Canvas c, int x, int floor, int z, Direction headFacing) {
-        BlockState bed = s(Blocks.RED_BED).with(BedBlock.FACING, headFacing);
-        c.set(x, floor, z, bed.with(BedBlock.PART, BedPart.FOOT));
-        c.set(x + headFacing.getOffsetX(), floor, z + headFacing.getOffsetZ(), bed.with(BedBlock.PART, BedPart.HEAD));
+        BlockState bed = s(Blocks.BED.pick(DyeColor.RED)).setValue(BedBlock.FACING, headFacing);
+        c.set(x, floor, z, bed.setValue(BedBlock.PART, BedPart.FOOT));
+        c.set(x + headFacing.getStepX(), floor, z + headFacing.getStepZ(), bed.setValue(BedBlock.PART, BedPart.HEAD));
     }
 
     /** A plank pier on log posts; follows the ground on land. */
@@ -317,11 +319,11 @@ public final class Builds {
         });
     }
 
-    public static StoryNpcEntity npc(net.minecraft.world.World w, StoryNpcEntity.Role role) {
-        StoryNpcEntity npc = ModEntities.STORY_NPC.create(w);
+    public static StoryNpcEntity npc(net.minecraft.world.level.Level w, StoryNpcEntity.Role role) {
+        StoryNpcEntity npc = ModEntities.STORY_NPC.create(w, EntitySpawnReason.EVENT);
         if (npc != null) {
             npc.setRole(role);
-            npc.setCustomName(Text.literal(role.displayName()));
+            npc.setCustomName(Component.literal(role.displayName()));
             npc.setCustomNameVisible(true);
         }
         return npc;
@@ -342,7 +344,7 @@ public final class Builds {
             for (int y = floor; y < floor + 20; y++) {
                 if (d <= 3.5 && d > 2.5) {
                     boolean red = ((y - floor) / 4) % 2 == 1;
-                    c.set(x, y, z, s(red ? Blocks.RED_TERRACOTTA : Blocks.WHITE_TERRACOTTA));
+                    c.set(x, y, z, s(red ? Blocks.DYED_TERRACOTTA.pick(DyeColor.RED) : Blocks.DYED_TERRACOTTA.pick(DyeColor.WHITE)));
                 } else if (d <= 2.5) {
                     c.set(x, y, z, s(Blocks.AIR));
                 }
@@ -353,11 +355,11 @@ public final class Builds {
                 if (d <= 0.5) c.set(x, y, z, s(Blocks.SEA_LANTERN));
                 else if (d <= 1.5) c.set(x, y, z, s(Blocks.GLASS));
             }
-            if (d <= 2.0) c.set(x, floor + 23, z, s(Blocks.RED_TERRACOTTA));
+            if (d <= 2.0) c.set(x, floor + 23, z, s(Blocks.DYED_TERRACOTTA.pick(DyeColor.RED)));
         });
-        c.set(cx, floor + 24, cz, s(Blocks.LIGHTNING_ROD));
+        c.set(cx, floor + 24, cz, s(Blocks.LIGHTNING_ROD.weathering().unaffected()));
         doorway(c, cx, cz + 3, floor);
-        BlockState ladder = s(Blocks.LADDER).with(LadderBlock.FACING, Direction.SOUTH);
+        BlockState ladder = s(Blocks.LADDER).setValue(LadderBlock.FACING, Direction.SOUTH);
         for (int y = floor; y <= floor + 20; y++) {
             c.set(cx, y, cz - 2, ladder);
         }
@@ -384,9 +386,9 @@ public final class Builds {
     static void markerBuoy(Canvas c, int x, int z) {
         int base = Archipelago.column(x, z).top() + 1;
         for (int y = base; y <= Archipelago.WATER_TOP + 1; y++) c.set(x, y, z, s(Blocks.SPRUCE_LOG));
-        c.set(x, Archipelago.WATER_TOP + 2, z, s(Blocks.RED_WOOL));
-        c.set(x, Archipelago.WATER_TOP + 3, z, s(Blocks.WHITE_WOOL));
-        c.set(x, Archipelago.WATER_TOP + 4, z, s(Blocks.RED_WOOL));
+        c.set(x, Archipelago.WATER_TOP + 2, z, s(Blocks.WOOL.pick(DyeColor.RED)));
+        c.set(x, Archipelago.WATER_TOP + 3, z, s(Blocks.WOOL.pick(DyeColor.WHITE)));
+        c.set(x, Archipelago.WATER_TOP + 4, z, s(Blocks.WOOL.pick(DyeColor.RED)));
         c.set(x, Archipelago.WATER_TOP + 5, z, s(Blocks.LANTERN));
         for (int[] k : new int[][]{{1, 0}, {-1, 0}, {0, 1}, {0, -1}}) c.set(x + k[0], Archipelago.WATER_TOP, z + k[1], s(Blocks.SPRUCE_SLAB));
     }
@@ -404,8 +406,8 @@ public final class Builds {
             }
         }
         c.fill(cx, deck, cz, cx, deck + 4, cz, s(Blocks.STRIPPED_DARK_OAK_LOG));
-        c.set(cx, deck + 5, cz, s(Blocks.BLACK_WOOL));
-        c.set(cx + 1, deck + 5, cz, s(Blocks.WHITE_WOOL));
+        c.set(cx, deck + 5, cz, s(Blocks.WOOL.pick(DyeColor.BLACK)));
+        c.set(cx + 1, deck + 5, cz, s(Blocks.WOOL.pick(DyeColor.WHITE)));
         c.set(cx + 3, deck, cz, s(Blocks.HAY_BLOCK));
         c.set(cx - 3, deck, cz, s(Blocks.HAY_BLOCK));
     }
@@ -416,7 +418,7 @@ public final class Builds {
             double r = Noise.rand(x, z, 61);
             int y = Math.max(top + 1, 63);
             if (r < 0.55) {
-                c.set(x, y, z, s(Blocks.STRIPPED_SPRUCE_LOG).with(PillarBlock.AXIS, Direction.Axis.X));
+                c.set(x, y, z, s(Blocks.STRIPPED_SPRUCE_LOG).setValue(RotatedPillarBlock.AXIS, Direction.Axis.X));
             }
         });
         c.set(cx + 4, floorAt(cx + 4, cz + 3), cz + 3, s(Blocks.BARREL));
@@ -438,7 +440,7 @@ public final class Builds {
                     var col = Archipelago.column(x, z);
                     if (!col.isLand()) continue;
                     BlockState here = c.get(x, col.top(), z);
-                    if (here.isOf(Blocks.GRASS_BLOCK) || here.isOf(Blocks.DIRT) || here.isOf(Blocks.SAND)) {
+                    if (here.is(Blocks.GRASS_BLOCK) || here.is(Blocks.DIRT) || here.is(Blocks.SAND)) {
                         c.set(x, col.top(), z, s(Blocks.DIRT_PATH));
                         c.set(x, col.top() + 1, z, s(Blocks.AIR));
                     }
@@ -466,22 +468,22 @@ public final class Builds {
         }
         c.fill(sx - 1, py + 4, sz - 1, sx + 1, py + 4, sz + 1, s(Blocks.SPRUCE_SLAB));
         // Market stalls
-        stall(c, sx - 5, sz - 5, py, s(Blocks.RED_WOOL));
-        stall(c, sx + 5, sz - 5, py, s(Blocks.YELLOW_WOOL));
-        stall(c, sx - 5, sz + 5, py, s(Blocks.BLUE_WOOL));
-        stall(c, sx + 5, sz + 5, py, s(Blocks.GREEN_WOOL));
+        stall(c, sx - 5, sz - 5, py, s(Blocks.WOOL.pick(DyeColor.RED)));
+        stall(c, sx + 5, sz - 5, py, s(Blocks.WOOL.pick(DyeColor.YELLOW)));
+        stall(c, sx - 5, sz + 5, py, s(Blocks.WOOL.pick(DyeColor.BLUE)));
+        stall(c, sx + 5, sz + 5, py, s(Blocks.WOOL.pick(DyeColor.GREEN)));
         c.spawn(sx + 3.5, py + 1, sz + 3.5, 0, w -> {
-            var qm = ModEntities.QUARTERMASTER.create(w);
+            var qm = ModEntities.QUARTERMASTER.create(w, EntitySpawnReason.EVENT);
             if (qm != null) {
-                qm.setCustomName(Text.literal(trader1));
+                qm.setCustomName(Component.literal(trader1));
                 qm.setCustomNameVisible(true);
             }
             return qm;
         });
         c.spawn(sx - 3.5, py + 1, sz - 3.5, 0, w -> {
-            var qm = ModEntities.QUARTERMASTER.create(w);
+            var qm = ModEntities.QUARTERMASTER.create(w, EntitySpawnReason.EVENT);
             if (qm != null) {
-                qm.setCustomName(Text.literal(trader2));
+                qm.setCustomName(Component.literal(trader2));
                 qm.setCustomNameVisible(true);
             }
             return qm;
@@ -519,7 +521,7 @@ public final class Builds {
         c.set(x1 + 3, floor + 3, mz, hangingLantern());
         c.set(x2 - 4, floor + 3, mz, hangingLantern());
         // Ladder to the rooms upstairs
-        BlockState ladder = s(Blocks.LADDER).with(LadderBlock.FACING, Direction.SOUTH);
+        BlockState ladder = s(Blocks.LADDER).setValue(LadderBlock.FACING, Direction.SOUTH);
         for (int y = floor; y <= floor + 4; y++) {
             c.set(x1 + 1, y, z1 + 1, ladder);
         }
@@ -575,20 +577,20 @@ public final class Builds {
         c.fill(cx - 7, floor - 1, cz - 6, cx + 7, floor - 1, cz + 6, s(Blocks.SPRUCE_PLANKS));
         // Ribs of an unfinished sloop
         for (int x = cx - 5; x <= cx + 5; x += 2) {
-            c.set(x, floor, cz, s(Blocks.STRIPPED_SPRUCE_LOG).with(PillarBlock.AXIS, Direction.Axis.X));
+            c.set(x, floor, cz, s(Blocks.STRIPPED_SPRUCE_LOG).setValue(RotatedPillarBlock.AXIS, Direction.Axis.X));
             c.fill(x, floor + 1, cz - 2, x, floor + 2, cz - 2, s(Blocks.SPRUCE_FENCE));
             c.fill(x, floor + 1, cz + 2, x, floor + 2, cz + 2, s(Blocks.SPRUCE_FENCE));
             c.set(x, floor + 1, cz - 1, s(Blocks.SPRUCE_SLAB));
             c.set(x, floor + 1, cz + 1, s(Blocks.SPRUCE_SLAB));
         }
-        c.fill(cx - 6, floor, cz, cx + 6, floor, cz, s(Blocks.STRIPPED_SPRUCE_LOG).with(PillarBlock.AXIS, Direction.Axis.X));
+        c.fill(cx - 6, floor, cz, cx + 6, floor, cz, s(Blocks.STRIPPED_SPRUCE_LOG).setValue(RotatedPillarBlock.AXIS, Direction.Axis.X));
         c.set(cx - 6, floor, cz - 5, s(Blocks.STONECUTTER));
         c.set(cx - 5, floor, cz - 5, s(Blocks.CRAFTING_TABLE));
-        c.fill(cx + 4, floor, cz - 5, cx + 6, floor + 1, cz - 5, s(Blocks.STRIPPED_OAK_LOG).with(PillarBlock.AXIS, Direction.Axis.X));
+        c.fill(cx + 4, floor, cz - 5, cx + 6, floor + 1, cz - 5, s(Blocks.STRIPPED_OAK_LOG).setValue(RotatedPillarBlock.AXIS, Direction.Axis.X));
         c.spawn(cx + 0.5, floor, cz - 4.5, 180, w -> {
-            var shipwright = ModEntities.SHIPWRIGHT.create(w);
+            var shipwright = ModEntities.SHIPWRIGHT.create(w, EntitySpawnReason.EVENT);
             if (shipwright != null) {
-                shipwright.setCustomName(Text.literal("Shipwright Hollis Pike"));
+                shipwright.setCustomName(Component.literal("Shipwright Hollis Pike"));
                 shipwright.setCustomNameVisible(true);
             }
             return shipwright;
@@ -622,14 +624,14 @@ public final class Builds {
         }
         // Beam and the old bell, just above the waterline
         c.fill(x1 + 1, 66, cz, x2 - 1, 66, cz, s(Blocks.STONE_BRICK_SLAB));
-        c.set(cx, 65, cz, s(Blocks.BELL).with(BellBlock.ATTACHMENT, Attachment.CEILING).with(BellBlock.FACING, Direction.NORTH));
+        c.set(cx, 65, cz, s(Blocks.BELL).setValue(BellBlock.ATTACHMENT, BellAttachType.CEILING).setValue(BellBlock.FACING, Direction.NORTH));
         c.chest(cx, floor, z2 - 1, Direction.NORTH, null, new ItemStack(ModItems.REEF_SHARD));
         c.chest(x1 + 1, floor, z1 + 1, Direction.SOUTH, TREASURE);
         c.set(x2 - 1, floor, z1 + 1, s(Blocks.SEA_LANTERN));
         // Treasure guardians
         for (int[] g : new int[][]{{cx - 5, cz}, {cx + 5, cz}, {cx, cz - 5}}) {
             int gy = Archipelago.column(g[0], g[1]).top() + 1;
-            c.spawn(g[0] + 0.5, gy, g[1] + 0.5, 0, EntityType.DROWNED::create);
+            c.spawn(g[0] + 0.5, gy, g[1] + 0.5, 0, w__ -> EntityTypes.DROWNED.create(w__, EntitySpawnReason.STRUCTURE));
         }
     }
 
@@ -641,7 +643,7 @@ public final class Builds {
             int y = base + (i < 7 ? 0 : (i - 7) / 3);
             int halfBeam = (i < 2 || i > 11) ? 1 : 2;
             boolean broken = Noise.rand(x, cz, 95) < 0.18;
-            c.set(x, y - 1, cz, s(Blocks.DARK_OAK_LOG).with(PillarBlock.AXIS, Direction.Axis.X));
+            c.set(x, y - 1, cz, s(Blocks.DARK_OAK_LOG).setValue(RotatedPillarBlock.AXIS, Direction.Axis.X));
             for (int w = -halfBeam; w <= halfBeam; w++) {
                 c.set(x, y, cz + w, s(Blocks.DARK_OAK_PLANKS));
                 if (Math.abs(w) == halfBeam && !broken) {
@@ -669,9 +671,9 @@ public final class Builds {
         c.fill(x1 + 2, floor - 1, cz + 2, x1 + 4, floor - 1, cz + 2, s(Blocks.LAVA));
         c.fill(x1 + 2, floor - 2, cz + 2, x1 + 4, floor - 2, cz + 2, s(Blocks.BLACKSTONE));
         // Workshop
-        BlockState furnace = s(Blocks.FURNACE).with(FurnaceBlock.FACING, Direction.SOUTH);
+        BlockState furnace = s(Blocks.FURNACE).setValue(FurnaceBlock.FACING, Direction.SOUTH);
         c.fill(x1 + 1, floor, z1 + 1, x1 + 4, floor, z1 + 1, furnace);
-        c.set(x1 + 5, floor, z1 + 1, s(Blocks.BLAST_FURNACE).with(FurnaceBlock.FACING, Direction.SOUTH));
+        c.set(x1 + 5, floor, z1 + 1, s(Blocks.BLAST_FURNACE).setValue(FurnaceBlock.FACING, Direction.SOUTH));
         c.set(cx + 2, floor, cz, s(Blocks.ANVIL));
         c.set(x2 - 1, floor, cz, s(Blocks.SMITHING_TABLE));
         c.set(x2 - 1, floor, cz + 1, s(Blocks.GRINDSTONE));
@@ -680,7 +682,7 @@ public final class Builds {
         c.set(cx, floor + 4, cz, hangingLantern());
         // Smugglers guarding the shard
         for (int[] g : new int[][]{{x1 + 3, cz - 1}, {cx + 2, z2 - 2}, {x2 - 2, z1 + 2}}) {
-            c.spawn(g[0] + 0.5, floor, g[1] + 0.5, 0, w -> ModEntities.CURSED_PIRATE.create(w));
+            c.spawn(g[0] + 0.5, floor, g[1] + 0.5, 0, w -> ModEntities.CURSED_PIRATE.create(w, EntitySpawnReason.EVENT));
         }
     }
 
@@ -691,10 +693,10 @@ public final class Builds {
         roof(c, x1, z1, x2, z2, floor + 4, s(Blocks.DARK_OAK_PLANKS));
         windows(c, x1, z1, x2, z2, floor + 1);
         doorway(c, x2, cz, floor);
-        c.set(cx, floor, cz, s(Blocks.BELL).with(BellBlock.ATTACHMENT, Attachment.FLOOR).with(BellBlock.FACING, Direction.EAST));
+        c.set(cx, floor, cz, s(Blocks.BELL).setValue(BellBlock.ATTACHMENT, BellAttachType.FLOOR).setValue(BellBlock.FACING, Direction.EAST));
         c.set(x1 + 1, floor, z1 + 1, s(Blocks.CAULDRON));
         c.set(x1 + 1, floor, z2 - 1, s(Blocks.CHIPPED_ANVIL));
-        c.set(x1 + 2, floor, z2 - 1, s(Blocks.BLAST_FURNACE).with(FurnaceBlock.FACING, Direction.NORTH));
+        c.set(x1 + 2, floor, z2 - 1, s(Blocks.BLAST_FURNACE).setValue(FurnaceBlock.FACING, Direction.NORTH));
         c.set(cx, floor + 3, cz - 1, hangingLantern());
         c.spawn(x2 + 2.5, floorAt(x2 + 2, cz), cz + 0.5, 90, w -> npc(w, StoryNpcEntity.Role.BELLWRIGHT));
     }
@@ -738,7 +740,7 @@ public final class Builds {
         c.fill(cx - 1, floor, cz - 4, cx - 1, floor + 2, cz - 4, s(Blocks.DARK_OAK_FENCE));
         c.fill(cx + 1, floor, cz - 4, cx + 1, floor + 2, cz - 4, s(Blocks.DARK_OAK_FENCE));
         c.fill(cx - 1, floor + 3, cz - 4, cx + 1, floor + 3, cz - 4, s(Blocks.DARK_OAK_PLANKS));
-        c.set(cx, floor + 2, cz - 4, s(Blocks.BELL).with(BellBlock.ATTACHMENT, Attachment.CEILING).with(BellBlock.FACING, Direction.EAST));
+        c.set(cx, floor + 2, cz - 4, s(Blocks.BELL).setValue(BellBlock.ATTACHMENT, BellAttachType.CEILING).setValue(BellBlock.FACING, Direction.EAST));
         c.set(cx - 5, floor, cz, s(Blocks.SOUL_CAMPFIRE));
         c.set(cx + 5, floor, cz, s(Blocks.SOUL_CAMPFIRE));
     }
@@ -764,16 +766,16 @@ public final class Builds {
         c.set(cx + 1, DECK + 1, cz - 2, s(Blocks.CAULDRON));
         c.set(cx - 1, DECK + 1, cz - 2, s(Blocks.BREWING_STAND));
         c.spawn(cx + 0.5, DECK + 1, cz + 1.5, 180, w -> {
-            var trader = ModEntities.QUARTERMASTER.create(w);
+            var trader = ModEntities.QUARTERMASTER.create(w, EntitySpawnReason.EVENT);
             if (trader != null) {
-                trader.setCustomName(Text.literal("Silas Fenn, Bayou Trader"));
+                trader.setCustomName(Component.literal("Silas Fenn, Bayou Trader"));
                 trader.setCustomNameVisible(true);
             }
             return trader;
         });
         for (int i = 0; i < 3; i++) {
             int fx = cx - 6 + i * 6;
-            c.spawn(fx + 0.5, Archipelago.standY(fx, cz + 8), cz + 8.5, 0, w -> EntityType.FROG.create(w));
+            c.spawn(fx + 0.5, Archipelago.standY(fx, cz + 8), cz + 8.5, 0, w -> EntityTypes.FROG.create(w, EntitySpawnReason.EVENT));
         }
 
         // Houses and the boardwalks that reach them
@@ -872,7 +874,7 @@ public final class Builds {
         c.set(cx - 16, floor + 2, cz - 2, s(Blocks.LANTERN));
         c.set(cx - 16, floor + 2, cz + 2, s(Blocks.LANTERN));
         // Inner ladder up to the walkway
-        BlockState ladder = s(Blocks.LADDER).with(LadderBlock.FACING, Direction.SOUTH);
+        BlockState ladder = s(Blocks.LADDER).setValue(LadderBlock.FACING, Direction.SOUTH);
         for (int y = floor; y <= floor + 6; y++) {
             c.set(cx + 6, y, cz - 13, ladder);
         }
@@ -922,8 +924,8 @@ public final class Builds {
         int hx1 = cx + 5, hz1 = cz - 4, hx2 = cx + 12, hz2 = cz + 6;
         room(c, hx1, hz1, hx2, hz2, floor, 6, s(Blocks.STONE_BRICKS), s(Blocks.POLISHED_ANDESITE), s(Blocks.POLISHED_ANDESITE));
         roof(c, hx1, hz1, hx2, hz2, floor + 6, s(Blocks.DEEPSLATE_TILES));
-        c.fill(hx1, floor + 4, hz1, hx2, floor + 4, hz1, s(Blocks.BLUE_WOOL));
-        c.fill(hx1, floor + 4, hz2, hx2, floor + 4, hz2, s(Blocks.BLUE_WOOL));
+        c.fill(hx1, floor + 4, hz1, hx2, floor + 4, hz1, s(Blocks.WOOL.pick(DyeColor.BLUE)));
+        c.fill(hx1, floor + 4, hz2, hx2, floor + 4, hz2, s(Blocks.WOOL.pick(DyeColor.BLUE)));
         windows(c, hx1, hz1, hx2, hz2, floor + 2);
         doorway(c, hx1, cz + 1, floor);
         c.set(hx2 - 1, floor, cz, s(Blocks.CARTOGRAPHY_TABLE));
@@ -936,16 +938,16 @@ public final class Builds {
 
         // Flagpole in the parade ground: Tidewatch blue with a white band
         c.fill(cx, floor, cz, cx, floor + 13, cz, s(Blocks.SPRUCE_FENCE));
-        c.fill(cx + 1, floor + 10, cz, cx + 5, floor + 12, cz, s(Blocks.BLUE_WOOL));
-        c.fill(cx + 1, floor + 11, cz, cx + 5, floor + 11, cz, s(Blocks.WHITE_WOOL));
+        c.fill(cx + 1, floor + 10, cz, cx + 5, floor + 12, cz, s(Blocks.WOOL.pick(DyeColor.BLUE)));
+        c.fill(cx + 1, floor + 11, cz, cx + 5, floor + 11, cz, s(Blocks.WOOL.pick(DyeColor.WHITE)));
 
         // Garrison
         int[][] posts = {{cx - 10, cz - 2}, {cx - 10, cz + 3}, {cx - 2, cz + 9}, {cx + 2, cz - 3}};
         for (int[] p : posts) {
-            c.spawn(p[0] + 0.5, floor, p[1] + 0.5, 0, w -> ModEntities.MARINE.create(w));
+            c.spawn(p[0] + 0.5, floor, p[1] + 0.5, 0, w -> ModEntities.MARINE.create(w, EntitySpawnReason.EVENT));
         }
-        c.spawn(cx + 0.5, floor + 7, cz - 14 + 0.5, 180, w -> ModEntities.MARINE.create(w));
-        c.spawn(cx + 0.5, floor + 7, cz + 14 + 0.5, 0, w -> ModEntities.MARINE.create(w));
+        c.spawn(cx + 0.5, floor + 7, cz - 14 + 0.5, 180, w -> ModEntities.MARINE.create(w, EntitySpawnReason.EVENT));
+        c.spawn(cx + 0.5, floor + 7, cz + 14 + 0.5, 0, w -> ModEntities.MARINE.create(w, EntitySpawnReason.EVENT));
     }
 
     // =====================================================================
@@ -958,19 +960,19 @@ public final class Builds {
         int floor = floorAt(cx, cz);
         room(c, x1, z1, x2, z2, floor, 4, s(Blocks.STONE_BRICKS), s(Blocks.POLISHED_ANDESITE), s(Blocks.DARK_OAK_PLANKS));
         c.fill(x1, floor + 4, z1, x2, floor + 4, z2, s(Blocks.DARK_OAK_PLANKS));
-        c.walls(x1, floor + 5, z1, x2, floor + 7, z2, s(Blocks.WHITE_TERRACOTTA));
+        c.walls(x1, floor + 5, z1, x2, floor + 7, z2, s(Blocks.DYED_TERRACOTTA.pick(DyeColor.WHITE)));
         c.fill(x1 + 1, floor + 5, z1 + 1, x2 - 1, floor + 7, z2 - 1, s(Blocks.AIR));
         roof(c, x1, z1, x2, z2, floor + 8, s(Blocks.DEEPSLATE_TILES));
         windows(c, x1, z1, x2, z2, floor + 1);
         windows(c, x1, z1, x2, z2, floor + 6);
         doorway(c, x1, cz, floor);
-        c.fill(x1 + 1, floor, cz, x2 - 1, floor, cz, s(Blocks.RED_CARPET));
+        c.fill(x1 + 1, floor, cz, x2 - 1, floor, cz, s(Blocks.CARPET.pick(DyeColor.RED)));
         c.fill(x2 - 2, floor, cz - 1, x2 - 2, floor, cz + 1, s(Blocks.DARK_OAK_PLANKS)); // the Governor's desk
         c.set(x2 - 1, floor, cz - 2, s(Blocks.BOOKSHELF));
         c.set(x2 - 1, floor, cz + 2, s(Blocks.BOOKSHELF));
         c.set(x2 - 1, floor + 1, cz - 2, s(Blocks.BOOKSHELF));
         c.set(x2 - 1, floor + 1, cz + 2, s(Blocks.BOOKSHELF));
-        BlockState ladder = s(Blocks.LADDER).with(LadderBlock.FACING, Direction.SOUTH);
+        BlockState ladder = s(Blocks.LADDER).setValue(LadderBlock.FACING, Direction.SOUTH);
         for (int y = floor; y <= floor + 4; y++) c.set(x1 + 1, y, z1 + 1, ladder);
         c.set(cx, floor + 3, cz, hangingLantern());
         bed(c, x2 - 2, floor + 5, z1 + 1, Direction.SOUTH);
@@ -994,8 +996,8 @@ public final class Builds {
         int roofTop = floor + 6 + Math.min((x2 - x1) / 2, (z2 - z1) / 2) + 1;
         c.fill(cx, roofTop, cz, cx, roofTop + 2, cz, s(Blocks.SPRUCE_FENCE));
         c.set(cx, roofTop + 3, cz, s(Blocks.DARK_OAK_PLANKS));
-        c.set(cx, roofTop + 2, cz + 1, s(Blocks.BELL).with(BellBlock.ATTACHMENT, Attachment.SINGLE_WALL)
-                .with(BellBlock.FACING, Direction.NORTH));
+        c.set(cx, roofTop + 2, cz + 1, s(Blocks.BELL).setValue(BellBlock.ATTACHMENT, BellAttachType.SINGLE_WALL)
+                .setValue(BellBlock.FACING, Direction.NORTH));
     }
 
     // =====================================================================
@@ -1012,7 +1014,7 @@ public final class Builds {
             c.fill(x, top + 1, z, x, top + 4, z, s(Blocks.SPRUCE_LOG));
         });
         // Tents
-        BlockState[] cloth = {s(Blocks.RED_WOOL), s(Blocks.BLACK_WOOL), s(Blocks.BROWN_WOOL), s(Blocks.GRAY_WOOL)};
+        BlockState[] cloth = {s(Blocks.WOOL.pick(DyeColor.RED)), s(Blocks.WOOL.pick(DyeColor.BLACK)), s(Blocks.WOOL.pick(DyeColor.BROWN)), s(Blocks.WOOL.pick(DyeColor.GRAY))};
         int[][] tents = {{-7, -6}, {6, -7}, {-7, 5}, {6, 5}};
         for (int i = 0; i < tents.length; i++) {
             int tx = cx + tents[i][0], tz = cz + tents[i][1];
@@ -1022,8 +1024,8 @@ public final class Builds {
                     c.set(tx + dx, base + (2 - Math.abs(dx)), z, cloth[i]);
                 }
             }
-            c.set(tx, base, tz + 1, s(Blocks.RED_BED).with(BedBlock.FACING, Direction.SOUTH).with(BedBlock.PART, BedPart.FOOT));
-            c.set(tx, base, tz + 2, s(Blocks.RED_BED).with(BedBlock.FACING, Direction.SOUTH).with(BedBlock.PART, BedPart.HEAD));
+            c.set(tx, base, tz + 1, s(Blocks.BED.pick(DyeColor.RED)).setValue(BedBlock.FACING, Direction.SOUTH).setValue(BedBlock.PART, BedPart.FOOT));
+            c.set(tx, base, tz + 2, s(Blocks.BED.pick(DyeColor.RED)).setValue(BedBlock.FACING, Direction.SOUTH).setValue(BedBlock.PART, BedPart.HEAD));
             if (i == 0) {
                 // the stolen ledger lies here
                 c.chest(tx - 1, base, tz + 2, Direction.EAST, null, new ItemStack(ModItems.GOVERNORS_LEDGER));
@@ -1034,8 +1036,8 @@ public final class Builds {
         // Bonfire and seats
         int fy = Archipelago.column(cx, cz).top() + 1;
         c.set(cx, fy, cz, s(Blocks.CAMPFIRE));
-        c.set(cx - 2, fy, cz, s(Blocks.STRIPPED_SPRUCE_LOG).with(PillarBlock.AXIS, Direction.Axis.Z));
-        c.set(cx, fy, cz - 2, s(Blocks.STRIPPED_SPRUCE_LOG).with(PillarBlock.AXIS, Direction.Axis.X));
+        c.set(cx - 2, fy, cz, s(Blocks.STRIPPED_SPRUCE_LOG).setValue(RotatedPillarBlock.AXIS, Direction.Axis.Z));
+        c.set(cx, fy, cz - 2, s(Blocks.STRIPPED_SPRUCE_LOG).setValue(RotatedPillarBlock.AXIS, Direction.Axis.X));
         // Lookout
         int lx = cx + 9, lz = cz + 9;
         int ly = Archipelago.column(lx, lz).top() + 1;
@@ -1043,15 +1045,15 @@ public final class Builds {
             c.fill(k[0], ly, k[1], k[0], ly + 7, k[1], s(Blocks.SPRUCE_LOG));
         }
         c.fill(lx - 1, ly + 8, lz - 1, lx + 1, ly + 8, lz + 1, s(Blocks.SPRUCE_PLANKS));
-        BlockState ladder = s(Blocks.LADDER).with(LadderBlock.FACING, Direction.NORTH);
+        BlockState ladder = s(Blocks.LADDER).setValue(LadderBlock.FACING, Direction.NORTH);
         for (int y = ly; y <= ly + 8; y++) c.set(lx, y, lz + 2, ladder);
         c.set(lx, ly + 9, lz, s(Blocks.LANTERN));
         spawnNpc(c, StoryNpcEntity.Role.ROOK);
         spawnNpc(c, StoryNpcEntity.Role.DEALER);
         c.spawn(cx - 3.5, fy, cz + 2.5, 0, w -> {
-            var fence = ModEntities.QUARTERMASTER.create(w);
+            var fence = ModEntities.QUARTERMASTER.create(w, EntitySpawnReason.EVENT);
             if (fence != null) {
-                fence.setCustomName(Text.literal("Tilda Crook, Fence"));
+                fence.setCustomName(Component.literal("Tilda Crook, Fence"));
                 fence.setCustomNameVisible(true);
             }
             return fence;
@@ -1087,8 +1089,8 @@ public final class Builds {
             int y = base + (8 - edge);
             Direction out = Math.abs(x - cx) >= Math.abs(z - cz)
                     ? (x > cx ? Direction.EAST : Direction.WEST) : (z > cz ? Direction.SOUTH : Direction.NORTH);
-            var prop = net.minecraft.block.VineBlock.getFacingProperty(out.getOpposite());
-            c.set(x + out.getOffsetX(), y, z + out.getOffsetZ(), s(Blocks.VINE).with(prop, true));
+            var prop = net.minecraft.world.level.block.VineBlock.getPropertyForFace(out.getOpposite());
+            c.set(x + out.getStepX(), y, z + out.getStepZ(), s(Blocks.VINE).setValue(prop, true));
         });
     }
 
@@ -1096,7 +1098,7 @@ public final class Builds {
         int y = floorAt(x, z);
         for (int dz = -2; dz <= 2; dz++) {
             for (int dx = -2; dx <= 2; dx++) {
-                c.set(x + dx, y + (2 - Math.abs(dx)), z + dz, s(Blocks.GREEN_WOOL));
+                c.set(x + dx, y + (2 - Math.abs(dx)), z + dz, s(Blocks.WOOL.pick(DyeColor.GREEN)));
             }
         }
         c.set(x - 1, y, z, s(Blocks.CRAFTING_TABLE));
@@ -1136,18 +1138,18 @@ public final class Builds {
             else if (r < 0.1) c.set(x, floor + 7, z, s(Blocks.COBWEB));
         });
         c.fill(x2 - 1, floor, z1 + 1, x2 - 1, floor + 2, z1 + 3, s(Blocks.BOOKSHELF));
-        c.set(cx, floor + 3, cz, s(Blocks.SOUL_LANTERN).with(LanternBlock.HANGING, true));
-        c.set(cx, floor + 7, cz, s(Blocks.SOUL_LANTERN).with(LanternBlock.HANGING, true));
-        BlockState ladder = s(Blocks.LADDER).with(LadderBlock.FACING, Direction.SOUTH);
+        c.set(cx, floor + 3, cz, s(Blocks.SOUL_LANTERN).setValue(LanternBlock.HANGING, true));
+        c.set(cx, floor + 7, cz, s(Blocks.SOUL_LANTERN).setValue(LanternBlock.HANGING, true));
+        BlockState ladder = s(Blocks.LADDER).setValue(LadderBlock.FACING, Direction.SOUTH);
         for (int y = floor; y <= floor + 4; y++) c.set(x1 + 1, y, z1 + 1, ladder);
         c.chest(x2 - 1, floor + 5, z2 - 1, Direction.WEST, TREASURE);
         // The shade that haunts the place (the Medium's quest)
-        c.spawn(cx + 0.5, floor, cz + 0.5, 0, w -> EntityType.WITHER_SKELETON.create(w), e -> {
-            if (!(e instanceof net.minecraft.entity.mob.MobEntity shade)) return;
-            shade.setCustomName(Text.literal("The Shade of Lady Morrow").formatted(net.minecraft.util.Formatting.DARK_AQUA));
+        c.spawn(cx + 0.5, floor, cz + 0.5, 0, w -> EntityTypes.WITHER_SKELETON.create(w, EntitySpawnReason.EVENT), e -> {
+            if (!(e instanceof net.minecraft.world.entity.Mob shade)) return;
+            shade.setCustomName(Component.literal("The Shade of Lady Morrow").withStyle(net.minecraft.ChatFormatting.DARK_AQUA));
             shade.setCustomNameVisible(true);
-            shade.addCommandTag("cursedtides_shade");
-            var hp = shade.getAttributeInstance(net.minecraft.entity.attribute.EntityAttributes.GENERIC_MAX_HEALTH);
+            shade.addTag("cursedtides_shade");
+            var hp = shade.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH);
             if (hp != null) {
                 hp.setBaseValue(90);
                 shade.setHealth(90);
@@ -1164,7 +1166,7 @@ public final class Builds {
         c.set(x1 + 1, floor, cz, s(Blocks.ENCHANTING_TABLE));
         c.set(x1 + 1, floor, z1 + 1, s(Blocks.CANDLE));
         c.set(x1 + 1, floor, z2 - 1, s(Blocks.SKELETON_SKULL));
-        c.set(cx, floor + 2, cz, s(Blocks.SOUL_LANTERN).with(LanternBlock.HANGING, true));
+        c.set(cx, floor + 2, cz, s(Blocks.SOUL_LANTERN).setValue(LanternBlock.HANGING, true));
         spawnNpc(c, StoryNpcEntity.Role.MEDIUM);
     }
 
@@ -1179,8 +1181,8 @@ public final class Builds {
             int ky = Archipelago.column(k[0], k[1]).top() + 1;
             c.fill(k[0], ky, k[1], k[0], y + 6, k[1], s(Blocks.SPRUCE_LOG));
         }
-        c.fill(cx - 2, y + 7, cz, cx + 2, y + 7, cz, s(Blocks.STRIPPED_SPRUCE_LOG).with(PillarBlock.AXIS, Direction.Axis.X));
-        c.fill(cx, y + 3, cz, cx, y + 6, cz, s(Blocks.CHAIN));
+        c.fill(cx - 2, y + 7, cz, cx + 2, y + 7, cz, s(Blocks.STRIPPED_SPRUCE_LOG).setValue(RotatedPillarBlock.AXIS, Direction.Axis.X));
+        c.fill(cx, y + 3, cz, cx, y + 6, cz, s(Blocks.IRON_CHAIN));
         c.fill(cx - 1, y - 1, cz - 1, cx + 1, y - 1, cz + 1, s(Blocks.SPRUCE_TRAPDOOR));
         // Rails and ore heaps
         for (int x = cx + 3; x <= cx + 10; x++) {
@@ -1196,16 +1198,16 @@ public final class Builds {
             int base = Archipelago.column(tx, tz).top() + 1;
             for (int z = tz; z <= tz + 3; z++) {
                 for (int dx = -2; dx <= 2; dx++) {
-                    c.set(tx + dx, base + (2 - Math.abs(dx)), z, s(Blocks.WHITE_WOOL));
+                    c.set(tx + dx, base + (2 - Math.abs(dx)), z, s(Blocks.WOOL.pick(DyeColor.WHITE)));
                 }
             }
             c.set(tx, base, tz + 2, s(Blocks.BARREL));
         }
         spawnNpc(c, StoryNpcEntity.Role.FOREMAN);
         c.spawn(cx - 3.5, y, cz + 3.5, 0, w -> {
-            var assayer = ModEntities.QUARTERMASTER.create(w);
+            var assayer = ModEntities.QUARTERMASTER.create(w, EntitySpawnReason.EVENT);
             if (assayer != null) {
-                assayer.setCustomName(Text.literal("Quill Hart, Assayer"));
+                assayer.setCustomName(Component.literal("Quill Hart, Assayer"));
                 assayer.setCustomNameVisible(true);
             }
             return assayer;

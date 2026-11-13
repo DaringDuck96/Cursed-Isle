@@ -1,5 +1,6 @@
 package com.cursedtides.living;
 
+import net.minecraft.world.entity.EntitySpawnReason;
 import com.cursedtides.entity.ModEntities;
 import com.cursedtides.entity.QuartermasterEntity;
 import com.cursedtides.entity.StoryNpcEntity;
@@ -9,17 +10,17 @@ import com.cursedtides.world.Archipelago.Island;
 import com.cursedtides.world.Builds;
 import com.cursedtides.world.ModWorld;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.Entity;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.world.Heightmap;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.phys.AABB;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -63,39 +64,39 @@ public final class Residents {
     }
 
     private static void tick(MinecraftServer server) {
-        if (!ModWorld.isArchipelago() || server.getTicks() % 100 != 0) return;
-        ServerWorld world = server.getOverworld();
-        for (ServerPlayerEntity p : world.getPlayers()) {
+        if (!ModWorld.isArchipelago() || server.getTickCount() % 100 != 0) return;
+        ServerLevel world = server.overworld();
+        for (ServerPlayer p : world.players()) {
             for (Home h : HOMES) {
                 int x = h.island().cx() + h.dx(), z = h.island().cz() + h.dz();
-                if (p.squaredDistanceTo(x, p.getY(), z) > 72 * 72 || !world.isChunkLoaded(new BlockPos(x, 0, z))) continue;
-                Box near = new Box(x - 40, world.getBottomY(), z - 40, x + 40, world.getTopY(), z + 40);
-                if (!world.getEntitiesByClass(StoryNpcEntity.class, near, n -> n.getRole() == h.role()).isEmpty()) continue;
+                if (p.distanceToSqr(x, p.getY(), z) > 72 * 72 || !world.hasChunkAt(new BlockPos(x, 0, z))) continue;
+                AABB near = new AABB(x - 40, world.getMinY(), z - 40, x + 40, world.getMaxY(), z + 40);
+                if (!world.getEntitiesOfClass(StoryNpcEntity.class, near, n -> n.getRole() == h.role()).isEmpty()) continue;
                 BlockPos at = openGround(world, x, z, 10);
                 if (at == null) continue;
                 StoryNpcEntity npc = Builds.npc(world, h.role());
                 if (npc == null) continue;
-                npc.refreshPositionAndAngles(at.getX() + 0.5, at.getY(), at.getZ() + 0.5, world.random.nextFloat() * 360, 0);
-                world.spawnEntity(npc);
+                npc.snapTo(at.getX() + 0.5, at.getY(), at.getZ() + 0.5, world.getRandom().nextFloat() * 360, 0);
+                world.addFreshEntity(npc);
             }
         }
-        if (server.getTicks() % 1200 == 0) expire(world);
-        if (server.getTicks() % 6000 == 0) visitors(world);
+        if (server.getTickCount() % 1200 == 0) expire(world);
+        if (server.getTickCount() % 6000 == 0) visitors(world);
     }
 
     /** Somewhere a person could stand: natural ground with two blocks of air above, near the wanted spot. */
     @Nullable
-    public static BlockPos openGround(ServerWorld world, int x, int z, int search) {
+    public static BlockPos openGround(ServerLevel world, int x, int z, int search) {
         for (int r = 0; r <= search; r++) {
             for (int dx = -r; dx <= r; dx++) {
                 for (int dz = -r; dz <= r; dz++) {
                     if (Math.max(Math.abs(dx), Math.abs(dz)) != r) continue;
-                    int top = world.getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, x + dx, z + dz);
+                    int top = world.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x + dx, z + dz);
                     BlockPos ground = new BlockPos(x + dx, top - 1, z + dz);
                     BlockState s = world.getBlockState(ground);
-                    if (!natural(s) || !world.getFluidState(ground.up()).isEmpty()) continue;
-                    if (!world.isAir(ground.up(2))) continue;
-                    return ground.up();
+                    if (!natural(s) || !world.getFluidState(ground.above()).isEmpty()) continue;
+                    if (!world.isEmptyBlock(ground.above(2))) continue;
+                    return ground.above();
                 }
             }
         }
@@ -103,27 +104,27 @@ public final class Residents {
     }
 
     private static boolean natural(BlockState s) {
-        return s.isOf(Blocks.GRASS_BLOCK) || s.isOf(Blocks.SAND) || s.isOf(Blocks.DIRT) || s.isOf(Blocks.COARSE_DIRT) || s.isOf(Blocks.DIRT_PATH)
-                || s.isOf(Blocks.GRAVEL) || s.isOf(Blocks.PODZOL) || s.isOf(Blocks.RED_SAND) || s.isOf(Blocks.STONE) || s.isOf(Blocks.COBBLESTONE)
-                || s.isOf(Blocks.MUD) || s.isOf(Blocks.SANDSTONE) || s.isOf(Blocks.ANDESITE) || s.isOf(Blocks.TUFF) || s.isOf(Blocks.MOSS_BLOCK)
-                || s.isOf(Blocks.STONE_BRICKS) || s.isOf(Blocks.MOSSY_COBBLESTONE) || s.isOf(Blocks.ROOTED_DIRT) || s.isOf(Blocks.CALCITE);
+        return s.is(Blocks.GRASS_BLOCK) || s.is(Blocks.SAND) || s.is(Blocks.DIRT) || s.is(Blocks.COARSE_DIRT) || s.is(Blocks.DIRT_PATH)
+                || s.is(Blocks.GRAVEL) || s.is(Blocks.PODZOL) || s.is(Blocks.RED_SAND) || s.is(Blocks.STONE) || s.is(Blocks.COBBLESTONE)
+                || s.is(Blocks.MUD) || s.is(Blocks.SANDSTONE) || s.is(Blocks.ANDESITE) || s.is(Blocks.TUFF) || s.is(Blocks.MOSS_BLOCK)
+                || s.is(Blocks.STONE_BRICKS) || s.is(Blocks.MOSSY_COBBLESTONE) || s.is(Blocks.ROOTED_DIRT) || s.is(Blocks.CALCITE);
     }
 
     public static void markTransient(Entity e, long until) {
-        e.addCommandTag(TRANSIENT);
-        e.addCommandTag(EXPIRES + until);
+        e.addTag(TRANSIENT);
+        e.addTag(EXPIRES + until);
     }
 
-    private static void expire(ServerWorld world) {
-        long now = world.getTime();
+    private static void expire(ServerLevel world) {
+        long now = world.getGameTime();
         List<Entity> tagged = new java.util.ArrayList<>();
-        for (Entity e : world.iterateEntities()) if (e.getCommandTags().contains(TRANSIENT)) tagged.add(e);
+        for (Entity e : world.getAllEntities()) if (e.entityTags().contains(TRANSIENT)) tagged.add(e);
         for (Entity e : tagged) {
-            for (String tag : e.getCommandTags()) {
+            for (String tag : e.entityTags()) {
                 if (!tag.startsWith(EXPIRES)) continue;
                 try {
                     if (Long.parseLong(tag.substring(EXPIRES.length())) < now) {
-                        world.spawnParticles(net.minecraft.particle.ParticleTypes.POOF, e.getX(), e.getY() + 1, e.getZ(), 12, 0.3, 0.5, 0.3, 0.02);
+                        world.sendParticles(net.minecraft.core.particles.ParticleTypes.POOF, e.getX(), e.getY() + 1, e.getZ(), 12, 0.3, 0.5, 0.3, 0.02);
                         e.discard();
                     }
                 } catch (NumberFormatException ignored) { }
@@ -133,49 +134,49 @@ public final class Residents {
     }
 
     /** Every five minutes, a chance of a peddler in a town or the Old Mariner on a beach at night. */
-    private static void visitors(ServerWorld world) {
-        List<ServerPlayerEntity> players = world.getPlayers(p -> !p.isSpectator());
+    private static void visitors(ServerLevel world) {
+        List<ServerPlayer> players = world.getPlayers(p -> !p.isSpectator());
         if (players.isEmpty()) return;
-        ServerPlayerEntity p = players.get(world.random.nextInt(players.size()));
-        long t = world.getTimeOfDay() % 24000;
+        ServerPlayer p = players.get(world.getRandom().nextInt(players.size()));
+        long t = world.getOverworldClockTime() % 24000;
         boolean night = t >= 13000 && t < 23000;
-        if (night && world.random.nextFloat() < 0.15f) {
+        if (night && world.getRandom().nextFloat() < 0.15f) {
             spawnMariner(world, p);
-        } else if (!night && world.random.nextFloat() < 0.3f) {
+        } else if (!night && world.getRandom().nextFloat() < 0.3f) {
             spawnPeddler(world, p);
         }
     }
 
-    public static boolean spawnPeddler(ServerWorld world, ServerPlayerEntity p) {
+    public static boolean spawnPeddler(ServerLevel world, ServerPlayer p) {
         var port = Prosperity.nearestPort(p.getBlockX(), p.getBlockZ(), 120);
         if (port == null) return false;
-        BlockPos at = openGround(world, port.island().cx() + world.random.nextInt(21) - 10, port.island().cz() + world.random.nextInt(21) - 10, 12);
+        BlockPos at = openGround(world, port.island().cx() + world.getRandom().nextInt(21) - 10, port.island().cz() + world.getRandom().nextInt(21) - 10, 12);
         if (at == null) return false;
-        QuartermasterEntity peddler = ModEntities.QUARTERMASTER.create(world);
+        QuartermasterEntity peddler = ModEntities.QUARTERMASTER.create(world, EntitySpawnReason.EVENT);
         if (peddler == null) return false;
         String[] names = {"Jonquil", "Fennick", "Old Saffron", "Hettie Brass", "Mendel", "Quince"};
-        peddler.setCustomName(Text.literal(names[world.random.nextInt(names.length)] + ", Wandering Peddler"));
+        peddler.setCustomName(Component.literal(names[world.getRandom().nextInt(names.length)] + ", Wandering Peddler"));
         peddler.setCustomNameVisible(true);
-        peddler.refreshPositionAndAngles(at.getX() + 0.5, at.getY(), at.getZ() + 0.5, 0, 0);
-        markTransient(peddler, world.getTime() + 12000);
-        world.spawnEntity(peddler);
-        world.getServer().getPlayerManager().broadcast(Text.literal("A wandering peddler has set out a blanket of curios at "
-                + port.island().name() + ". They'll be gone by nightfall.").formatted(Formatting.YELLOW), false);
+        peddler.snapTo(at.getX() + 0.5, at.getY(), at.getZ() + 0.5, 0, 0);
+        markTransient(peddler, world.getGameTime() + 12000);
+        world.addFreshEntity(peddler);
+        world.getServer().getPlayerList().broadcastSystemMessage(Component.literal("A wandering peddler has set out a blanket of curios at "
+                + port.island().name() + ". They'll be gone by nightfall.").withStyle(ChatFormatting.YELLOW), false);
         return true;
     }
 
-    public static boolean spawnMariner(ServerWorld world, ServerPlayerEntity p) {
+    public static boolean spawnMariner(ServerLevel world, ServerPlayer p) {
         for (int i = 0; i < 12; i++) {
-            double a = world.random.nextDouble() * Math.PI * 2;
+            double a = world.getRandom().nextDouble() * Math.PI * 2;
             int x = (int) (p.getX() + Math.cos(a) * 24), z = (int) (p.getZ() + Math.sin(a) * 24);
             BlockPos at = openGround(world, x, z, 6);
-            if (at == null || !world.getBlockState(at.down()).isOf(Blocks.SAND)) continue;
+            if (at == null || !world.getBlockState(at.below()).is(Blocks.SAND)) continue;
             StoryNpcEntity m = Builds.npc(world, Role.OLD_MARINER);
             if (m == null) return false;
-            m.refreshPositionAndAngles(at.getX() + 0.5, at.getY(), at.getZ() + 0.5, 0, 0);
-            markTransient(m, world.getTime() + 3600);
-            world.spawnEntity(m);
-            p.sendMessage(Text.literal("Down on the sand, someone is humming an old sea song.").formatted(Formatting.DARK_AQUA, Formatting.ITALIC), false);
+            m.snapTo(at.getX() + 0.5, at.getY(), at.getZ() + 0.5, 0, 0);
+            markTransient(m, world.getGameTime() + 3600);
+            world.addFreshEntity(m);
+            p.sendSystemMessage(Component.literal("Down on the sand, someone is humming an old sea song.").withStyle(ChatFormatting.DARK_AQUA, ChatFormatting.ITALIC), false);
             return true;
         }
         return false;

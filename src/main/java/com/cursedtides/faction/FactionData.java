@@ -6,16 +6,16 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.packet.s2c.play.SubtitleS2CPacket;
-import net.minecraft.network.packet.s2c.play.TitleS2CPacket;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
+import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 
 /**
  * Reputation (-1000..1000) with each faction, ranks and one-time rank rewards,
@@ -72,39 +72,39 @@ public final class FactionData {
 
     // ------------------------------------------------------------------ reputation
 
-    public static int rep(PlayerEntity player, Faction faction) {
+    public static int rep(Player player, Faction faction) {
         return player.getAttachedOrElse(type(faction), 0);
     }
 
-    public static void set(ServerPlayerEntity player, Faction faction, int value) {
+    public static void set(ServerPlayer player, Faction faction, int value) {
         adjust(player, faction, value - rep(player, faction));
     }
 
-    public static void adjust(ServerPlayerEntity player, Faction faction, int delta) {
+    public static void adjust(ServerPlayer player, Faction faction, int delta) {
         if (delta == 0) return;
         int before = rep(player, faction);
-        int after = MathHelper.clamp(before + delta, MIN, MAX);
+        int after = Mth.clamp(before + delta, MIN, MAX);
         player.setAttached(type(faction), after);
 
         String oldRank = rankName(faction, before);
         String newRank = rankName(faction, after);
         if (!oldRank.equals(newRank)) {
-            player.sendMessage(Text.literal(faction.displayName() + ": you are now ").formatted(Formatting.GRAY)
-                    .append(Text.literal(newRank).formatted(faction.color(), Formatting.BOLD)), false);
+            player.sendSystemMessage(Component.literal(faction.displayName() + ": you are now ").withStyle(ChatFormatting.GRAY)
+                    .append(Component.literal(newRank).withStyle(faction.color(), ChatFormatting.BOLD)), false);
         }
         if (faction == Faction.NAVY) {
             if (before > WANTED_AT && after <= WANTED_AT) {
                 com.cursedtides.activity.Achievements.grant(player, "wanted");
-                player.networkHandler.sendPacket(new TitleS2CPacket(Text.literal("WANTED").formatted(Formatting.DARK_RED)));
-                player.networkHandler.sendPacket(new SubtitleS2CPacket(
-                        Text.literal("Bounty: " + bounty(player) + " doubloons").formatted(Formatting.GOLD)));
-                player.getWorld().playSound(null, player.getX(), player.getY(), player.getZ(),
-                        SoundEvents.BLOCK_BELL_USE, SoundCategory.PLAYERS, 1.0f, 0.5f);
-                player.sendMessage(Text.literal("The Tidewatch has put a price on your head. Marines will fire on sight "
+                player.connection.send(new ClientboundSetTitleTextPacket(Component.literal("WANTED").withStyle(ChatFormatting.DARK_RED)));
+                player.connection.send(new ClientboundSetSubtitleTextPacket(
+                        Component.literal("Bounty: " + bounty(player) + " doubloons").withStyle(ChatFormatting.GOLD)));
+                player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                        SoundEvents.BELL_BLOCK, SoundSource.PLAYERS, 1.0f, 0.5f);
+                player.sendSystemMessage(Component.literal("The Tidewatch has put a price on your head. Marines will fire on sight "
                         + "and patrols will hunt you. The Commodore on Ironwatch Isle takes payment for pardons.")
-                        .formatted(Formatting.RED), false);
+                        .withStyle(ChatFormatting.RED), false);
             } else if (before <= WANTED_AT && after > WANTED_AT) {
-                player.sendMessage(Text.literal("Your name is cleared with the Tidewatch.").formatted(Formatting.GREEN), false);
+                player.sendSystemMessage(Component.literal("Your name is cleared with the Tidewatch.").withStyle(ChatFormatting.GREEN), false);
             }
         }
         grantRankRewards(player, faction, after);
@@ -133,15 +133,15 @@ public final class FactionData {
         return "Brethren Captain";
     }
 
-    private static void grantRankRewards(ServerPlayerEntity player, Faction faction, int rep) {
+    private static void grantRankRewards(ServerPlayer player, Faction faction, int rep) {
         int mask = player.getAttachedOrElse(REWARDS, 0);
         int base = faction == Faction.NAVY ? 0 : faction == Faction.BRETHREN ? 2 : 4;
         if (faction == Faction.SMUGGLERS && rep >= 300 && (mask & (1 << base)) == 0) {
             mask |= 1 << base;
             give(player, new ItemStack(ModItems.CARGO_BULKHEAD, 2));
             give(player, new ItemStack(ModItems.EXPLOSIVE_SHELL, 8));
-            player.sendMessage(Text.literal("The smugglers of Raven's Landing look after their own: two hidden-hold bulkheads and a crate of shells.")
-                    .formatted(Formatting.GOLD), false);
+            player.sendSystemMessage(Component.literal("The smugglers of Raven's Landing look after their own: two hidden-hold bulkheads and a crate of shells.")
+                    .withStyle(ChatFormatting.GOLD), false);
         }
         if (faction != Faction.SMUGGLERS && rep >= 300 && (mask & (1 << base)) == 0) {
             mask |= 1 << base;
@@ -151,41 +151,41 @@ public final class FactionData {
             // and the clothes to match
             (faction == Faction.NAVY ? com.cursedtides.item.ModClothing.NAVY_SET
                     : com.cursedtides.item.ModClothing.CAPTAIN_SET).forEach(item -> give(player, new ItemStack(item)));
-            player.sendMessage(Text.literal("For your service, the " + faction.displayName() + " sends you a gift: ")
-                    .append(gun.getName()).formatted(Formatting.GOLD), false);
+            player.sendSystemMessage(Component.literal("For your service, the " + faction.displayName() + " sends you a gift: ")
+                    .append(gun.getHoverName()).withStyle(ChatFormatting.GOLD), false);
         }
         if (rep >= 600 && (mask & (1 << (base + 1))) == 0) {
             mask |= 1 << (base + 1);
             give(player, new ItemStack(ModItems.DOUBLOON, 64));
-            player.sendMessage(Text.literal("The " + faction.displayName() + " counts you among its finest. 64 doubloons, with thanks.")
-                    .formatted(Formatting.GOLD), false);
+            player.sendSystemMessage(Component.literal("The " + faction.displayName() + " counts you among its finest. 64 doubloons, with thanks.")
+                    .withStyle(ChatFormatting.GOLD), false);
         }
         player.setAttached(REWARDS, mask);
     }
 
     // ------------------------------------------------------------------ infamy
 
-    public static boolean isWanted(PlayerEntity player) {
+    public static boolean isWanted(Player player) {
         return rep(player, Faction.NAVY) <= WANTED_AT;
     }
 
-    public static int bounty(PlayerEntity player) {
+    public static int bounty(Player player) {
         int navy = rep(player, Faction.NAVY);
         return navy > WANTED_AT ? 0 : Math.min(64, 15 + (-navy) / 16);
     }
 
     // ------------------------------------------------------------------ contracts
 
-    public static Contract contract(PlayerEntity player) {
+    public static Contract contract(Player player) {
         return player.getAttachedOrElse(CONTRACT, Contract.NONE);
     }
 
-    public static void setContract(PlayerEntity player, Contract contract) {
+    public static void setContract(Player player, Contract contract) {
         player.setAttached(CONTRACT, contract);
     }
 
     /** Advances the player's contract if it is of this type. */
-    public static void progress(ServerPlayerEntity player, ContractType type) {
+    public static void progress(ServerPlayer player, ContractType type) {
         Contract c = contract(player);
         if (c.type() != type.id() || c.progress() >= type.goal()) {
             return;
@@ -193,19 +193,19 @@ public final class FactionData {
         int now = c.progress() + 1;
         setContract(player, new Contract(c.type(), now));
         if (now >= type.goal()) {
-            player.sendMessage(Text.literal("Contract complete: " + type.description() + ". Return to your "
+            player.sendSystemMessage(Component.literal("Contract complete: " + type.description() + ". Return to your "
                     + (type.giver() == Faction.NAVY ? "Commodore" : type.giver() == Faction.SMUGGLERS ? "Smugglers' Queen" : "Broker")
-                    + " for payment.").formatted(Formatting.GOLD), false);
-            player.getWorld().playSound(null, player.getX(), player.getY(), player.getZ(),
-                    SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundCategory.PLAYERS, 0.5f, 1.4f);
+                    + " for payment.").withStyle(ChatFormatting.GOLD), false);
+            player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                    SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.5f, 1.4f);
         } else {
-            player.sendMessage(Text.literal(type.description() + ": " + now + "/" + type.goal()).formatted(Formatting.GRAY), true);
+            player.sendSystemMessage(Component.literal(type.description() + ": " + now + "/" + type.goal()).withStyle(ChatFormatting.GRAY), true);
         }
     }
 
-    static void give(PlayerEntity player, ItemStack stack) {
-        if (!player.getInventory().insertStack(stack)) {
-            player.dropItem(stack, false);
+    static void give(Player player, ItemStack stack) {
+        if (!player.getInventory().add(stack)) {
+            player.drop(stack, false, net.minecraft.util.Prediction.SERVER_ONLY);
         }
     }
 }

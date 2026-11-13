@@ -1,30 +1,32 @@
 package com.cursedtides.world;
 
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.entity.EntityTypes;
 import com.cursedtides.entity.ModEntities;
 import com.cursedtides.entity.StoryNpcEntity.Role;
 import com.cursedtides.item.ModItems;
 import com.cursedtides.wildlife.Wildlife;
-import net.minecraft.block.BellBlock;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.LadderBlock;
-import net.minecraft.block.PillarBlock;
-import net.minecraft.block.enums.Attachment;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.entity.vehicle.BoatEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.Direction;
-
 import java.util.List;
 import java.util.function.Function;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.vehicle.boat.Boat;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.BellBlock;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LadderBlock;
+import net.minecraft.world.level.block.RotatedPillarBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BellAttachType;
 
 import static com.cursedtides.world.Builds.TAVERN;
 import static com.cursedtides.world.Builds.TREASURE;
@@ -101,7 +103,7 @@ final class OuterBuilds {
         int gx = Archipelago.GOLDWATER_CAY.cx() - 14, gz = Archipelago.GOLDWATER_CAY.cz() + 10;
         add(gx - 2, gz - 2, gx + 2, gz + 3, c -> {
             int py = floorAt(gx, gz);
-            Builds.stall(c, gx, gz, py - 1, s(Blocks.ORANGE_WOOL));
+            Builds.stall(c, gx, gz, py - 1, s(Blocks.WOOL.pick(DyeColor.ORANGE)));
             vendor(c, gx + 0.5, py, gz + 2.5, "Trader Amos Kett");
         });
     }
@@ -117,9 +119,9 @@ final class OuterBuilds {
     /** A shopkeeper; their trade (in the name) decides what they sell. */
     private static void vendor(Canvas c, double x, int y, double z, String name) {
         c.spawn(x, y, z, 0, w -> {
-            var qm = ModEntities.QUARTERMASTER.create(w);
+            var qm = ModEntities.QUARTERMASTER.create(w, EntitySpawnReason.EVENT);
             if (qm != null) {
-                qm.setCustomName(Text.literal(name));
+                qm.setCustomName(Component.literal(name));
                 qm.setCustomNameVisible(true);
             }
             return qm;
@@ -127,34 +129,34 @@ final class OuterBuilds {
     }
 
     /** A named, persistent hostile that guards a place. */
-    private static void guard(Canvas c, double x, int y, double z, Function<ServerWorld, Entity> factory, String name) {
+    private static void guard(Canvas c, double x, int y, double z, Function<ServerLevel, Entity> factory, String name) {
         c.spawn(x, y, z, 0, factory, e -> {
-            if (e instanceof MobEntity mob) {
-                mob.setCustomName(Text.literal(name));
-                mob.setPersistent();
+            if (e instanceof Mob mob) {
+                mob.setCustomName(Component.literal(name));
+                mob.setPersistenceRequired();
             }
         });
     }
 
     /** A boss: more health, bigger, armoured, and it drops a relic and a hoard when it falls. */
-    private static void boss(Canvas c, double x, int y, double z, Function<ServerWorld, Entity> factory, String name,
+    private static void boss(Canvas c, double x, int y, double z, Function<ServerLevel, Entity> factory, String name,
                              float health, double scale, ItemStack weapon) {
         c.spawn(x, y, z, 0, factory, e -> {
-            if (!(e instanceof MobEntity mob)) return;
-            mob.setCustomName(Text.literal(name).formatted(Formatting.GOLD, Formatting.BOLD));
+            if (!(e instanceof Mob mob)) return;
+            mob.setCustomName(Component.literal(name).withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
             mob.setCustomNameVisible(true);
-            mob.setPersistent();
-            mob.addCommandTag(BOSS_TAG);
-            var hp = mob.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
+            mob.setPersistenceRequired();
+            mob.addTag(BOSS_TAG);
+            var hp = mob.getAttribute(Attributes.MAX_HEALTH);
             if (hp != null) hp.setBaseValue(health);
             mob.setHealth(health);
-            var size = mob.getAttributeInstance(EntityAttributes.GENERIC_SCALE);
+            var size = mob.getAttribute(Attributes.SCALE);
             if (size != null) size.setBaseValue(scale);
-            var armor = mob.getAttributeInstance(EntityAttributes.GENERIC_ARMOR);
+            var armor = mob.getAttribute(Attributes.ARMOR);
             if (armor != null) armor.setBaseValue(10);
             if (weapon != null) {
-                mob.equipStack(EquipmentSlot.MAINHAND, weapon);
-                mob.setEquipmentDropChance(EquipmentSlot.MAINHAND, 0.0f);
+                mob.setItemSlot(EquipmentSlot.MAINHAND, weapon);
+                mob.setDropChance(EquipmentSlot.MAINHAND, 0.0f);
             }
         });
     }
@@ -172,8 +174,8 @@ final class OuterBuilds {
     private static void campfire(Canvas c, int x, int z) {
         int y = Archipelago.column(x, z).top() + 1;
         c.set(x, y, z, s(Blocks.CAMPFIRE));
-        c.set(x - 2, y, z, s(Blocks.STRIPPED_SPRUCE_LOG).with(PillarBlock.AXIS, Direction.Axis.Z));
-        c.set(x + 2, y, z, s(Blocks.STRIPPED_SPRUCE_LOG).with(PillarBlock.AXIS, Direction.Axis.Z));
+        c.set(x - 2, y, z, s(Blocks.STRIPPED_SPRUCE_LOG).setValue(RotatedPillarBlock.AXIS, Direction.Axis.Z));
+        c.set(x + 2, y, z, s(Blocks.STRIPPED_SPRUCE_LOG).setValue(RotatedPillarBlock.AXIS, Direction.Axis.Z));
     }
 
     // =====================================================================
@@ -186,9 +188,9 @@ final class OuterBuilds {
             int py = Archipelago.column(KX, KZ).top() + 1;
             vendor(c, KX + 3.5, py, KZ - 3.5, "Armorer Bram Cole");
             vendor(c, KX - 3.5, py, KZ + 3.5, "Chandler Tobin Reed");
-            c.spawn(KX - 6.5, py, KZ + 7.5, 0, w -> ModEntities.MARINE.create(w));
-            c.spawn(KX + 7.5, py, KZ - 6.5, 0, w -> ModEntities.MARINE.create(w));
-            c.spawn(KX + 7.5, py, KZ + 7.5, 0, w -> ModEntities.MARINE.create(w));
+            c.spawn(KX - 6.5, py, KZ + 7.5, 0, w -> ModEntities.MARINE.create(w, EntitySpawnReason.EVENT));
+            c.spawn(KX + 7.5, py, KZ - 6.5, 0, w -> ModEntities.MARINE.create(w, EntitySpawnReason.EVENT));
+            c.spawn(KX + 7.5, py, KZ + 7.5, 0, w -> ModEntities.MARINE.create(w, EntitySpawnReason.EVENT));
         });
         add(KT_X1 - 1, KT_Z1 - 1, KT_X1 + 13, KT_Z1 + 11, c -> Builds.tavern(c, KT_X1, KT_Z1, KT_X1 + 12, KT_Z1 + 10));
         add(KX - 25, KZ - 8, KX - 13, KZ + 4, c -> bank(c, KX - 24, KZ - 7, KX - 14, KZ + 3));
@@ -204,7 +206,7 @@ final class OuterBuilds {
         });
         add(KX - 3, KZ + 26, KX + 3, KZ + 94, c -> {
             Builds.pier(c, KX, KZ + 30, KZ + 92, 2);
-            c.spawn(KX + 4.5, 63, KZ + 84.5, 0, w -> new BoatEntity(w, 0, 0, 0));
+            c.spawn(KX + 4.5, 63, KZ + 84.5, 0, w -> EntityTypes.OAK_BOAT.create(w, EntitySpawnReason.STRUCTURE));
         });
     }
 
@@ -230,7 +232,7 @@ final class OuterBuilds {
     private static void townHall(Canvas c, int x1, int z1, int x2, int z2) {
         int cx = (x1 + x2) / 2, cz = (z1 + z2) / 2;
         int floor = floorAt(cx, cz);
-        Builds.room(c, x1, z1, x2, z2, floor, 6, s(Blocks.WHITE_TERRACOTTA), s(Blocks.QUARTZ_PILLAR), s(Blocks.DARK_OAK_PLANKS));
+        Builds.room(c, x1, z1, x2, z2, floor, 6, s(Blocks.DYED_TERRACOTTA.pick(DyeColor.WHITE)), s(Blocks.QUARTZ_PILLAR), s(Blocks.DARK_OAK_PLANKS));
         clear(c, x1 + 1, floor, z1 + 1, x2 - 1, floor + 5, z2 - 1);
         Builds.roof(c, x1, z1, x2, z2, floor + 6, s(Blocks.DEEPSLATE_TILES));
         Builds.windows(c, x1, z1, x2, z2, floor + 2);
@@ -242,10 +244,10 @@ final class OuterBuilds {
         c.fill(x2 - 1, floor, z1 + 1, x2 - 1, floor + 2, z1 + 1, s(Blocks.BOOKSHELF));
         c.set(cx, floor + 5, cz, Builds.hangingLantern());
         // Clock tower over the door
-        c.fill(cx - 1, floor + 6, z2 - 2, cx + 1, floor + 12, z2, s(Blocks.WHITE_TERRACOTTA));
+        c.fill(cx - 1, floor + 6, z2 - 2, cx + 1, floor + 12, z2, s(Blocks.DYED_TERRACOTTA.pick(DyeColor.WHITE)));
         c.set(cx, floor + 10, z2 + 1, s(Blocks.GOLD_BLOCK)); // the clock face
-        c.set(cx, floor + 13, z2 - 1, s(Blocks.LIGHTNING_ROD));
-        c.spawn(cx + 0.5, floor, z2 + 1.5, 0, w -> ModEntities.MARINE.create(w));
+        c.set(cx, floor + 13, z2 - 1, s(Blocks.LIGHTNING_ROD.weathering().unaffected()));
+        c.spawn(cx + 0.5, floor, z2 + 1.5, 0, w -> ModEntities.MARINE.create(w, EntitySpawnReason.EVENT));
         Builds.spawnNpc(c, Role.AUCTIONEER);
     }
 
@@ -287,7 +289,7 @@ final class OuterBuilds {
         c.fill(cx - 7, floor - 1, cz - 6, cx + 7, floor - 1, cz + 6, s(Blocks.STONE_BRICKS));
         clear(c, cx - 7, floor, cz - 6, cx + 7, floor + 8, cz + 6);
         for (int z = cz - 5; z <= cz + 5; z++) {
-            c.set(cx, floor, z, s(Blocks.STRIPPED_DARK_OAK_LOG).with(PillarBlock.AXIS, Direction.Axis.Z));
+            c.set(cx, floor, z, s(Blocks.STRIPPED_DARK_OAK_LOG).setValue(RotatedPillarBlock.AXIS, Direction.Axis.Z));
             if (Math.floorMod(z, 2) == 0) {
                 c.fill(cx - 3, floor + 1, z, cx - 3, floor + 4, z, s(Blocks.DARK_OAK_FENCE));
                 c.fill(cx + 3, floor + 1, z, cx + 3, floor + 4, z, s(Blocks.DARK_OAK_FENCE));
@@ -299,8 +301,8 @@ final class OuterBuilds {
         }
         // Crane
         c.fill(cx - 6, floor, cz - 5, cx - 6, floor + 9, cz - 5, s(Blocks.SPRUCE_LOG));
-        c.fill(cx - 6, floor + 9, cz - 5, cx - 1, floor + 9, cz - 5, s(Blocks.SPRUCE_LOG).with(PillarBlock.AXIS, Direction.Axis.X));
-        c.fill(cx - 1, floor + 5, cz - 5, cx - 1, floor + 8, cz - 5, s(Blocks.CHAIN));
+        c.fill(cx - 6, floor + 9, cz - 5, cx - 1, floor + 9, cz - 5, s(Blocks.SPRUCE_LOG).setValue(RotatedPillarBlock.AXIS, Direction.Axis.X));
+        c.fill(cx - 1, floor + 5, cz - 5, cx - 1, floor + 8, cz - 5, s(Blocks.IRON_CHAIN));
         vendor(c, cx + 5.5, floor, cz - 4.5, "Navy Chandler Ruth Ashby");
         vendor(c, cx - 4.5, floor, cz + 4.5, "Navy Purser Edmund Hale");
     }
@@ -319,7 +321,7 @@ final class OuterBuilds {
         }
         add(VX - 13, VZ + 15, VX - 5, VZ + 23, c -> {
             int py = floorAt(VX - 9, VZ + 19);
-            Builds.stall(c, VX - 9, VZ + 19, py - 1, s(Blocks.PURPLE_WOOL));
+            Builds.stall(c, VX - 9, VZ + 19, py - 1, s(Blocks.WOOL.pick(DyeColor.PURPLE)));
             c.set(VX - 9, py, VZ + 19, s(Blocks.BREWING_STAND));
             vendor(c, VX - 8.5, py, VZ + 21.5, "Apothecary Brother Anselm");
             vendor(c, VX - 6.5, py, VZ + 21.5, "Merchant Sister Odile");
@@ -339,18 +341,18 @@ final class OuterBuilds {
             c.fill(x2 + 1, floor, z, x2 + 1, floor + h - 3, z, s(Blocks.CUT_SANDSTONE));
         }
         // Tall stained windows
-        BlockState[] glass = {s(Blocks.BLUE_STAINED_GLASS), s(Blocks.RED_STAINED_GLASS), s(Blocks.YELLOW_STAINED_GLASS)};
+        BlockState[] glass = {s(Blocks.STAINED_GLASS.pick(DyeColor.BLUE)), s(Blocks.STAINED_GLASS.pick(DyeColor.RED)), s(Blocks.STAINED_GLASS.pick(DyeColor.YELLOW))};
         int k = 0;
         for (int z = z1 + 2; z <= z2 - 2; z += 4) {
             c.fill(x1, floor + 2, z, x1, floor + 6, z, glass[k % 3]);
             c.fill(x2, floor + 2, z, x2, floor + 6, z, glass[(k + 1) % 3]);
             k++;
         }
-        c.fill(cx - 1, floor + 4, z1, cx + 1, floor + 7, z1, s(Blocks.ORANGE_STAINED_GLASS)); // rose window over the altar
+        c.fill(cx - 1, floor + 4, z1, cx + 1, floor + 7, z1, s(Blocks.STAINED_GLASS.pick(DyeColor.ORANGE))); // rose window over the altar
         Builds.roof(c, x1, z1, x2, z2, floor + h, s(Blocks.DARK_OAK_PLANKS));
         // Doors at the south end, nave, pews and altar at the north
         for (int dx = -1; dx <= 1; dx++) Builds.doorway(c, cx + dx, z2, floor);
-        c.fill(cx - 1, floor - 1, z1 + 1, cx + 1, floor - 1, z2 - 1, s(Blocks.RED_TERRACOTTA));
+        c.fill(cx - 1, floor - 1, z1 + 1, cx + 1, floor - 1, z2 - 1, s(Blocks.DYED_TERRACOTTA.pick(DyeColor.RED)));
         for (int z = z1 + 5; z <= z2 - 3; z += 2) {
             c.fill(x1 + 2, floor, z, cx - 2, floor, z, s(Blocks.SPRUCE_STAIRS));
             c.fill(cx + 2, floor, z, x2 - 2, floor, z, s(Blocks.SPRUCE_STAIRS));
@@ -366,7 +368,7 @@ final class OuterBuilds {
         c.walls(cx - 2, floor + h, tz1, cx + 2, floor + h + 9, tz2 + 1, s(Blocks.SMOOTH_SANDSTONE));
         clear(c, cx - 1, floor + h, tz1 + 1, cx + 1, floor + h + 9, tz2);
         c.fill(cx - 2, floor + h + 6, tz1 + 2, cx + 2, floor + h + 7, tz1 + 2, s(Blocks.AIR));
-        c.set(cx, floor + h + 7, tz1 + 2, s(Blocks.BELL).with(BellBlock.ATTACHMENT, Attachment.CEILING).with(BellBlock.FACING, Direction.NORTH));
+        c.set(cx, floor + h + 7, tz1 + 2, s(Blocks.BELL).setValue(BellBlock.ATTACHMENT, BellAttachType.CEILING).setValue(BellBlock.FACING, Direction.NORTH));
         c.fill(cx - 2, floor + h + 10, tz1, cx + 2, floor + h + 10, tz2 + 1, s(Blocks.DARK_OAK_PLANKS));
         c.fill(cx, floor + h + 11, tz1 + 2, cx, floor + h + 13, tz1 + 2, s(Blocks.CUT_SANDSTONE));
         c.chest(x2 - 1, floor, z1 + 1, Direction.WEST, null, new ItemStack(ModItems.ANCIENT_RELIC), new ItemStack(Items.GOLDEN_APPLE, 2));
@@ -413,8 +415,8 @@ final class OuterBuilds {
         });
         add(MX - 3, MZ + 8, MX + 3, MZ + 62, c -> {
             Builds.pier(c, MX, MZ + 10, MZ + 60, 1);
-            c.spawn(MX + 2.5, 63, MZ + 52.5, 0, w -> new BoatEntity(w, 0, 0, 0));
-            c.spawn(MX - 2.5, 63, MZ + 40.5, 90, w -> new BoatEntity(w, 0, 0, 0));
+            c.spawn(MX + 2.5, 63, MZ + 52.5, 0, w -> EntityTypes.OAK_BOAT.create(w, EntitySpawnReason.STRUCTURE));
+            c.spawn(MX - 2.5, 63, MZ + 40.5, 90, w -> EntityTypes.OAK_BOAT.create(w, EntitySpawnReason.STRUCTURE));
             for (int z = MZ + 20; z <= MZ + 58; z += 9) c.set(MX + 1, 64, z, s(Blocks.BARREL));
         });
     }
@@ -462,14 +464,14 @@ final class OuterBuilds {
         add(WX - 6, WZ - 6, WX + 6, WZ + 6, c -> watchtower(c, WX, WZ));
         add(WX + 11, WZ + 1, WX + 21, WZ + 11, c -> widowsHouse(c, WX + 12, WZ + 2, WX + 20, WZ + 10));
         add(WX - 19, WZ - 13, WX - 7, WZ - 1, c -> {
-            tent(c, WX - 15, WZ - 11, s(Blocks.BLACK_WOOL));
-            tent(c, WX - 10, WZ - 11, s(Blocks.GRAY_WOOL));
+            tent(c, WX - 15, WZ - 11, s(Blocks.WOOL.pick(DyeColor.BLACK)));
+            tent(c, WX - 10, WZ - 11, s(Blocks.WOOL.pick(DyeColor.GRAY)));
             campfire(c, WX - 13, WZ - 4);
             int y = Archipelago.column(WX - 9, WZ - 4).top() + 1;
             c.chest(WX - 9, y, WZ - 4, Direction.WEST, TREASURE);
             for (int[] g : new int[][]{{-16, -5}, {-11, -6}, {-14, -2}, {-8, -8}}) {
                 int gx = WX + g[0], gz = WZ + g[1];
-                guard(c, gx + 0.5, Archipelago.column(gx, gz).top() + 1, gz + 0.5, EntityType.PILLAGER::create, "Wrecker");
+                guard(c, gx + 0.5, Archipelago.column(gx, gz).top() + 1, gz + 0.5, w__ -> EntityTypes.PILLAGER.create(w__, EntitySpawnReason.STRUCTURE), "Wrecker");
             }
         });
         // A way up: a tunnel into the cliff from the sea, and a ladder shaft to the top
@@ -496,7 +498,7 @@ final class OuterBuilds {
         Builds.doorway(c, cx, cz + 4, floor);
         c.fill(cx - 3, floor + 8, cz - 3, cx + 3, floor + 8, cz + 3, s(Blocks.SPRUCE_PLANKS));
         clear(c, cx, floor + 8, cz + 2, cx, floor + 8, cz + 2);
-        BlockState ladder = s(Blocks.LADDER).with(LadderBlock.FACING, Direction.NORTH);
+        BlockState ladder = s(Blocks.LADDER).setValue(LadderBlock.FACING, Direction.NORTH);
         for (int y = floor; y <= floor + 8; y++) c.set(cx, y, cz + 3, ladder);
         c.set(cx, floor + 9, cz, s(Blocks.SPRUCE_FENCE));
         c.set(cx, floor + 10, cz, s(Blocks.LANTERN));
@@ -528,7 +530,7 @@ final class OuterBuilds {
         int top = Archipelago.column(shaftX, WZ).top();
         clear(c, shaftX, 63, WZ, edge, 64, WZ);
         clear(c, shaftX, 63, WZ, shaftX, top + 1, WZ);
-        BlockState ladder = s(Blocks.LADDER).with(LadderBlock.FACING, Direction.EAST);
+        BlockState ladder = s(Blocks.LADDER).setValue(LadderBlock.FACING, Direction.EAST);
         for (int y = 63; y <= top; y++) {
             c.set(shaftX - 1, y, WZ, s(Blocks.STONE));
             c.set(shaftX, y, WZ, ladder);
@@ -554,17 +556,17 @@ final class OuterBuilds {
                 if (Noise.rand(x, z, 211) < 0.2) c.set(x, water, z, s(Blocks.LILY_PAD));
             });
             boss(c, SHX + 19.5, water - 1, SHZ - 0.5, w -> {
-                var croc = Wildlife.CROCODILE.create(w);
+                var croc = Wildlife.CROCODILE.create(w, EntitySpawnReason.EVENT);
                 return croc;
             }, "Old Gnasher", 240, 2.6, null);
         });
         add(SHX - 26, SHZ + 14, SHX - 16, SHZ + 24, c -> {
-            tent(c, SHX - 23, SHZ + 15, s(Blocks.GREEN_WOOL));
-            tent(c, SHX - 18, SHZ + 17, s(Blocks.BROWN_WOOL));
+            tent(c, SHX - 23, SHZ + 15, s(Blocks.WOOL.pick(DyeColor.GREEN)));
+            tent(c, SHX - 18, SHZ + 17, s(Blocks.WOOL.pick(DyeColor.BROWN)));
             campfire(c, SHX - 21, SHZ + 21);
             for (int[] g : new int[][]{{-24, 21}, {-18, 22}, {-20, 15}}) {
                 int gx = SHX + g[0], gz = SHZ + g[1];
-                guard(c, gx + 0.5, Archipelago.column(gx, gz).top() + 1, gz + 0.5, EntityType.VINDICATOR::create, "Jungle Raider");
+                guard(c, gx + 0.5, Archipelago.column(gx, gz).top() + 1, gz + 0.5, w__ -> EntityTypes.VINDICATOR.create(w__, EntitySpawnReason.STRUCTURE), "Jungle Raider");
             }
             int y = Archipelago.column(SHX - 17, SHZ + 21).top() + 1;
             c.chest(SHX - 17, y, SHZ + 21, Direction.WEST, TREASURE);
@@ -591,15 +593,15 @@ final class OuterBuilds {
             int height = 2 + (int) (Noise.rand(px, pz, 223) * 5);
             c.fill(px, floor, pz, px, floor + height, pz, s(Blocks.CHISELED_STONE_BRICKS));
             if (height > 4) c.set(px, floor + height + 1, pz, s(Blocks.MOSSY_STONE_BRICK_SLAB));
-            c.set(px + 1, floor + 1, pz, s(Blocks.VINE).with(net.minecraft.block.VineBlock.WEST, true));
+            c.set(px + 1, floor + 1, pz, s(Blocks.VINE).setValue(net.minecraft.world.level.block.VineBlock.WEST, true));
         }
         // The serpent: a coiled body of green terracotta rising to a head
         int[][] coil = {{-2, 0}, {-2, 1}, {-1, 2}, {0, 2}, {1, 2}, {2, 1}, {2, 0}, {2, -1}, {1, -2}, {0, -2}, {-1, -2}};
         for (int i = 0; i < coil.length; i++) {
-            c.set(cx + coil[i][0], floor + i / 4, cz + coil[i][1], s(Blocks.GREEN_TERRACOTTA));
+            c.set(cx + coil[i][0], floor + i / 4, cz + coil[i][1], s(Blocks.DYED_TERRACOTTA.pick(DyeColor.GREEN)));
         }
-        c.fill(cx - 1, floor + 3, cz - 1, cx - 1, floor + 5, cz - 1, s(Blocks.GREEN_TERRACOTTA));
-        c.fill(cx - 2, floor + 6, cz - 2, cx, floor + 6, cz, s(Blocks.GREEN_TERRACOTTA));
+        c.fill(cx - 1, floor + 3, cz - 1, cx - 1, floor + 5, cz - 1, s(Blocks.DYED_TERRACOTTA.pick(DyeColor.GREEN)));
+        c.fill(cx - 2, floor + 6, cz - 2, cx, floor + 6, cz, s(Blocks.DYED_TERRACOTTA.pick(DyeColor.GREEN)));
         c.set(cx - 2, floor + 6, cz - 1, s(Blocks.EMERALD_BLOCK));
         c.set(cx, floor + 6, cz - 1, s(Blocks.EMERALD_BLOCK));
         c.chest(cx, floor, cz, Direction.NORTH, null, new ItemStack(ModItems.ANCIENT_RELIC), new ItemStack(ModItems.ANCIENT_COIN, 5));
@@ -631,9 +633,9 @@ final class OuterBuilds {
         for (int[] k : new int[][]{{cx - 15, cz - 15}, {cx + 15, cz - 15}, {cx - 15, cz + 15}, {cx + 15, cz + 15}}) {
             c.fill(k[0], floor, k[1], k[0], floor + 8, k[1], s(Blocks.CHISELED_RED_SANDSTONE));
             c.fill(k[0], floor + 9, k[1], k[0], floor + 12, k[1], s(Blocks.DARK_OAK_FENCE));
-            c.set(k[0] + 1, floor + 12, k[1], s(Blocks.BLACK_WOOL));
-            c.set(k[0] + 1, floor + 11, k[1], s(Blocks.BLACK_WOOL));
-            c.set(k[0] + 2, floor + 12, k[1], s(Blocks.RED_WOOL));
+            c.set(k[0] + 1, floor + 12, k[1], s(Blocks.WOOL.pick(DyeColor.BLACK)));
+            c.set(k[0] + 1, floor + 11, k[1], s(Blocks.WOOL.pick(DyeColor.BLACK)));
+            c.set(k[0] + 2, floor + 12, k[1], s(Blocks.WOOL.pick(DyeColor.RED)));
         }
         // Wall-walk on the inside, gate on the south
         c.walls(cx - 14, floor + 4, cz - 14, cx + 14, floor + 4, cz + 14, s(Blocks.DARK_OAK_PLANKS));
@@ -642,7 +644,7 @@ final class OuterBuilds {
         // Cannons on the walls: black barrels on carriages
         for (int[] g : new int[][]{{-8, -14}, {8, -14}, {-14, 0}, {14, 0}}) {
             c.set(cx + g[0], floor + 5, cz + g[1], s(Blocks.SPRUCE_SLAB));
-            c.set(cx + g[0], floor + 6, cz + g[1], s(Blocks.BLACK_CONCRETE));
+            c.set(cx + g[0], floor + 6, cz + g[1], s(Blocks.CONCRETE.pick(DyeColor.BLACK)));
         }
         // The keep
         int kx1 = cx - 6, kx2 = cx + 6, kz1 = cz - 11, kz2 = cz - 2;
@@ -652,7 +654,7 @@ final class OuterBuilds {
         Builds.doorway(c, cx, kz2, floor);
         Builds.doorway(c, cx + 1, kz2, floor);
         Builds.windows(c, kx1, kz1, kx2, kz2, floor + 2);
-        c.fill(cx - 2, floor, kz1 + 1, cx + 2, floor, kz1 + 1, s(Blocks.RED_CARPET));
+        c.fill(cx - 2, floor, kz1 + 1, cx + 2, floor, kz1 + 1, s(Blocks.CARPET.pick(DyeColor.RED)));
         c.set(cx, floor, kz1 + 1, s(Blocks.DARK_OAK_STAIRS));
         c.chest(kx1 + 1, floor, kz1 + 1, Direction.SOUTH, Builds.TREASURE);
         c.chest(kx2 - 1, floor, kz1 + 1, Direction.SOUTH, null, new ItemStack(ModItems.DOUBLOON, 40),
@@ -661,15 +663,15 @@ final class OuterBuilds {
         // Gallows in the yard
         c.fill(cx + 9, floor, cz + 6, cx + 9, floor + 4, cz + 6, s(Blocks.DARK_OAK_FENCE));
         c.fill(cx + 9, floor + 4, cz + 6, cx + 11, floor + 4, cz + 6, s(Blocks.DARK_OAK_FENCE));
-        c.set(cx + 11, floor + 3, cz + 6, s(Blocks.CHAIN));
+        c.set(cx + 11, floor + 3, cz + 6, s(Blocks.IRON_CHAIN));
         // The warlord and his crew
-        boss(c, cx + 0.5, floor, cz - 8.5, w -> EntityType.VINDICATOR.create(w), "Red Maddox, Pirate Warlord", 180, 1.25,
+        boss(c, cx + 0.5, floor, cz - 8.5, w -> EntityTypes.VINDICATOR.create(w, EntitySpawnReason.EVENT), "Red Maddox, Pirate Warlord", 180, 1.25,
                 new ItemStack(Items.NETHERITE_AXE));
         int[][] crew = {{-9, 4}, {9, 4}, {-5, 8}, {5, 8}, {-11, -9}, {11, -9}};
         for (int i = 0; i < crew.length; i++) {
             boolean musket = i % 2 == 1;
             guard(c, cx + crew[i][0] + 0.5, floor, cz + crew[i][1] + 0.5,
-                    musket ? EntityType.PILLAGER::create : EntityType.VINDICATOR::create,
+                    musket ? w__ -> EntityTypes.PILLAGER.create(w__, EntitySpawnReason.STRUCTURE) : w__ -> EntityTypes.VINDICATOR.create(w__, EntitySpawnReason.STRUCTURE),
                     musket ? "Bloodwake Musketeer" : "Bloodwake Cutthroat");
         }
     }
@@ -682,7 +684,7 @@ final class OuterBuilds {
         add(SBX - 6, SBZ - 18, SBX + 4, SBZ - 10, c -> raceHut(c, SBX - 5, SBZ - 17, SBX + 3, SBZ - 11));
         add(SBX - 2, SBZ - 54, SBX + 2, SBZ - 16, c -> {
             Builds.pier(c, SBX, SBZ - 52, SBZ - 18, 1);
-            c.spawn(SBX + 2.5, 63, SBZ - 46.5, 0, w -> new BoatEntity(w, 0, 0, 0));
+            c.spawn(SBX + 2.5, 63, SBZ - 46.5, 0, w -> EntityTypes.OAK_BOAT.create(w, EntitySpawnReason.STRUCTURE));
         });
         for (int i = 0; i < BUOYS.length; i++) {
             int bx = SBX + BUOYS[i][0], bz = SBZ + BUOYS[i][1];
@@ -703,9 +705,9 @@ final class OuterBuilds {
         c.set(x2 - 1, floor, z1 + 1, s(Blocks.BARREL));
         // Weathervane and a tall striped flag pole
         c.fill(x2 + 1, floor, z1, x2 + 1, floor + 9, z1, s(Blocks.SPRUCE_FENCE));
-        c.set(x2 + 2, floor + 9, z1, s(Blocks.WHITE_WOOL));
-        c.set(x2 + 2, floor + 8, z1, s(Blocks.RED_WOOL));
-        c.set(x2 + 1, floor + 10, z1, s(Blocks.LIGHTNING_ROD));
+        c.set(x2 + 2, floor + 9, z1, s(Blocks.WOOL.pick(DyeColor.WHITE)));
+        c.set(x2 + 2, floor + 8, z1, s(Blocks.WOOL.pick(DyeColor.RED)));
+        c.set(x2 + 1, floor + 10, z1, s(Blocks.LIGHTNING_ROD.weathering().unaffected()));
         Builds.spawnNpc(c, Role.RACEMASTER);
     }
 
@@ -713,7 +715,7 @@ final class OuterBuilds {
     private static void buoy(Canvas c, int x, int z, boolean start) {
         int floor = Archipelago.column(x, z).top();
         c.fill(x, floor + 1, z, x, 64, z, s(Blocks.STRIPPED_SPRUCE_LOG));
-        c.set(x, 65, z, s(start ? Blocks.YELLOW_WOOL : Blocks.RED_WOOL));
+        c.set(x, 65, z, s(start ? Blocks.WOOL.pick(DyeColor.YELLOW) : Blocks.WOOL.pick(DyeColor.RED)));
         c.set(x, 66, z, s(Blocks.SEA_LANTERN));
     }
 
@@ -735,7 +737,7 @@ final class OuterBuilds {
         }
         add(RX - 2, RZ + 26, RX + 2, RZ + 92, c -> {
             Builds.pier(c, RX, RZ + 30, RZ + 90, 1);
-            c.spawn(RX + 2.5, 63, RZ + 80.5, 0, w -> new BoatEntity(w, 0, 0, 0));
+            c.spawn(RX + 2.5, 63, RZ + 80.5, 0, w -> EntityTypes.OAK_BOAT.create(w, EntitySpawnReason.STRUCTURE));
         });
     }
 
@@ -764,10 +766,10 @@ final class OuterBuilds {
             }
             c.chest(EFX + 12, rim, EFZ, Direction.WEST, null, new ItemStack(ModItems.ANCIENT_RELIC, 2),
                     new ItemStack(Items.DIAMOND, 3), new ItemStack(ModItems.DOUBLOON, 50));
-            boss(c, EFX + 11.5, rim, EFZ + 4.5, w -> EntityType.BLAZE.create(w), "The Cinder King", 220, 2.0, null);
+            boss(c, EFX + 11.5, rim, EFZ + 4.5, w -> EntityTypes.BLAZE.create(w, EntitySpawnReason.EVENT), "The Cinder King", 220, 2.0, null);
             for (int[] g : new int[][]{{-11, 3}, {3, 11}, {-3, -11}}) {
-                c.spawn(EFX + g[0] + 0.5, rim, EFZ + g[1] + 0.5, 0, w -> EntityType.BLAZE.create(w), e -> {
-                    if (e instanceof MobEntity m) m.setPersistent();
+                c.spawn(EFX + g[0] + 0.5, rim, EFZ + g[1] + 0.5, 0, w -> EntityTypes.BLAZE.create(w, EntitySpawnReason.EVENT), e -> {
+                    if (e instanceof Mob m) m.setPersistenceRequired();
                 });
             }
         });
@@ -788,7 +790,7 @@ final class OuterBuilds {
         }
         int ax = FKX + 2, az = FKZ + 38;
         add(ax - 4, az - 4, ax + 4, az + 4, c -> {
-            tent(c, ax - 1, az - 3, s(Blocks.WHITE_WOOL));
+            tent(c, ax - 1, az - 3, s(Blocks.WOOL.pick(DyeColor.WHITE)));
             campfire(c, ax, az + 2);
             int y = Archipelago.column(ax + 3, az).top() + 1;
             c.set(ax + 3, y, az, s(Blocks.LECTERN));
@@ -857,7 +859,7 @@ final class OuterBuilds {
             c.set(BVX, floor, BVZ, s(Blocks.SOUL_FIRE));
             c.chest(BVX + 2, floor, BVZ, Direction.WEST, null, new ItemStack(ModItems.ANCIENT_RELIC, 2),
                     new ItemStack(Items.ECHO_SHARD, 4), new ItemStack(ModItems.DOUBLOON, 40));
-            boss(c, BVX - 2.5, floor, BVZ + 0.5, w -> EntityType.WITCH.create(w), "The Veil Witch", 160, 1.15, null);
+            boss(c, BVX - 2.5, floor, BVZ + 0.5, w -> EntityTypes.WITCH.create(w, EntitySpawnReason.EVENT), "The Veil Witch", 160, 1.15, null);
         });
         add(BVX - 32, BVZ + 16, BVX - 16, BVZ + 22, c -> Builds.shipwreck(c, BVX - 31, BVZ + 19));
     }
@@ -870,7 +872,7 @@ final class OuterBuilds {
         add(LHX - 8, LHZ - 6, LHX + 8, LHZ + 6, c -> horizonGate(c, LHX, LHZ));
         add(LHX + 10, LHZ - 20, LHX + 20, LHZ - 10, c -> observatory(c, LHX + 15, LHZ - 15));
         add(LHX - 24, LHZ + 8, LHX - 16, LHZ + 16, c -> {
-            tent(c, LHX - 21, LHZ + 8, s(Blocks.BLUE_WOOL));
+            tent(c, LHX - 21, LHZ + 8, s(Blocks.WOOL.pick(DyeColor.BLUE)));
             campfire(c, LHX - 20, LHZ + 14);
             Builds.spawnNpc(c, Role.WAYFARER);
         });
@@ -907,13 +909,13 @@ final class OuterBuilds {
                 double dome = Math.sqrt(Math.max(0, 25 - (y - floor - 3) * (y - floor - 3) * 1.6));
                 boolean shell = y <= floor + 3 ? d > 4.2 : d <= dome + 0.5 && d > dome - 0.7;
                 boolean broken = Noise.rand(x, y, z, 261) < 0.3 && y > floor + 4;
-                c.set(x, y, z, shell && !broken ? s(Blocks.WEATHERED_CUT_COPPER) : s(Blocks.AIR));
+                c.set(x, y, z, shell && !broken ? s(Blocks.CUT_COPPER.weathering().weathered()) : s(Blocks.AIR));
             }
         });
         Builds.doorway(c, cx, cz + 5, floor);
         // The great glass: a copper tube aimed at the sky
         c.set(cx, floor, cz, s(Blocks.CHISELED_STONE_BRICKS));
-        c.fill(cx, floor + 1, cz, cx, floor + 3, cz - 2, s(Blocks.LIGHTNING_ROD));
+        c.fill(cx, floor + 1, cz, cx, floor + 3, cz - 2, s(Blocks.LIGHTNING_ROD.weathering().unaffected()));
         c.chest(cx + 3, floor, cz, Direction.WEST, null, new ItemStack(ModItems.ANCIENT_RELIC),
                 new ItemStack(ModItems.MAP_FRAGMENT), new ItemStack(Items.SPYGLASS));
     }
@@ -930,8 +932,8 @@ final class OuterBuilds {
             add(x0, wz - 3, x0 + 14, wz + 3, c -> {
                 Builds.shipwreck(c, x0, wz);
                 int y = Archipelago.column(x0 + 9, wz).top() + 1;
-                c.spawn(x0 + 9.5, y, wz + 0.5, 0, wr -> EntityType.DROWNED.create(wr), e -> {
-                    if (e instanceof MobEntity m) m.setPersistent();
+                c.spawn(x0 + 9.5, y, wz + 0.5, 0, wr -> EntityTypes.DROWNED.create(wr, EntitySpawnReason.EVENT), e -> {
+                    if (e instanceof Mob m) m.setPersistenceRequired();
                 });
             });
         }
@@ -949,9 +951,9 @@ final class OuterBuilds {
             c.fill(sx - 3, 67, sz - 3, sx + 3, 67, sz + 3, s(Blocks.SPRUCE_SLAB));
             c.set(sx - 1, 64, sz - 1, s(Blocks.BARREL));
             c.set(sx + 1, 66, sz, Builds.hangingLantern());
-            c.set(sx + 4, 64, sz - 4, s(Blocks.CHAIN));
+            c.set(sx + 4, 64, sz - 4, s(Blocks.IRON_CHAIN));
             vendor(c, sx + 0.5, 64, sz + 3.5, "Salvager Nan Brightwater");
-            c.spawn(sx + 6.5, 63, sz + 0.5, 0, w -> new BoatEntity(w, 0, 0, 0));
+            c.spawn(sx + 6.5, 63, sz + 0.5, 0, w -> EntityTypes.OAK_BOAT.create(w, EntitySpawnReason.STRUCTURE));
         });
     }
 }

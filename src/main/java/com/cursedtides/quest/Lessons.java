@@ -11,25 +11,24 @@ import com.mojang.serialization.Codec;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.packet.s2c.play.SubtitleS2CPacket;
-import net.minecraft.network.packet.s2c.play.TitleFadeS2CPacket;
-import net.minecraft.network.packet.s2c.play.TitleS2CPacket;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
+import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
+import net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.Vec3;
 import java.util.function.Supplier;
 
 /**
@@ -81,20 +80,20 @@ public final class Lessons {
     /** The marker buoy and the gunnery hulk, off Driftwood's south shore. */
     public static final int BUOY_X = 46, BUOY_Z = 176, HULK_X = -34, HULK_Z = 196;
 
-    public static Step step(ServerPlayerEntity p) {
+    public static Step step(ServerPlayer p) {
         Step[] all = Step.values();
         return all[Math.max(0, Math.min(all.length - 1, p.getAttachedOrElse(STEP, 0)))];
     }
 
-    public static boolean active(ServerPlayerEntity p) {
+    public static boolean active(ServerPlayer p) {
         return QuestData.stage(p) == QuestData.START && step(p) != Step.TALK && step(p) != Step.DONE;
     }
 
-    public static Text objective(ServerPlayerEntity p) {
+    public static Component objective(ServerPlayer p) {
         Step s = step(p);
-        if (s.goal == null) return Text.literal(Step.TALK.goal);
+        if (s.goal == null) return Component.literal(Step.TALK.goal);
         int need = need(s), have = p.getAttachedOrElse(COUNT, 0);
-        return Text.literal(need > 1 ? s.goal + " " + Math.min(have, need) + "/" + need : s.goal);
+        return Component.literal(need > 1 ? s.goal + " " + Math.min(have, need) + "/" + need : s.goal);
     }
 
     private static int need(Step s) {
@@ -112,14 +111,14 @@ public final class Lessons {
 
     // ------------------------------------------------------------------ Wren
 
-    private static void wren(ServerPlayerEntity p, String... lines) {
+    private static void wren(ServerPlayer p, String... lines) {
         for (String line : lines) {
-            p.sendMessage(Text.literal("[Keeper Wren] ").formatted(Formatting.GOLD).append(Text.literal(line).formatted(Formatting.WHITE)), false);
+            p.sendSystemMessage(Component.literal("[Keeper Wren] ").withStyle(ChatFormatting.GOLD).append(Component.literal(line).withStyle(ChatFormatting.WHITE)), false);
         }
     }
 
     /** Wren's side of it: the first talk starts the lessons; later talks repeat the current one. */
-    public static void talk(ServerPlayerEntity p) {
+    public static void talk(ServerPlayer p) {
         Step s = step(p);
         if (s == Step.TALK) {
             wren(p, "Easy, easy. The tide spat you onto Driftwood Island, same as it did me forty years back.",
@@ -135,10 +134,10 @@ public final class Lessons {
 
     // ------------------------------------------------------------------ the lessons
 
-    private static void begin(ServerPlayerEntity p, Step s) {
+    private static void begin(ServerPlayer p, Step s) {
         p.setAttached(STEP, s.ordinal());
         p.setAttached(COUNT, 0);
-        ServerWorld w = p.getServerWorld();
+        ServerLevel w = p.level();
         switch (s) {
             case BLADE -> {
                 ensure(p, ModItems.CUTLASS, 1);
@@ -178,63 +177,63 @@ public final class Lessons {
                         "And keep your journal (J) about you. When your skills grow, K lets you choose what you learn.",
                         "One more thing: every port has a warp stone beside its gaol. Touch one, and it'll bring you back there from anywhere.");
                 ensure(p, ModItems.SEA_CHART, 1);
-                QuestData.give(p, new ItemStack(net.minecraft.item.Items.BREAD, 8));
+                QuestData.give(p, new ItemStack(net.minecraft.world.item.Items.BREAD, 8));
                 QuestData.setStage(p, QuestData.FIND_YSOLDE);
                 title(p, "Lessons done", "Sail east to Saltmarrow");
-                p.getWorld().playSound(null, p.getBlockPos(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundCategory.PLAYERS, 0.7f, 1.1f);
+                p.level().playSound(null, p.blockPosition(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.7f, 1.1f);
                 return;
             }
             default -> { }
         }
         if (s.keys != null) {
             title(p, s.keys, s.tip);
-            p.sendMessage(Text.literal("Lesson: ").formatted(Formatting.AQUA, Formatting.BOLD)
-                    .append(Text.literal(s.goal + "  ").formatted(Formatting.WHITE))
-                    .append(Text.literal("(" + s.keys + ")").formatted(Formatting.GRAY)), false);
+            p.sendSystemMessage(Component.literal("Lesson: ").withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD)
+                    .append(Component.literal(s.goal + "  ").withStyle(ChatFormatting.WHITE))
+                    .append(Component.literal("(" + s.keys + ")").withStyle(ChatFormatting.GRAY)), false);
         }
     }
 
-    private static void title(ServerPlayerEntity p, String title, String sub) {
-        p.networkHandler.sendPacket(new TitleFadeS2CPacket(10, 90, 20));
-        p.networkHandler.sendPacket(new SubtitleS2CPacket(Text.literal(sub == null ? "" : sub).formatted(Formatting.GRAY)));
-        p.networkHandler.sendPacket(new TitleS2CPacket(Text.literal(title).formatted(Formatting.AQUA)));
+    private static void title(ServerPlayer p, String title, String sub) {
+        p.connection.send(new ClientboundSetTitlesAnimationPacket(10, 90, 20));
+        p.connection.send(new ClientboundSetSubtitleTextPacket(Component.literal(sub == null ? "" : sub).withStyle(ChatFormatting.GRAY)));
+        p.connection.send(new ClientboundSetTitleTextPacket(Component.literal(title).withStyle(ChatFormatting.AQUA)));
     }
 
-    private static void ensure(ServerPlayerEntity p, net.minecraft.item.Item item, int count) {
-        int have = p.getInventory().count(item);
+    private static void ensure(ServerPlayer p, net.minecraft.world.item.Item item, int count) {
+        int have = p.getInventory().countItem(item);
         if (have < count) QuestData.give(p, new ItemStack(item, count - have));
     }
 
-    private static void spawnNear(ServerWorld w, ServerPlayerEntity p, Supplier<EntityType<?>> type, int min, int max, boolean leveled) {
+    private static void spawnNear(ServerLevel w, ServerPlayer p, Supplier<EntityType<?>> type, int min, int max, boolean leveled) {
         for (int tries = 0; tries < 10; tries++) {
-            double a = w.random.nextDouble() * Math.PI * 2;
-            int d = min + w.random.nextInt(max - min + 1);
+            double a = w.getRandom().nextDouble() * Math.PI * 2;
+            int d = min + w.getRandom().nextInt(max - min + 1);
             BlockPos at = com.cursedtides.living.Residents.openGround(w, (int) (p.getX() + Math.cos(a) * d), (int) (p.getZ() + Math.sin(a) * d), 4);
             if (at == null) continue;
-            Entity e = type.get().create(w);
-            if (!(e instanceof MobEntity mob)) return;
-            mob.refreshPositionAndAngles(at.getX() + 0.5, at.getY(), at.getZ() + 0.5, w.random.nextFloat() * 360, 0);
-            mob.initialize(w, w.getLocalDifficulty(at), SpawnReason.EVENT, null);
-            mob.addCommandTag(TAG);
+            Entity e = type.get().create(w, EntitySpawnReason.EVENT);
+            if (!(e instanceof Mob mob)) return;
+            mob.snapTo(at.getX() + 0.5, at.getY(), at.getZ() + 0.5, w.getRandom().nextFloat() * 360, 0);
+            mob.finalizeSpawn(w, w.getCurrentDifficultyAt(at), EntitySpawnReason.EVENT, null);
+            mob.addTag(TAG);
             if (leveled) {
                 Levels.apply(mob, 1);
                 mob.setTarget(p);
             }
-            w.spawnEntity(mob);
+            w.addFreshEntity(mob);
             return;
         }
     }
 
-    private static void progress(ServerPlayerEntity p, Step s) {
+    private static void progress(ServerPlayer p, Step s) {
         if (step(p) != s || QuestData.stage(p) != QuestData.START) return;
         int have = p.getAttachedOrElse(COUNT, 0) + 1;
         p.setAttached(COUNT, have);
         if (have < need(s)) {
-            p.sendMessage(Text.literal(s.goal + " " + have + "/" + need(s)).formatted(Formatting.AQUA), true);
+            p.sendSystemMessage(Component.literal(s.goal + " " + have + "/" + need(s)).withStyle(ChatFormatting.AQUA), true);
             return;
         }
-        p.sendMessage(Text.literal("Lesson learned!").formatted(Formatting.GREEN, Formatting.BOLD), true);
-        p.getWorld().playSound(null, p.getBlockPos(), SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.6f, 1.4f);
+        p.sendSystemMessage(Component.literal("Lesson learned!").withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD), true);
+        p.level().playSound(null, p.blockPosition(), SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.6f, 1.4f);
         Weapon w = switch (s) {
             case BLADE, GUARD -> Weapon.CUTLASS;
             case PISTOL -> Weapon.PISTOL;
@@ -250,7 +249,7 @@ public final class Lessons {
     // ------------------------------------------------------------------ hooks from the rest of the game
 
     /** A foe died; the weapon is what landed the killing blow (or null). */
-    public static void onKill(ServerPlayerEntity p, Weapon weapon, LivingEntity victim) {
+    public static void onKill(ServerPlayer p, Weapon weapon, LivingEntity victim) {
         if (!active(p)) return;
         Step s = step(p);
         if (s == Step.BLADE && weapon == Weapon.CUTLASS) progress(p, s);
@@ -258,29 +257,29 @@ public final class Lessons {
     }
 
     /** A hit landed with a weapon. */
-    public static void onHit(ServerPlayerEntity p, Weapon weapon, LivingEntity victim) {
+    public static void onHit(ServerPlayer p, Weapon weapon, LivingEntity victim) {
         if (active(p) && step(p) == Step.PISTOL && weapon == Weapon.PISTOL) progress(p, Step.PISTOL);
     }
 
-    public static void onDollWorked(ServerPlayerEntity p) {
+    public static void onDollWorked(ServerPlayer p) {
         if (active(p) && step(p) == Step.DOLL) progress(p, Step.DOLL);
     }
 
-    public static void onThrow(ServerPlayerEntity p) {
+    public static void onThrow(ServerPlayer p) {
         if (active(p) && step(p) == Step.BOMB) progress(p, Step.BOMB);
     }
 
-    public static void onCannonImpact(Entity owner, Vec3d at) {
-        ServerPlayerEntity p = owner instanceof ServerPlayerEntity sp ? sp
-                : owner instanceof ShipEntity ship && ship.getControllingPassenger() instanceof ServerPlayerEntity sp2 ? sp2 : null;
+    public static void onCannonImpact(Entity owner, Vec3 at) {
+        ServerPlayer p = owner instanceof ServerPlayer sp ? sp
+                : owner instanceof ShipEntity ship && ship.getControllingPassenger() instanceof ServerPlayer sp2 ? sp2 : null;
         if (p == null || !active(p) || step(p) != Step.GUNS) return;
         double dx = at.x - HULK_X, dz = at.z - HULK_Z;
         if (dx * dx + dz * dz < 16 * 16) progress(p, Step.GUNS);
     }
 
     private static void tick(MinecraftServer server) {
-        if (server.getTicks() % 10 != 3) return;
-        for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
+        if (server.getTickCount() % 10 != 3) return;
+        for (ServerPlayer p : server.getPlayerList().getPlayers()) {
             if (!active(p)) continue;
             Step s = step(p);
             boolean aboard = p.getVehicle() instanceof ShipEntity ship && ship.isOwner(p);

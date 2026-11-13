@@ -1,22 +1,21 @@
 package com.cursedtides.world;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.ChestBlock;
-import net.minecraft.block.entity.ChestBlockEntity;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.loot.LootTable;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.StructureWorldAccess;
-
 import java.util.function.Function;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.WorldGenLevel;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.ChestBlock;
+import net.minecraft.world.level.block.entity.ChestBlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.loot.LootTable;
 
 /**
  * Writes blocks in absolute world coordinates but only inside one chunk. Every chunk
@@ -36,24 +35,24 @@ public final class Canvas {
         int ay = Math.min(y1, y2), by = Math.max(y1, y2);
         columns(x1, z1, x2, z2, (x, z) -> {
             for (int y = ay; y <= by; y++) {
-                world.setBlockState(pos.set(x, y, z), fn.at(x, y, z), 2);
+                world.setBlock(pos.set(x, y, z), fn.at(x, y, z), 2);
             }
         });
     }
 
-    private final StructureWorldAccess world;
+    private final WorldGenLevel world;
     public final int minX, minZ, maxX, maxZ;
-    private final BlockPos.Mutable pos = new BlockPos.Mutable();
+    private final BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
 
-    public Canvas(StructureWorldAccess world, ChunkPos chunk) {
+    public Canvas(WorldGenLevel world, ChunkPos chunk) {
         this.world = world;
-        this.minX = chunk.getStartX();
-        this.minZ = chunk.getStartZ();
-        this.maxX = chunk.getEndX();
-        this.maxZ = chunk.getEndZ();
+        this.minX = chunk.getMinBlockX();
+        this.minZ = chunk.getMinBlockZ();
+        this.maxX = chunk.getMaxBlockX();
+        this.maxZ = chunk.getMaxBlockZ();
     }
 
-    public StructureWorldAccess world() {
+    public WorldGenLevel world() {
         return world;
     }
 
@@ -67,13 +66,13 @@ public final class Canvas {
 
     public void set(int x, int y, int z, BlockState state) {
         if (contains(x, z)) {
-            world.setBlockState(pos.set(x, y, z), state, 2);
+            world.setBlock(pos.set(x, y, z), state, 2);
         }
     }
 
     public BlockState get(int x, int y, int z) {
         if (!contains(x, z)) {
-            return Blocks.AIR.getDefaultState();
+            return Blocks.AIR.defaultBlockState();
         }
         return world.getBlockState(pos.set(x, y, z));
     }
@@ -93,7 +92,7 @@ public final class Canvas {
         int ay = Math.min(y1, y2), by = Math.max(y1, y2);
         columns(x1, z1, x2, z2, (x, z) -> {
             for (int y = ay; y <= by; y++) {
-                world.setBlockState(pos.set(x, y, z), state, 2);
+                world.setBlock(pos.set(x, y, z), state, 2);
             }
         });
     }
@@ -114,28 +113,28 @@ public final class Canvas {
         columns(x1, z1, x2, z2, (x, z) -> {
             int top = Archipelago.column(x, z).top();
             for (int y = Math.max(top + 1, Archipelago.SEA_FLOOR + 1); y <= floorY - 1; y++) {
-                world.setBlockState(pos.set(x, y, z), support, 2);
+                world.setBlock(pos.set(x, y, z), support, 2);
             }
             for (int y = floorY; y <= Math.max(top, floorY + 6); y++) {
-                BlockState air = y <= Archipelago.WATER_TOP ? Blocks.WATER.getDefaultState() : Blocks.AIR.getDefaultState();
-                world.setBlockState(pos.set(x, y, z), air, 2);
+                BlockState air = y <= Archipelago.WATER_TOP ? Blocks.WATER.defaultBlockState() : Blocks.AIR.defaultBlockState();
+                world.setBlock(pos.set(x, y, z), air, 2);
             }
         });
     }
 
     /** A chest holding specific items and/or a loot table. */
-    public void chest(int x, int y, int z, Direction facing, RegistryKey<LootTable> loot, ItemStack... items) {
+    public void chest(int x, int y, int z, Direction facing, ResourceKey<LootTable> loot, ItemStack... items) {
         if (!contains(x, z)) {
             return;
         }
-        boolean wet = world.getBlockState(pos.set(x, y, z)).isOf(Blocks.WATER);
-        BlockState state = Blocks.CHEST.getDefaultState()
-                .with(ChestBlock.FACING, facing)
-                .with(ChestBlock.WATERLOGGED, wet);
-        world.setBlockState(pos.set(x, y, z), state, 2);
+        boolean wet = world.getBlockState(pos.set(x, y, z)).is(Blocks.WATER);
+        BlockState state = Blocks.CHEST.defaultBlockState()
+                .setValue(ChestBlock.FACING, facing)
+                .setValue(ChestBlock.WATERLOGGED, wet);
+        world.setBlock(pos.set(x, y, z), state, 2);
         if (world.getBlockEntity(pos.set(x, y, z)) instanceof ChestBlockEntity chest) {
             for (int i = 0; i < items.length; i++) {
-                chest.setStack(13 + i - items.length / 2, items[i]);
+                chest.setItem(13 + i - items.length / 2, items[i]);
             }
             if (loot != null) {
                 chest.setLootTable(loot, Noise.hash(x, y, z, 99));
@@ -143,28 +142,28 @@ public final class Canvas {
         }
     }
 
-    public void spawn(double x, int y, double z, float yaw, Function<ServerWorld, Entity> factory) {
+    public void spawn(double x, int y, double z, float yaw, Function<ServerLevel, Entity> factory) {
         spawn(x, y, z, yaw, factory, null);
     }
 
     /** Spawns a persistent entity, but only from the chunk that contains it. afterInit runs after initialize(). */
-    public void spawn(double x, int y, double z, float yaw, Function<ServerWorld, Entity> factory,
+    public void spawn(double x, int y, double z, float yaw, Function<ServerLevel, Entity> factory,
                       @org.jetbrains.annotations.Nullable java.util.function.Consumer<Entity> afterInit) {
         if (!contains((int) Math.floor(x), (int) Math.floor(z))) {
             return;
         }
-        Entity entity = factory.apply(world.toServerWorld());
+        Entity entity = factory.apply(world.getLevel());
         if (entity == null) {
             return;
         }
-        entity.refreshPositionAndAngles(x, y, z, yaw, 0.0f);
-        if (entity instanceof MobEntity mob) {
-            mob.initialize(world, world.getLocalDifficulty(pos.set(x, y, z)), SpawnReason.STRUCTURE, null);
-            mob.setPersistent();
+        entity.snapTo(x, y, z, yaw, 0.0f);
+        if (entity instanceof Mob mob) {
+            mob.finalizeSpawn(world, world.getCurrentDifficultyAt(pos.set(x, y, z)), EntitySpawnReason.STRUCTURE, null);
+            mob.setPersistenceRequired();
         }
         if (afterInit != null) {
             afterInit.accept(entity);
         }
-        world.spawnEntity(entity);
+        world.addFreshEntity(entity);
     }
 }

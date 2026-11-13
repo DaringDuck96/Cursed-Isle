@@ -1,5 +1,6 @@
 package com.cursedtides.item;
 
+import net.minecraft.world.InteractionResult;
 import com.cursedtides.CursedTides;
 import com.cursedtides.pirate.PirateData;
 import com.cursedtides.pirate.Weapon;
@@ -7,36 +8,34 @@ import com.cursedtides.ship.Wind;
 import com.cursedtides.world.Archipelago;
 import com.cursedtides.world.Builds;
 import com.cursedtides.world.ModWorld;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.ChestBlock;
-import net.minecraft.block.entity.ChestBlockEntity;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.NbtComponent;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.tooltip.TooltipType;
-import net.minecraft.loot.LootTable;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Hand;
-import net.minecraft.util.TypedActionResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.random.Random;
-import net.minecraft.world.Heightmap;
-import net.minecraft.world.World;
-
 import java.util.List;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.ChestBlock;
+import net.minecraft.world.level.block.entity.ChestBlockEntity;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.storage.loot.LootTable;
 
 /**
  * A weathered treasure map. The first time you read it, it shows where the treasure
@@ -45,100 +44,100 @@ import java.util.List;
  * use it again: a chest is buried two blocks down. Dig!
  */
 public class TreasureMapItem extends Item {
-    static final RegistryKey<LootTable> BURIED = RegistryKey.of(RegistryKeys.LOOT_TABLE, CursedTides.id("chests/buried_treasure"));
-    static final RegistryKey<LootTable> LEGENDARY = RegistryKey.of(RegistryKeys.LOOT_TABLE, CursedTides.id("chests/legendary_treasure"));
+    static final ResourceKey<LootTable> BURIED = ResourceKey.create(Registries.LOOT_TABLE, CursedTides.id("chests/buried_treasure"));
+    static final ResourceKey<LootTable> LEGENDARY = ResourceKey.create(Registries.LOOT_TABLE, CursedTides.id("chests/legendary_treasure"));
 
-    public TreasureMapItem(Settings settings) {
+    public TreasureMapItem(Properties settings) {
         super(settings);
     }
 
     public static ItemStack legendary() {
         ItemStack map = new ItemStack(ModItems.TREASURE_MAP);
-        NbtCompound data = new NbtCompound();
+        CompoundTag data = new CompoundTag();
         data.putBoolean("Legendary", true);
-        map.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(data));
-        map.set(DataComponentTypes.CUSTOM_NAME, Text.literal("Legendary Treasure Map").formatted(Formatting.GOLD));
+        map.set(DataComponents.CUSTOM_DATA, CustomData.of(data));
+        map.set(DataComponents.CUSTOM_NAME, Component.literal("Legendary Treasure Map").withStyle(ChatFormatting.GOLD));
         return map;
     }
 
-    private static NbtCompound data(ItemStack stack) {
-        NbtComponent c = stack.get(DataComponentTypes.CUSTOM_DATA);
-        return c == null ? new NbtCompound() : c.copyNbt();
+    private static CompoundTag data(ItemStack stack) {
+        CustomData c = stack.get(DataComponents.CUSTOM_DATA);
+        return c == null ? new CompoundTag() : c.copyTag();
     }
 
     @Override
-    public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
-        ItemStack map = user.getStackInHand(hand);
-        if (!(world instanceof ServerWorld serverWorld)) {
-            return TypedActionResult.success(map, true);
+    public InteractionResult use(Level world, Player user, InteractionHand hand) {
+        ItemStack map = user.getItemInHand(hand);
+        if (!(world instanceof ServerLevel serverWorld)) {
+            return InteractionResult.SUCCESS;
         }
-        NbtCompound data = data(map);
+        CompoundTag data = data(map);
         if (!data.contains("TargetX")) {
             int[] target = chooseTarget(serverWorld, user, user.getRandom());
             data.putInt("TargetX", target[0]);
             data.putInt("TargetZ", target[1]);
-            map.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(data));
-            world.playSound(null, user.getX(), user.getY(), user.getZ(), SoundEvents.ITEM_BOOK_PAGE_TURN, SoundCategory.PLAYERS, 1.0f, 0.8f);
-            user.sendMessage(Text.literal("The ink resolves into a coastline and an X... "
-                    + describe(user, target[0], target[1])).formatted(Formatting.GOLD), false);
-            return TypedActionResult.success(map, false);
+            map.set(DataComponents.CUSTOM_DATA, CustomData.of(data));
+            world.playSound(null, user.getX(), user.getY(), user.getZ(), SoundEvents.BOOK_PAGE_TURN, SoundSource.PLAYERS, 1.0f, 0.8f);
+            com.cursedtides.util.Compat.tell(user, Component.literal("The ink resolves into a coastline and an X... "
+                    + describe(user, target[0], target[1])).withStyle(ChatFormatting.GOLD), false);
+            return InteractionResult.SUCCESS;
         }
 
-        int tx = data.getInt("TargetX"), tz = data.getInt("TargetZ");
+        int tx = data.getIntOr("TargetX", 0), tz = data.getIntOr("TargetZ", 0);
         double dist = Math.hypot(tx + 0.5 - user.getX(), tz + 0.5 - user.getZ());
         if (dist > 4.0) {
-            user.sendMessage(Text.literal(describe(user, tx, tz)).formatted(Formatting.YELLOW), true);
-            return TypedActionResult.success(map, false);
+            com.cursedtides.util.Compat.tell(user, Component.literal(describe(user, tx, tz)).withStyle(ChatFormatting.YELLOW), true);
+            return InteractionResult.SUCCESS;
         }
 
         // Bury the chest under the X
-        int surface = serverWorld.getTopY(Heightmap.Type.OCEAN_FLOOR, tx, tz) - 1;
+        int surface = serverWorld.getHeight(Heightmap.Types.OCEAN_FLOOR, tx, tz) - 1;
         BlockPos chestPos = new BlockPos(tx, surface - 2, tz);
-        world.setBlockState(chestPos, Blocks.CHEST.getDefaultState().with(ChestBlock.FACING, Direction.NORTH), 3);
+        world.setBlock(chestPos, Blocks.CHEST.defaultBlockState().setValue(ChestBlock.FACING, Direction.NORTH), 3);
         if (world.getBlockEntity(chestPos) instanceof ChestBlockEntity chest) {
-            chest.setLootTable(data.getBoolean("Legendary") ? LEGENDARY : BURIED, user.getRandom().nextLong());
+            chest.setLootTable(data.getBooleanOr("Legendary", false) ? LEGENDARY : BURIED, user.getRandom().nextLong());
         }
         for (int dx = -1; dx <= 1; dx++) {
             for (int dz = -1; dz <= 1; dz++) {
                 if (Math.abs(dx) == Math.abs(dz)) {
                     BlockPos mark = new BlockPos(tx + dx, surface, tz + dz);
-                    if (world.getBlockState(mark).isOpaqueFullCube(world, mark)) {
-                        world.setBlockState(mark, Blocks.COARSE_DIRT.getDefaultState(), 3);
+                    if (world.getBlockState(mark).isSolidRender()) {
+                        world.setBlock(mark, Blocks.COARSE_DIRT.defaultBlockState(), 3);
                     }
                 }
             }
         }
-        serverWorld.spawnParticles(ParticleTypes.HAPPY_VILLAGER, tx + 0.5, surface + 1.2, tz + 0.5, 20, 0.6, 0.3, 0.6, 0.0);
-        world.playSound(null, user.getX(), user.getY(), user.getZ(), SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.6f, 1.6f);
-        user.sendMessage(Text.literal("X marks the spot! Something is buried right here. Dig two blocks down.")
-                .formatted(Formatting.GOLD), false);
-        if (user instanceof ServerPlayerEntity sp) {
-            PirateData.addXp(sp, Weapon.EXPLORATION, data.getBoolean("Legendary") ? 120 : 40);
+        serverWorld.sendParticles(ParticleTypes.HAPPY_VILLAGER, tx + 0.5, surface + 1.2, tz + 0.5, 20, 0.6, 0.3, 0.6, 0.0);
+        world.playSound(null, user.getX(), user.getY(), user.getZ(), SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.6f, 1.6f);
+        com.cursedtides.util.Compat.tell(user, Component.literal("X marks the spot! Something is buried right here. Dig two blocks down.")
+                .withStyle(ChatFormatting.GOLD), false);
+        if (user instanceof ServerPlayer sp) {
+            PirateData.addXp(sp, Weapon.EXPLORATION, data.getBooleanOr("Legendary", false) ? 120 : 40);
             int fee = (int) com.cursedtides.pirate.PerkData.stat(sp, com.cursedtides.pirate.Perk.Stat.FINDERS_FEE);
-            if (fee > 0 && !sp.getInventory().insertStack(new ItemStack(ModItems.DOUBLOON, fee))) {
-                sp.dropItem(new ItemStack(ModItems.DOUBLOON, fee), false);
+            if (fee > 0 && !sp.getInventory().add(new ItemStack(ModItems.DOUBLOON, fee))) {
+                sp.drop(new ItemStack(ModItems.DOUBLOON, fee), false, net.minecraft.util.Prediction.SERVER_ONLY);
             }
         }
-        if (!user.getAbilities().creativeMode) {
-            map.decrement(1);
+        if (!user.getAbilities().instabuild) {
+            map.shrink(1);
         }
-        return TypedActionResult.success(map, false);
+        return InteractionResult.SUCCESS;
     }
 
     /** Shows the bearing while the map is held. */
     @Override
-    public void inventoryTick(ItemStack stack, World world, Entity entity, int slot, boolean selected) {
-        if (world.isClient || !selected || entity.age % 10 != 0 || !(entity instanceof ServerPlayerEntity player)) {
+    public void inventoryTick(ItemStack stack, net.minecraft.server.level.ServerLevel world, Entity entity, net.minecraft.world.entity.EquipmentSlot slot) {
+        if (slot != net.minecraft.world.entity.EquipmentSlot.MAINHAND || entity.tickCount % 10 != 0 || !(entity instanceof ServerPlayer player)) {
             return;
         }
-        NbtCompound data = data(stack);
+        CompoundTag data = data(stack);
         if (data.contains("TargetX")) {
-            player.sendMessage(Text.literal(describe(player, data.getInt("TargetX"), data.getInt("TargetZ")))
-                    .formatted(Formatting.YELLOW), true);
+            player.sendSystemMessage(Component.literal(describe(player, data.getIntOr("TargetX", 0), data.getIntOr("TargetZ", 0)))
+                    .withStyle(ChatFormatting.YELLOW), true);
         }
     }
 
-    static String describe(PlayerEntity player, int tx, int tz) {
+    static String describe(Player player, int tx, int tz) {
         double dx = tx + 0.5 - player.getX(), dz = tz + 0.5 - player.getZ();
         int dist = (int) Math.round(Math.hypot(dx, dz));
         if (dist <= 4) return "X marks the spot: you're standing on it. Use the map here.";
@@ -146,7 +145,7 @@ public class TreasureMapItem extends Item {
         return "X marks the spot: " + dist + " blocks " + bearing + " (" + tx + ", " + tz + ")";
     }
 
-    private static int[] chooseTarget(ServerWorld world, PlayerEntity user, Random random) {
+    private static int[] chooseTarget(ServerLevel world, Player user, RandomSource random) {
         if (ModWorld.isArchipelago()) {
             List<Archipelago.Island> islands = Archipelago.ISLANDS.stream()
                     .filter(i -> i.style() != Archipelago.Style.REEF).toList();
@@ -168,18 +167,20 @@ public class TreasureMapItem extends Item {
     }
 
     @Override
-    public void appendTooltip(ItemStack stack, TooltipContext context, List<Text> tooltip, TooltipType type) {
-        NbtCompound data = data(stack);
+    public void appendHoverText(ItemStack stack, TooltipContext context, net.minecraft.world.item.component.TooltipDisplay display__, java.util.function.Consumer<Component> adder__, TooltipFlag type) {
+        java.util.List<Component> tooltip = new java.util.ArrayList<>();
+        CompoundTag data = data(stack);
         if (data.contains("TargetX")) {
-            tooltip.add(Text.literal("X at " + data.getInt("TargetX") + ", " + data.getInt("TargetZ")).formatted(Formatting.GOLD));
-            tooltip.add(Text.literal("Hold it to follow the bearing. Use it on the X.").formatted(Formatting.GRAY));
+            tooltip.add(Component.literal("X at " + data.getIntOr("TargetX", 0) + ", " + data.getIntOr("TargetZ", 0)).withStyle(ChatFormatting.GOLD));
+            tooltip.add(Component.literal("Hold it to follow the bearing. Use it on the X.").withStyle(ChatFormatting.GRAY));
         } else {
-            tooltip.add(Text.literal("Unread. Use it to study the markings.").formatted(Formatting.GRAY, Formatting.ITALIC));
+            tooltip.add(Component.literal("Unread. Use it to study the markings.").withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
         }
+        tooltip.forEach(adder__);
     }
 
     @Override
-    public boolean hasGlint(ItemStack stack) {
-        return data(stack).getBoolean("Legendary");
+    public boolean isFoil(ItemStack stack) {
+        return data(stack).getBooleanOr("Legendary", false);
     }
 }

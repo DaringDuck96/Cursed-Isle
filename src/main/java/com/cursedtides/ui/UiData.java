@@ -13,13 +13,12 @@ import com.cursedtides.world.Archipelago;
 import com.cursedtides.world.ModWorld;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.NbtComponent;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,11 +27,11 @@ public final class UiData {
     private UiData() {}
 
     public static void register() {
-        PayloadTypeRegistry.playS2C().register(UiPayloads.Journal.ID, UiPayloads.Journal.CODEC);
-        PayloadTypeRegistry.playS2C().register(UiPayloads.Chart.ID, UiPayloads.Chart.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(UiPayloads.Journal.ID, UiPayloads.Journal.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(UiPayloads.Chart.ID, UiPayloads.Chart.CODEC);
     }
 
-    public static void sendJournal(ServerPlayerEntity player) {
+    public static void sendJournal(ServerPlayer player) {
         List<String> lines = new ArrayList<>();
         int notoriety = PirateData.notoriety(player);
         lines.add("§6§l" + com.cursedtides.character.CharacterData.pirateName(player) + "§r§6, "
@@ -43,8 +42,8 @@ public final class UiData {
             lines.add("§7" + com.cursedtides.character.CharacterData.background(player).title()
                     + ". (Rename with /pirate appearance)");
         }
-        com.cursedtides.social.CrewState.Crew crew = player.getServer() == null ? null
-                : com.cursedtides.social.CrewState.get(player.getServer()).crewOf(player.getUuid());
+        com.cursedtides.social.CrewState.Crew crew = player.level().getServer() == null ? null
+                : com.cursedtides.social.CrewState.get(player.level().getServer()).crewOf(player.getUUID());
         if (crew != null) {
             lines.add("§7Crew: §f" + crew.name + " §7(" + crew.members.size() + " hands, captain "
                     + crew.names.getOrDefault(crew.captain, "?") + ")");
@@ -105,7 +104,7 @@ public final class UiData {
         for (Weapon w : Weapon.values()) {
             int level = PirateData.level(player, w);
             String bar = "|".repeat(Math.round(level / 30f * 20));
-            lines.add("§f" + pad(Text.translatable(w.translationKey()).getString(), 12) + " §7Lv " + level + "  §b" + bar);
+            lines.add("§f" + pad(Component.translatable(w.translationKey()).getString(), 12) + " §7Lv " + level + "  §b" + bar);
         }
         lines.add("§3Voodoo energy " + PirateData.voodoo(player) + "/" + PirateData.maxVoodoo(player));
         lines.add("");
@@ -135,21 +134,21 @@ public final class UiData {
         lines.add("§e§lTreasure maps carried");
         boolean anyMap = false;
         var inv = player.getInventory();
-        for (int i = 0; i < inv.size(); i++) {
-            ItemStack stack = inv.getStack(i);
-            if (!stack.isOf(ModItems.TREASURE_MAP)) continue;
+        for (int i = 0; i < inv.getContainerSize(); i++) {
+            ItemStack stack = inv.getItem(i);
+            if (!stack.is(ModItems.TREASURE_MAP)) continue;
             anyMap = true;
-            NbtComponent c = stack.get(DataComponentTypes.CUSTOM_DATA);
-            NbtCompound data = c == null ? new NbtCompound() : c.copyNbt();
+            CustomData c = stack.get(DataComponents.CUSTOM_DATA);
+            CompoundTag data = c == null ? new CompoundTag() : c.copyTag();
             if (data.contains("TargetX")) {
-                int tx = data.getInt("TargetX"), tz = data.getInt("TargetZ");
+                int tx = data.getIntOr("TargetX", 0), tz = data.getIntOr("TargetZ", 0);
                 int dist = (int) Math.hypot(tx - player.getX(), tz - player.getZ());
-                lines.add("§f" + (data.getBoolean("Legendary") ? "§6Legendary §f" : "") + "X at " + tx + ", " + tz + " §7(" + dist + " blocks)");
+                lines.add("§f" + (data.getBooleanOr("Legendary", false) ? "§6Legendary §f" : "") + "X at " + tx + ", " + tz + " §7(" + dist + " blocks)");
             } else {
                 lines.add("§7An unread map. Use it to study the markings.");
             }
         }
-        int fragments = inv.count(ModItems.MAP_FRAGMENT);
+        int fragments = inv.countItem(ModItems.MAP_FRAGMENT);
         if (fragments > 0) lines.add("§7Map fragments: " + fragments + "/3");
         if (!anyMap && fragments == 0) lines.add("§7None. Look in dungeon vaults, wrecks and the Quartermasters' wares.");
         lines.add("");
@@ -178,15 +177,15 @@ public final class UiData {
         ServerPlayNetworking.send(player, new UiPayloads.Journal(lines));
     }
 
-    public static void sendMap(ServerPlayerEntity player) {
+    public static void sendMap(ServerPlayer player) {
         List<Integer> marks = new ArrayList<>();
         var inv = player.getInventory();
-        for (int i = 0; i < inv.size(); i++) {
-            ItemStack stack = inv.getStack(i);
-            NbtComponent c = stack.isOf(ModItems.TREASURE_MAP) ? stack.get(DataComponentTypes.CUSTOM_DATA) : null;
-            if (c != null && c.copyNbt().contains("TargetX")) {
-                marks.add(c.copyNbt().getInt("TargetX"));
-                marks.add(c.copyNbt().getInt("TargetZ"));
+        for (int i = 0; i < inv.getContainerSize(); i++) {
+            ItemStack stack = inv.getItem(i);
+            CustomData c = stack.is(ModItems.TREASURE_MAP) ? stack.get(DataComponents.CUSTOM_DATA) : null;
+            if (c != null && c.copyTag().contains("TargetX")) {
+                marks.add(c.copyTag().getIntOr("TargetX", 0));
+                marks.add(c.copyTag().getIntOr("TargetZ", 0));
             }
         }
         long cleared = Dungeons.mask(player);

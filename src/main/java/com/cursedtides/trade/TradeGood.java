@@ -1,16 +1,15 @@
 package com.cursedtides.trade;
 
 import com.cursedtides.CursedTides;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.tooltip.TooltipType;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Rarity;
-
 import java.util.List;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Rarity;
+import net.minecraft.world.item.TooltipFlag;
 
 /** Crated cargo for buying cheap in one port and selling dear in another. Prices are in silver. */
 public enum TradeGood {
@@ -47,7 +46,7 @@ public enum TradeGood {
 
     public static TradeGood of(ItemStack stack) {
         for (TradeGood g : values()) {
-            if (g.item != null && stack.isOf(g.item)) return g;
+            if (g.item != null && stack.is(g.item)) return g;
         }
         return null;
     }
@@ -59,12 +58,12 @@ public enum TradeGood {
 
     public static void register() {
         for (TradeGood g : values()) {
-            g.item = Registry.register(Registries.ITEM, CursedTides.id(g.id), new GoodItem(g,
-                    new Item.Settings().maxCount(16).rarity(g.contraband ? Rarity.UNCOMMON : Rarity.COMMON)));
+            g.item = Registry.register(BuiltInRegistries.ITEM, com.cursedtides.util.Reg.itemId(g.id), new GoodItem(g,
+                    com.cursedtides.util.Reg.props().stacksTo(16).rarity(g.contraband ? Rarity.UNCOMMON : Rarity.COMMON)));
         }
-        net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents.modifyEntriesEvent(net.minecraft.registry.RegistryKey.of(
-                net.minecraft.registry.RegistryKeys.ITEM_GROUP, CursedTides.id("main"))).register(entries -> {
-            for (TradeGood g : values()) entries.add(g.item);
+        net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents.modifyOutputEvent(net.minecraft.resources.ResourceKey.create(
+                net.minecraft.core.registries.Registries.CREATIVE_MODE_TAB, CursedTides.id("main"))).register(entries -> {
+            for (TradeGood g : values()) entries.accept(g.item);
         });
     }
 
@@ -82,31 +81,34 @@ public enum TradeGood {
     static class GoodItem extends Item {
         private final TradeGood good;
 
-        GoodItem(TradeGood good, Settings settings) {
+        GoodItem(TradeGood good, Properties settings) {
             super(settings);
             this.good = good;
         }
 
         /** Distilling rum from sugar is a brewer's trade. */
         @Override
-        public void onCraftByPlayer(ItemStack stack, net.minecraft.world.World world, net.minecraft.entity.player.PlayerEntity player) {
-            if (good == RUM && !world.isClient && player instanceof net.minecraft.server.network.ServerPlayerEntity sp) {
+        public void onCraftedBy(ItemStack stack, net.minecraft.world.entity.player.Player player) {
+            net.minecraft.world.level.Level world = player.level();
+            if (good == RUM && !world.isClientSide() && player instanceof net.minecraft.server.level.ServerPlayer sp) {
                 com.cursedtides.profession.ProfessionData.addXp(sp, com.cursedtides.profession.Profession.BREWING, 10);
             }
         }
 
         @Override
-        public Text getName(ItemStack stack) {
-            return Text.literal(good.displayName);
+        public Component getName(ItemStack stack) {
+            return Component.literal(good.displayName);
         }
 
         @Override
-        public void appendTooltip(ItemStack stack, TooltipContext context, List<Text> tooltip, TooltipType type) {
-            tooltip.add(Text.literal(good.contraband ? "Contraband: the Tidewatch will seize it" : "Trade good")
-                    .formatted(good.contraband ? Formatting.RED : Formatting.GOLD));
-            tooltip.add(Text.literal("Worth about " + Wallet.format(good.basePrice)).formatted(Formatting.GRAY));
+        public void appendHoverText(ItemStack stack, TooltipContext context, net.minecraft.world.item.component.TooltipDisplay display__, java.util.function.Consumer<Component> adder__, TooltipFlag type) {
+        java.util.List<Component> tooltip = new java.util.ArrayList<>();
+            tooltip.add(Component.literal(good.contraband ? "Contraband: the Tidewatch will seize it" : "Trade good")
+                    .withStyle(good.contraband ? ChatFormatting.RED : ChatFormatting.GOLD));
+            tooltip.add(Component.literal("Worth about " + Wallet.format(good.basePrice)).withStyle(ChatFormatting.GRAY));
             String hint = good.tradeHint();
-            if (!hint.isEmpty()) tooltip.add(Text.literal(hint).formatted(Formatting.DARK_GRAY, Formatting.ITALIC));
-        }
+            if (!hint.isEmpty()) tooltip.add(Component.literal(hint).withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
+        tooltip.forEach(adder__);
+    }
     }
 }

@@ -9,27 +9,26 @@ import com.cursedtides.world.ModWorld;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.entity.Entity;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.network.RegistryByteBuf;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.codec.PacketCodecs;
-import net.minecraft.network.packet.CustomPayload;
-import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.PersistentState;
-
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
+import net.minecraft.world.Container;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.saveddata.SavedData;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -49,25 +48,25 @@ public final class Markets {
     // ------------------------------------------------------------------ payloads
 
     /** Server to client: the market screen's contents. */
-    public record Data(NbtCompound data) implements CustomPayload {
-        public static final Id<Data> ID = new Id<>(CursedTides.id("market"));
-        public static final PacketCodec<RegistryByteBuf, Data> CODEC =
-                PacketCodec.tuple(PacketCodecs.NBT_COMPOUND, Data::data, Data::new);
-        @Override public Id<? extends CustomPayload> getId() { return ID; }
+    public record Data(CompoundTag data) implements CustomPacketPayload {
+        public static final Type<Data> ID = new Type<>(CursedTides.id("market"));
+        public static final StreamCodec<RegistryFriendlyByteBuf, Data> CODEC =
+                StreamCodec.composite(ByteBufCodecs.COMPOUND_TAG, Data::data, Data::new);
+        @Override public Type<? extends CustomPacketPayload> type() { return ID; }
     }
 
     /** Client to server: buy or sell at the merchant with this entity id. */
-    public record Action(int merchant, int good, int action) implements CustomPayload {
-        public static final Id<Action> ID = new Id<>(CursedTides.id("market_action"));
-        public static final PacketCodec<RegistryByteBuf, Action> CODEC = PacketCodec.tuple(
-                PacketCodecs.VAR_INT, Action::merchant, PacketCodecs.VAR_INT, Action::good, PacketCodecs.VAR_INT, Action::action,
+    public record Action(int merchant, int good, int action) implements CustomPacketPayload {
+        public static final Type<Action> ID = new Type<>(CursedTides.id("market_action"));
+        public static final StreamCodec<RegistryFriendlyByteBuf, Action> CODEC = StreamCodec.composite(
+                ByteBufCodecs.VAR_INT, Action::merchant, ByteBufCodecs.VAR_INT, Action::good, ByteBufCodecs.VAR_INT, Action::action,
                 Action::new);
-        @Override public Id<? extends CustomPayload> getId() { return ID; }
+        @Override public Type<? extends CustomPacketPayload> type() { return ID; }
     }
 
     public static void register() {
-        PayloadTypeRegistry.playS2C().register(Data.ID, Data.CODEC);
-        PayloadTypeRegistry.playC2S().register(Action.ID, Action.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(Data.ID, Data.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(Action.ID, Action.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(Action.ID, (payload, ctx) -> ctx.server().execute(() -> act(ctx.player(), payload)));
         ServerTickEvents.END_SERVER_TICK.register(Markets::tick);
     }
@@ -83,7 +82,7 @@ public final class Markets {
     }
 
     /** What the merchant pays you. Black markets pay well for contraband, poorly for honest cargo. */
-    public static int sellPrice(MinecraftServer server, Ports.Port port, TradeGood g, ServerPlayerEntity player) {
+    public static int sellPrice(MinecraftServer server, Ports.Port port, TradeGood g, ServerPlayer player) {
         double spread = port.blackMarket() && !g.contraband ? 0.7 : 0.8;
         if (port.blackMarket() && g.contraband) {
             int rep = FactionData.rep(player, Faction.SMUGGLERS);
@@ -98,24 +97,24 @@ public final class Markets {
 
     // ------------------------------------------------------------------ the screen
 
-    public static void open(ServerPlayerEntity player, Entity merchant) {
+    public static void open(ServerPlayer player, Entity merchant) {
         Ports.Port port = Ports.at(merchant.getBlockX(), merchant.getBlockZ());
-        MinecraftServer server = player.getServer();
+        MinecraftServer server = player.level().getServer();
         if (server == null) return;
-        if (TradeEvents.quarantined(port, player.getServerWorld())) {
-            player.sendMessage(Text.literal("The market's shut: the port is under quarantine. Come back when the fever's passed.").formatted(Formatting.RED), false);
+        if (TradeEvents.quarantined(port, player.level())) {
+            player.sendSystemMessage(Component.literal("The market's shut: the port is under quarantine. Come back when the fever's passed.").withStyle(ChatFormatting.RED), false);
             return;
         }
-        NbtCompound data = new NbtCompound();
+        CompoundTag data = new CompoundTag();
         data.putInt("Merchant", merchant.getId());
         data.putString("Port", port == Ports.NOWHERE ? "Open market" : port.island().name());
         data.putBoolean("Black", port.blackMarket());
         data.putInt("Wallet", Wallet.total(player));
         State s = State.get(server);
-        NbtList goods = new NbtList();
+        ListTag goods = new ListTag();
         for (TradeGood g : TradeGood.values()) {
             if (!port.deals(g)) continue;
-            NbtCompound e = new NbtCompound();
+            CompoundTag e = new CompoundTag();
             e.putInt("Id", g.ordinal());
             e.putString("Name", g.displayName);
             e.putInt("Buy", price(server, port, g));
@@ -133,24 +132,24 @@ public final class Markets {
         }
         data.put("Goods", goods);
         // Current shortages and gluts elsewhere, for planning a route
-        NbtList news = new NbtList();
+        ListTag news = new ListTag();
         for (Event ev : s.events) {
             Ports.Port where = Ports.ALL.get(ev.port);
-            news.add(net.minecraft.nbt.NbtString.of((ev.mult > 1 ? "Shortage of " : "Glut of ")
+            news.add(net.minecraft.nbt.StringTag.valueOf((ev.mult > 1 ? "Shortage of " : "Glut of ")
                     + TradeGood.values()[ev.good].displayName.toLowerCase() + " at " + where.island().name()));
         }
         data.put("News", news);
         ServerPlayNetworking.send(player, new Data(data));
     }
 
-    private static void act(ServerPlayerEntity player, Action a) {
-        Entity merchant = player.getWorld().getEntityById(a.merchant());
-        if (merchant == null || merchant.squaredDistanceTo(player) > 10 * 10) return;
+    private static void act(ServerPlayer player, Action a) {
+        Entity merchant = player.level().getEntity(a.merchant());
+        if (merchant == null || merchant.distanceToSqr(player) > 10 * 10) return;
         if (a.good() < 0 || a.good() >= TradeGood.values().length) return;
         TradeGood g = TradeGood.values()[a.good()];
         Ports.Port port = Ports.at(merchant.getBlockX(), merchant.getBlockZ());
         if (!port.deals(g)) return;
-        MinecraftServer server = player.getServer();
+        MinecraftServer server = player.level().getServer();
         if (server == null) return;
         State s = State.get(server);
         String k = key(port, g);
@@ -163,7 +162,7 @@ public final class Markets {
                 if (!Wallet.pay(player, cost)) break;
                 if (!store(player, new ItemStack(g.item()))) {
                     Wallet.give(player, cost);
-                    player.sendMessage(Text.literal("No room: your pockets and your hold are full.").formatted(Formatting.RED), true);
+                    player.sendSystemMessage(Component.literal("No room: your pockets and your hold are full.").withStyle(ChatFormatting.RED), true);
                     break;
                 }
                 spent += cost;
@@ -171,11 +170,11 @@ public final class Markets {
                 s.nudge(k, STEP);
             }
             if (bought > 0) {
-                player.sendMessage(Text.literal("Bought " + bought + " " + g.displayName + " for " + Wallet.format(spent))
-                        .formatted(Formatting.GOLD), true);
+                player.sendSystemMessage(Component.literal("Bought " + bought + " " + g.displayName + " for " + Wallet.format(spent))
+                        .withStyle(ChatFormatting.GOLD), true);
                 ding(player, 1.2f);
             } else if (Wallet.total(player) < price(server, port, g)) {
-                player.sendMessage(Text.literal("You can't afford that.").formatted(Formatting.RED), true);
+                player.sendSystemMessage(Component.literal("You can't afford that.").withStyle(ChatFormatting.RED), true);
             }
         } else {
             int have = count(player, g);
@@ -200,52 +199,52 @@ public final class Markets {
                 }
                 com.cursedtides.activity.Challenges.progress(player, "trade", sold);
                 TradeEvents.onSold(player, port, g, sold);
-                player.sendMessage(Text.literal("Sold " + sold + " " + g.displayName + " for " + Wallet.format(earned))
-                        .formatted(Formatting.GOLD), true);
+                player.sendSystemMessage(Component.literal("Sold " + sold + " " + g.displayName + " for " + Wallet.format(earned))
+                        .withStyle(ChatFormatting.GOLD), true);
                 ding(player, 0.9f);
-                player.playSoundToPlayer(com.cursedtides.sound.ModSounds.COINS.value(), net.minecraft.sound.SoundCategory.PLAYERS, 0.7f, 1f);
+                com.cursedtides.util.Compat.sound(player, com.cursedtides.sound.ModSounds.COINS.value(), net.minecraft.sounds.SoundSource.PLAYERS, 0.7f, 1f);
             }
         }
-        s.markDirty();
+        s.setDirty();
         open(player, merchant); // refresh the screen
     }
 
-    private static void ding(ServerPlayerEntity player, float pitch) {
-        player.getWorld().playSound(null, player.getBlockPos(), SoundEvents.ENTITY_VILLAGER_TRADE, SoundCategory.NEUTRAL, 0.6f, pitch);
+    private static void ding(ServerPlayer player, float pitch) {
+        player.level().playSound(null, player.blockPosition(), SoundEvents.VILLAGER_TRADE, SoundSource.NEUTRAL, 0.6f, pitch);
     }
 
     // ------------------------------------------------------------------ cargo: pockets and the hold
 
     /** The player's own ships close by: cargo can be sold straight from the hold. */
-    private static List<Inventory> holds(ServerPlayerEntity player) {
-        List<Inventory> out = new ArrayList<>();
-        var box = player.getBoundingBox().expand(40);
-        for (ShipEntity ship : player.getWorld().getEntitiesByClass(ShipEntity.class, box,
-                s -> !s.isHostile() && s.getOwner() != null && s.getOwner().equals(player.getUuid()))) {
+    private static List<Container> holds(ServerPlayer player) {
+        List<Container> out = new ArrayList<>();
+        var box = player.getBoundingBox().inflate(40);
+        for (ShipEntity ship : player.level().getEntitiesOfClass(ShipEntity.class, box,
+                s -> !s.isHostile() && s.getOwner() != null && s.getOwner().equals(player.getUUID()))) {
             out.add(ship.cargo());
         }
         return out;
     }
 
-    public static int count(ServerPlayerEntity player, TradeGood g) {
-        int n = player.getInventory().count(g.item());
-        for (Inventory hold : holds(player)) n += hold.count(g.item());
+    public static int count(ServerPlayer player, TradeGood g) {
+        int n = player.getInventory().countItem(g.item());
+        for (Container hold : holds(player)) n += hold.countItem(g.item());
         return n;
     }
 
-    private static boolean take(ServerPlayerEntity player, TradeGood g) {
+    private static boolean take(ServerPlayer player, TradeGood g) {
         var inv = player.getInventory();
-        for (int i = 0; i < inv.size(); i++) {
-            if (inv.getStack(i).isOf(g.item())) {
-                inv.getStack(i).decrement(1);
+        for (int i = 0; i < inv.getContainerSize(); i++) {
+            if (inv.getItem(i).is(g.item())) {
+                inv.getItem(i).shrink(1);
                 return true;
             }
         }
-        for (Inventory hold : holds(player)) {
-            for (int i = 0; i < hold.size(); i++) {
-                if (hold.getStack(i).isOf(g.item())) {
-                    hold.getStack(i).decrement(1);
-                    hold.markDirty();
+        for (Container hold : holds(player)) {
+            for (int i = 0; i < hold.getContainerSize(); i++) {
+                if (hold.getItem(i).is(g.item())) {
+                    hold.getItem(i).shrink(1);
+                    hold.setChanged();
                     return true;
                 }
             }
@@ -253,11 +252,11 @@ public final class Markets {
         return false;
     }
 
-    private static boolean store(ServerPlayerEntity player, ItemStack stack) {
-        if (player.getInventory().insertStack(stack.copy())) return true;
-        for (Inventory hold : holds(player)) {
-            if (hold instanceof net.minecraft.inventory.SimpleInventory simple && simple.canInsert(stack)) {
-                simple.addStack(stack.copy());
+    private static boolean store(ServerPlayer player, ItemStack stack) {
+        if (player.getInventory().add(stack.copy())) return true;
+        for (Container hold : holds(player)) {
+            if (hold instanceof net.minecraft.world.SimpleContainer simple && simple.canAddItem(stack)) {
+                simple.addItem(stack.copy());
                 return true;
             }
         }
@@ -267,27 +266,27 @@ public final class Markets {
     // ------------------------------------------------------------------ drift and events
 
     private static void tick(MinecraftServer server) {
-        if (server.getTicks() % 1200 != 0) return;
-        ServerWorld world = server.getOverworld();
+        if (server.getTickCount() % 1200 != 0) return;
+        ServerLevel world = server.overworld();
         State s = State.get(server);
         s.pressure.replaceAll((k, v) -> Math.abs(v) < 0.01 ? 0.0 : v * 0.92);
-        long now = world.getTime();
+        long now = world.getGameTime();
         s.events.removeIf(e -> e.expires < now);
         // Roughly every ten minutes, something happens to a market somewhere
-        if (ModWorld.isArchipelago() && server.getTicks() % 12000 == 0 && s.events.size() < 4 && world.random.nextFloat() < 0.6f) {
-            int portIndex = world.random.nextInt(Ports.ALL.size());
+        if (ModWorld.isArchipelago() && server.getTickCount() % 12000 == 0 && s.events.size() < 4 && world.getRandom().nextFloat() < 0.6f) {
+            int portIndex = world.getRandom().nextInt(Ports.ALL.size());
             Ports.Port port = Ports.ALL.get(portIndex);
             List<TradeGood> options = new ArrayList<>();
             for (TradeGood g : TradeGood.values()) if (!g.contraband && port.deals(g)) options.add(g);
-            TradeGood g = options.get(world.random.nextInt(options.size()));
-            boolean shortage = world.random.nextBoolean();
+            TradeGood g = options.get(world.getRandom().nextInt(options.size()));
+            boolean shortage = world.getRandom().nextBoolean();
             s.events.add(new Event(portIndex, g.ordinal(), shortage ? 2.0 : 0.5, now + EVENT_LENGTH));
-            s.markDirty();
+            s.setDirty();
             if (shortage) TradeEvents.onShortage(server, portIndex, g, now + EVENT_LENGTH);
-            server.getPlayerManager().broadcast(Text.literal(shortage
+            server.getPlayerList().broadcastSystemMessage(Component.literal(shortage
                     ? "Word from " + port.island().name() + ": they've run short of " + g.displayName.toLowerCase() + ". Prices have doubled."
                     : "Word from " + port.island().name() + ": the warehouses are overflowing with " + g.displayName.toLowerCase()
-                    + ". It's going for half price.").formatted(Formatting.YELLOW), false);
+                    + ". It's going for half price.").withStyle(ChatFormatting.YELLOW), false);
         }
     }
 
@@ -296,17 +295,17 @@ public final class Markets {
     record Event(int port, int good, double mult, long expires) {}
 
 
-    public static final class State extends PersistentState {
+    public static final class State extends SavedData {
         final Map<String, Double> pressure = new HashMap<>();
         final List<Event> events = new ArrayList<>();
-        private static final Type<State> TYPE = new Type<>(State::new, State::fromNbt, null);
+        private static final net.minecraft.world.level.saveddata.SavedDataType<State> TYPE = com.cursedtides.util.Saved.type("cursedtides_markets", State::new, State::fromNbt, (st__, l__) -> st__.save(new CompoundTag(), l__));
 
         public static State get(MinecraftServer server) {
-            return server.getOverworld().getPersistentStateManager().getOrCreate(TYPE, "cursedtides_markets");
+            return server.overworld().getDataStorage().computeIfAbsent(TYPE);
         }
 
         void nudge(String k, double d) {
-            pressure.put(k, MathHelper.clamp(pressure.getOrDefault(k, 0.0) + d, MIN_P, MAX_P));
+            pressure.put(k, Mth.clamp(pressure.getOrDefault(k, 0.0) + d, MIN_P, MAX_P));
         }
 
         double eventMultiplier(Ports.Port port, TradeGood g) {
@@ -320,14 +319,13 @@ public final class Markets {
             return m > 1 ? "SHORTAGE" : m < 1 ? "GLUT" : null;
         }
 
-        @Override
-        public NbtCompound writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup lookup) {
-            NbtCompound p = new NbtCompound();
+                public CompoundTag save(CompoundTag nbt, HolderLookup.Provider lookup) {
+            CompoundTag p = new CompoundTag();
             pressure.forEach(p::putDouble);
             nbt.put("Pressure", p);
-            NbtList list = new NbtList();
+            ListTag list = new ListTag();
             for (Event e : events) {
-                NbtCompound c = new NbtCompound();
+                CompoundTag c = new CompoundTag();
                 c.putInt("Port", e.port);
                 c.putInt("Good", e.good);
                 c.putDouble("Mult", e.mult);
@@ -338,14 +336,14 @@ public final class Markets {
             return nbt;
         }
 
-        private static State fromNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup lookup) {
+        private static State fromNbt(CompoundTag nbt, HolderLookup.Provider lookup) {
             State s = new State();
-            NbtCompound p = nbt.getCompound("Pressure");
-            for (String k : p.getKeys()) s.pressure.put(k, p.getDouble(k));
-            NbtList list = nbt.getList("Events", NbtElement.COMPOUND_TYPE);
+            CompoundTag p = nbt.getCompoundOrEmpty("Pressure");
+            for (String k : p.keySet()) s.pressure.put(k, p.getDoubleOr(k, 0d));
+            ListTag list = nbt.getListOrEmpty("Events");
             for (int i = 0; i < list.size(); i++) {
-                NbtCompound c = list.getCompound(i);
-                s.events.add(new Event(c.getInt("Port"), c.getInt("Good"), c.getDouble("Mult"), c.getLong("Expires")));
+                CompoundTag c = list.getCompoundOrEmpty(i);
+                s.events.add(new Event(c.getIntOr("Port", 0), c.getIntOr("Good", 0), c.getDoubleOr("Mult", 0d), c.getLongOr("Expires", 0L)));
             }
             return s;
         }

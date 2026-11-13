@@ -1,12 +1,13 @@
 package com.cursedtides.world;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.CampfireBlock;
-import net.minecraft.util.math.Direction;
-
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.item.DyeColor;
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.CampfireBlock;
+import net.minecraft.world.level.block.state.BlockState;
 
 /**
  * Grows the ports, the navy strongholds and the pirate hideouts out to the size of the towns in the old pirate
@@ -33,8 +34,8 @@ final class Districts {
             new Town(Archipelago.BLACKTHORN_ISLE, Kind.HIDEOUT, 70),
             new Town(Archipelago.BLOODWAKE_CAY, Kind.HIDEOUT, 64));
 
-    private static BlockState s(net.minecraft.block.Block b) {
-        return b.getDefaultState();
+    private static BlockState s(net.minecraft.world.level.block.Block b) {
+        return b.defaultBlockState();
     }
 
     /** Called from Builds' setup, after the hand-built towns are in and before the caverns and gaols look for room. */
@@ -178,7 +179,7 @@ final class Districts {
         switch (kind) {
             case PORT, FREEPORT -> {
                 switch (k % 6) {
-                    case 0, 3 -> Builds.house(c, x, z, x + door.getOffsetX() * 9, z + door.getOffsetZ() * 9);
+                    case 0, 3 -> Builds.house(c, x, z, x + door.getStepX() * 9, z + door.getStepZ() * 9);
                     case 1 -> warehouse(c, x, z, door, kind == Kind.FREEPORT);
                     case 2 -> shop(c, x, z, door, kind == Kind.FREEPORT);
                     case 4 -> market(c, x, z);
@@ -234,10 +235,10 @@ final class Districts {
     private static void shop(Canvas c, int cx, int cz, Direction door, boolean rough) {
         int x1 = cx - 4, x2 = cx + 4, z1 = cz - 4, z2 = cz + 4;
         int floor = Builds.floorAt(cx, cz);
-        Builds.room(c, x1, z1, x2, z2, floor, 4, s(rough ? Blocks.OAK_PLANKS : Blocks.WHITE_TERRACOTTA),
+        Builds.room(c, x1, z1, x2, z2, floor, 4, s(rough ? Blocks.OAK_PLANKS : Blocks.DYED_TERRACOTTA.pick(DyeColor.WHITE)),
                 s(Blocks.DARK_OAK_LOG), s(Blocks.OAK_PLANKS));
         c.fill(x1 + 1, floor, z1 + 1, x2 - 1, floor + 3, z2 - 1, s(Blocks.AIR));
-        Builds.roof(c, x1, z1, x2, z2, floor + 4, s(rough ? Blocks.SPRUCE_PLANKS : Blocks.RED_TERRACOTTA));
+        Builds.roof(c, x1, z1, x2, z2, floor + 4, s(rough ? Blocks.SPRUCE_PLANKS : Blocks.DYED_TERRACOTTA.pick(DyeColor.RED)));
         Builds.windows(c, x1, z1, x2, z2, floor + 1);
         door(c, x1, z1, x2, z2, floor, door);
         // Counter and shelves
@@ -245,8 +246,8 @@ final class Districts {
         c.fill(x1 + 1, floor, z1 + 1, x2 - 1, floor + 1, z1 + 1, s(Blocks.CHISELED_BOOKSHELF));
         c.set(cx, floor + 3, cz, Builds.hangingLantern());
         // An awning over the door
-        int ax = cx + door.getOffsetX() * 5, az = cz + door.getOffsetZ() * 5;
-        BlockState cloth = s(Noise.rand(cx, cz, 7111) < 0.5 ? Blocks.RED_WOOL : Blocks.YELLOW_WOOL);
+        int ax = cx + door.getStepX() * 5, az = cz + door.getStepZ() * 5;
+        BlockState cloth = s(Noise.rand(cx, cz, 7111) < 0.5 ? Blocks.WOOL.pick(DyeColor.RED) : Blocks.WOOL.pick(DyeColor.YELLOW));
         if (door.getAxis() == Direction.Axis.Z) c.fill(ax - 2, floor + 3, az, ax + 2, floor + 3, az, cloth);
         else c.fill(ax, floor + 3, az - 2, ax, floor + 3, az + 2, cloth);
     }
@@ -265,7 +266,7 @@ final class Districts {
         Builds.windows(c, x1, z1, x2, z2, floor + 1);
         Builds.windows(c, x1, z1, x2, z2, floor + 6);
         door(c, x1, z1, x2, z2, floor, door);
-        BlockState ladder = s(Blocks.LADDER).with(net.minecraft.block.LadderBlock.FACING, Direction.SOUTH);
+        BlockState ladder = s(Blocks.LADDER).setValue(net.minecraft.world.level.block.LadderBlock.FACING, Direction.SOUTH);
         for (int y = floor; y <= floor + 4; y++) c.set(x1 + 1, y, z1 + 1, ladder);
         c.set(x2 - 1, floor + 5, z2 - 1, s(Blocks.BARREL));
         c.set(cx, floor + 3, cz, Builds.hangingLantern());
@@ -275,7 +276,7 @@ final class Districts {
         int floor = Builds.floorAt(cx, cz);
         c.foundation(cx - 5, cz - 5, cx + 5, cz + 5, floor, s(Blocks.COBBLESTONE));
         c.fill(cx - 5, floor - 1, cz - 5, cx + 5, floor - 1, cz + 5, s(Blocks.SMOOTH_STONE));
-        BlockState[] canopies = {s(Blocks.RED_WOOL), s(Blocks.WHITE_WOOL), s(Blocks.BLUE_WOOL), s(Blocks.YELLOW_WOOL)};
+        BlockState[] canopies = {s(Blocks.WOOL.pick(DyeColor.RED)), s(Blocks.WOOL.pick(DyeColor.WHITE)), s(Blocks.WOOL.pick(DyeColor.BLUE)), s(Blocks.WOOL.pick(DyeColor.YELLOW))};
         int i = 0;
         for (int[] k : new int[][]{{-3, -3}, {3, -3}, {-3, 3}, {3, 3}}) {
             Builds.stall(c, cx + k[0], cz + k[1], floor - 1, canopies[i++ % canopies.length]);
@@ -294,7 +295,7 @@ final class Districts {
         for (int x = x1 + 1; x <= x2 - 2; x += 2) Builds.bed(c, x, floor, z1 + 1, Direction.SOUTH);
         c.fill(x1 + 1, floor, z2 - 1, x2 - 1, floor, z2 - 1, s(Blocks.BARREL));
         c.set(cx, floor + 4, cz, Builds.hangingLantern());
-        c.spawn(cx + 0.5, floor, cz + 0.5, 0, w -> com.cursedtides.entity.ModEntities.MARINE.create(w));
+        c.spawn(cx + 0.5, floor, cz + 0.5, 0, w -> com.cursedtides.entity.ModEntities.MARINE.create(w, EntitySpawnReason.EVENT));
     }
 
     private static void watchtower(Canvas c, int cx, int cz) {
@@ -303,7 +304,7 @@ final class Districts {
         c.walls(cx - 2, floor, cz - 2, cx + 2, floor + 10, cz + 2, s(Blocks.STONE_BRICKS));
         c.fill(cx - 1, floor, cz - 1, cx + 1, floor + 10, cz + 1, s(Blocks.AIR));
         Builds.doorway(c, cx, cz + 2, floor);
-        BlockState ladder = s(Blocks.LADDER).with(net.minecraft.block.LadderBlock.FACING, Direction.SOUTH);
+        BlockState ladder = s(Blocks.LADDER).setValue(net.minecraft.world.level.block.LadderBlock.FACING, Direction.SOUTH);
         for (int y = floor; y <= floor + 11; y++) c.set(cx, y, cz - 1, ladder);
         c.fill(cx - 3, floor + 11, cz - 3, cx + 3, floor + 11, cz + 3, s(Blocks.SPRUCE_PLANKS));
         c.set(cx, floor + 11, cz - 1, ladder);
@@ -313,7 +314,7 @@ final class Districts {
             }
         }
         c.set(cx + 2, floor + 12, cz + 2, s(Blocks.LANTERN));
-        c.spawn(cx + 1.5, floor + 12, cz + 1.5, 180, w -> com.cursedtides.entity.ModEntities.MARINE.create(w));
+        c.spawn(cx + 1.5, floor + 12, cz + 1.5, 180, w -> com.cursedtides.entity.ModEntities.MARINE.create(w, EntitySpawnReason.EVENT));
     }
 
     private static void drillYard(Canvas c, int cx, int cz) {
@@ -352,7 +353,7 @@ final class Districts {
 
     private static void tents(Canvas c, int cx, int cz) {
         int floor = Builds.floorAt(cx, cz);
-        BlockState[] cloth = {s(Blocks.BROWN_WOOL), s(Blocks.WHITE_WOOL), s(Blocks.RED_WOOL)};
+        BlockState[] cloth = {s(Blocks.WOOL.pick(DyeColor.BROWN)), s(Blocks.WOOL.pick(DyeColor.WHITE)), s(Blocks.WOOL.pick(DyeColor.RED))};
         int i = 0;
         for (int[] k : new int[][]{{-3, -2}, {3, -2}, {0, 3}}) {
             int tx = cx + k[0], tz = cz + k[1];
@@ -365,7 +366,7 @@ final class Districts {
             c.set(tx, y + 2, tz, w);
             c.set(tx, y + 1, tz, s(Blocks.AIR));
         }
-        c.set(cx, floor, cz, s(Blocks.CAMPFIRE).with(CampfireBlock.LIT, true));
+        c.set(cx, floor, cz, s(Blocks.CAMPFIRE).setValue(CampfireBlock.LIT, true));
     }
 
     private static void firePit(Canvas c, int cx, int cz) {

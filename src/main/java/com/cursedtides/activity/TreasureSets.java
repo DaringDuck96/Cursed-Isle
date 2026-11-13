@@ -1,5 +1,6 @@
 package com.cursedtides.activity;
 
+import net.minecraft.world.InteractionResult;
 import com.cursedtides.CursedTides;
 import com.cursedtides.item.ModItems;
 import com.mojang.serialization.Codec;
@@ -7,31 +8,29 @@ import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.CustomModelDataComponent;
-import net.minecraft.component.type.NbtComponent;
-import net.minecraft.entity.mob.Monster;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.tooltip.TooltipType;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Hand;
-import net.minecraft.util.Rarity;
-import net.minecraft.util.TypedActionResult;
-import net.minecraft.world.World;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.Registry;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.monster.Enemy;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Rarity;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.item.component.CustomModelData;
+import net.minecraft.world.level.Level;
 import java.util.ArrayList;
 import java.util.List;
 
-import static net.minecraft.server.command.CommandManager.literal;
+import static net.minecraft.commands.Commands.literal;
 
 /**
  * Treasure collections: pearls, jewels, old coins and Brethren keepsakes, found on the fallen and in chests.
@@ -56,50 +55,52 @@ public final class TreasureSets {
             .persistent(Codec.STRING.listOf()).copyOnDeath().initializer(List::of).buildAndRegister(CursedTides.id("treasure_sets"));
 
     public static class PieceItem extends Item {
-        public PieceItem(Settings s) { super(s); }
+        public PieceItem(Properties s) { super(s); }
 
         @Override
-        public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
-            ItemStack stack = user.getStackInHand(hand);
-            if (user instanceof ServerPlayerEntity p) {
-                String key = stack.getOrDefault(DataComponentTypes.CUSTOM_DATA, NbtComponent.DEFAULT).copyNbt().getString("Piece");
-                if (!key.isEmpty()) { add(p, key); stack.decrement(1); }
+        public InteractionResult use(Level world, Player user, InteractionHand hand) {
+            ItemStack stack = user.getItemInHand(hand);
+            if (user instanceof ServerPlayer p) {
+                String key = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag().getStringOr("Piece", "");
+                if (!key.isEmpty()) { add(p, key); stack.shrink(1); }
             }
-            return TypedActionResult.success(stack, world.isClient);
+            return InteractionResult.SUCCESS;
         }
 
         @Override
-        public void appendTooltip(ItemStack stack, TooltipContext context, List<Text> tooltip, TooltipType type) {
-            String key = stack.getOrDefault(DataComponentTypes.CUSTOM_DATA, NbtComponent.DEFAULT).copyNbt().getString("Piece");
+        public void appendHoverText(ItemStack stack, TooltipContext context, net.minecraft.world.item.component.TooltipDisplay display__, java.util.function.Consumer<Component> adder__, TooltipFlag type) {
+        java.util.List<Component> tooltip = new java.util.ArrayList<>();
+            String key = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag().getStringOr("Piece", "");
             int dot = key.indexOf('.');
-            if (dot > 0) for (Set s : SETS) if (s.id().equals(key.substring(0, dot))) tooltip.add(Text.literal("Part of: " + s.title()).formatted(Formatting.GOLD));
-            tooltip.add(Text.literal("Use to add it to your collection (/collections).").formatted(Formatting.DARK_GRAY));
-        }
+            if (dot > 0) for (Set s : SETS) if (s.id().equals(key.substring(0, dot))) tooltip.add(Component.literal("Part of: " + s.title()).withStyle(ChatFormatting.GOLD));
+            tooltip.add(Component.literal("Use to add it to your collection (/collections).").withStyle(ChatFormatting.DARK_GRAY));
+        tooltip.forEach(adder__);
+    }
     }
 
-    public static final Item PIECE = Registry.register(Registries.ITEM, CursedTides.id("treasure_piece"), new PieceItem(new Item.Settings().rarity(Rarity.RARE)));
+    public static final Item PIECE = Registry.register(BuiltInRegistries.ITEM, com.cursedtides.util.Reg.itemId("treasure_piece"), new PieceItem(com.cursedtides.util.Reg.props().rarity(Rarity.RARE)));
 
     public static ItemStack piece(int set, int index) {
         Set s = SETS.get(set);
         ItemStack stack = new ItemStack(PIECE);
-        NbtCompound n = new NbtCompound();
+        CompoundTag n = new CompoundTag();
         n.putString("Piece", s.id() + "." + index);
-        stack.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(n));
-        stack.set(DataComponentTypes.ITEM_NAME, Text.literal(s.pieces()[index]));
-        stack.set(DataComponentTypes.CUSTOM_MODEL_DATA, new CustomModelDataComponent(set + 1));
+        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(n));
+        stack.set(DataComponents.ITEM_NAME, Component.literal(s.pieces()[index]));
+        stack.set(DataComponents.CUSTOM_MODEL_DATA, new net.minecraft.world.item.component.CustomModelData(java.util.List.of((float) (set + 1)), java.util.List.of(), java.util.List.of(), java.util.List.of()));
         return stack;
     }
 
-    public static ItemStack random(net.minecraft.util.math.random.Random r) {
+    public static ItemStack random(net.minecraft.util.RandomSource r) {
         int set = r.nextInt(SETS.size());
         return piece(set, r.nextInt(SETS.get(set).pieces().length));
     }
 
-    static void add(ServerPlayerEntity p, String key) {
+    static void add(ServerPlayer p, String key) {
         List<String> found = new ArrayList<>(p.getAttachedOrElse(FOUND, List.of()));
         if (found.contains(key)) {
             com.cursedtides.trade.Wallet.give(p, 25);
-            p.sendMessage(Text.literal("You already have that one. A collector pays you 2 doubloons and change for the spare.").formatted(Formatting.GRAY), true);
+            p.sendSystemMessage(Component.literal("You already have that one. A collector pays you 2 doubloons and change for the spare.").withStyle(ChatFormatting.GRAY), true);
             return;
         }
         found.add(key);
@@ -108,42 +109,42 @@ public final class TreasureSets {
         Set set = SETS.stream().filter(s -> s.id().equals(setId)).findFirst().orElse(null);
         if (set == null) return;
         long have = found.stream().filter(k -> k.startsWith(setId + ".")).count();
-        p.getWorld().playSound(null, p.getBlockPos(), SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 0.8f, 1.4f);
-        p.sendMessage(Text.literal(set.title() + ": " + have + "/" + set.pieces().length).formatted(Formatting.GOLD), false);
+        p.level().playSound(null, p.blockPosition(), SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.8f, 1.4f);
+        p.sendSystemMessage(Component.literal(set.title() + ": " + have + "/" + set.pieces().length).withStyle(ChatFormatting.GOLD), false);
         if (have == set.pieces().length) complete(p, set);
     }
 
-    private static void complete(ServerPlayerEntity p, Set set) {
-        p.sendMessage(Text.literal("Collection complete: " + set.title() + "! You receive " + set.reward() + ".").formatted(Formatting.GOLD, Formatting.BOLD), false);
-        p.getWorld().playSound(null, p.getBlockPos(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundCategory.PLAYERS, 1f, 1f);
+    private static void complete(ServerPlayer p, Set set) {
+        p.sendSystemMessage(Component.literal("Collection complete: " + set.title() + "! You receive " + set.reward() + ".").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), false);
+        p.level().playSound(null, p.blockPosition(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1f, 1f);
         Achievements.grant(p, "collector_of_sets");
         switch (set.id()) {
-            case "pearls" -> { p.giveItemStack(new ItemStack(com.cursedtides.appearance.Accessories.LUCKY_COIN)); p.giveItemStack(new ItemStack(ModItems.DOUBLOON, 60)); }
+            case "pearls" -> { p.addItem(new ItemStack(com.cursedtides.appearance.Accessories.LUCKY_COIN)); p.addItem(new ItemStack(ModItems.DOUBLOON, 60)); }
             case "jewels" -> {
                 ItemStack ring = new ItemStack(com.cursedtides.appearance.Accessories.RUBY_RING);
                 com.cursedtides.appearance.AccessoryItem.setQuality(ring, 2);
-                p.giveItemStack(ring);
-                p.giveItemStack(new ItemStack(ModItems.DOUBLOON, 64));
-                p.giveItemStack(new ItemStack(ModItems.DOUBLOON, 16));
+                p.addItem(ring);
+                p.addItem(new ItemStack(ModItems.DOUBLOON, 64));
+                p.addItem(new ItemStack(ModItems.DOUBLOON, 16));
             }
-            case "coins" -> { p.giveItemStack(com.cursedtides.combat.GearRarity.legendaryOf(p.getServerWorld(), ModItems.SABER, p.getRandom())); p.giveItemStack(new ItemStack(ModItems.DOUBLOON, 50)); }
+            case "coins" -> { p.addItem(com.cursedtides.combat.GearRarity.legendaryOf(p.level(), ModItems.SABER, p.getRandom())); p.addItem(new ItemStack(ModItems.DOUBLOON, 50)); }
             default -> {
-                p.giveItemStack(new ItemStack(com.cursedtides.appearance.Accessories.COMPASS_PENDANT));
-                p.giveItemStack(new ItemStack(com.cursedtides.explore.Cartography.HIDDEN_CHART));
-                p.giveItemStack(new ItemStack(ModItems.DOUBLOON, 64));
-                p.giveItemStack(new ItemStack(ModItems.DOUBLOON, 6));
+                p.addItem(new ItemStack(com.cursedtides.appearance.Accessories.COMPASS_PENDANT));
+                p.addItem(new ItemStack(com.cursedtides.explore.Cartography.HIDDEN_CHART));
+                p.addItem(new ItemStack(ModItems.DOUBLOON, 64));
+                p.addItem(new ItemStack(ModItems.DOUBLOON, 6));
             }
         }
     }
 
     public static void register() {
         ServerLivingEntityEvents.AFTER_DEATH.register((victim, source) -> {
-            if (!(source.getAttacker() instanceof ServerPlayerEntity) || !(victim instanceof Monster)) return;
-            float chance = victim.getCommandTags().contains("cursedtides_boss") ? 1f : 0.025f;
-            if (victim.getRandom().nextFloat() < chance) victim.dropStack(random(victim.getRandom()));
+            if (!(source.getEntity() instanceof ServerPlayer) || !(victim instanceof Enemy)) return;
+            float chance = victim.entityTags().contains("cursedtides_boss") ? 1f : 0.025f;
+            if (victim.getRandom().nextFloat() < chance) com.cursedtides.util.Compat.drop(victim, random(victim.getRandom()));
         });
         CommandRegistrationCallback.EVENT.register((d, a, e) -> d.register(literal("collections").executes(ctx -> {
-            ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();
+            ServerPlayer p = ctx.getSource().getPlayerOrException();
             List<String> found = p.getAttachedOrElse(FOUND, List.of());
             for (int i = 0; i < SETS.size(); i++) {
                 Set s = SETS.get(i);
@@ -152,7 +153,7 @@ public final class TreasureSets {
                     boolean have = found.contains(s.id() + "." + k);
                     line.append(have ? "§a" : "§8").append(have ? s.pieces()[k] : "???").append("§7, ");
                 }
-                p.sendMessage(Text.literal("§6" + s.title() + ": " + line.substring(0, line.length() - 4)), false);
+                p.sendSystemMessage(Component.literal("§6" + s.title() + ": " + line.substring(0, line.length() - 4)), false);
             }
             return 1;
         })));

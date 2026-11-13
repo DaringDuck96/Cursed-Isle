@@ -1,21 +1,21 @@
 package com.cursedtides.entity;
 
 import com.cursedtides.item.ModItems;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.item.Item;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.hit.EntityHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.world.World;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
 
 /** A straight-flying curse. Slows its target; at Hex mastery 5+ it also withers. */
-public class HexBoltEntity extends net.minecraft.entity.projectile.thrown.ThrownItemEntity {
+public class HexBoltEntity extends net.minecraft.world.entity.projectile.throwableitemprojectile.ThrowableItemProjectile {
     private static final int MAX_AGE = 60;
     private int hexLevel;
     private float bonusDamage;
@@ -24,13 +24,13 @@ public class HexBoltEntity extends net.minecraft.entity.projectile.thrown.Thrown
         this.bonusDamage = bonus;
     }
 
-    public HexBoltEntity(EntityType<? extends HexBoltEntity> type, World world) {
+    public HexBoltEntity(EntityType<? extends HexBoltEntity> type, Level world) {
         super(type, world);
         this.setNoGravity(true);
     }
 
-    public HexBoltEntity(World world, LivingEntity owner, int hexLevel) {
-        super(ModEntities.HEX_BOLT, owner, world);
+    public HexBoltEntity(Level world, LivingEntity owner, int hexLevel) {
+        super(ModEntities.HEX_BOLT, owner, world, new net.minecraft.world.item.ItemStack(ModItems.HEX_ORB));
         this.hexLevel = hexLevel;
         this.setNoGravity(true);
     }
@@ -43,46 +43,49 @@ public class HexBoltEntity extends net.minecraft.entity.projectile.thrown.Thrown
     @Override
     public void tick() {
         super.tick();
-        World world = this.getWorld();
-        if (world.isClient) {
+        Level world = this.level();
+        if (world.isClientSide()) {
             world.addParticle(ParticleTypes.WITCH, this.getX(), this.getY(), this.getZ(), 0, 0, 0);
             world.addParticle(ParticleTypes.SOUL_FIRE_FLAME, this.getX(), this.getY(), this.getZ(), 0, 0, 0);
-        } else if (this.age > MAX_AGE) {
+        } else if (this.tickCount > MAX_AGE) {
             this.discard();
         }
     }
 
     @Override
-    protected void onEntityHit(EntityHitResult hit) {
-        super.onEntityHit(hit);
+    protected void onHitEntity(EntityHitResult hit) {
+        super.onHitEntity(hit);
         Entity target = hit.getEntity();
-        target.damage(this.getDamageSources().indirectMagic(this, this.getOwner()), 6.0f + hexLevel * 0.3f + bonusDamage);
+        if (this.level() instanceof ServerLevel sl__) target.hurtServer(sl__, this.damageSources().indirectMagic(this, this.getOwner()), 6.0f + hexLevel * 0.3f + bonusDamage);
         if (target instanceof LivingEntity living) {
-            living.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 60 + hexLevel * 4, 1), this.getOwner());
+            living.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 60 + hexLevel * 4, 1), this.getOwner());
             if (hexLevel >= 5) {
-                living.addStatusEffect(new StatusEffectInstance(StatusEffects.WITHER, 60, hexLevel >= 15 ? 1 : 0), this.getOwner());
+                living.addEffect(new MobEffectInstance(MobEffects.WITHER, 60, hexLevel >= 15 ? 1 : 0), this.getOwner());
             }
         }
     }
 
     @Override
-    protected void onCollision(HitResult hit) {
-        super.onCollision(hit);
-        if (this.getWorld() instanceof ServerWorld serverWorld) {
-            serverWorld.spawnParticles(ParticleTypes.WITCH, this.getX(), this.getY(), this.getZ(), 12, 0.3, 0.3, 0.3, 0.05);
+    protected void onHit(HitResult hit) {
+        super.onHit(hit);
+        if (this.level() instanceof ServerLevel serverWorld) {
+            serverWorld.sendParticles(ParticleTypes.WITCH, this.getX(), this.getY(), this.getZ(), 12, 0.3, 0.3, 0.3, 0.05);
             this.discard();
         }
     }
 
     @Override
-    public void writeCustomDataToNbt(NbtCompound nbt) {
-        super.writeCustomDataToNbt(nbt);
+    public void addAdditionalSaveData(net.minecraft.world.level.storage.ValueOutput out__) {
+        CompoundTag nbt = new CompoundTag();
+        super.addAdditionalSaveData(out__);
         nbt.putInt("HexLevel", hexLevel);
+        out__.store("ct", CompoundTag.CODEC, nbt);
     }
 
     @Override
-    public void readCustomDataFromNbt(NbtCompound nbt) {
-        super.readCustomDataFromNbt(nbt);
-        hexLevel = nbt.getInt("HexLevel");
+    public void readAdditionalSaveData(net.minecraft.world.level.storage.ValueInput in__) {
+        CompoundTag nbt = in__.read("ct", CompoundTag.CODEC).orElseGet(CompoundTag::new);
+        super.readAdditionalSaveData(in__);
+        hexLevel = nbt.getIntOr("HexLevel", 0);
     }
 }

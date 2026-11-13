@@ -8,20 +8,19 @@ import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
-import net.minecraft.item.ItemStack;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.item.ItemStack;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import static net.minecraft.server.command.CommandManager.literal;
+import static net.minecraft.commands.Commands.literal;
 
 /**
  * One daily and one weekly challenge, the same for everyone, chosen by the real-world date.
@@ -56,12 +55,12 @@ public final class Challenges {
     public static Kind daily() { return KINDS.get(new Random(day() * 31 + 7).nextInt(KINDS.size())); }
     public static Kind weekly() { return KINDS.get(new Random(week() * 131 + 3).nextInt(KINDS.size())); }
 
-    public static String describeDaily(ServerPlayerEntity p) {
+    public static String describeDaily(ServerPlayer p) {
         Kind k = daily();
         return String.format(k.verb(), k.daily()).toLowerCase();
     }
 
-    public static void progress(ServerPlayerEntity p, String key, int amount) {
+    public static void progress(ServerPlayer p, String key, int amount) {
         Map<String, Integer> m = new HashMap<>(p.getAttachedOrElse(PROGRESS, Map.of()));
         boolean changed = false;
         if (daily().key().equals(key)) changed |= step(p, m, "d" + day(), daily().daily(), amount, false);
@@ -69,7 +68,7 @@ public final class Challenges {
         if (changed) p.setAttached(PROGRESS, m);
     }
 
-    private static boolean step(ServerPlayerEntity p, Map<String, Integer> m, String slot, int goal, int amount, boolean weekly) {
+    private static boolean step(ServerPlayer p, Map<String, Integer> m, String slot, int goal, int amount, boolean weekly) {
         if (m.getOrDefault(slot + "_done", 0) == 1) return false;
         int now = Math.min(goal, m.getOrDefault(slot, 0) + amount);
         m.put(slot, now);
@@ -77,17 +76,17 @@ public final class Challenges {
             m.put(slot + "_done", 1);
             reward(p, weekly);
         } else if (now % Math.max(1, goal / 4) == 0) {
-            p.sendMessage(Text.literal((weekly ? "Weekly" : "Daily") + " challenge: " + now + "/" + goal).formatted(Formatting.AQUA), true);
+            p.sendSystemMessage(Component.literal((weekly ? "Weekly" : "Daily") + " challenge: " + now + "/" + goal).withStyle(ChatFormatting.AQUA), true);
         }
         return true;
     }
 
-    private static void reward(ServerPlayerEntity p, boolean weekly) {
-        p.sendMessage(Text.literal("✔ " + (weekly ? "Weekly" : "Daily") + " challenge complete!").formatted(Formatting.GREEN, Formatting.BOLD), false);
-        p.getWorld().playSound(null, p.getBlockPos(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundCategory.PLAYERS, 0.8f, 1.0f);
-        p.giveItemStack(new ItemStack(ModItems.DOUBLOON, weekly ? 30 : 6));
+    private static void reward(ServerPlayer p, boolean weekly) {
+        p.sendSystemMessage(Component.literal("✔ " + (weekly ? "Weekly" : "Daily") + " challenge complete!").withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD), false);
+        p.level().playSound(null, p.blockPosition(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.8f, 1.0f);
+        p.addItem(new ItemStack(ModItems.DOUBLOON, weekly ? 30 : 6));
         if (weekly) {
-            p.giveItemStack(new ItemStack(Accessories.random(p.getRandom(), true)));
+            p.addItem(new ItemStack(Accessories.random(p.getRandom(), true)));
             Achievements.grant(p, "weekly_legend");
         } else {
             Achievements.grant(p, "daily_grind");
@@ -96,7 +95,7 @@ public final class Challenges {
 
     public static void register() {
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
-            ServerPlayerEntity p = handler.getPlayer();
+            ServerPlayer p = handler.getPlayer();
             // forget anything older than this week
             Map<String, Integer> m = new HashMap<>(p.getAttachedOrElse(PROGRESS, Map.of()));
             m.keySet().removeIf(k -> !(k.startsWith("d" + day()) || k.startsWith("w" + week())));
@@ -104,19 +103,19 @@ public final class Challenges {
             show(p);
         });
         CommandRegistrationCallback.EVENT.register((dispatcher, access, env) -> dispatcher.register(literal("challenges").executes(ctx -> {
-            show(ctx.getSource().getPlayerOrThrow());
+            show(ctx.getSource().getPlayerOrException());
             return 1;
         })));
     }
 
-    public static void show(ServerPlayerEntity p) {
+    public static void show(ServerPlayer p) {
         Map<String, Integer> m = p.getAttachedOrElse(PROGRESS, Map.of());
         Kind d = daily(), w = weekly();
         int dp = m.getOrDefault("d" + day(), 0), wp = m.getOrDefault("w" + week(), 0);
         boolean dd = m.getOrDefault("d" + day() + "_done", 0) == 1, wd = m.getOrDefault("w" + week() + "_done", 0) == 1;
-        p.sendMessage(Text.literal("Today: ").formatted(Formatting.AQUA).append(Text.literal(String.format(d.verb(), d.daily())
-                + (dd ? "  ✔" : "  (" + dp + "/" + d.daily() + ")")).formatted(dd ? Formatting.GREEN : Formatting.WHITE)), false);
-        p.sendMessage(Text.literal("This week: ").formatted(Formatting.AQUA).append(Text.literal(String.format(w.verb(), w.weekly())
-                + (wd ? "  ✔" : "  (" + wp + "/" + w.weekly() + ")")).formatted(wd ? Formatting.GREEN : Formatting.WHITE)), false);
+        p.sendSystemMessage(Component.literal("Today: ").withStyle(ChatFormatting.AQUA).append(Component.literal(String.format(d.verb(), d.daily())
+                + (dd ? "  ✔" : "  (" + dp + "/" + d.daily() + ")")).withStyle(dd ? ChatFormatting.GREEN : ChatFormatting.WHITE)), false);
+        p.sendSystemMessage(Component.literal("This week: ").withStyle(ChatFormatting.AQUA).append(Component.literal(String.format(w.verb(), w.weekly())
+                + (wd ? "  ✔" : "  (" + wp + "/" + w.weekly() + ")")).withStyle(wd ? ChatFormatting.GREEN : ChatFormatting.WHITE)), false);
     }
 }

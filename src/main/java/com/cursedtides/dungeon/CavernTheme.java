@@ -1,18 +1,19 @@
 package com.cursedtides.dungeon;
 
+import net.minecraft.world.entity.EntityTypes;
 import com.cursedtides.entity.ModEntities;
 import com.cursedtides.world.Noise;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.LanternBlock;
-import net.minecraft.entity.EntityType;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LanternBlock;
+import net.minecraft.world.level.block.state.BlockState;
 
 /** The look and inhabitants of a grand cavern. */
 public enum CavernTheme {
     CURSED, VOLCANIC, JUNGLE, MINE, DROWNED, CRYSTAL;
 
-    private static BlockState s(Block b) { return b.getDefaultState(); }
+    private static BlockState s(Block b) { return b.defaultBlockState(); }
 
     public BlockState wall(int x, int y, int z) {
         double r = Noise.rand(x, y, z, 901);
@@ -79,10 +80,10 @@ public enum CavernTheme {
 
     public BlockState hangingLight() {
         return switch (this) {
-            case CURSED -> s(Blocks.SOUL_LANTERN).with(LanternBlock.HANGING, true);
+            case CURSED -> s(Blocks.SOUL_LANTERN).setValue(LanternBlock.HANGING, true);
             case VOLCANIC -> s(Blocks.SHROOMLIGHT);
             case JUNGLE -> s(Blocks.SHROOMLIGHT);
-            case MINE -> s(Blocks.LANTERN).with(LanternBlock.HANGING, true);
+            case MINE -> s(Blocks.LANTERN).setValue(LanternBlock.HANGING, true);
             case DROWNED -> s(Blocks.SEA_LANTERN);
             case CRYSTAL -> s(Blocks.GLOWSTONE);
         };
@@ -101,24 +102,24 @@ public enum CavernTheme {
 
     public EntityType<?> mob(int i) {
         return switch (this) {
-            case CURSED -> i % 3 == 0 ? EntityType.STRAY : i % 3 == 1 ? ModEntities.CURSED_PIRATE : EntityType.SKELETON;
-            case VOLCANIC -> i % 3 == 0 ? EntityType.MAGMA_CUBE : i % 3 == 1 ? EntityType.WITHER_SKELETON : EntityType.HUSK;
-            case JUNGLE -> i % 3 == 0 ? EntityType.CAVE_SPIDER : i % 3 == 1 ? com.cursedtides.wildlife.Wildlife.SNAKE : EntityType.SPIDER;
-            case MINE -> i % 2 == 0 ? EntityType.ZOMBIE : ModEntities.CURSED_PIRATE;
-            case DROWNED -> i % 2 == 0 ? EntityType.DROWNED : ModEntities.CURSED_PIRATE;
-            case CRYSTAL -> i % 2 == 0 ? EntityType.STRAY : EntityType.SKELETON;
+            case CURSED -> i % 3 == 0 ? EntityTypes.STRAY : i % 3 == 1 ? ModEntities.CURSED_PIRATE : EntityTypes.SKELETON;
+            case VOLCANIC -> i % 3 == 0 ? EntityTypes.MAGMA_CUBE : i % 3 == 1 ? EntityTypes.WITHER_SKELETON : EntityTypes.HUSK;
+            case JUNGLE -> i % 3 == 0 ? EntityTypes.CAVE_SPIDER : i % 3 == 1 ? com.cursedtides.wildlife.Wildlife.SNAKE : EntityTypes.SPIDER;
+            case MINE -> i % 2 == 0 ? EntityTypes.ZOMBIE : ModEntities.CURSED_PIRATE;
+            case DROWNED -> i % 2 == 0 ? EntityTypes.DROWNED : ModEntities.CURSED_PIRATE;
+            case CRYSTAL -> i % 2 == 0 ? EntityTypes.STRAY : EntityTypes.SKELETON;
         };
     }
 
     /** What packs of the living (or not quite) roam the halls. */
     public EntityType<?> pack(int i) {
         return switch (this) {
-            case CURSED -> i % 2 == 0 ? ModEntities.CURSED_PIRATE : EntityType.SKELETON;
-            case VOLCANIC -> i % 3 == 0 ? EntityType.WITHER_SKELETON : EntityType.HUSK;
-            case JUNGLE -> i % 3 == 0 ? com.cursedtides.wildlife.Wildlife.JAGUAR : i % 3 == 1 ? com.cursedtides.wildlife.Wildlife.SNAKE : EntityType.SPIDER;
-            case MINE -> i % 3 == 0 ? EntityType.PILLAGER : i % 3 == 1 ? EntityType.VINDICATOR : EntityType.ZOMBIE;
-            case DROWNED -> i % 2 == 0 ? EntityType.DROWNED : ModEntities.CURSED_PIRATE;
-            case CRYSTAL -> i % 3 == 0 ? EntityType.SKELETON : EntityType.STRAY;
+            case CURSED -> i % 2 == 0 ? ModEntities.CURSED_PIRATE : EntityTypes.SKELETON;
+            case VOLCANIC -> i % 3 == 0 ? EntityTypes.WITHER_SKELETON : EntityTypes.HUSK;
+            case JUNGLE -> i % 3 == 0 ? com.cursedtides.wildlife.Wildlife.JAGUAR : i % 3 == 1 ? com.cursedtides.wildlife.Wildlife.SNAKE : EntityTypes.SPIDER;
+            case MINE -> i % 3 == 0 ? EntityTypes.PILLAGER : i % 3 == 1 ? EntityTypes.VINDICATOR : EntityTypes.ZOMBIE;
+            case DROWNED -> i % 2 == 0 ? EntityTypes.DROWNED : ModEntities.CURSED_PIRATE;
+            case CRYSTAL -> i % 3 == 0 ? EntityTypes.SKELETON : EntityTypes.STRAY;
         };
     }
 }

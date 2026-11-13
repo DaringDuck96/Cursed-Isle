@@ -1,5 +1,7 @@
 package com.cursedtides.dungeon;
 
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.entity.EntityTypes;
 import com.cursedtides.CursedTides;
 import com.cursedtides.combat.Levels;
 import com.cursedtides.entity.ModEntities;
@@ -12,36 +14,34 @@ import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.LadderBlock;
-import net.minecraft.block.LanternBlock;
-import net.minecraft.block.PillarBlock;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.attribute.EntityAttributeInstance;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.loot.LootTables;
-import net.minecraft.network.packet.s2c.play.SubtitleS2CPacket;
-import net.minecraft.network.packet.s2c.play.TitleFadeS2CPacket;
-import net.minecraft.network.packet.s2c.play.TitleS2CPacket;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
+import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
+import net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
-
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LadderBlock;
+import net.minecraft.world.level.block.LanternBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.loot.BuiltInLootTables;
+import net.minecraft.world.phys.AABB;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -95,13 +95,13 @@ public final class Delves {
         public final Look look;
         public final Archipelago.Island island;
         public final String bossName;
-        final Supplier<EntityType<? extends MobEntity>> bossType;
-        final List<Supplier<EntityType<? extends MobEntity>>> crew;
+        final Supplier<EntityType<? extends Mob>> bossType;
+        final List<Supplier<EntityType<? extends Mob>>> crew;
         public int x, z, baseY;
         public final List<Floor> floors = new ArrayList<>();
 
         Delve(int index, String name, Kind kind, Look look, Archipelago.Island island, String bossName,
-              Supplier<EntityType<? extends MobEntity>> bossType, List<Supplier<EntityType<? extends MobEntity>>> crew) {
+              Supplier<EntityType<? extends Mob>> bossType, List<Supplier<EntityType<? extends Mob>>> crew) {
             this.index = index;
             this.name = name;
             this.kind = kind;
@@ -119,19 +119,19 @@ public final class Delves {
 
     public static final List<Delve> ALL = List.of(
             new Delve(0, "The Weeping Duchess", Kind.WRECK, Look.WRECK_DARK, Archipelago.SUNKEN_REACH, "Captain Saltbones",
-                    () -> EntityType.WITHER_SKELETON, List.of(() -> EntityType.DROWNED, () -> ModEntities.CURSED_PIRATE, () -> EntityType.SKELETON)),
+                    () -> EntityTypes.WITHER_SKELETON, List.of(() -> EntityTypes.DROWNED, () -> ModEntities.CURSED_PIRATE, () -> EntityTypes.SKELETON)),
             new Delve(1, "The Gilded Gull", Kind.WRECK, Look.WRECK_PALE, Archipelago.MARINERS_REST, "The Barnacle Bride",
-                    () -> EntityType.DROWNED, List.of(() -> EntityType.DROWNED, () -> EntityType.DROWNED, () -> ModEntities.CURSED_PIRATE)),
+                    () -> EntityTypes.DROWNED, List.of(() -> EntityTypes.DROWNED, () -> EntityTypes.DROWNED, () -> ModEntities.CURSED_PIRATE)),
             new Delve(2, "The Corsair's Lament", Kind.WRECK, Look.WRECK_DARK, Archipelago.BLACKTHORN_ISLE, "Bosun Grimmet Saltbones",
-                    () -> EntityType.WITHER_SKELETON, List.of(() -> ModEntities.CURSED_PIRATE, () -> EntityType.SKELETON, () -> EntityType.STRAY)),
+                    () -> EntityTypes.WITHER_SKELETON, List.of(() -> ModEntities.CURSED_PIRATE, () -> EntityTypes.SKELETON, () -> EntityTypes.STRAY)),
             new Delve(3, "The Mary Clare", Kind.WRECK, Look.WRECK_PALE, Archipelago.CROOKED_REEF, "The Barnacle Bride's Sister",
-                    () -> EntityType.DROWNED, List.of(() -> EntityType.DROWNED, () -> EntityType.GUARDIAN, () -> ModEntities.CURSED_PIRATE)),
+                    () -> EntityTypes.DROWNED, List.of(() -> EntityTypes.DROWNED, () -> EntityTypes.GUARDIAN, () -> ModEntities.CURSED_PIRATE)),
             new Delve(4, "The Gallows Spire", Kind.SPIRE, Look.GALLOWS, Archipelago.BLOODWAKE_CAY, "The Hangman of Bloodwake",
-                    () -> EntityType.VINDICATOR, List.of(() -> EntityType.HUSK, () -> EntityType.SKELETON, () -> EntityType.PILLAGER)),
+                    () -> EntityTypes.VINDICATOR, List.of(() -> EntityTypes.HUSK, () -> EntityTypes.SKELETON, () -> EntityTypes.PILLAGER)),
             new Delve(5, "Witchlight Tower", Kind.SPIRE, Look.WITCHLIGHT, Archipelago.MIREFEN_BAYOU, "The Witchlight Hag",
-                    () -> EntityType.WITCH, List.of(() -> EntityType.BOGGED, () -> EntityType.SPIDER, () -> EntityType.WITCH)),
+                    () -> EntityTypes.WITCH, List.of(() -> EntityTypes.BOGGED, () -> EntityTypes.SPIDER, () -> EntityTypes.WITCH)),
             new Delve(6, "The Old Signal Tower", Kind.SPIRE, Look.SIGNAL, Archipelago.IRONWATCH_ISLE, "The Signal Keeper",
-                    () -> EntityType.STRAY, List.of(() -> EntityType.STRAY, () -> EntityType.SKELETON, () -> EntityType.ZOMBIE))
+                    () -> EntityTypes.STRAY, List.of(() -> EntityTypes.STRAY, () -> EntityTypes.SKELETON, () -> EntityTypes.ZOMBIE))
     );
 
     // Wreck layout, along x: decks' floors (the hold sits on the sea floor) and the weather deck just above the water
@@ -196,11 +196,11 @@ public final class Delves {
         return dx >= -HALF_LEN && dx <= HALF_LEN && Math.abs(dz) <= halfBeam(dx);
     }
 
-    private static BlockState st(Block b) { return b.getDefaultState(); }
+    private static BlockState st(Block b) { return b.defaultBlockState(); }
 
     private static BlockState light(Look L) {
         BlockState s = st(L.light);
-        return s.getBlock() instanceof LanternBlock ? s.with(LanternBlock.HANGING, true) : s;
+        return s.getBlock() instanceof LanternBlock ? s.setValue(LanternBlock.HANGING, true) : s;
     }
 
     private static void wreck(Canvas c, Delve d) {
@@ -234,7 +234,7 @@ public final class Delves {
         }
         // Hatches and ladders: weather deck to captain's deck, and down deck by deck
         int[][] hatches = {{6, WRECK_FLOORS[3], 24}, {-6, WRECK_FLOORS[2], WRECK_FLOORS[3]}, {9, WRECK_FLOORS[1], WRECK_FLOORS[2]}, {-12, WRECK_FLOORS[0], WRECK_FLOORS[1]}};
-        BlockState ladder = st(Blocks.LADDER).with(LadderBlock.FACING, Direction.NORTH);
+        BlockState ladder = st(Blocks.LADDER).setValue(LadderBlock.FACING, Direction.NORTH);
         for (int[] h : hatches) {
             int x = x0 + h[0];
             for (int y = keel + h[1] + 1; y <= keel + h[2]; y++) {
@@ -261,17 +261,17 @@ public final class Delves {
                 }
             }
             if (i == 0) {
-                c.chest(x0 - 18, fy, z0 - 3, Direction.EAST, LootTables.SHIPWRECK_TREASURE_CHEST);
-                c.chest(x0 + 12, fy, z0 + 3, Direction.WEST, LootTables.SHIPWRECK_SUPPLY_CHEST);
+                c.chest(x0 - 18, fy, z0 - 3, Direction.EAST, BuiltInLootTables.SHIPWRECK_TREASURE);
+                c.chest(x0 + 12, fy, z0 + 3, Direction.WEST, BuiltInLootTables.SHIPWRECK_SUPPLY);
                 for (int dx = -8; dx <= 4; dx += 3) c.set(x0 + dx, fy, z0 - 4, st(Blocks.BARREL));
             }
             if (i == 3) {
                 // The captain's cabin aft: a table, a chart, the captain's sea chest
                 c.set(x0 - 17, fy, z0, st(Blocks.DARK_OAK_PLANKS));
-                c.set(x0 - 17, fy + 1, z0, st(Blocks.CANDLE).with(net.minecraft.block.CandleBlock.LIT, true));
-                c.chest(x0 - 19, fy, z0 + 2, Direction.EAST, LootTables.SHIPWRECK_MAP_CHEST);
-                c.set(x0 - 15, fy, z0 - 3, st(Blocks.RED_CARPET));
-                c.set(x0 - 16, fy, z0 - 3, st(Blocks.RED_CARPET));
+                c.set(x0 - 17, fy + 1, z0, st(Blocks.CANDLE).setValue(net.minecraft.world.level.block.CandleBlock.LIT, true));
+                c.chest(x0 - 19, fy, z0 + 2, Direction.EAST, BuiltInLootTables.SHIPWRECK_MAP);
+                c.set(x0 - 15, fy, z0 - 3, st(Blocks.CARPET.pick(DyeColor.RED)));
+                c.set(x0 - 16, fy, z0 - 3, st(Blocks.CARPET.pick(DyeColor.RED)));
             }
         }
         // The weather deck: broken masts and rags of sail, a ladder down the side to the water
@@ -279,9 +279,9 @@ public final class Delves {
         for (int k = 0; k < masts.length; k++) {
             int h = 3 + (int) (Noise.rand(x0, k, z0, 7301) * 9);
             for (int y = deckTop + 1; y <= deckTop + h; y++) c.set(x0 + masts[k], y, z0, st(Blocks.STRIPPED_DARK_OAK_LOG));
-            if (h > 6) for (int y = deckTop + 3; y < deckTop + h - 1; y++) c.set(x0 + masts[k] + 1, y, z0 - 1, st(y % 2 == 0 ? Blocks.LIGHT_GRAY_WOOL : Blocks.GRAY_WOOL));
+            if (h > 6) for (int y = deckTop + 3; y < deckTop + h - 1; y++) c.set(x0 + masts[k] + 1, y, z0 - 1, st(y % 2 == 0 ? Blocks.WOOL.pick(DyeColor.LIGHT_GRAY) : Blocks.WOOL.pick(DyeColor.GRAY)));
         }
-        BlockState sideLadder = st(Blocks.LADDER).with(LadderBlock.FACING, Direction.SOUTH);
+        BlockState sideLadder = st(Blocks.LADDER).setValue(LadderBlock.FACING, Direction.SOUTH);
         for (int y = Archipelago.WATER_TOP - 1; y <= deckTop + 1; y++) c.set(x0, y, z0 + HALF_BEAM + 1, sideLadder);
         c.set(x0, deckTop + 1, z0 + HALF_BEAM, st(Blocks.AIR));
     }
@@ -379,19 +379,19 @@ public final class Delves {
             boolean east = i % 2 == 0;
             int lx = east ? x0 + SPIRE_R - 1 : x0 - SPIRE_R + 1;
             Direction face = east ? Direction.WEST : Direction.EAST;
-            for (int y = y1; y <= y2; y++) c.set(lx, y, z0 - 2, st(Blocks.LADDER).with(LadderBlock.FACING, face));
+            for (int y = y1; y <= y2; y++) c.set(lx, y, z0 - 2, st(Blocks.LADDER).setValue(LadderBlock.FACING, face));
         }
         // Lights and furnishings on each floor
         for (int i = 0; i < SPIRE_STOREYS; i++) {
             int fy = g + i * SPIRE_STOREY;
             c.set(x0, fy + SPIRE_STOREY - 2, z0, light(L));
             switch (d.look) {
-                case GALLOWS -> { c.set(x0 + 2, fy, z0 + 2, st(Blocks.HAY_BLOCK)); for (int y = fy + 2; y < fy + SPIRE_STOREY - 1; y++) c.set(x0 - 2, y, z0 + 1, st(Blocks.CHAIN)); }
+                case GALLOWS -> { c.set(x0 + 2, fy, z0 + 2, st(Blocks.HAY_BLOCK)); for (int y = fy + 2; y < fy + SPIRE_STOREY - 1; y++) c.set(x0 - 2, y, z0 + 1, st(Blocks.IRON_CHAIN)); }
                 case WITCHLIGHT -> { c.set(x0 + 2, fy, z0 + 2, st(Blocks.CAULDRON)); c.set(x0 - 3, fy, z0 + 3, st(Blocks.BREWING_STAND)); }
                 default -> { c.set(x0 + 3, fy, z0 + 3, st(Blocks.BARREL)); c.set(x0 - 3, fy, z0 + 3, st(Blocks.BARREL)); c.set(x0 - 3, fy + 1, z0 + 3, st(Blocks.BARREL)); }
             }
         }
-        c.chest(x0 - 3, roof + 1, z0 - 3, Direction.SOUTH, LootTables.SIMPLE_DUNGEON_CHEST);
+        c.chest(x0 - 3, roof + 1, z0 - 3, Direction.SOUTH, BuiltInLootTables.SIMPLE_DUNGEON);
         // The signal fire on top
         c.set(x0, roof + 1, z0, st(d.look == Look.WITCHLIGHT ? Blocks.SOUL_CAMPFIRE : Blocks.CAMPFIRE));
     }
@@ -412,22 +412,22 @@ public final class Delves {
     }
 
     private static void tick(MinecraftServer server) {
-        if (server.getTicks() % 20 != 11 || !com.cursedtides.world.ModWorld.isArchipelago()) return;
+        if (server.getTickCount() % 20 != 11 || !com.cursedtides.world.ModWorld.isArchipelago()) return;
         if (!placed) Builds.groundY(0, 0); // makes sure the layout's been worked out, even with no new chunks
         if (!placed) return;
-        ServerWorld w = server.getOverworld();
-        long now = w.getTime();
-        for (ServerPlayerEntity p : w.getPlayers()) {
+        ServerLevel w = server.overworld();
+        long now = w.getGameTime();
+        for (ServerPlayer p : w.players()) {
             for (Delve d : ALL) {
                 double dist = Math.hypot(p.getX() - d.x, p.getZ() - d.z);
                 if (dist > 60) continue;
-                if (dist < 40 && SEEN.getOrDefault(p.getUuid(), -1) != d.index) {
-                    SEEN.put(p.getUuid(), d.index);
+                if (dist < 40 && SEEN.getOrDefault(p.getUUID(), -1) != d.index) {
+                    SEEN.put(p.getUUID(), d.index);
                     int lv = d.level();
-                    p.networkHandler.sendPacket(new TitleFadeS2CPacket(10, 50, 20));
-                    p.networkHandler.sendPacket(new SubtitleS2CPacket(Text.literal((d.kind == Kind.WRECK ? "A wreck" : "A ruined spire")
-                            + " · Lv " + (lv - 2) + "-" + (lv + 2)).formatted(Formatting.GRAY)));
-                    p.networkHandler.sendPacket(new TitleS2CPacket(Text.literal(d.name).formatted(Formatting.GOLD)));
+                    p.connection.send(new ClientboundSetTitlesAnimationPacket(10, 50, 20));
+                    p.connection.send(new ClientboundSetSubtitleTextPacket(Component.literal((d.kind == Kind.WRECK ? "A wreck" : "A ruined spire")
+                            + " · Lv " + (lv - 2) + "-" + (lv + 2)).withStyle(ChatFormatting.GRAY)));
+                    p.connection.send(new ClientboundSetTitleTextPacket(Component.literal(d.name).withStyle(ChatFormatting.GOLD)));
                 }
                 for (int i = 0; i < d.floors.size(); i++) {
                     Floor f = d.floors.get(i);
@@ -435,8 +435,8 @@ public final class Delves {
                     String key = d.index + ":" + i;
                     if (now - LAST_SPAWN.getOrDefault(key, -RESPAWN * 4) < (f.boss() ? BOSS_RESPAWN : RESPAWN)) continue;
                     String tag = TAG + key;
-                    Box box = new Box(f.x1() - 2, f.y1() - 2, f.z1() - 2, f.x2() + 3, f.y2() + 3, f.z2() + 3);
-                    if (!w.getEntitiesByClass(MobEntity.class, box, m -> m.getCommandTags().contains(tag)).isEmpty()) continue;
+                    AABB box = new AABB(f.x1() - 2, f.y1() - 2, f.z1() - 2, f.x2() + 3, f.y2() + 3, f.z2() + 3);
+                    if (!w.getEntitiesOfClass(Mob.class, box, m -> m.entityTags().contains(tag)).isEmpty()) continue;
                     LAST_SPAWN.put(key, now);
                     populate(w, d, f, tag, p);
                 }
@@ -444,75 +444,75 @@ public final class Delves {
         }
     }
 
-    private static void populate(ServerWorld w, Delve d, Floor f, String tag, ServerPlayerEntity p) {
+    private static void populate(ServerLevel w, Delve d, Floor f, String tag, ServerPlayer p) {
         int level = d.level();
-        int count = f.boss() ? 3 : 4 + w.random.nextInt(3);
+        int count = f.boss() ? 3 : 4 + w.getRandom().nextInt(3);
         for (int i = 0; i < count; i++) {
             BlockPos at = spot(w, f, p);
             if (at == null) continue;
-            EntityType<? extends MobEntity> type = d.crew.get(w.random.nextInt(d.crew.size())).get();
-            mob(w, type, at, level - 2 + w.random.nextInt(4), tag, null);
+            EntityType<? extends Mob> type = d.crew.get(w.getRandom().nextInt(d.crew.size())).get();
+            mob(w, type, at, level - 2 + w.getRandom().nextInt(4), tag, null);
         }
         if (f.boss()) {
             BlockPos at = spot(w, f, p);
-            if (at == null) at = BlockPos.ofFloored(p.getPos());
-            MobEntity boss = mob(w, d.bossType.get(), at, level + 3, tag, d.bossName);
+            if (at == null) at = BlockPos.containing(p.position());
+            Mob boss = mob(w, d.bossType.get(), at, level + 3, tag, d.bossName);
             if (boss != null) {
-                boss.addCommandTag(BOSS + d.index);
-                boss.addCommandTag("cursedtides_boss");
-                EntityAttributeInstance hp = boss.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
+                boss.addTag(BOSS + d.index);
+                boss.addTag("cursedtides_boss");
+                AttributeInstance hp = boss.getAttribute(Attributes.MAX_HEALTH);
                 if (hp != null) { hp.setBaseValue(hp.getBaseValue() * 6 * Levels.healthFactor(level + 3)); boss.setHealth(boss.getMaxHealth()); }
-                EntityAttributeInstance size = boss.getAttributeInstance(EntityAttributes.GENERIC_SCALE);
+                AttributeInstance size = boss.getAttribute(Attributes.SCALE);
                 if (size != null) size.setBaseValue(1.2);
-                boss.equipStack(EquipmentSlot.MAINHAND, new ItemStack(d.kind == Kind.WRECK ? com.cursedtides.item.ModItems.CUTLASS : net.minecraft.item.Items.IRON_AXE));
-                boss.setEquipmentDropChance(EquipmentSlot.MAINHAND, 0f);
-                p.sendMessage(Text.literal(d.bossName).formatted(Formatting.RED, Formatting.BOLD)
-                        .append(Text.literal(" waits on " + f.name() + ".").formatted(Formatting.GRAY)), false);
-                w.playSound(null, at, SoundEvents.ENTITY_WITHER_SKELETON_AMBIENT, SoundCategory.HOSTILE, 2f, 0.6f);
+                boss.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(d.kind == Kind.WRECK ? com.cursedtides.item.ModItems.CUTLASS : net.minecraft.world.item.Items.IRON_AXE));
+                boss.setDropChance(EquipmentSlot.MAINHAND, 0f);
+                p.sendSystemMessage(Component.literal(d.bossName).withStyle(ChatFormatting.RED, ChatFormatting.BOLD)
+                        .append(Component.literal(" waits on " + f.name() + ".").withStyle(ChatFormatting.GRAY)), false);
+                w.playSound(null, at, SoundEvents.WITHER_SKELETON_AMBIENT, SoundSource.HOSTILE, 2f, 0.6f);
             }
         }
     }
 
-    private static BlockPos spot(ServerWorld w, Floor f, ServerPlayerEntity p) {
+    private static BlockPos spot(ServerLevel w, Floor f, ServerPlayer p) {
         for (int k = 0; k < 20; k++) {
-            int x = f.x1() + w.random.nextInt(f.x2() - f.x1() + 1);
-            int z = f.z1() + w.random.nextInt(f.z2() - f.z1() + 1);
+            int x = f.x1() + w.getRandom().nextInt(f.x2() - f.x1() + 1);
+            int z = f.z1() + w.getRandom().nextInt(f.z2() - f.z1() + 1);
             BlockPos at = new BlockPos(x, f.y1(), z);
-            if (p.squaredDistanceTo(x, f.y1(), z) < 16) continue;
-            if (w.getBlockState(at).isAir() && w.getBlockState(at.up()).isAir() && !w.getBlockState(at.down()).isAir()) return at;
+            if (p.distanceToSqr(x, f.y1(), z) < 16) continue;
+            if (w.getBlockState(at).isAir() && w.getBlockState(at.above()).isAir() && !w.getBlockState(at.below()).isAir()) return at;
         }
         return null;
     }
 
-    private static MobEntity mob(ServerWorld w, EntityType<? extends MobEntity> type, BlockPos at, int level, String tag, String name) {
-        MobEntity m = type.create(w);
+    private static Mob mob(ServerLevel w, EntityType<? extends Mob> type, BlockPos at, int level, String tag, String name) {
+        Mob m = type.create(w, EntitySpawnReason.EVENT);
         if (m == null) return null;
-        m.refreshPositionAndAngles(at.getX() + 0.5, at.getY(), at.getZ() + 0.5, w.random.nextFloat() * 360, 0);
-        m.initialize(w, w.getLocalDifficulty(at), SpawnReason.EVENT, null);
+        m.snapTo(at.getX() + 0.5, at.getY(), at.getZ() + 0.5, w.getRandom().nextFloat() * 360, 0);
+        m.finalizeSpawn(w, w.getCurrentDifficultyAt(at), EntitySpawnReason.EVENT, null);
         if (name != null) {
-            m.setCustomName(Text.literal(name).formatted(Formatting.GOLD, Formatting.BOLD));
+            m.setCustomName(Component.literal(name).withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
             m.setCustomNameVisible(true);
         }
         Levels.apply(m, Math.max(1, level));
-        m.addCommandTag(tag);
-        m.setPersistent();
-        w.spawnEntity(m);
+        m.addTag(tag);
+        m.setPersistenceRequired();
+        w.addFreshEntity(m);
         return m;
     }
 
     private static void onDeath(LivingEntity victim, DamageSource source) {
-        for (String t : victim.getCommandTags()) {
+        for (String t : victim.entityTags()) {
             if (!t.startsWith(BOSS)) continue;
             Delve d = ALL.get(Integer.parseInt(t.substring(BOSS.length())));
-            if (!(victim.getWorld() instanceof ServerWorld w)) return;
-            for (ServerPlayerEntity p : w.getPlayers(q -> q.squaredDistanceTo(victim) < 40 * 40)) {
+            if (!(victim.level() instanceof ServerLevel w)) return;
+            for (ServerPlayer p : w.getPlayers(q -> q.distanceToSqr(victim) < 40 * 40)) {
                 int cleared = p.getAttachedOrElse(CLEARED, 0);
                 boolean first = (cleared & (1 << d.index)) == 0;
                 p.setAttached(CLEARED, cleared | (1 << d.index));
                 com.cursedtides.quest.QuestData.give(p, com.cursedtides.combat.Loot.container(com.cursedtides.combat.Loot.Tier.SKULL, d.level()));
                 com.cursedtides.trade.Wallet.give(p, (first ? 60 : 20) * com.cursedtides.trade.Wallet.SILVER_PER_DOUBLOON);
                 com.cursedtides.pirate.PirateData.addXp(p, com.cursedtides.pirate.Weapon.CUTLASS, first ? 200 : 60);
-                p.sendMessage(Text.literal(d.name + " is cleared" + (first ? " for the first time!" : ".")).formatted(Formatting.GOLD, Formatting.BOLD), false);
+                p.sendSystemMessage(Component.literal(d.name + " is cleared" + (first ? " for the first time!" : ".")).withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), false);
                 com.cursedtides.activity.Achievements.grant(p, d.kind == Kind.WRECK ? "wreck_diver" : "spire_climber");
                 if (Integer.bitCount(p.getAttachedOrElse(CLEARED, 0)) >= ALL.size()) com.cursedtides.activity.Achievements.grant(p, "all_delves");
             }
@@ -520,7 +520,7 @@ public final class Delves {
         }
     }
 
-    public static List<String> journal(ServerPlayerEntity p) {
+    public static List<String> journal(ServerPlayer p) {
         int cleared = p.getAttachedOrElse(CLEARED, 0);
         List<String> lines = new ArrayList<>();
         lines.add("§fWrecks and spires cleared: " + Integer.bitCount(cleared) + "/" + ALL.size());

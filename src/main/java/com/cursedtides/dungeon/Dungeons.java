@@ -7,14 +7,13 @@ import com.cursedtides.world.Archipelago;
 import com.mojang.serialization.Codec;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.player.Player;
 import java.util.List;
 
 /**
@@ -134,42 +133,42 @@ public final class Dungeons {
         CLEARED_ALL.identifier();
     }
 
-    public static long mask(PlayerEntity player) {
+    public static long mask(Player player) {
         return player.getAttachedOrElse(CLEARED_ALL, 0L) | (player.getAttachedOrElse(CLEARED, 0) & 0xFFFFFFFFL);
     }
 
-    public static int clearedCount(PlayerEntity player) {
+    public static int clearedCount(Player player) {
         return Long.bitCount(mask(player));
     }
 
-    public static boolean isCleared(PlayerEntity player, Dungeon d) {
+    public static boolean isCleared(Player player, Dungeon d) {
         return (mask(player) & (1L << d.index)) != 0;
     }
 
-    public static void onVaultOpened(ServerPlayerEntity player, BlockPos pos) {
+    public static void onVaultOpened(ServerPlayer player, BlockPos pos) {
         for (Dungeon d : ALL) {
             if (!d.contains(pos)) continue;
             com.cursedtides.quest.HorizonArc.onVault(player, d);
             long mask = mask(player);
             if ((mask & (1L << d.index)) != 0) return;
             player.setAttached(CLEARED_ALL, mask | (1L << d.index));
-            player.sendMessage(Text.literal("Vault opened: " + d.name + " (" + clearedCount(player) + "/" + ALL.size() + ")")
-                    .formatted(Formatting.GOLD), false);
-            player.getWorld().playSound(null, player.getX(), player.getY(), player.getZ(),
-                    SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundCategory.PLAYERS, 0.7f, 1.1f);
+            player.sendSystemMessage(Component.literal("Vault opened: " + d.name + " (" + clearedCount(player) + "/" + ALL.size() + ")")
+                    .withStyle(ChatFormatting.GOLD), false);
+            player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                    SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.7f, 1.1f);
             PirateData.addXp(player, Weapon.EXPLORATION, 40 + d.tier * 30);
             com.cursedtides.activity.Achievements.grant(player, "first_vault");
             if (clearedCount(player) >= 10) com.cursedtides.activity.Achievements.grant(player, "ten_vaults");
             com.cursedtides.activity.Challenges.progress(player, "vault", 1);
-            net.minecraft.item.ItemStack arm = com.cursedtides.combat.GearRarity.randomWeapon(player.getServerWorld(), player.getRandom(), d.tier);
+            net.minecraft.world.item.ItemStack arm = com.cursedtides.combat.GearRarity.randomWeapon(player.level(), player.getRandom(), d.tier);
             if (com.cursedtides.combat.GearRarity.isLegendary(arm)) com.cursedtides.activity.Achievements.grant(player, "legendary_find");
-            if (!player.getInventory().insertStack(arm)) player.dropItem(arm, false);
-            if (player.getRandom().nextBoolean()) player.giveItemStack(com.cursedtides.explore.Collectibles.randomFor(player, player.getRandom().nextBoolean() ? com.cursedtides.explore.Collectibles.Kind.LOG : com.cursedtides.explore.Collectibles.Kind.PAINTING));
+            if (!player.getInventory().add(arm)) player.drop(arm, false, net.minecraft.util.Prediction.SERVER_ONLY);
+            if (player.getRandom().nextBoolean()) player.addItem(com.cursedtides.explore.Collectibles.randomFor(player, player.getRandom().nextBoolean() ? com.cursedtides.explore.Collectibles.Kind.LOG : com.cursedtides.explore.Collectibles.Kind.PAINTING));
             if (player.getRandom().nextInt(3) < d.tier) {
-                net.minecraft.item.ItemStack trinket = new net.minecraft.item.ItemStack(
+                net.minecraft.world.item.ItemStack trinket = new net.minecraft.world.item.ItemStack(
                         com.cursedtides.appearance.Accessories.random(player.getRandom(), d.tier >= 2));
-                if (!player.getInventory().insertStack(trinket)) player.dropItem(trinket, false);
-                player.sendMessage(Text.literal("Among the treasure: ").append(trinket.getName()).formatted(Formatting.LIGHT_PURPLE), false);
+                if (!player.getInventory().add(trinket)) player.drop(trinket, false, net.minecraft.util.Prediction.SERVER_ONLY);
+                player.sendSystemMessage(Component.literal("Among the treasure: ").append(trinket.getHoverName()).withStyle(ChatFormatting.LIGHT_PURPLE), false);
             }
             return;
         }

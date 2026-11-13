@@ -8,11 +8,11 @@ import com.cursedtides.world.Archipelago;
 import com.cursedtides.world.ModWorld;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.LivingEntity;
 
 /** How deeds change reputation: kills, sinkings, captures. */
 public final class FactionEvents {
@@ -23,20 +23,20 @@ public final class FactionEvents {
 
         // Remind wanted players when they sail into Tidewatch waters.
         ServerTickEvents.END_SERVER_TICK.register(server -> {
-            if (server.getTicks() % 600 != 0 || !ModWorld.isArchipelago()) return;
+            if (server.getTickCount() % 600 != 0 || !ModWorld.isArchipelago()) return;
             Archipelago.Island fort = Archipelago.IRONWATCH_ISLE;
-            for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
+            for (ServerPlayer p : server.getPlayerList().getPlayers()) {
                 double dx = p.getX() - fort.cx(), dz = p.getZ() - fort.cz();
                 if (FactionData.isWanted(p) && dx * dx + dz * dz < 140 * 140) {
-                    p.sendMessage(Text.literal("Ironwatch's guns are watching you. Bounty: "
-                            + FactionData.bounty(p) + " doubloons.").formatted(Formatting.RED), true);
+                    p.sendSystemMessage(Component.literal("Ironwatch's guns are watching you. Bounty: "
+                            + FactionData.bounty(p) + " doubloons.").withStyle(ChatFormatting.RED), true);
                 }
             }
         });
     }
 
     private static void onDeath(LivingEntity victim, DamageSource source) {
-        if (!(source.getAttacker() instanceof ServerPlayerEntity player)) {
+        if (!(source.getEntity() instanceof ServerPlayer player)) {
             return;
         }
         if (victim instanceof MarineEntity) {
@@ -53,15 +53,15 @@ public final class FactionEvents {
             FactionData.progress(player, ContractType.BRETHREN_UNDEAD);
             com.cursedtides.activity.Achievements.grant(player, "first_blood");
             com.cursedtides.activity.Challenges.progress(player, "undead", 1);
-            if (player.getRandom().nextInt(25) == 0) victim.dropStack(com.cursedtides.combat.GearRarity.randomWeapon(player.getServerWorld(), player.getRandom(), 0));
+            if (player.getRandom().nextInt(25) == 0) com.cursedtides.util.Compat.drop(victim, com.cursedtides.combat.GearRarity.randomWeapon(player.level(), player.getRandom(), 0));
         }
     }
 
     /** Called by a ship when a player sends her to the bottom. */
-    public static void onShipSunk(ServerPlayerEntity sinker, ShipFaction faction) {
+    public static void onShipSunk(ServerPlayer sinker, ShipFaction faction) {
         com.cursedtides.profession.ProfessionData.addXp(sinker, com.cursedtides.profession.Profession.LEADERSHIP, 20);
         com.cursedtides.activity.Achievements.grant(sinker, "sink_ship");
-        if (sinker.getRandom().nextInt(4) == 0) sinker.giveItemStack(com.cursedtides.explore.Collectibles.randomFor(sinker, com.cursedtides.explore.Collectibles.Kind.LOG));
+        if (sinker.getRandom().nextInt(4) == 0) sinker.addItem(com.cursedtides.explore.Collectibles.randomFor(sinker, com.cursedtides.explore.Collectibles.Kind.LOG));
         com.cursedtides.activity.Challenges.progress(sinker, "sink", 1);
         com.cursedtides.activity.Leaderboards.add(sinker, "sinkings", 1);
         switch (faction) {
@@ -89,7 +89,7 @@ public final class FactionEvents {
     }
 
     /** Called by a ship when a player captures her. */
-    public static void onShipCaptured(ServerPlayerEntity captor, ShipFaction faction) {
+    public static void onShipCaptured(ServerPlayer captor, ShipFaction faction) {
         com.cursedtides.profession.ProfessionData.addXp(captor, com.cursedtides.profession.Profession.LEADERSHIP, 35);
         com.cursedtides.activity.Achievements.grant(captor, "capture_ship");
         if (faction == ShipFaction.NAVY) {
@@ -111,7 +111,7 @@ public final class FactionEvents {
     }
 
     /** Firing on a Tidewatch ship or marine without being wanted costs a little standing each time. */
-    public static void onAttackedNavy(ServerPlayerEntity player) {
+    public static void onAttackedNavy(ServerPlayer player) {
         FactionData.adjust(player, Faction.NAVY, -4);
     }
 }

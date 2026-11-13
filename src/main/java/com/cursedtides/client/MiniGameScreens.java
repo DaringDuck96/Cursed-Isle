@@ -2,11 +2,10 @@ package com.cursedtides.client;
 
 import com.cursedtides.activity.MiniGames;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.text.Text;
-import org.lwjgl.glfw.GLFW;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 
 import java.util.Random;
 
@@ -16,7 +15,7 @@ public final class MiniGameScreens {
 
     public static void register() {
         ClientPlayNetworking.registerGlobalReceiver(MiniGames.Open.ID, (payload, context) -> context.client().execute(() ->
-                context.client().setScreen(payload.kind() == MiniGames.BREW ? new BrewScreen() : new RepairScreen(payload.arg()))));
+                context.client().gui.setScreen(payload.kind() == MiniGames.BREW ? new BrewScreen() : new RepairScreen(payload.arg()))));
     }
 
     // ================================================================== brewing: match three
@@ -31,7 +30,7 @@ public final class MiniGameScreens {
         private String note = "";
 
         public BrewScreen() {
-            super(Text.literal("Brewing"));
+            super(Component.literal("Brewing"));
             for (int x = 0; x < N; x++) for (int y = 0; y < N; y++) grid[x][y] = fresh(x, y);
         }
 
@@ -47,13 +46,13 @@ public final class MiniGameScreens {
             if (tonic < 0) {
                 for (int i = 0; i < MiniGames.TONICS.length; i++) {
                     final int t = i;
-                    addDrawableChild(ButtonWidget.builder(Text.literal(MiniGames.TONICS[i] + " (" + MiniGames.INGREDIENTS[i] + ")"), b -> {
+                    addRenderableWidget(Button.builder(Component.literal(MiniGames.TONICS[i] + " (" + MiniGames.INGREDIENTS[i] + ")"), b -> {
                         tonic = t;
-                        clearAndInit();
-                    }).dimensions(width / 2 - 110, height / 2 - 70 + i * 24, 220, 20).build());
+                        rebuildWidgets();
+                    }).bounds(width / 2 - 110, height / 2 - 70 + i * 24, 220, 20).build());
                 }
             } else {
-                addDrawableChild(ButtonWidget.builder(Text.literal("Bottle it"), b -> finish()).dimensions(width / 2 - 40, top() + N * CELL + 8, 80, 20).build());
+                addRenderableWidget(Button.builder(Component.literal("Bottle it"), b -> finish()).bounds(width / 2 - 40, top() + N * CELL + 8, 80, 20).build());
             }
         }
 
@@ -61,7 +60,8 @@ public final class MiniGameScreens {
         private int top() { return height / 2 - N * CELL / 2 - 10; }
 
         @Override
-        public boolean mouseClicked(double mx, double my, int button) {
+        public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event__, boolean dbl__) {
+        double mx = event__.x(), my = event__.y(); int button = UiCompat.button(event__);
             if (tonic >= 0 && moves > 0) {
                 int x = (int) ((mx - left()) / CELL), y = (int) ((my - top()) / CELL);
                 if (mx >= left() && my >= top() && x < N && y < N) {
@@ -73,7 +73,7 @@ public final class MiniGameScreens {
                     return true;
                 }
             }
-            return super.mouseClicked(mx, my, button);
+            return super.mouseClicked(event__, dbl__);
         }
 
         private void trySwap(int ax, int ay, int bx, int by) {
@@ -118,35 +118,35 @@ public final class MiniGameScreens {
 
         private void finish() {
             ClientPlayNetworking.send(new MiniGames.Result(MiniGames.BREW, tonic, score));
-            close();
+            onClose();
         }
 
         @Override
-        public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
-            super.renderBackground(ctx, mouseX, mouseY, delta);
-            super.render(ctx, mouseX, mouseY, delta);
+        public void extractRenderState(GuiGraphicsExtractor ctx, int mouseX, int mouseY, float delta) {
+            super.extractBackground(ctx, mouseX, mouseY, delta);
+            super.extractRenderState(ctx, mouseX, mouseY, delta);
             if (tonic < 0) {
-                ctx.drawCenteredTextWithShadow(textRenderer, Text.literal("§6What will you brew? §7(needs a glass bottle and the ingredient)"), width / 2, height / 2 - 92, 0xFFFFFF);
+                ctx.centeredText(font, Component.literal("§6What will you brew? §7(needs a glass bottle and the ingredient)"), width / 2, height / 2 - 92, 0xFFFFFFFF);
                 return;
             }
             int l = left(), t = top();
-            ctx.drawCenteredTextWithShadow(textRenderer, Text.literal("§6" + MiniGames.TONICS[tonic] + "§f   score " + score + "   stirs left " + moves),
-                    width / 2, t - 24, 0xFFFFFF);
-            ctx.drawCenteredTextWithShadow(textRenderer, Text.literal("§7Swap neighbours to line up three. Fine at 1400, masterwork at 2400."), width / 2, t - 12, 0xFFFFFF);
+            ctx.centeredText(font, Component.literal("§6" + MiniGames.TONICS[tonic] + "§f   score " + score + "   stirs left " + moves),
+                    width / 2, t - 24, 0xFFFFFFFF);
+            ctx.centeredText(font, Component.literal("§7Swap neighbours to line up three. Fine at 1400, masterwork at 2400."), width / 2, t - 12, 0xFFFFFFFF);
             ctx.fill(l - 3, t - 3, l + N * CELL + 3, t + N * CELL + 3, 0xCC2A1E14);
             for (int x = 0; x < N; x++) {
                 for (int y = 0; y < N; y++) {
                     int cx = l + x * CELL, cy = t + y * CELL;
                     boolean sel = x == selX && y == selY;
                     ctx.fill(cx + 1, cy + 1, cx + CELL - 1, cy + CELL - 1, sel ? 0xFFFFFFFF : COLOURS[grid[x][y]]);
-                    ctx.drawCenteredTextWithShadow(textRenderer, Text.literal(SYMBOLS[grid[x][y]]), cx + CELL / 2, cy + 7, sel ? 0x000000 : 0xFFFFFF);
+                    ctx.centeredText(font, Component.literal(SYMBOLS[grid[x][y]]), cx + CELL / 2, cy + 7, sel ? 0xFF000000 : 0xFFFFFFFF);
                 }
             }
-            ctx.drawCenteredTextWithShadow(textRenderer, Text.literal("§e" + note), width / 2, t + N * CELL + 32, 0xFFFFFF);
+            ctx.centeredText(font, Component.literal("§e" + note), width / 2, t + N * CELL + 32, 0xFFFFFFFF);
         }
 
-        @Override public void renderBackground(DrawContext c, int x, int y, float d) { }
-        @Override public boolean shouldPause() { return false; }
+        @Override public void extractBackground(GuiGraphicsExtractor c, int x, int y, float d) { }
+        @Override public boolean isPauseScreen() { return false; }
     }
 
     // ================================================================== patching the hull
@@ -161,14 +161,14 @@ public final class MiniGameScreens {
                 "Click as fast as you can! 25 buckets in 6 seconds.", "Saw with A and D, back and forth: 20 strokes in 7 seconds."};
 
         public RepairScreen(int job) {
-            super(Text.literal("Repair"));
+            super(Component.literal("Repair"));
             this.job = Math.floorMod(job, 3);
         }
 
         @Override
         protected void init() {
-            if (job == 1) addDrawableChild(ButtonWidget.builder(Text.literal("BAIL!"), b -> { if (!done) clicks++; check(); })
-                    .dimensions(width / 2 - 50, height / 2 + 10, 100, 30).build());
+            if (job == 1) addRenderableWidget(Button.builder(Component.literal("BAIL!"), b -> { if (!done) clicks++; check(); })
+                    .bounds(width / 2 - 50, height / 2 + 10, 100, 30).build());
         }
 
         @Override
@@ -201,53 +201,55 @@ public final class MiniGameScreens {
         private void send(boolean ok) {
             done = true;
             ClientPlayNetworking.send(new MiniGames.Result(MiniGames.REPAIR, job, ok ? 1 : 0));
-            close();
+            onClose();
         }
 
         @Override
-        public boolean keyPressed(int key, int scan, int mods) {
-            if (job == 0 && key == GLFW.GLFW_KEY_SPACE) { strike(); return true; }
-            if (job == 2 && (key == GLFW.GLFW_KEY_A || key == GLFW.GLFW_KEY_D || key == GLFW.GLFW_KEY_LEFT || key == GLFW.GLFW_KEY_RIGHT)) {
-                int side = key == GLFW.GLFW_KEY_A || key == GLFW.GLFW_KEY_LEFT ? 0 : 1;
+        public boolean keyPressed(net.minecraft.client.input.KeyEvent key__) {
+        int key = key__.key(), scan = key__.keycode(), mods = key__.modifiers();
+            if (job == 0 && key == com.mojang.blaze3d.platform.InputConstants.KEY_SPACE) { strike(); return true; }
+            if (job == 2 && (key == com.mojang.blaze3d.platform.InputConstants.KEY_A || key == com.mojang.blaze3d.platform.InputConstants.KEY_D || key == com.mojang.blaze3d.platform.InputConstants.KEY_LEFT || key == com.mojang.blaze3d.platform.InputConstants.KEY_RIGHT)) {
+                int side = key == com.mojang.blaze3d.platform.InputConstants.KEY_A || key == com.mojang.blaze3d.platform.InputConstants.KEY_LEFT ? 0 : 1;
                 if (side != lastKey) strokes++;
                 lastKey = side;
                 check();
                 return true;
             }
-            return super.keyPressed(key, scan, mods);
+            return super.keyPressed(key__);
         }
 
         @Override
-        public boolean mouseClicked(double mx, double my, int button) {
+        public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event__, boolean dbl__) {
+        double mx = event__.x(), my = event__.y(); int button = UiCompat.button(event__);
             if (job == 0) { strike(); return true; }
-            return super.mouseClicked(mx, my, button);
+            return super.mouseClicked(event__, dbl__);
         }
 
         @Override
-        public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
-            super.renderBackground(ctx, mouseX, mouseY, delta);
-            super.render(ctx, mouseX, mouseY, delta);
+        public void extractRenderState(GuiGraphicsExtractor ctx, int mouseX, int mouseY, float delta) {
+            super.extractBackground(ctx, mouseX, mouseY, delta);
+            super.extractRenderState(ctx, mouseX, mouseY, delta);
             int cx = width / 2, cy = height / 2;
-            ctx.drawCenteredTextWithShadow(textRenderer, Text.literal("§6" + TITLES[job]), cx, cy - 50, 0xFFFFFF);
-            ctx.drawCenteredTextWithShadow(textRenderer, Text.literal("§7" + HELP[job]), cx, cy - 36, 0xFFFFFF);
+            ctx.centeredText(font, Component.literal("§6" + TITLES[job]), cx, cy - 50, 0xFFFFFFFF);
+            ctx.centeredText(font, Component.literal("§7" + HELP[job]), cx, cy - 36, 0xFFFFFFFF);
             if (job == 0) {
                 int w = 200, x0 = cx - w / 2;
                 ctx.fill(x0, cy - 10, x0 + w, cy + 4, 0xFF4A3424);
                 ctx.fill(x0 + (int) (w * 0.38f), cy - 10, x0 + (int) (w * 0.62f), cy + 4, 0xFF3A9A3A);
                 int m = x0 + (int) (w * marker);
                 ctx.fill(m - 2, cy - 14, m + 2, cy + 8, 0xFFFFFFFF);
-                ctx.drawCenteredTextWithShadow(textRenderer, Text.literal("Good blows " + hits + "/3   misses " + misses + "/3"), cx, cy + 16, 0xFFFFFF);
+                ctx.centeredText(font, Component.literal("Good blows " + hits + "/3   misses " + misses + "/3"), cx, cy + 16, 0xFFFFFFFF);
             } else if (job == 1) {
-                ctx.drawCenteredTextWithShadow(textRenderer, Text.literal("Buckets: " + clicks + "/25   " + Math.max(0, (120 - ticks) / 20) + "s"), cx, cy - 8, 0xFFFFFF);
+                ctx.centeredText(font, Component.literal("Buckets: " + clicks + "/25   " + Math.max(0, (120 - ticks) / 20) + "s"), cx, cy - 8, 0xFFFFFFFF);
             } else {
-                ctx.drawCenteredTextWithShadow(textRenderer, Text.literal("Strokes: " + strokes + "/20   " + Math.max(0, (140 - ticks) / 20) + "s"), cx, cy - 8, 0xFFFFFF);
+                ctx.centeredText(font, Component.literal("Strokes: " + strokes + "/20   " + Math.max(0, (140 - ticks) / 20) + "s"), cx, cy - 8, 0xFFFFFFFF);
                 int off = (strokes % 2 == 0 ? -20 : 20);
                 ctx.fill(cx - 60, cy + 10, cx + 60, cy + 16, 0xFF8A6A44);
                 ctx.fill(cx + off - 30, cy + 4, cx + off + 30, cy + 10, 0xFFB0B0B8);
             }
         }
 
-        @Override public void renderBackground(DrawContext c, int x, int y, float d) { }
-        @Override public boolean shouldPause() { return false; }
+        @Override public void extractBackground(GuiGraphicsExtractor c, int x, int y, float d) { }
+        @Override public boolean isPauseScreen() { return false; }
     }
 }

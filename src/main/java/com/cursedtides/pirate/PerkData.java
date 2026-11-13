@@ -9,22 +9,21 @@ import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.entity.attribute.EntityAttribute;
-import net.minecraft.entity.attribute.EntityAttributeInstance;
-import net.minecraft.entity.attribute.EntityAttributeModifier;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.RegistryByteBuf;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.codec.PacketCodecs;
-import net.minecraft.network.packet.CustomPayload;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.Holder;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.player.Player;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,26 +42,26 @@ public final class PerkData {
             .buildAndRegister(CursedTides.id("perks"));
 
     // ---- payloads
-    public record Skills(List<Integer> levels, long chosen) implements CustomPayload {
-        public static final CustomPayload.Id<Skills> ID = new CustomPayload.Id<>(CursedTides.id("skills"));
-        public static final PacketCodec<RegistryByteBuf, Skills> CODEC = PacketCodec.tuple(
-                PacketCodecs.VAR_INT.collect(PacketCodecs.toList()), Skills::levels,
-                PacketCodecs.VAR_LONG, Skills::chosen,
+    public record Skills(List<Integer> levels, long chosen) implements CustomPacketPayload {
+        public static final CustomPacketPayload.Type<Skills> ID = new CustomPacketPayload.Type<>(CursedTides.id("skills"));
+        public static final StreamCodec<RegistryFriendlyByteBuf, Skills> CODEC = StreamCodec.composite(
+                ByteBufCodecs.VAR_INT.apply(ByteBufCodecs.list()), Skills::levels,
+                ByteBufCodecs.VAR_LONG, Skills::chosen,
                 Skills::new);
-        @Override public Id<? extends CustomPayload> getId() { return ID; }
+        @Override public Type<? extends CustomPacketPayload> type() { return ID; }
     }
 
-    public record Choose(int tree, int tier, int option) implements CustomPayload {
-        public static final CustomPayload.Id<Choose> ID = new CustomPayload.Id<>(CursedTides.id("choose_perk"));
-        public static final PacketCodec<RegistryByteBuf, Choose> CODEC = PacketCodec.tuple(
-                PacketCodecs.VAR_INT, Choose::tree, PacketCodecs.VAR_INT, Choose::tier, PacketCodecs.VAR_INT, Choose::option,
+    public record Choose(int tree, int tier, int option) implements CustomPacketPayload {
+        public static final CustomPacketPayload.Type<Choose> ID = new CustomPacketPayload.Type<>(CursedTides.id("choose_perk"));
+        public static final StreamCodec<RegistryFriendlyByteBuf, Choose> CODEC = StreamCodec.composite(
+                ByteBufCodecs.VAR_INT, Choose::tree, ByteBufCodecs.VAR_INT, Choose::tier, ByteBufCodecs.VAR_INT, Choose::option,
                 Choose::new);
-        @Override public Id<? extends CustomPayload> getId() { return ID; }
+        @Override public Type<? extends CustomPacketPayload> type() { return ID; }
     }
 
     public static void register() {
-        PayloadTypeRegistry.playS2C().register(Skills.ID, Skills.CODEC);
-        PayloadTypeRegistry.playC2S().register(Choose.ID, Choose.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(Skills.ID, Skills.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(Choose.ID, Choose.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(Choose.ID, (payload, context) ->
                 context.server().execute(() -> choose(context.player(), payload)));
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> applyAttributes(handler.getPlayer()));
@@ -79,11 +78,11 @@ public final class PerkData {
         return (int) ((chosen >>> (slot(tree, tier) * 2)) & 3L);
     }
 
-    public static long chosen(PlayerEntity player) {
+    public static long chosen(Player player) {
         return player.getAttachedOrElse(CHOSEN, 0L);
     }
 
-    public static List<Perk> perks(PlayerEntity player) {
+    public static List<Perk> perks(Player player) {
         long chosen = chosen(player);
         List<Perk> list = new ArrayList<>();
         for (Weapon tree : Weapon.values()) {
@@ -99,7 +98,7 @@ public final class PerkData {
     }
 
     /** Sum of a stat across the player's chosen perks. */
-    public static double stat(PlayerEntity player, Perk.Stat stat) {
+    public static double stat(Player player, Perk.Stat stat) {
         double total = 0;
         for (Perk p : perks(player)) {
             if (p.stat() == stat) total += p.amount();
@@ -109,47 +108,47 @@ public final class PerkData {
 
     // ---- choosing
 
-    public static void sendSkills(ServerPlayerEntity player) {
+    public static void sendSkills(ServerPlayer player) {
         List<Integer> levels = new ArrayList<>();
         for (Weapon w : Weapon.values()) levels.add(PirateData.level(player, w));
         ServerPlayNetworking.send(player, new Skills(levels, chosen(player)));
     }
 
-    private static void choose(ServerPlayerEntity player, Choose c) {
+    private static void choose(ServerPlayer player, Choose c) {
         if (c.tree() < 0 || c.tree() >= Weapon.values().length || c.tier() < 0 || c.tier() > 2 || c.option() < 0 || c.option() > 1) {
             return;
         }
         Weapon tree = Weapon.values()[c.tree()];
         long chosen = chosen(player);
         if (choice(chosen, tree, c.tier()) != 0) {
-            player.sendMessage(Text.literal("You've already chosen at that tier. (/pirate respec to start over)").formatted(Formatting.GRAY), true);
+            player.sendSystemMessage(Component.literal("You've already chosen at that tier. (/pirate respec to start over)").withStyle(ChatFormatting.GRAY), true);
         } else if (PirateData.level(player, tree) < Perk.TIER_LEVELS[c.tier()]) {
-            player.sendMessage(Text.literal("Reach level " + Perk.TIER_LEVELS[c.tier()] + " first.").formatted(Formatting.GRAY), true);
+            player.sendSystemMessage(Component.literal("Reach level " + Perk.TIER_LEVELS[c.tier()] + " first.").withStyle(ChatFormatting.GRAY), true);
         } else {
             long updated = chosen | ((long) (c.option() + 1) << (slot(tree, c.tier()) * 2));
             player.setAttached(CHOSEN, updated);
             Perk perk = Perk.of(tree, c.tier(), c.option());
             applyAttributes(player);
-            player.getWorld().playSound(null, player.getX(), player.getY(), player.getZ(),
-                    SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.6f, 1.5f);
+            player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                    SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.6f, 1.5f);
             if (perk != null) {
-                player.sendMessage(Text.literal("Learned " + perk.title() + ": " + perk.effect()).formatted(Formatting.GOLD), false);
+                player.sendSystemMessage(Component.literal("Learned " + perk.title() + ": " + perk.effect()).withStyle(ChatFormatting.GOLD), false);
             }
         }
         sendSkills(player);
     }
 
-    public static boolean respec(ServerPlayerEntity player) {
+    public static boolean respec(ServerPlayer player) {
         if (chosen(player) == 0L) return false;
-        if (!player.getAbilities().creativeMode) {
-            if (player.getInventory().count(ModItems.DOUBLOON) < RESPEC_COST) return false;
+        if (!player.getAbilities().instabuild) {
+            if (player.getInventory().countItem(ModItems.DOUBLOON) < RESPEC_COST) return false;
             int left = RESPEC_COST;
             var inv = player.getInventory();
-            for (int i = 0; i < inv.size() && left > 0; i++) {
-                var s = inv.getStack(i);
-                if (s.isOf(ModItems.DOUBLOON)) {
+            for (int i = 0; i < inv.getContainerSize() && left > 0; i++) {
+                var s = inv.getItem(i);
+                if (s.is(ModItems.DOUBLOON)) {
                     int take = Math.min(left, s.getCount());
-                    s.decrement(take);
+                    s.shrink(take);
                     left -= take;
                 }
             }
@@ -161,23 +160,23 @@ public final class PerkData {
 
     // ---- attribute-type perks
 
-    public static void applyAttributes(ServerPlayerEntity player) {
-        set(player, EntityAttributes.GENERIC_ATTACK_DAMAGE, "perk_melee", stat(player, Perk.Stat.MELEE));
-        set(player, EntityAttributes.GENERIC_MAX_HEALTH, "perk_health", stat(player, Perk.Stat.MAX_HEALTH));
-        set(player, EntityAttributes.GENERIC_MOVEMENT_SPEED, "perk_speed", stat(player, Perk.Stat.SPEED));
-        set(player, EntityAttributes.GENERIC_LUCK, "perk_luck", stat(player, Perk.Stat.LUCK));
+    public static void applyAttributes(ServerPlayer player) {
+        set(player, Attributes.ATTACK_DAMAGE, "perk_melee", stat(player, Perk.Stat.MELEE));
+        set(player, Attributes.MAX_HEALTH, "perk_health", stat(player, Perk.Stat.MAX_HEALTH));
+        set(player, Attributes.MOVEMENT_SPEED, "perk_speed", stat(player, Perk.Stat.SPEED));
+        set(player, Attributes.LUCK, "perk_luck", stat(player, Perk.Stat.LUCK));
         if (player.getHealth() > player.getMaxHealth()) {
             player.setHealth(player.getMaxHealth());
         }
     }
 
-    private static void set(PlayerEntity player, RegistryEntry<EntityAttribute> attribute, String key, double value) {
-        EntityAttributeInstance instance = player.getAttributeInstance(attribute);
+    private static void set(Player player, Holder<Attribute> attribute, String key, double value) {
+        AttributeInstance instance = player.getAttribute(attribute);
         if (instance == null) return;
         var id = CursedTides.id(key);
         instance.removeModifier(id);
         if (value != 0) {
-            instance.addPersistentModifier(new EntityAttributeModifier(id, value, EntityAttributeModifier.Operation.ADD_VALUE));
+            instance.addPermanentModifier(new AttributeModifier(id, value, AttributeModifier.Operation.ADD_VALUE));
         }
     }
 }

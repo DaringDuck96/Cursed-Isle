@@ -4,13 +4,13 @@ import com.cursedtides.entity.ShipEntity;
 import com.cursedtides.item.ModItems;
 import com.cursedtides.ship.ShipEvents;
 import com.cursedtides.ship.ShipFaction;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 /** Named boss ships and treasure fleets: big prizes at sea. */
 public final class SeaEvents {
@@ -22,58 +22,58 @@ public final class SeaEvents {
             "The Iron Maw", "Bloody Mary Kettle", "The Salt Tyrant"};
     private static final String[] TREASURE_SHIPS = {"The Golden Hind of Kingsport", "Sovereign's Purse", "The Silver Duchess", "Crown Bounty"};
 
-    public static boolean bossShip(ServerWorld world, ServerPlayerEntity player) {
+    public static boolean bossShip(ServerLevel world, ServerPlayer player) {
         BlockPos at = ShipEvents.findSeaSpot(world, player, 80, 110);
         if (at == null) return false;
         ShipEntity ship = ShipEvents.spawnShip(world, ShipFaction.PIRATE, at.getX() + 0.5, at.getY() - 0.1, at.getZ() + 0.5, player);
         if (ship == null) return false;
-        String name = BOSS_SHIPS[world.random.nextInt(BOSS_SHIPS.length)];
+        String name = BOSS_SHIPS[world.getRandom().nextInt(BOSS_SHIPS.length)];
         ship.makeLegendary(name);
-        ship.setCustomName(Text.literal(name).formatted(Formatting.DARK_RED, Formatting.BOLD));
+        ship.setCustomName(Component.literal(name).withStyle(ChatFormatting.DARK_RED, ChatFormatting.BOLD));
         ship.setFlag(com.cursedtides.ship.FlagItem.Design.BLACK_SKULL.ordinal());
-        ship.addCommandTag(BOSS);
-        world.getServer().getPlayerManager().broadcast(Text.literal("The dread ship " + name + " has been sighted! Her captain has sunk "
-                + (20 + world.random.nextInt(60)) + " ships. Sink her and her hold is yours.").formatted(Formatting.DARK_RED, Formatting.BOLD), false);
+        ship.addTag(BOSS);
+        world.getServer().getPlayerList().broadcastSystemMessage(Component.literal("The dread ship " + name + " has been sighted! Her captain has sunk "
+                + (20 + world.getRandom().nextInt(60)) + " ships. Sink her and her hold is yours.").withStyle(ChatFormatting.DARK_RED, ChatFormatting.BOLD), false);
         return true;
     }
 
-    public static boolean treasureFleet(ServerWorld world, ServerPlayerEntity player) {
+    public static boolean treasureFleet(ServerLevel world, ServerPlayer player) {
         BlockPos at = ShipEvents.findSeaSpot(world, player, 80, 110);
         if (at == null) return false;
         ShipEntity galleon = ShipEvents.spawnShip(world, ShipFaction.MERCHANT, at.getX() + 0.5, at.getY() - 0.1, at.getZ() + 0.5, player);
         if (galleon == null) return false;
         galleon.setShipClass(com.cursedtides.ship.ShipClass.GALLEON);
         galleon.setHull(galleon.maxHull());
-        String name = TREASURE_SHIPS[world.random.nextInt(TREASURE_SHIPS.length)];
-        galleon.setCustomName(Text.literal(name).formatted(Formatting.GOLD, Formatting.BOLD));
-        galleon.addCommandTag(TREASURE);
-        galleon.cargo().addStack(new ItemStack(Items.GOLD_INGOT, 32));
-        galleon.cargo().addStack(new ItemStack(ModItems.DOUBLOON, 64));
-        galleon.cargo().addStack(new ItemStack(ModItems.DOUBLOON, 32));
-        galleon.cargo().addStack(new ItemStack(ModItems.ANCIENT_COIN, 6));
-        galleon.cargo().addStack(new ItemStack(com.cursedtides.explore.Cartography.CUT_GEM, 4));
+        String name = TREASURE_SHIPS[world.getRandom().nextInt(TREASURE_SHIPS.length)];
+        galleon.setCustomName(Component.literal(name).withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
+        galleon.addTag(TREASURE);
+        galleon.cargo().addItem(new ItemStack(Items.GOLD_INGOT, 32));
+        galleon.cargo().addItem(new ItemStack(ModItems.DOUBLOON, 64));
+        galleon.cargo().addItem(new ItemStack(ModItems.DOUBLOON, 32));
+        galleon.cargo().addItem(new ItemStack(ModItems.ANCIENT_COIN, 6));
+        galleon.cargo().addItem(new ItemStack(com.cursedtides.explore.Cartography.CUT_GEM, 4));
         for (int i = 0; i < 2; i++) {
             BlockPos e = new BlockPos(at.getX() + (i == 0 ? 18 : -18), at.getY(), at.getZ() + 10);
             ShipEvents.spawnShip(world, ShipFaction.NAVY, e.getX() + 0.5, e.getY() - 0.1, e.getZ() + 0.5, player);
         }
-        world.getServer().getPlayerManager().broadcast(Text.literal("A treasure fleet is crossing the Reach: the " + name
-                + ", riding low with gold, under Tidewatch escort. Fortune favours the bold.").formatted(Formatting.GOLD), false);
+        world.getServer().getPlayerList().broadcastSystemMessage(Component.literal("A treasure fleet is crossing the Reach: the " + name
+                + ", riding low with gold, under Tidewatch escort. Fortune favours the bold.").withStyle(ChatFormatting.GOLD), false);
         return true;
     }
 
     /** Called as a ship goes down. */
-    public static void onSunk(ServerWorld world, ShipEntity ship, ServerPlayerEntity sinker) {
-        if (ship.getCommandTags().contains(BOSS)) {
-            ship.dropStack(com.cursedtides.combat.GearRarity.randomWeapon(world, world.random, 4));
-            ship.dropStack(new ItemStack(ModItems.DOUBLOON, 60));
-            ship.dropStack(new ItemStack(com.cursedtides.appearance.Accessories.random(world.random, true)));
+    public static void onSunk(ServerLevel world, ShipEntity ship, ServerPlayer sinker) {
+        if (ship.entityTags().contains(BOSS)) {
+            com.cursedtides.util.Compat.drop(ship, com.cursedtides.combat.GearRarity.randomWeapon(world, world.getRandom(), 4));
+            com.cursedtides.util.Compat.drop(ship, new ItemStack(ModItems.DOUBLOON, 60));
+            com.cursedtides.util.Compat.drop(ship, new ItemStack(com.cursedtides.appearance.Accessories.random(world.getRandom(), true)));
             if (sinker != null) {
                 com.cursedtides.activity.Achievements.grant(sinker, "dread_sunk");
-                world.getServer().getPlayerManager().broadcast(Text.literal(sinker.getName().getString() + " has sent "
-                        + ship.getName().getString() + " to the bottom!").formatted(Formatting.GOLD, Formatting.BOLD), false);
+                world.getServer().getPlayerList().broadcastSystemMessage(Component.literal(sinker.getName().getString() + " has sent "
+                        + ship.getName().getString() + " to the bottom!").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), false);
             }
         }
-        if (ship.getCommandTags().contains(TREASURE) && sinker != null) {
+        if (ship.entityTags().contains(TREASURE) && sinker != null) {
             com.cursedtides.faction.FactionData.adjust(sinker, com.cursedtides.faction.Faction.NAVY, -80);
             com.cursedtides.faction.FactionData.adjust(sinker, com.cursedtides.faction.Faction.BRETHREN, 60);
         }

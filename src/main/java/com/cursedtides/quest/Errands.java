@@ -1,5 +1,6 @@
 package com.cursedtides.quest;
 
+import net.minecraft.world.entity.EntityTypes;
 import com.cursedtides.CursedTides;
 import com.cursedtides.combat.Levels;
 import com.cursedtides.dungeon.Delves;
@@ -16,27 +17,26 @@ import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.attribute.EntityAttributeInstance;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.ClickEvent;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.phys.AABB;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -45,8 +45,8 @@ import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-import static net.minecraft.server.command.CommandManager.argument;
-import static net.minecraft.server.command.CommandManager.literal;
+import static net.minecraft.commands.Commands.argument;
+import static net.minecraft.commands.Commands.literal;
 
 /**
  * Errands: hand-written side quests for the people in the towns. Talk to someone with work going and they'll ask
@@ -67,7 +67,7 @@ public final class Errands {
     public record Hunt(Predicate<LivingEntity> which, int count, String what) implements Step {}
 
     /** Kill one named enemy (and his friends), who turns up at a place when you get near. */
-    public record Slay(String name, Supplier<EntityType<? extends MobEntity>> type, Supplier<int[]> where, String place) implements Step {}
+    public record Slay(String name, Supplier<EntityType<? extends Mob>> type, Supplier<int[]> where, String place) implements Step {}
 
     /** Go somewhere (within so many blocks; a y of Integer.MIN_VALUE means any height) and see what's there. */
     public record Find(Supplier<int[]> where, int radius, String place, String found) implements Step {}
@@ -118,7 +118,7 @@ public final class Errands {
 
     private static ItemStack named(Item item, int n, String name) {
         ItemStack s = new ItemStack(item, n);
-        s.set(DataComponentTypes.CUSTOM_NAME, Text.literal(name).formatted(Formatting.GOLD));
+        s.set(DataComponents.CUSTOM_NAME, Component.literal(name).withStyle(ChatFormatting.GOLD));
         return s;
     }
 
@@ -146,7 +146,7 @@ public final class Errands {
                             "He's camped in the scrub on Mariner's Rest with a few lads who think he's paying them. He isn't.",
                             "Bring him to account. Permanently, if he insists."},
                     "Gentleman Corwen Pike, Mariner's Rest. The Brethren don't forget, captain, and neither do I.",
-                    new Slay("Gentleman Corwen Pike", () -> EntityType.PILLAGER, () -> wild(Archipelago.MARINERS_REST, 300, 0.5), "the scrub on Mariner's Rest"),
+                    new Slay("Gentleman Corwen Pike", () -> EntityTypes.PILLAGER, () -> wild(Archipelago.MARINERS_REST, 300, 0.5), "the scrub on Mariner's Rest"),
                     new String[]{"His signet ring? Lovely. I'll have it melted into something he'd have hated.", "The Brethren pay their debts too. Here's yours."},
                     45, () -> null),
 
@@ -173,7 +173,7 @@ public final class Errands {
                     new String[]{"Skeletons with bows, out on Hollowgrave. Somebody's taught them to shoot, and they shoot better than my recruits.",
                             "Go and show them what a real marksman looks like. Eight of them."},
                     "Eight skeletons. Aim small, miss small.",
-                    new Hunt(e -> e.getType() == EntityType.SKELETON, 8, "skeletons"),
+                    new Hunt(e -> e.getType() == EntityTypes.SKELETON, 8, "skeletons"),
                     new String[]{"Eight! I'll tell the recruits you did it with your eyes shut. Builds character.", "Take these. Better shot than the stuff they sell in the square."},
                     25, () -> new ItemStack(ModItems.PISTOL_SHOT, 24)),
 
@@ -189,7 +189,7 @@ public final class Errands {
                     new String[]{"Scuttler Quinn. Sank four merchantmen by drilling their hulls in harbour, then bought the salvage rights for pennies.",
                             "Last seen ashore on Blackthorn Isle, in the hills behind the fort. Dead or alive pays the same, and dead is less paperwork."},
                     "Scuttler Quinn, Blackthorn's hills. The poster's still up.",
-                    new Slay("Scuttler Quinn", () -> EntityType.VINDICATOR, () -> wild(Archipelago.BLACKTHORN_ISLE, 240, 0.55), "the hills of Blackthorn Isle"),
+                    new Slay("Scuttler Quinn", () -> EntityTypes.VINDICATOR, () -> wild(Archipelago.BLACKTHORN_ISLE, 240, 0.55), "the hills of Blackthorn Isle"),
                     new String[]{"Quinn's drill. Nasty thing. I'll file it with the evidence.", "Bounty's paid in full. Sign here. And here. And here."},
                     50, () -> null),
 
@@ -283,7 +283,7 @@ public final class Errands {
                     new String[]{"Six of my marines deserted to join a pirate crew. They took their muskets, and my second-best hat.",
                             "By now they'll be among the pillagers raiding the outer isles. I don't need them back. I need them stopped."},
                     "Six pillagers, captain. Any six. They all look alike in the end.",
-                    new Hunt(e -> e.getType() == EntityType.PILLAGER, 6, "pillagers"),
+                    new Hunt(e -> e.getType() == EntityTypes.PILLAGER, 6, "pillagers"),
                     new String[]{"Six. The Tidewatch is in your debt. Officially, quietly.", "If you find my hat, I'd like it back."},
                     40, () -> null),
 
@@ -304,11 +304,11 @@ public final class Errands {
             .persistent(Codec.unboundedMap(Codec.STRING, Codec.INT)).copyOnDeath().initializer(HashMap::new)
             .buildAndRegister(CursedTides.id("errands"));
 
-    private static int get(ServerPlayerEntity p, String key) {
+    private static int get(ServerPlayer p, String key) {
         return p.getAttachedOrElse(STATE, Map.of()).getOrDefault(key, 0);
     }
 
-    private static void put(ServerPlayerEntity p, String key, int v) {
+    private static void put(ServerPlayer p, String key, int v) {
         Map<String, Integer> m = new HashMap<>(p.getAttachedOrElse(STATE, Map.of()));
         m.put(key, v);
         p.setAttached(STATE, m);
@@ -319,13 +319,13 @@ public final class Errands {
         return null;
     }
 
-    private static boolean ready(ServerPlayerEntity p) {
+    private static boolean ready(ServerPlayer p) {
         return Lessons.step(p) == Lessons.Step.DONE;
     }
 
     /** When each person last offered work to each player, so a second word gets their usual business. */
     /** For the marker over a person's head: 0 nothing, 1 has work for you, 2 waiting for you to come back. */
-    public static int marker(ServerPlayerEntity p, Role role) {
+    public static int marker(ServerPlayer p, Role role) {
         if (!ready(p)) return 0;
         int best = 0;
         for (Errand e : ALL) {
@@ -342,10 +342,10 @@ public final class Errands {
 
     // ------------------------------------------------------------------ talking
 
-    private static void say(StoryNpcEntity npc, ServerPlayerEntity p, String... lines) {
+    private static void say(StoryNpcEntity npc, ServerPlayer p, String... lines) {
         String name = npc.getRole().displayName();
         for (String l : lines) {
-            p.sendMessage(Text.literal("[" + name + "] ").formatted(Formatting.GOLD).append(Text.literal(l).formatted(Formatting.WHITE)), false);
+            p.sendSystemMessage(Component.literal("[" + name + "] ").withStyle(ChatFormatting.GOLD).append(Component.literal(l).withStyle(ChatFormatting.WHITE)), false);
         }
     }
 
@@ -353,7 +353,7 @@ public final class Errands {
      * Called before an NPC's usual conversation. Returns true when the errand business took the turn: handing in, a
      * delivery, or offering new work (once every few minutes; talk again for the usual business).
      */
-    public static boolean interact(StoryNpcEntity npc, ServerPlayerEntity p) {
+    public static boolean interact(StoryNpcEntity npc, ServerPlayer p) {
         if (!ready(p)) return false;
         Role role = npc.getRole();
         // A delivery for this person?
@@ -362,7 +362,7 @@ public final class Errands {
                 if (take(p, d.parcel())) {
                     say(npc, p, d.lines());
                     put(p, e.id(), READY);
-                    p.sendMessage(Text.literal("Delivered. Go back to " + e.giver().displayName() + ".").formatted(Formatting.GREEN), false);
+                    p.sendSystemMessage(Component.literal("Delivered. Go back to " + e.giver().displayName() + ".").withStyle(ChatFormatting.GREEN), false);
                     return true;
                 }
             }
@@ -380,53 +380,53 @@ public final class Errands {
                 return false; // and on to their usual business
             }
             if (s == NONE) {
-                long now = p.getServerWorld().getTime();
-                String key = p.getUuid() + "|" + role.name();
+                long now = p.level().getGameTime();
+                String key = p.getUUID() + "|" + role.name();
                 Long last = OFFERED.get(key);
                 if (last != null && now - last < 20 * 60 * 3) return false;
                 OFFERED.put(key, now);
-                p.sendMessage(Text.literal("Errand: " + e.title()).formatted(Formatting.YELLOW, Formatting.BOLD), false);
+                p.sendSystemMessage(Component.literal("Errand: " + e.title()).withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD), false);
                 say(npc, p, e.offer());
-                p.sendMessage(Text.literal("  [Accept]").styled(st -> st.withColor(Formatting.GREEN)
-                                .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/errand accept " + e.id())))
-                        .append(Text.literal("   [Not now]").styled(st -> st.withColor(Formatting.GRAY)
-                                .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/errand later " + e.id()))))
-                        .append(Text.literal("   (talk again for their usual business)").formatted(Formatting.DARK_GRAY)), false);
+                p.sendSystemMessage(Component.literal("  [Accept]").withStyle(st -> st.withColor(ChatFormatting.GREEN)
+                                .withClickEvent(new ClickEvent.RunCommand("/errand accept " + e.id())))
+                        .append(Component.literal("   [Not now]").withStyle(st -> st.withColor(ChatFormatting.GRAY)
+                                .withClickEvent(new ClickEvent.RunCommand("/errand later " + e.id()))))
+                        .append(Component.literal("   (talk again for their usual business)").withStyle(ChatFormatting.DARK_GRAY)), false);
                 return true;
             }
         }
         return false;
     }
 
-    private static void accept(ServerPlayerEntity p, String id) {
+    private static void accept(ServerPlayer p, String id) {
         Errand e = byId(id);
         if (e == null || get(p, id) != NONE || !ready(p)) return;
         put(p, id, ACTIVE);
         put(p, id + "#n", 0);
-        p.sendMessage(Text.literal("Errand accepted: " + e.title()).formatted(Formatting.GREEN), false);
-        p.sendMessage(Text.literal("  " + objective(p, e)).formatted(Formatting.GRAY), false);
+        p.sendSystemMessage(Component.literal("Errand accepted: " + e.title()).withStyle(ChatFormatting.GREEN), false);
+        p.sendSystemMessage(Component.literal("  " + objective(p, e)).withStyle(ChatFormatting.GRAY), false);
         if (e.step() instanceof Deliver d) {
             ItemStack parcel = new ItemStack(Items.PAPER);
-            parcel.set(DataComponentTypes.CUSTOM_NAME, Text.literal(d.parcel()).formatted(Formatting.GOLD));
+            parcel.set(DataComponents.CUSTOM_NAME, Component.literal(d.parcel()).withStyle(ChatFormatting.GOLD));
             QuestData.give(p, parcel);
         }
-        p.getServerWorld().playSound(null, p.getBlockPos(), SoundEvents.ITEM_BOOK_PAGE_TURN, SoundCategory.PLAYERS, 1f, 1f);
+        p.level().playSound(null, p.blockPosition(), SoundEvents.BOOK_PAGE_TURN, SoundSource.PLAYERS, 1f, 1f);
     }
 
-    private static void complete(StoryNpcEntity npc, ServerPlayerEntity p, Errand e) {
+    private static void complete(StoryNpcEntity npc, ServerPlayer p, Errand e) {
         put(p, e.id(), DONE);
         say(npc, p, e.done());
         com.cursedtides.trade.Wallet.give(p, e.doubloons() * com.cursedtides.trade.Wallet.SILVER_PER_DOUBLOON);
         ItemStack extra = e.extra().get();
         if (extra != null && !extra.isEmpty()) QuestData.give(p, extra);
         com.cursedtides.pirate.PirateData.addXp(p, com.cursedtides.pirate.Weapon.SAILING, 40);
-        p.sendMessage(Text.literal("Errand complete: " + e.title() + " (+" + e.doubloons() + " doubloons)").formatted(Formatting.GOLD, Formatting.BOLD), false);
-        p.getServerWorld().playSound(null, p.getBlockPos(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundCategory.PLAYERS, 0.6f, 1.2f);
+        p.sendSystemMessage(Component.literal("Errand complete: " + e.title() + " (+" + e.doubloons() + " doubloons)").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), false);
+        p.level().playSound(null, p.blockPosition(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.6f, 1.2f);
         com.cursedtides.activity.Achievements.grant(p, "errand_runner");
         if (doneCount(p) >= ALL.size()) com.cursedtides.activity.Achievements.grant(p, "pillar_of_the_reach");
     }
 
-    private static int doneCount(ServerPlayerEntity p) {
+    private static int doneCount(ServerPlayer p) {
         int n = 0;
         for (Errand e : ALL) if (get(p, e.id()) == DONE) n++;
         return n;
@@ -434,27 +434,27 @@ public final class Errands {
 
     // ------------------------------------------------------------------ inventory helpers
 
-    private static int count(ServerPlayerEntity p, Item item) {
-        return p.getInventory().count(item);
+    private static int count(ServerPlayer p, Item item) {
+        return p.getInventory().countItem(item);
     }
 
-    private static void remove(ServerPlayerEntity p, Item item, int n) {
+    private static void remove(ServerPlayer p, Item item, int n) {
         var inv = p.getInventory();
-        for (int i = 0; i < inv.size() && n > 0; i++) {
-            ItemStack s = inv.getStack(i);
-            if (!s.isOf(item)) continue;
+        for (int i = 0; i < inv.getContainerSize() && n > 0; i++) {
+            ItemStack s = inv.getItem(i);
+            if (!s.is(item)) continue;
             int t = Math.min(n, s.getCount());
-            s.decrement(t);
+            s.shrink(t);
             n -= t;
         }
     }
 
-    private static boolean take(ServerPlayerEntity p, String parcelName) {
+    private static boolean take(ServerPlayer p, String parcelName) {
         var inv = p.getInventory();
-        for (int i = 0; i < inv.size(); i++) {
-            ItemStack s = inv.getStack(i);
-            if (s.isOf(Items.PAPER) && s.contains(DataComponentTypes.CUSTOM_NAME) && s.getName().getString().equals(parcelName)) {
-                s.decrement(1);
+        for (int i = 0; i < inv.getContainerSize(); i++) {
+            ItemStack s = inv.getItem(i);
+            if (s.is(Items.PAPER) && s.has(DataComponents.CUSTOM_NAME) && s.getHoverName().getString().equals(parcelName)) {
+                s.shrink(1);
                 return true;
             }
         }
@@ -466,42 +466,42 @@ public final class Errands {
     public static void register() {
         STATE.identifier();
         ServerLivingEntityEvents.AFTER_DEATH.register((victim, source) -> {
-            if (source.getAttacker() instanceof ServerPlayerEntity p) onKill(p, victim);
-            for (String t : victim.getCommandTags()) {
-                if (!t.startsWith(SLAY_TAG) || !(victim.getWorld() instanceof ServerWorld w)) continue;
+            if (source.getEntity() instanceof ServerPlayer p) onKill(p, victim);
+            for (String t : victim.entityTags()) {
+                if (!t.startsWith(SLAY_TAG) || !(victim.level() instanceof ServerLevel w)) continue;
                 String id = t.substring(SLAY_TAG.length());
                 Errand e = byId(id);
                 if (e == null || !(e.step() instanceof Slay sl) || !victim.hasCustomName() || !victim.getCustomName().getString().startsWith(sl.name())) continue;
-                for (ServerPlayerEntity p : w.getPlayers(q -> q.squaredDistanceTo(victim) < 64 * 64 && get(q, id) == ACTIVE)) {
+                for (ServerPlayer p : w.getPlayers(q -> q.distanceToSqr(victim) < 64 * 64 && get(q, id) == ACTIVE)) {
                     put(p, id, READY);
-                    p.sendMessage(Text.literal(sl.name() + " is dead. Go back to " + e.giver().displayName() + ".").formatted(Formatting.GREEN), false);
+                    p.sendSystemMessage(Component.literal(sl.name() + " is dead. Go back to " + e.giver().displayName() + ".").withStyle(ChatFormatting.GREEN), false);
                 }
             }
         });
         ServerTickEvents.END_SERVER_TICK.register(Errands::tick);
         CommandRegistrationCallback.EVENT.register((d, a, env) -> d.register(literal("errand")
                 .then(literal("accept").then(argument("id", StringArgumentType.word()).executes(ctx -> {
-                    accept(ctx.getSource().getPlayerOrThrow(), StringArgumentType.getString(ctx, "id"));
+                    accept(ctx.getSource().getPlayerOrException(), StringArgumentType.getString(ctx, "id"));
                     return 1;
                 })))
                 .then(literal("later").then(argument("id", StringArgumentType.word()).executes(ctx -> {
-                    ctx.getSource().getPlayerOrThrow().sendMessage(Text.literal("Maybe another time. (They'll ask again later.)").formatted(Formatting.GRAY), false);
+                    ctx.getSource().getPlayerOrException().sendSystemMessage(Component.literal("Maybe another time. (They'll ask again later.)").withStyle(ChatFormatting.GRAY), false);
                     return 1;
                 })))));
     }
 
     /** Any kill by a player: counts for Hunt errands. */
-    public static void onKill(ServerPlayerEntity p, LivingEntity victim) {
+    public static void onKill(ServerPlayer p, LivingEntity victim) {
         for (Errand e : ALL) {
             if (get(p, e.id()) != ACTIVE || !(e.step() instanceof Hunt h) || !h.which().test(victim)) continue;
             int n = get(p, e.id() + "#n") + 1;
             put(p, e.id() + "#n", n);
             if (n >= h.count()) {
                 put(p, e.id(), READY);
-                p.sendMessage(Text.literal(e.title() + ": done (" + h.count() + "/" + h.count() + " " + h.what() + "). Go back to "
-                        + e.giver().displayName() + ".").formatted(Formatting.GREEN), false);
+                p.sendSystemMessage(Component.literal(e.title() + ": done (" + h.count() + "/" + h.count() + " " + h.what() + "). Go back to "
+                        + e.giver().displayName() + ".").withStyle(ChatFormatting.GREEN), false);
             } else {
-                p.sendMessage(Text.literal(e.title() + ": " + n + "/" + h.count() + " " + h.what()).formatted(Formatting.GRAY), true);
+                p.sendSystemMessage(Component.literal(e.title() + ": " + n + "/" + h.count() + " " + h.what()).withStyle(ChatFormatting.GRAY), true);
             }
         }
     }
@@ -509,9 +509,9 @@ public final class Errands {
     private static final String SLAY_TAG = "ct_errand:";
 
     private static void tick(MinecraftServer server) {
-        if (server.getTicks() % 40 != 23) return;
-        ServerWorld w = server.getOverworld();
-        for (ServerPlayerEntity p : w.getPlayers()) {
+        if (server.getTickCount() % 40 != 23) return;
+        ServerLevel w = server.overworld();
+        for (ServerPlayer p : w.players()) {
             for (Errand e : ALL) {
                 if (get(p, e.id()) != ACTIVE) continue;
                 if (e.step() instanceof Find f) {
@@ -521,51 +521,51 @@ public final class Errands {
                     boolean yok = at[1] == Integer.MIN_VALUE || Math.abs(p.getY() - at[1]) < 6;
                     if (dx * dx + dz * dz < f.radius() * f.radius() && yok) {
                         put(p, e.id(), READY);
-                        p.sendMessage(Text.literal(f.found()).formatted(Formatting.AQUA, Formatting.ITALIC), false);
-                        p.sendMessage(Text.literal("Go back to " + e.giver().displayName() + ".").formatted(Formatting.GREEN), false);
-                        w.playSound(null, p.getBlockPos(), SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 1f, 0.8f);
+                        p.sendSystemMessage(Component.literal(f.found()).withStyle(ChatFormatting.AQUA, ChatFormatting.ITALIC), false);
+                        p.sendSystemMessage(Component.literal("Go back to " + e.giver().displayName() + ".").withStyle(ChatFormatting.GREEN), false);
+                        w.playSound(null, p.blockPosition(), SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 1f, 0.8f);
                     }
                 } else if (e.step() instanceof Slay sl) {
                     int[] at = sl.where().get();
-                    if (at == null || p.squaredDistanceTo(at[0], p.getY(), at[2]) > 48 * 48) continue;
+                    if (at == null || p.distanceToSqr(at[0], p.getY(), at[2]) > 48 * 48) continue;
                     String tag = SLAY_TAG + e.id();
-                    Box box = new Box(at[0] - 64, w.getBottomY(), at[2] - 64, at[0] + 64, w.getTopY(), at[2] + 64);
-                    if (!w.getEntitiesByClass(MobEntity.class, box, m -> m.getCommandTags().contains(tag)).isEmpty()) continue;
+                    AABB box = new AABB(at[0] - 64, w.getMinY(), at[2] - 64, at[0] + 64, w.getMaxY(), at[2] + 64);
+                    if (!w.getEntitiesOfClass(Mob.class, box, m -> m.entityTags().contains(tag)).isEmpty()) continue;
                     spawnMark(w, e, sl, at, tag, p);
                 }
             }
         }
     }
 
-    private static void spawnMark(ServerWorld w, Errand e, Slay sl, int[] at, String tag, ServerPlayerEntity p) {
+    private static void spawnMark(ServerLevel w, Errand e, Slay sl, int[] at, String tag, ServerPlayer p) {
         int level = Math.min(50, Levels.bandAt(new BlockPos(at[0], 64, at[2]))[1] + 2);
         for (int i = 0; i < 3; i++) {
             BlockPos pos = com.cursedtides.living.Residents.openGround(w, at[0] + (i == 0 ? 0 : (i == 1 ? 3 : -3)), at[2] + (i == 0 ? 0 : 2), 8);
             if (pos == null) continue;
-            MobEntity m = sl.type().get().create(w);
+            Mob m = sl.type().get().create(w, EntitySpawnReason.EVENT);
             if (m == null) continue;
-            m.refreshPositionAndAngles(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, w.random.nextFloat() * 360, 0);
-            m.initialize(w, w.getLocalDifficulty(pos), SpawnReason.EVENT, null);
+            m.snapTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, w.getRandom().nextFloat() * 360, 0);
+            m.finalizeSpawn(w, w.getCurrentDifficultyAt(pos), EntitySpawnReason.EVENT, null);
             if (i == 0) {
-                m.setCustomName(Text.literal(sl.name()).formatted(Formatting.RED, Formatting.BOLD));
+                m.setCustomName(Component.literal(sl.name()).withStyle(ChatFormatting.RED, ChatFormatting.BOLD));
                 m.setCustomNameVisible(true);
             }
             Levels.apply(m, i == 0 ? level + 2 : level);
             if (i == 0) {
-                EntityAttributeInstance hp = m.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
+                AttributeInstance hp = m.getAttribute(Attributes.MAX_HEALTH);
                 if (hp != null) { hp.setBaseValue(hp.getBaseValue() * 3 * Levels.healthFactor(level + 2)); m.setHealth(m.getMaxHealth()); }
             }
-            m.addCommandTag(tag);
-            m.setPersistent();
-            w.spawnEntity(m);
+            m.addTag(tag);
+            m.setPersistenceRequired();
+            w.addFreshEntity(m);
             m.setTarget(p);
         }
-        p.sendMessage(Text.literal(sl.name() + " is here, and not alone.").formatted(Formatting.RED), false);
+        p.sendSystemMessage(Component.literal(sl.name() + " is here, and not alone.").withStyle(ChatFormatting.RED), false);
     }
 
     // ------------------------------------------------------------------ the journal and the chart
 
-    private static String objective(ServerPlayerEntity p, Errand e) {
+    private static String objective(ServerPlayer p, Errand e) {
         Step s = e.step();
         if (get(p, e.id()) == READY) return "Return to " + e.giver().displayName() + ".";
         if (s instanceof Fetch f) return "Bring " + f.count() + " " + f.what() + " to " + e.giver().displayName()
@@ -577,7 +577,7 @@ public final class Errands {
         return "";
     }
 
-    public static List<String> journal(ServerPlayerEntity p) {
+    public static List<String> journal(ServerPlayer p) {
         List<String> lines = new ArrayList<>();
         for (Errand e : ALL) {
             int s = get(p, e.id());
@@ -595,7 +595,7 @@ public final class Errands {
         return null;
     }
 
-    private static Errand firstActive(ServerPlayerEntity p) {
+    private static Errand firstActive(ServerPlayer p) {
         for (Errand e : ALL) {
             int s = get(p, e.id());
             if (s == ACTIVE || s == READY) return e;
@@ -603,7 +603,7 @@ public final class Errands {
         return null;
     }
 
-    public static int[] target(ServerPlayerEntity p) {
+    public static int[] target(ServerPlayer p) {
         Errand e = firstActive(p);
         if (e == null) return null;
         if (get(p, e.id()) == READY) return npcSpot(e.giver());
@@ -615,7 +615,7 @@ public final class Errands {
         return null;
     }
 
-    public static String targetLabel(ServerPlayerEntity p) {
+    public static String targetLabel(ServerPlayer p) {
         Errand e = firstActive(p);
         return e == null ? "" : e.title();
     }

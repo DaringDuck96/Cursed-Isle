@@ -69,7 +69,7 @@
   "item.cursedtides.galleon_deed": "Galleon Deed",
   "entity.cursedtides.ship": "Ship",
   "entity.cursedtides.shipwright": "Shipwright",
-  "category.cursedtides.ship": "Cursed Tides: Ships",
+  "key.category.cursedtides.ship": "Cursed Tides: Ships",
   "key.cursedtides.sails_up": "Raise sails (aboard) / lock on to a foe (on foot)",
   "key.cursedtides.sails_down": "Lower sails",
   "key.cursedtides.fire_port": "Fire port broadside",

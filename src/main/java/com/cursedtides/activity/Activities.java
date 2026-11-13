@@ -35,13 +35,13 @@ public final class Activities {
         Specials.register("drink_round", (p, npc) -> DrinkingContest.round(p));
         Specials.register("drink_concede", (p, npc) -> DrinkingContest.concede(p));
         Specials.register("parcel", (p, npc) -> {
-            if (p.getInventory().count(Deliveries.PARCEL) >= 3) return List.of("You're carrying three already. Deliver those first.");
-            p.giveItemStack(ParcelItem.make(p, npc));
+            if (p.getInventory().countItem(Deliveries.PARCEL) >= 3) return List.of("You're carrying three already. Deliver those first.");
+            p.addItem(ParcelItem.make(p, npc));
             return List.of("Here. Sealed, so don't peek. The address is on the label, and so is the pay.");
         });
         for (Leaderboards.Board b : Leaderboards.BOARDS) {
             Specials.register("top_" + b.id(), (p, npc) -> {
-                List<String> top = Leaderboards.top(p.getServer(), b.id(), 3);
+                List<String> top = Leaderboards.top(p.level().getServer(), b.id(), 3);
                 if (top.isEmpty()) return List.of("Nobody's name on the board yet. Could be yours.");
                 return List.of("The board reads: " + String.join("; ", top) + ".");
             });

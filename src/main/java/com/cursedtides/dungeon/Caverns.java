@@ -1,5 +1,7 @@
 package com.cursedtides.dungeon;
 
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.entity.EntityTypes;
 import com.cursedtides.CursedTides;
 import com.cursedtides.pirate.PirateData;
 import com.cursedtides.pirate.Weapon;
@@ -13,39 +15,38 @@ import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.attribute.EntityAttributeInstance;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.boss.BossBar;
-import net.minecraft.entity.boss.ServerBossBar;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.entity.mob.HostileEntity;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.s2c.play.SubtitleS2CPacket;
-import net.minecraft.network.packet.s2c.play.TitleFadeS2CPacket;
-import net.minecraft.network.packet.s2c.play.TitleS2CPacket;
+import net.minecraft.ChatFormatting;
+import net.minecraft.commands.Commands;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
+import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
+import net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.command.CommandManager;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
-
+import net.minecraft.server.level.ServerBossEvent;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.BossEvent;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -67,19 +68,19 @@ public final class Caverns {
 
     public static final List<Site> SITES = List.of(
             new Site("The Weeping Catacombs", Archipelago.HOLLOWGRAVE_ISLAND, CavernTheme.CURSED, 8,
-                    "The Bone Abbot", () -> EntityType.WITHER_SKELETON, 220, 3),
+                    "The Bone Abbot", () -> EntityTypes.WITHER_SKELETON, 220, 3),
             new Site("Cinderdeep", Archipelago.ASHFALL_ISLAND, CavernTheme.VOLCANIC, 7,
-                    "The Cinder Matron", () -> EntityType.BLAZE, 180, 3),
+                    "The Cinder Matron", () -> EntityTypes.BLAZE, 180, 3),
             new Site("The Serpent's Throat", Archipelago.SERPENTS_HOLLOW, CavernTheme.JUNGLE, 8,
                     "Old Gnasher", () -> com.cursedtides.wildlife.Wildlife.CROCODILE, 260, 4),
             new Site("The Motherlode", Archipelago.GOLDWATER_CAY, CavernTheme.MINE, 7,
-                    "Claim-Jumper Grubb", () -> EntityType.VINDICATOR, 200, 3),
+                    "Claim-Jumper Grubb", () -> EntityTypes.VINDICATOR, 200, 3),
             new Site("The Drowned Grotto", Archipelago.WHISPERING_KEY, CavernTheme.DROWNED, 7,
-                    "Mother Brine", () -> EntityType.DROWNED, 240, 4),
+                    "Mother Brine", () -> EntityTypes.DROWNED, 240, 4),
             new Site("The Furnace Below", Archipelago.EMBERFALL, CavernTheme.VOLCANIC, 9,
-                    "The Slag Beast", () -> EntityType.RAVAGER, 320, 5),
+                    "The Slag Beast", () -> EntityTypes.RAVAGER, 320, 5),
             new Site("Hall of the First Light", Archipelago.LAST_HORIZON, CavernTheme.CRYSTAL, 9,
-                    "The Lantern Warden", () -> EntityType.EVOKER, 300, 5)
+                    "The Lantern Warden", () -> EntityTypes.EVOKER, 300, 5)
     );
 
     private static volatile List<Cavern> built;
@@ -167,33 +168,33 @@ public final class Caverns {
                 if (d > 5.2) continue;
                 int ground = Builds.groundY(x, z);
                 // Level the ground into a little clearing
-                for (int yy = y; yy <= Math.max(y, ground) + 3; yy++) c.set(x, yy, z, Blocks.AIR.getDefaultState());
+                for (int yy = y; yy <= Math.max(y, ground) + 3; yy++) c.set(x, yy, z, Blocks.AIR.defaultBlockState());
                 for (int yy = Math.min(y, ground) - 1; yy < y; yy++) c.set(x, yy, z, cv.theme.wall(x, yy, z));
-                c.set(x, y - 1, z, d < 4.5 ? cv.theme.floor(x, y - 1, z) : Blocks.COARSE_DIRT.getDefaultState());
+                c.set(x, y - 1, z, d < 4.5 ? cv.theme.floor(x, y - 1, z) : Blocks.COARSE_DIRT.defaultBlockState());
                 boolean opening = dx >= 2 && Math.abs(dz) <= 1;
                 if (d >= 3.2 && d <= 4.6 && !opening) {
                     int h = 1 + (int) (com.cursedtides.world.Noise.rand(x, z, 4321) * 3);
                     for (int k = 0; k < h; k++) c.set(x, y + k, z, cv.theme.wall(x, y + k, z));
                 }
                 if (Math.abs(dx) <= 1 && Math.abs(dz) <= 1) {
-                    for (int yy = y - 6; yy < y; yy++) c.set(x, yy, z, Blocks.CAVE_AIR.getDefaultState());
-                    c.set(x, y - 7, z, Blocks.BLACK_CONCRETE_POWDER.getDefaultState());
+                    for (int yy = y - 6; yy < y; yy++) c.set(x, yy, z, Blocks.CAVE_AIR.defaultBlockState());
+                    c.set(x, y - 7, z, Blocks.CONCRETE_POWDER.pick(DyeColor.BLACK).defaultBlockState());
                 }
             }
         }
         // The beam and its posts
         for (int dx = -2; dx <= 2; dx += 4) {
             if (!c.contains(mx + dx, mz)) continue;
-            c.fill(mx + dx, y, mz, mx + dx, y + 2, mz, Blocks.SPRUCE_FENCE.getDefaultState());
+            c.fill(mx + dx, y, mz, mx + dx, y + 2, mz, Blocks.SPRUCE_FENCE.defaultBlockState());
         }
-        BlockState beam = Blocks.STRIPPED_SPRUCE_LOG.getDefaultState().with(net.minecraft.block.PillarBlock.AXIS, Direction.Axis.X);
+        BlockState beam = Blocks.STRIPPED_SPRUCE_LOG.defaultBlockState().setValue(net.minecraft.world.level.block.RotatedPillarBlock.AXIS, Direction.Axis.X);
         for (int dx = -2; dx <= 2; dx++) if (c.contains(mx + dx, mz)) c.set(mx + dx, y + 3, mz, beam);
         if (c.contains(mx, mz)) {
             for (int yy = y - 6; yy <= y + 2; yy++) c.set(mx, yy, mz, Cavern.CaveRopeHolder.rope());
         }
         if (c.contains(mx + 2, mz + 1)) c.set(mx + 2, y + 3, mz + 1,
-                Blocks.LANTERN.getDefaultState().with(net.minecraft.block.LanternBlock.HANGING, false));
-        if (c.contains(mx - 2, mz - 1)) c.set(mx - 2, y + 3, mz - 1, Blocks.LANTERN.getDefaultState());
+                Blocks.LANTERN.defaultBlockState().setValue(net.minecraft.world.level.block.LanternBlock.HANGING, false));
+        if (c.contains(mx - 2, mz - 1)) c.set(mx - 2, y + 3, mz - 1, Blocks.LANTERN.defaultBlockState());
     }
 
     // ------------------------------------------------------------------ the rope
@@ -211,27 +212,27 @@ public final class Caverns {
         return null;
     }
 
-    public static void climb(ServerPlayerEntity player, BlockPos ropePos) {
+    public static void climb(ServerPlayer player, BlockPos ropePos) {
         for (Cavern c : all()) {
             if (ropePos.getY() > 20 && Math.abs(ropePos.getX() - c.mouthX) <= 3 && Math.abs(ropePos.getZ() - c.mouthZ) <= 3) {
                 BlockPos land = c.ropeLanding();
-                player.sendMessage(Text.literal("You climb down into the dark...").formatted(Formatting.GRAY), true);
+                player.sendSystemMessage(Component.literal("You climb down into the dark...").withStyle(ChatFormatting.GRAY), true);
                 travel(player, land.getX() + 1.5, land.getY(), land.getZ() + 0.5);
                 return;
             }
             if (c.contains(ropePos)) {
-                player.sendMessage(Text.literal("You haul yourself back up to daylight.").formatted(Formatting.GRAY), true);
+                player.sendSystemMessage(Component.literal("You haul yourself back up to daylight.").withStyle(ChatFormatting.GRAY), true);
                 travel(player, c.mouthX + 3.5, c.mouthY, c.mouthZ + 0.5);
                 return;
             }
         }
     }
 
-    private static void travel(ServerPlayerEntity player, double x, double y, double z) {
-        if (player.hasVehicle()) player.stopRiding();
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.BLINDNESS, 30, 0, false, false));
-        player.requestTeleport(x, y, z);
-        player.getWorld().playSound(null, x, y, z, SoundEvents.BLOCK_LADDER_STEP, SoundCategory.PLAYERS, 1f, 0.8f);
+    private static void travel(ServerPlayer player, double x, double y, double z) {
+        if (player.isPassenger()) player.stopRiding();
+        player.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 30, 0, false, false));
+        player.teleportTo(x, y, z);
+        player.level().playSound(null, x, y, z, SoundEvents.LADDER_STEP, SoundSource.PLAYERS, 1f, 0.8f);
     }
 
     // ------------------------------------------------------------------ players' records
@@ -243,7 +244,7 @@ public final class Caverns {
     public static final AttachmentType<Integer> BEATEN = AttachmentRegistry.<Integer>builder()
             .persistent(Codec.INT).copyOnDeath().initializer(() -> 0).buildAndRegister(CursedTides.id("caverns_beaten"));
 
-    public static int beatenCount(ServerPlayerEntity p) {
+    public static int beatenCount(ServerPlayer p) {
         return Integer.bitCount(p.getAttachedOrElse(BEATEN, 0));
     }
 
@@ -256,8 +257,8 @@ public final class Caverns {
     private static final class State {
         final Map<Cavern.Chamber, Long> packAt = new HashMap<>();
         long bossReady;
-        MobEntity boss;
-        ServerBossBar bar;
+        Mob boss;
+        ServerBossEvent bar;
     }
 
     private static final Map<Integer, State> STATES = new HashMap<>();
@@ -273,78 +274,78 @@ public final class Caverns {
         ServerTickEvents.END_SERVER_TICK.register(Caverns::tick);
         ServerLivingEntityEvents.AFTER_DEATH.register(Caverns::onDeath);
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) ->
-                dispatcher.register(CommandManager.literal("cursedtides")
-                        .requires(source -> source.hasPermissionLevel(2))
-                        .then(CommandManager.literal("cavern")
-                                .then(CommandManager.argument("index", IntegerArgumentType.integer(0, SITES.size() - 1))
+                dispatcher.register(Commands.literal("cursedtides")
+                        .requires(source -> source.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER))
+                        .then(Commands.literal("cavern")
+                                .then(Commands.argument("index", IntegerArgumentType.integer(0, SITES.size() - 1))
                                         .executes(ctx -> {
-                                            ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();
+                                            ServerPlayer p = ctx.getSource().getPlayerOrException();
                                             Cavern c = all().get(IntegerArgumentType.getInteger(ctx, "index"));
-                                            p.requestTeleport(c.mouthX + 3.5, c.mouthY, c.mouthZ + 0.5);
+                                            p.teleportTo(c.mouthX + 3.5, c.mouthY, c.mouthZ + 0.5);
                                             return 1;
                                         })
-                                        .then(CommandManager.literal("arena").executes(ctx -> {
-                                            ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();
+                                        .then(Commands.literal("arena").executes(ctx -> {
+                                            ServerPlayer p = ctx.getSource().getPlayerOrException();
                                             Cavern c = all().get(IntegerArgumentType.getInteger(ctx, "index"));
                                             Cavern.Chamber a = c.arena();
                                             int x = a.cx() + a.rx() / 2;
-                                            p.requestTeleport(x + 0.5, c.floorAt(a, x, a.cz()), a.cz() + 0.5);
+                                            p.teleportTo(x + 0.5, c.floorAt(a, x, a.cz()), a.cz() + 0.5);
                                             return 1;
                                         }))))));
     }
 
     private static void tick(MinecraftServer server) {
-        if (server.getTicks() % 20 != 0) return;
-        ServerWorld world = server.getOverworld();
-        long now = world.getTime();
+        if (server.getTickCount() % 20 != 0) return;
+        ServerLevel world = server.overworld();
+        long now = world.getGameTime();
         List<Cavern> caverns = all();
         if (caverns.isEmpty()) return;
-        Map<Integer, List<ServerPlayerEntity>> inside = new HashMap<>();
-        for (ServerPlayerEntity p : world.getPlayers()) {
-            Cavern c = at(p.getBlockPos());
-            Integer before = WHERE.get(p.getUuid());
+        Map<Integer, List<ServerPlayer>> inside = new HashMap<>();
+        for (ServerPlayer p : world.players()) {
+            Cavern c = at(p.blockPosition());
+            Integer before = WHERE.get(p.getUUID());
             if (c == null) {
-                WHERE.remove(p.getUuid());
+                WHERE.remove(p.getUUID());
                 for (Cavern m : caverns) {
-                    if (p.squaredDistanceTo(m.mouthX + 0.5, m.mouthY, m.mouthZ + 0.5) < 36) {
-                        p.sendMessage(Text.literal(m.name + " — use the rope to climb down").formatted(Formatting.GOLD), true);
+                    if (p.distanceToSqr(m.mouthX + 0.5, m.mouthY, m.mouthZ + 0.5) < 36) {
+                        p.sendSystemMessage(Component.literal(m.name + " — use the rope to climb down").withStyle(ChatFormatting.GOLD), true);
                     }
                 }
                 continue;
             }
             inside.computeIfAbsent(c.index, k -> new ArrayList<>()).add(p);
             if (before == null || before != c.index) {
-                WHERE.put(p.getUuid(), c.index);
+                WHERE.put(p.getUUID(), c.index);
                 enter(p, c);
             }
             if (p.isSpectator() || p.isCreative()) continue;
-            Cavern.Chamber ch = c.chamberAt(p.getBlockPos());
+            Cavern.Chamber ch = c.chamberAt(p.blockPosition());
             if (ch != null) stir(world, c, ch, p, now);
         }
         for (int i = 0; i < caverns.size(); i++) {
             State st = STATES.get(i);
-            List<ServerPlayerEntity> here = inside.getOrDefault(i, List.of());
+            List<ServerPlayer> here = inside.getOrDefault(i, List.of());
             if (st != null && st.boss != null) tendBoss(st, here);
         }
     }
 
-    private static void enter(ServerPlayerEntity p, Cavern c) {
+    private static void enter(ServerPlayer p, Cavern c) {
         Site s = SITES.get(c.index);
-        p.networkHandler.sendPacket(new TitleFadeS2CPacket(10, 60, 20));
-        p.networkHandler.sendPacket(new SubtitleS2CPacket(Text.literal("Beneath " + s.island().name()).formatted(Formatting.GRAY)));
-        p.networkHandler.sendPacket(new TitleS2CPacket(Text.literal(c.name).formatted(Formatting.GOLD)));
+        p.connection.send(new ClientboundSetTitlesAnimationPacket(10, 60, 20));
+        p.connection.send(new ClientboundSetSubtitleTextPacket(Component.literal("Beneath " + s.island().name()).withStyle(ChatFormatting.GRAY)));
+        p.connection.send(new ClientboundSetTitleTextPacket(Component.literal(c.name).withStyle(ChatFormatting.GOLD)));
         int found = p.getAttachedOrElse(FOUND, 0);
         if ((found & (1 << c.index)) == 0) {
             p.setAttached(FOUND, found | (1 << c.index));
-            p.sendMessage(Text.literal("Grand cavern discovered: " + c.name + " (" + Integer.bitCount(found | (1 << c.index))
-                    + "/" + SITES.size() + ")").formatted(Formatting.GOLD), false);
+            p.sendSystemMessage(Component.literal("Grand cavern discovered: " + c.name + " (" + Integer.bitCount(found | (1 << c.index))
+                    + "/" + SITES.size() + ")").withStyle(ChatFormatting.GOLD), false);
             PirateData.addXp(p, Weapon.EXPLORATION, 60);
             com.cursedtides.activity.Achievements.grant(p, "spelunker");
         }
     }
 
     /** Wake the chamber: a pack comes out of the dark, or in the great hall, its master. */
-    private static void stir(ServerWorld world, Cavern c, Cavern.Chamber ch, ServerPlayerEntity p, long now) {
+    private static void stir(ServerLevel world, Cavern c, Cavern.Chamber ch, ServerPlayer p, long now) {
         State st = state(c.index);
         if (ch.kind() == Cavern.Kind.ARENA) {
             if (st.boss == null && now >= st.bossReady && c.reachOf(ch, p.getBlockX(), p.getBlockZ()) < 0.8) summonBoss(world, c, ch);
@@ -353,125 +354,125 @@ public final class Caverns {
         if (ch.kind() == Cavern.Kind.ENTRY) return;
         Long last = st.packAt.get(ch);
         if (last != null && now - last < PACK_COOLDOWN) return;
-        Box box = new Box(ch.cx() - ch.rx(), ch.floor() - 4, ch.cz() - ch.rz(), ch.cx() + ch.rx() + 1, ch.floor() + ch.h(), ch.cz() + ch.rz() + 1);
-        if (world.getEntitiesByClass(HostileEntity.class, box, e -> true).size() >= 4) return;
+        AABB box = new AABB(ch.cx() - ch.rx(), ch.floor() - 4, ch.cz() - ch.rz(), ch.cx() + ch.rx() + 1, ch.floor() + ch.h(), ch.cz() + ch.rz() + 1);
+        if (world.getEntitiesOfClass(Monster.class, box, e -> true).size() >= 4) return;
         st.packAt.put(ch, now);
         Site s = SITES.get(c.index);
-        int n = 3 + world.random.nextInt(2) + (s.tier() >= 4 ? 1 : 0) + (ch.kind() == Cavern.Kind.GROTTO ? 1 : 0);
+        int n = 3 + world.getRandom().nextInt(2) + (s.tier() >= 4 ? 1 : 0) + (ch.kind() == Cavern.Kind.GROTTO ? 1 : 0);
         int spawned = 0;
         for (int k = 0; k < n * 3 && spawned < n; k++) {
-            BlockPos at = c.standable(ch, 0.35 + world.random.nextDouble() * 0.5, world.random.nextDouble() * Math.PI * 2);
-            if (at == null || at.getSquaredDistance(p.getBlockPos()) < 49) continue;
-            if (!world.getBlockState(at).isAir() || !world.getBlockState(at.up()).isAir()) continue;
-            Entity e = c.theme.pack(spawned + (int) (now / 20)).create(world);
-            if (!(e instanceof MobEntity mob)) continue;
-            mob.refreshPositionAndAngles(at.getX() + 0.5, at.getY(), at.getZ() + 0.5, world.random.nextFloat() * 360, 0);
-            mob.initialize(world, world.getLocalDifficulty(at), SpawnReason.EVENT, null);
-            world.spawnEntity(mob);
+            BlockPos at = c.standable(ch, 0.35 + world.getRandom().nextDouble() * 0.5, world.getRandom().nextDouble() * Math.PI * 2);
+            if (at == null || at.distSqr(p.blockPosition()) < 49) continue;
+            if (!world.getBlockState(at).isAir() || !world.getBlockState(at.above()).isAir()) continue;
+            Entity e = c.theme.pack(spawned + (int) (now / 20)).create(world, EntitySpawnReason.EVENT);
+            if (!(e instanceof Mob mob)) continue;
+            mob.snapTo(at.getX() + 0.5, at.getY(), at.getZ() + 0.5, world.getRandom().nextFloat() * 360, 0);
+            mob.finalizeSpawn(world, world.getCurrentDifficultyAt(at), EntitySpawnReason.EVENT, null);
+            world.addFreshEntity(mob);
             spawned++;
         }
         if (spawned > 0) {
-            world.playSound(null, p.getBlockPos(), SoundEvents.AMBIENT_CAVE.value(), SoundCategory.HOSTILE, 1f, 0.8f);
+            world.playSound(null, p.blockPosition(), SoundEvents.AMBIENT_CAVE.value(), SoundSource.HOSTILE, 1f, 0.8f);
         }
     }
 
-    private static void summonBoss(ServerWorld world, Cavern c, Cavern.Chamber ch) {
+    private static void summonBoss(ServerLevel world, Cavern c, Cavern.Chamber ch) {
         State st = state(c.index);
-        Box hall = new Box(ch.cx() - ch.rx(), ch.floor() - 4, ch.cz() - ch.rz(), ch.cx() + ch.rx() + 1, ch.floor() + ch.h(), ch.cz() + ch.rz() + 1);
+        AABB hall = new AABB(ch.cx() - ch.rx(), ch.floor() - 4, ch.cz() - ch.rz(), ch.cx() + ch.rx() + 1, ch.floor() + ch.h(), ch.cz() + ch.rz() + 1);
         // One that was already here (saved with the chunk)? Take it back up.
-        List<MobEntity> old = world.getEntitiesByClass(MobEntity.class, hall, e -> e.getCommandTags().contains(TAG + c.index));
+        List<Mob> old = world.getEntitiesOfClass(Mob.class, hall, e -> e.entityTags().contains(TAG + c.index));
         Site s = SITES.get(c.index);
         if (!old.isEmpty()) {
             st.boss = old.get(0);
         } else {
-            Entity e = s.boss().get().create(world);
-            if (!(e instanceof MobEntity mob)) return;
+            Entity e = s.boss().get().create(world, EntitySpawnReason.EVENT);
+            if (!(e instanceof Mob mob)) return;
             int y = c.floorAt(ch, ch.cx(), ch.cz());
             BlockPos at = new BlockPos(ch.cx(), y, ch.cz());
-            mob.refreshPositionAndAngles(at.getX() + 0.5, y, at.getZ() + 0.5, 0, 0);
-            mob.initialize(world, world.getLocalDifficulty(at), SpawnReason.EVENT, null);
-            mob.setCustomName(Text.literal(s.bossName()).formatted(Formatting.DARK_RED, Formatting.BOLD));
+            mob.snapTo(at.getX() + 0.5, y, at.getZ() + 0.5, 0, 0);
+            mob.finalizeSpawn(world, world.getCurrentDifficultyAt(at), EntitySpawnReason.EVENT, null);
+            mob.setCustomName(Component.literal(s.bossName()).withStyle(ChatFormatting.DARK_RED, ChatFormatting.BOLD));
             mob.setCustomNameVisible(true);
-            mob.setPersistent();
-            scale(mob, EntityAttributes.GENERIC_MAX_HEALTH, s.health());
+            mob.setPersistenceRequired();
+            scale(mob, Attributes.MAX_HEALTH, s.health());
             mob.setHealth(s.health());
-            EntityAttributeInstance atk = mob.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE);
+            AttributeInstance atk = mob.getAttribute(Attributes.ATTACK_DAMAGE);
             if (atk != null) atk.setBaseValue(atk.getBaseValue() * (1.3 + s.tier() * 0.15));
-            scale(mob, EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, 0.8);
-            if (mob.getType() == EntityType.DROWNED) mob.equipStack(EquipmentSlot.MAINHAND, new ItemStack(Items.TRIDENT));
-            if (mob.getType() == EntityType.WITHER_SKELETON) mob.equipStack(EquipmentSlot.MAINHAND, new ItemStack(Items.NETHERITE_SWORD));
-            if (mob.getType() == EntityType.VINDICATOR) mob.equipStack(EquipmentSlot.HEAD, new ItemStack(Items.IRON_HELMET));
-            for (EquipmentSlot slot : EquipmentSlot.values()) mob.setEquipmentDropChance(slot, 0f);
-            mob.addCommandTag(TAG);
-            mob.addCommandTag(TAG + c.index);
-            world.spawnEntity(mob);
+            scale(mob, Attributes.KNOCKBACK_RESISTANCE, 0.8);
+            if (mob.getType() == EntityTypes.DROWNED) mob.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.TRIDENT));
+            if (mob.getType() == EntityTypes.WITHER_SKELETON) mob.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.NETHERITE_SWORD));
+            if (mob.getType() == EntityTypes.VINDICATOR) mob.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.IRON_HELMET));
+            for (EquipmentSlot slot : EquipmentSlot.values()) mob.setDropChance(slot, 0f);
+            mob.addTag(TAG);
+            mob.addTag(TAG + c.index);
+            world.addFreshEntity(mob);
             // Its retinue
             for (int k = 0; k < 2 + s.tier() / 2; k++) {
-                BlockPos g = c.standable(ch, 0.3 + world.random.nextDouble() * 0.3, Math.PI * 2 * k / 4.0);
+                BlockPos g = c.standable(ch, 0.3 + world.getRandom().nextDouble() * 0.3, Math.PI * 2 * k / 4.0);
                 if (g == null) continue;
-                Entity ge = c.theme.pack(k).create(world);
-                if (!(ge instanceof MobEntity guard)) continue;
-                guard.refreshPositionAndAngles(g.getX() + 0.5, g.getY(), g.getZ() + 0.5, 0, 0);
-                guard.initialize(world, world.getLocalDifficulty(g), SpawnReason.EVENT, null);
-                world.spawnEntity(guard);
+                Entity ge = c.theme.pack(k).create(world, EntitySpawnReason.EVENT);
+                if (!(ge instanceof Mob guard)) continue;
+                guard.snapTo(g.getX() + 0.5, g.getY(), g.getZ() + 0.5, 0, 0);
+                guard.finalizeSpawn(world, world.getCurrentDifficultyAt(g), EntitySpawnReason.EVENT, null);
+                world.addFreshEntity(guard);
             }
-            for (ServerPlayerEntity p : world.getPlayers(p -> hall.contains(p.getPos()))) {
-                p.networkHandler.sendPacket(new TitleFadeS2CPacket(5, 50, 15));
-                p.networkHandler.sendPacket(new SubtitleS2CPacket(Text.literal("stirs in the deep").formatted(Formatting.GRAY)));
-                p.networkHandler.sendPacket(new TitleS2CPacket(Text.literal(s.bossName()).formatted(Formatting.DARK_RED)));
+            for (ServerPlayer p : world.getPlayers(p -> hall.contains(p.position()))) {
+                p.connection.send(new ClientboundSetTitlesAnimationPacket(5, 50, 15));
+                p.connection.send(new ClientboundSetSubtitleTextPacket(Component.literal("stirs in the deep").withStyle(ChatFormatting.GRAY)));
+                p.connection.send(new ClientboundSetTitleTextPacket(Component.literal(s.bossName()).withStyle(ChatFormatting.DARK_RED)));
             }
-            world.playSound(null, at, SoundEvents.ENTITY_WARDEN_EMERGE, SoundCategory.HOSTILE, 2f, 0.7f);
+            world.playSound(null, at, SoundEvents.WARDEN_EMERGE, SoundSource.HOSTILE, 2f, 0.7f);
         }
-        st.bar = new ServerBossBar(Text.literal(s.bossName()), BossBar.Color.RED, BossBar.Style.NOTCHED_10);
-        st.bar.setThickenFog(true);
-        st.bar.setDarkenSky(true);
+        st.bar = new ServerBossEvent(java.util.UUID.randomUUID(), Component.literal(s.bossName()), BossEvent.BossBarColor.RED, BossEvent.BossBarOverlay.NOTCHED_10);
+        st.bar.setCreateWorldFog(true);
+        st.bar.setDarkenScreen(true);
     }
 
-    private static void scale(MobEntity mob, net.minecraft.registry.entry.RegistryEntry<net.minecraft.entity.attribute.EntityAttribute> attr, double value) {
-        EntityAttributeInstance inst = mob.getAttributeInstance(attr);
+    private static void scale(Mob mob, net.minecraft.core.Holder<net.minecraft.world.entity.ai.attributes.Attribute> attr, double value) {
+        AttributeInstance inst = mob.getAttribute(attr);
         if (inst != null) inst.setBaseValue(value);
     }
 
-    private static void tendBoss(State st, List<ServerPlayerEntity> here) {
+    private static void tendBoss(State st, List<ServerPlayer> here) {
         if (st.boss.isRemoved() || !st.boss.isAlive()) {
             // Killed (onDeath handles it) or unloaded with the chunk: either way, stop tracking it here.
-            if (st.bar != null) st.bar.clearPlayers();
+            if (st.bar != null) st.bar.removeAllPlayers();
             st.bar = null;
             st.boss = null;
             return;
         }
         if (st.bar == null) return;
-        st.bar.setPercent(Math.max(0f, st.boss.getHealth() / st.boss.getMaxHealth()));
-        for (ServerPlayerEntity p : List.copyOf(st.bar.getPlayers())) if (!here.contains(p)) st.bar.removePlayer(p);
-        for (ServerPlayerEntity p : here) {
-            if (p.squaredDistanceTo(st.boss) < 48 * 48) st.bar.addPlayer(p);
+        st.bar.setProgress(Math.max(0f, st.boss.getHealth() / st.boss.getMaxHealth()));
+        for (ServerPlayer p : List.copyOf(st.bar.getPlayers())) if (!here.contains(p)) st.bar.removePlayer(p);
+        for (ServerPlayer p : here) {
+            if (p.distanceToSqr(st.boss) < 48 * 48) st.bar.addPlayer(p);
             else st.bar.removePlayer(p);
         }
     }
 
     private static void onDeath(LivingEntity entity, DamageSource source) {
-        if (!entity.getCommandTags().contains(TAG) || !(entity.getWorld() instanceof ServerWorld world)) return;
+        if (!entity.entityTags().contains(TAG) || !(entity.level() instanceof ServerLevel world)) return;
         int index = -1;
-        for (int i = 0; i < SITES.size(); i++) if (entity.getCommandTags().contains(TAG + i)) index = i;
+        for (int i = 0; i < SITES.size(); i++) if (entity.entityTags().contains(TAG + i)) index = i;
         if (index < 0) return;
         Cavern c = all().get(index);
         Site s = SITES.get(index);
         State st = state(index);
-        st.bossReady = world.getTime() + BOSS_COOLDOWN;
-        if (st.bar != null) st.bar.clearPlayers();
+        st.bossReady = world.getGameTime() + BOSS_COOLDOWN;
+        if (st.bar != null) st.bar.removeAllPlayers();
         st.bar = null;
         st.boss = null;
-        world.playSound(null, entity.getBlockPos(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundCategory.PLAYERS, 1f, 0.9f);
-        for (ServerPlayerEntity p : world.getPlayers(p -> c.contains(p.getBlockPos()) && p.squaredDistanceTo(entity) < 64 * 64)) {
-            p.sendMessage(Text.literal(s.bossName() + " is beaten! The hoard of " + c.name + " is yours.").formatted(Formatting.GOLD), false);
+        world.playSound(null, entity.blockPosition(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1f, 0.9f);
+        for (ServerPlayer p : world.getPlayers(p -> c.contains(p.blockPosition()) && p.distanceToSqr(entity) < 64 * 64)) {
+            p.sendSystemMessage(Component.literal(s.bossName() + " is beaten! The hoard of " + c.name + " is yours.").withStyle(ChatFormatting.GOLD), false);
             com.cursedtides.trade.Wallet.give(p, (20 + s.tier() * 15) * com.cursedtides.trade.Wallet.SILVER_PER_DOUBLOON);
             PirateData.addXp(p, Weapon.EXPLORATION, 80 + s.tier() * 40);
             ItemStack arm = com.cursedtides.combat.GearRarity.randomWeapon(world, p.getRandom(), s.tier());
             if (com.cursedtides.combat.GearRarity.isLegendary(arm)) com.cursedtides.activity.Achievements.grant(p, "legendary_find");
-            if (!p.getInventory().insertStack(arm)) p.dropItem(arm, false);
+            if (!p.getInventory().add(arm)) p.drop(arm, false, net.minecraft.util.Prediction.SERVER_ONLY);
             if (p.getRandom().nextInt(4) < s.tier() - 1) {
                 ItemStack trinket = new ItemStack(com.cursedtides.appearance.Accessories.random(p.getRandom(), true));
-                if (!p.getInventory().insertStack(trinket)) p.dropItem(trinket, false);
+                if (!p.getInventory().add(trinket)) p.drop(trinket, false, net.minecraft.util.Prediction.SERVER_ONLY);
             }
             int beaten = p.getAttachedOrElse(BEATEN, 0) | (1 << index);
             p.setAttached(BEATEN, beaten);

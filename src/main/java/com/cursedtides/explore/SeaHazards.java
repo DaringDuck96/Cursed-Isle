@@ -5,18 +5,16 @@ import com.cursedtides.world.Archipelago;
 import com.cursedtides.entity.ShipEntity;
 import com.cursedtides.world.ModWorld;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.entity.Entity;
-import net.minecraft.particle.ParticleTypes;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Vec3d;
-
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +54,7 @@ public final class SeaHazards {
             new FogBank("the Nowhere Mist", Archipelago.rx(-940, -720), Archipelago.rz(-940, -720), 338),
             new FogBank("the Crown's Veil", Archipelago.rx(1140, 320), Archipelago.rz(1140, 320), 286));
 
-    private static final Map<UUID, Vec3d> LAST_VEL = new HashMap<>();
+    private static final Map<UUID, Vec3> LAST_VEL = new HashMap<>();
     private static final Map<UUID, String> LAST_ZONE = new HashMap<>();
     private static final Map<UUID, Long> RAM_READY = new HashMap<>();
 
@@ -66,17 +64,17 @@ public final class SeaHazards {
 
     private static void tick(MinecraftServer server) {
         if (!ModWorld.isArchipelago()) return;
-        ServerWorld world = server.getOverworld();
-        int t = server.getTicks();
-        for (ServerPlayerEntity p : world.getPlayers()) {
+        ServerLevel world = server.overworld();
+        int t = server.getTickCount();
+        for (ServerPlayer p : world.players()) {
             if (!(p.getVehicle() instanceof ShipEntity ship) || ship.getControllingPassenger() != p) {
                 if (t % 40 == 0) announce(p);
                 continue;
             }
-            Vec3d pos = ship.getPos();
+            Vec3 pos = ship.position();
             var fig = ship.getFigurehead();
             if (fig == com.cursedtides.ship.FigureheadItem.Kind.EAGLE && t % 200 == 0) {
-                for (ShipEntity other : world.getEntitiesByClass(ShipEntity.class, ship.getBoundingBox().expand(150), o -> o != ship && o.isHostile())) {
+                for (ShipEntity other : world.getEntitiesOfClass(ShipEntity.class, ship.getBoundingBox().inflate(150), o -> o != ship && o.isHostile())) {
                     other.addStatusEffectGlow();
                 }
             }
@@ -87,77 +85,77 @@ public final class SeaHazards {
                 double d = Math.sqrt(dx * dx + dz * dz);
                 if (d > w.radius() * 1.6) continue;
                 double pull = 0.02 * (1 - d / (w.radius() * 1.6)) + 0.004;
-                Vec3d in = new Vec3d(dx, 0, dz).normalize();
-                Vec3d spin = new Vec3d(-in.z, 0, in.x);
-                ship.addVelocity(in.x * pull + spin.x * pull * 1.4, 0, in.z * pull + spin.z * pull * 1.4);
-                ship.setYaw(ship.getYaw() + 0.8f);
+                Vec3 in = new Vec3(dx, 0, dz).normalize();
+                Vec3 spin = new Vec3(-in.z, 0, in.x);
+                ship.push(in.x * pull + spin.x * pull * 1.4, 0, in.z * pull + spin.z * pull * 1.4);
+                ship.setYRot(ship.getYRot() + 0.8f);
                 if (d < 5 && t % 20 == 0) ship.seaDamage(world, 6f, "The whirlpool's heart grinds at the hull!");
             }
             for (Current c : CURRENTS) {
                 if (kraken) break;
-                Vec3d a = new Vec3d(c.x1(), 0, c.z1()), b = new Vec3d(c.x2(), 0, c.z2());
-                Vec3d ab = b.subtract(a);
+                Vec3 a = new Vec3(c.x1(), 0, c.z1()), b = new Vec3(c.x2(), 0, c.z2());
+                Vec3 ab = b.subtract(a);
                 double len = ab.length();
-                Vec3d dir = ab.multiply(1 / len);
-                Vec3d ap = new Vec3d(pos.x, 0, pos.z).subtract(a);
-                double along = ap.dotProduct(dir);
+                Vec3 dir = ab.scale(1 / len);
+                Vec3 ap = new Vec3(pos.x, 0, pos.z).subtract(a);
+                double along = ap.dot(dir);
                 if (along < 0 || along > len) continue;
-                double off = ap.subtract(dir.multiply(along)).length();
+                double off = ap.subtract(dir.scale(along)).length();
                 if (off > c.width()) continue;
-                ship.addVelocity(dir.x * c.strength(), 0, dir.z * c.strength());
+                ship.push(dir.x * c.strength(), 0, dir.z * c.strength());
             }
             // Running aground: a sudden stop against land at speed
-            Vec3d before = LAST_VEL.getOrDefault(ship.getUuid(), Vec3d.ZERO);
-            double speed = before.horizontalLength();
+            Vec3 before = LAST_VEL.getOrDefault(ship.getUUID(), Vec3.ZERO);
+            double speed = before.horizontalDistance();
             // Ramming: drive your bow into another ship at speed
-            if (speed > 0.3 && RAM_READY.getOrDefault(ship.getUuid(), 0L) < world.getTime()) {
-                Vec3d fwd = Vec3d.fromPolar(0, ship.getYaw());
-                net.minecraft.util.math.Box bow = ship.getBoundingBox().offset(fwd.multiply(2 * ship.shipClass().scale())).expand(1.5, 1, 1.5);
-                for (ShipEntity other : world.getEntitiesByClass(ShipEntity.class, bow, o -> o != ship && o.isAlive())) {
+            if (speed > 0.3 && RAM_READY.getOrDefault(ship.getUUID(), 0L) < world.getGameTime()) {
+                Vec3 fwd = Vec3.directionFromRotation(0, ship.getYRot());
+                net.minecraft.world.phys.AABB bow = ship.getBoundingBox().move(fwd.scale(2 * ship.shipClass().scale())).inflate(1.5, 1, 1.5);
+                for (ShipEntity other : world.getEntitiesOfClass(ShipEntity.class, bow, o -> o != ship && o.isAlive())) {
                     float hit = (float) (speed * 60 * ship.shipClass().scale());
-                    other.damage(world.getDamageSources().playerAttack(p), hit);
+                    other.hurt(world.damageSources().playerAttack(p), hit);
                     ship.seaDamage(world, hit * 0.25f, "Ramming speed! You stove in her side.");
-                    other.setVelocity(other.getVelocity().add(fwd.multiply(speed * 0.8)));
-                    ship.setVelocity(ship.getVelocity().multiply(0.2));
-                    world.playSound(null, other.getBlockPos(), net.minecraft.sound.SoundEvents.ENTITY_ZOMBIE_BREAK_WOODEN_DOOR, SoundCategory.NEUTRAL, 2f, 0.4f);
-                    world.spawnParticles(ParticleTypes.EXPLOSION, other.getX(), other.getY() + 1, other.getZ(), 2, 1, 0.5, 1, 0);
+                    other.setDeltaMovement(other.getDeltaMovement().add(fwd.scale(speed * 0.8)));
+                    ship.setDeltaMovement(ship.getDeltaMovement().scale(0.2));
+                    world.playSound(null, other.blockPosition(), net.minecraft.sounds.SoundEvents.ZOMBIE_BREAK_WOODEN_DOOR, SoundSource.NEUTRAL, 2f, 0.4f);
+                    world.sendParticles(ParticleTypes.EXPLOSION, other.getX(), other.getY() + 1, other.getZ(), 2, 1, 0.5, 1, 0);
                     com.cursedtides.pirate.PirateData.addXp(p, com.cursedtides.pirate.Weapon.SAILING, 20);
-                    RAM_READY.put(ship.getUuid(), world.getTime() + 60);
+                    RAM_READY.put(ship.getUUID(), world.getGameTime() + 60);
                     break;
                 }
             }
             if (ship.horizontalCollision && speed > 0.35 && t % 5 == 0) {
                 ship.seaDamage(world, (float) (speed * 30), "You've run aground! Timbers crack below the waterline.");
-                ship.setVelocity(before.multiply(-0.3));
+                ship.setDeltaMovement(before.scale(-0.3));
             }
-            LAST_VEL.put(ship.getUuid(), ship.getVelocity());
+            LAST_VEL.put(ship.getUUID(), ship.getDeltaMovement());
             if (t % 40 == 0) announce(p);
         }
         if (t % 10 == 0) {
             for (Whirlpool w : WHIRLPOOLS) {
-                if (world.getClosestPlayer(w.x(), 62, w.z(), 96, false) == null) continue;
+                if (world.getNearestPlayer(w.x(), 62, w.z(), 96, false) == null) continue;
                 for (int i = 0; i < 6; i++) {
                     double a = (t / 10.0 + i) * 0.9, r = 3 + (i * 4) % w.radius();
-                    world.spawnParticles(ParticleTypes.SPLASH, w.x() + Math.cos(a) * r, 63, w.z() + Math.sin(a) * r, 6, 0.6, 0, 0.6, 0.1);
-                    world.spawnParticles(ParticleTypes.BUBBLE_COLUMN_UP, w.x() + Math.cos(a) * r * 0.5, 62, w.z() + Math.sin(a) * r * 0.5, 3, 0.3, 0.2, 0.3, 0.05);
+                    world.sendParticles(ParticleTypes.SPLASH, w.x() + Math.cos(a) * r, 63, w.z() + Math.sin(a) * r, 6, 0.6, 0, 0.6, 0.1);
+                    world.sendParticles(ParticleTypes.BUBBLE_COLUMN_UP, w.x() + Math.cos(a) * r * 0.5, 62, w.z() + Math.sin(a) * r * 0.5, 3, 0.3, 0.2, 0.3, 0.05);
                 }
-                if (t % 60 == 0) world.playSound(null, w.x(), 62, w.z(), com.cursedtides.sound.ModSounds.WHIRLPOOL.value(), SoundCategory.AMBIENT, 4f, 1f);
+                if (t % 60 == 0) world.playSound(null, w.x(), 62, w.z(), com.cursedtides.sound.ModSounds.WHIRLPOOL.value(), SoundSource.AMBIENT, 4f, 1f);
             }
         }
     }
 
-    private static void announce(ServerPlayerEntity p) {
+    private static void announce(ServerPlayer p) {
         String zone = null;
         for (Whirlpool w : WHIRLPOOLS) if (near(p, w.x(), w.z(), w.radius() * 2)) zone = "whirlpool:" + w.name();
         for (FogBank f : FOG) if (zone == null && near(p, f.x(), f.z(), f.radius())) zone = "fog:" + f.name();
-        String last = LAST_ZONE.get(p.getUuid());
+        String last = LAST_ZONE.get(p.getUUID());
         if (zone != null && !zone.equals(last)) {
             String name = zone.substring(zone.indexOf(':') + 1);
-            p.sendMessage(Text.literal(zone.startsWith("fog") ? "Fog closes in: " + name + "." : "The sea is turning! " + capital(name) + " is close.")
-                    .formatted(zone.startsWith("fog") ? Formatting.GRAY : Formatting.DARK_AQUA, Formatting.ITALIC), true);
+            p.sendSystemMessage(Component.literal(zone.startsWith("fog") ? "Fog closes in: " + name + "." : "The sea is turning! " + capital(name) + " is close.")
+                    .withStyle(zone.startsWith("fog") ? ChatFormatting.GRAY : ChatFormatting.DARK_AQUA, ChatFormatting.ITALIC), true);
         }
-        if (zone == null) LAST_ZONE.remove(p.getUuid());
-        else LAST_ZONE.put(p.getUuid(), zone);
+        if (zone == null) LAST_ZONE.remove(p.getUUID());
+        else LAST_ZONE.put(p.getUUID(), zone);
     }
 
     private static String capital(String s) {
@@ -180,7 +178,7 @@ public final class SeaHazards {
     }
 
     @SuppressWarnings("unused")
-    private static Box box(int x, int z, int r) {
-        return new Box(x - r, 0, z - r, x + r, 256, z + r);
+    private static AABB box(int x, int z, int r) {
+        return new AABB(x - r, 0, z - r, x + r, 256, z + r);
     }
 }

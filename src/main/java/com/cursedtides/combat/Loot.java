@@ -1,38 +1,37 @@
 package com.cursedtides.combat;
 
+import net.minecraft.world.InteractionResult;
 import com.cursedtides.CursedTides;
 import com.cursedtides.item.ModItems;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
-import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.NbtComponent;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.SimpleInventory;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.tooltip.TooltipType;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.screen.GenericContainerScreenHandler;
-import net.minecraft.screen.ScreenHandlerType;
-import net.minecraft.screen.SimpleNamedScreenHandlerFactory;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Hand;
-import net.minecraft.util.Rarity;
-import net.minecraft.util.TypedActionResult;
-import net.minecraft.util.math.random.Random;
-import net.minecraft.world.World;
-
+import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.Registry;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.ChestMenu;
+import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Rarity;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.level.Level;
 import java.util.List;
 
 /**
@@ -63,27 +62,29 @@ public final class Loot {
     public static class ContainerItem extends Item {
         final Tier tier;
 
-        public ContainerItem(Settings s, Tier tier) {
+        public ContainerItem(Properties s, Tier tier) {
             super(s);
             this.tier = tier;
         }
 
         @Override
-        public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
-            ItemStack stack = user.getStackInHand(hand);
-            if (world.isClient || !(user instanceof ServerPlayerEntity p)) return TypedActionResult.success(stack, true);
-            int level = stack.getOrDefault(DataComponentTypes.CUSTOM_DATA, NbtComponent.DEFAULT).copyNbt().getInt("Level");
-            stack.decrement(1);
+        public InteractionResult use(Level world, Player user, InteractionHand hand) {
+            ItemStack stack = user.getItemInHand(hand);
+            if (world.isClientSide() || !(user instanceof ServerPlayer p)) return InteractionResult.SUCCESS;
+            int level = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag().getIntOr("Level", 0);
+            stack.shrink(1);
             open(p, tier, Math.max(1, level));
-            return TypedActionResult.success(stack, false);
+            return InteractionResult.SUCCESS;
         }
 
         @Override
-        public void appendTooltip(ItemStack stack, TooltipContext context, List<Text> tooltip, TooltipType type) {
-            int level = stack.getOrDefault(DataComponentTypes.CUSTOM_DATA, NbtComponent.DEFAULT).copyNbt().getInt("Level");
-            if (level > 0) tooltip.add(Text.literal("Taken from a level " + level + " foe").formatted(Formatting.GRAY));
-            tooltip.add(Text.literal("Use to open").formatted(Formatting.DARK_GRAY));
-        }
+        public void appendHoverText(ItemStack stack, TooltipContext context, net.minecraft.world.item.component.TooltipDisplay display__, java.util.function.Consumer<Component> adder__, TooltipFlag type) {
+        java.util.List<Component> tooltip = new java.util.ArrayList<>();
+            int level = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag().getIntOr("Level", 0);
+            if (level > 0) tooltip.add(Component.literal("Taken from a level " + level + " foe").withStyle(ChatFormatting.GRAY));
+            tooltip.add(Component.literal("Use to open").withStyle(ChatFormatting.DARK_GRAY));
+        tooltip.forEach(adder__);
+    }
     }
 
     public static final Item POUCH = reg(Tier.POUCH);
@@ -91,46 +92,46 @@ public final class Loot {
     public static final Item SKULL = reg(Tier.SKULL);
 
     private static Item reg(Tier t) {
-        return Registry.register(Registries.ITEM, CursedTides.id(t.id), new ContainerItem(new Item.Settings().maxCount(16).rarity(t.rarity), t));
+        return Registry.register(BuiltInRegistries.ITEM, com.cursedtides.util.Reg.itemId(t.id), new ContainerItem(com.cursedtides.util.Reg.props().stacksTo(16).rarity(t.rarity), t));
     }
 
     public static ItemStack container(Tier t, int level) {
         ItemStack s = new ItemStack(t == Tier.POUCH ? POUCH : t == Tier.CHEST ? CHEST : SKULL);
-        NbtCompound n = new NbtCompound();
+        CompoundTag n = new CompoundTag();
         n.putInt("Level", level);
-        s.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(n));
+        s.set(DataComponents.CUSTOM_DATA, CustomData.of(n));
         return s;
     }
 
     public static void register() {
-        ItemGroupEvents.modifyEntriesEvent(RegistryKey.of(RegistryKeys.ITEM_GROUP, CursedTides.id("main"))).register(e -> {
-            e.add(POUCH);
-            e.add(CHEST);
-            e.add(SKULL);
+        CreativeModeTabEvents.modifyOutputEvent(ResourceKey.create(Registries.CREATIVE_MODE_TAB, CursedTides.id("main"))).register(e -> {
+            e.accept(POUCH);
+            e.accept(CHEST);
+            e.accept(SKULL);
         });
         ServerLivingEntityEvents.AFTER_DEATH.register(Loot::onDeath);
     }
 
     private static void onDeath(LivingEntity victim, DamageSource source) {
-        if (!(source.getAttacker() instanceof ServerPlayerEntity) || !(victim.getWorld() instanceof ServerWorld w)) return;
+        if (!(source.getEntity() instanceof ServerPlayer) || !(victim.level() instanceof ServerLevel w)) return;
         int lv = Levels.levelOf(victim);
         if (lv <= 0) return;
         boolean big = victim.hasCustomName() && victim.isCustomNameVisible(); // elites and bosses wear their names openly
-        Random r = w.random;
+        RandomSource r = w.getRandom();
         Tier t = null;
         if (big) t = lv >= 15 ? Tier.SKULL : Tier.CHEST;
         else if (lv >= 20 && r.nextFloat() < 0.03f) t = Tier.SKULL;
         else if (lv >= 6 && r.nextFloat() < 0.10f) t = Tier.CHEST;
         else if (r.nextFloat() < 0.40f) t = Tier.POUCH;
-        if (t != null) victim.dropStack(container(t, lv));
+        if (t != null) com.cursedtides.util.Compat.drop(victim, container(t, lv));
     }
 
     /** Fill a loot window and show it; anything not taken is put in the pack when it closes. */
-    private static void open(ServerPlayerEntity p, Tier tier, int level) {
-        SimpleInventory inv = new SimpleInventory(9);
-        Random r = p.getRandom();
+    private static void open(ServerPlayer p, Tier tier, int level) {
+        SimpleContainer inv = new SimpleContainer(9);
+        RandomSource r = p.getRandom();
         int coins = (1 + level / 3) * tier.rolls + r.nextInt(3 + level);
-        inv.addStack(new ItemStack(ModItems.DOUBLOON, Math.min(64, Math.max(1, coins / 3))));
+        inv.addItem(new ItemStack(ModItems.DOUBLOON, Math.min(64, Math.max(1, coins / 3))));
         for (int i = 0; i < tier.rolls; i++) {
             float roll = r.nextFloat();
             ItemStack s;
@@ -138,26 +139,26 @@ public final class Loot {
             else if (roll < 0.45f) s = new ItemStack(Grenades.FIREBOMB, 1 + r.nextInt(2));
             else if (roll < 0.58f) s = com.cursedtides.explore.Collectibles.randomFor(p, null);
             else if (roll < 0.72f) s = new ItemStack(com.cursedtides.appearance.Accessories.random(r, tier != Tier.POUCH));
-            else if (roll < 0.86f || tier == Tier.SKULL) s = GearRarity.randomWeapon(p.getServerWorld(), r, Math.min(5, 1 + level / 10 + tier.ordinal()));
+            else if (roll < 0.86f || tier == Tier.SKULL) s = GearRarity.randomWeapon(p.level(), r, Math.min(5, 1 + level / 10 + tier.ordinal()));
             else s = new ItemStack(ModItems.DOUBLOON, 1 + r.nextInt(4));
-            if (s != null && !s.isEmpty()) inv.addStack(s);
+            if (s != null && !s.isEmpty()) inv.addItem(s);
         }
         // Now and then, a letter: the start of one of the found tales
         if (r.nextFloat() < (tier == Tier.POUCH ? 0.03f : 0.2f)) {
             ItemStack letter = com.cursedtides.quest.Letters.forLoot(p);
-            if (!letter.isEmpty()) inv.addStack(letter);
+            if (!letter.isEmpty()) inv.addItem(letter);
         }
-        p.getWorld().playSound(null, p.getBlockPos(), SoundEvents.BLOCK_CHEST_OPEN, SoundCategory.PLAYERS, 0.6f, 1.2f);
-        p.openHandledScreen(new SimpleNamedScreenHandlerFactory((syncId, playerInv, player) ->
-                new GenericContainerScreenHandler(ScreenHandlerType.GENERIC_9X1, syncId, playerInv, inv, 1) {
+        p.level().playSound(null, p.blockPosition(), SoundEvents.CHEST_OPEN, SoundSource.PLAYERS, 0.6f, 1.2f);
+        p.openMenu(new SimpleMenuProvider((syncId, playerInv, player) ->
+                new ChestMenu(MenuType.GENERIC_9x1, syncId, playerInv, inv, 1) {
                     @Override
-                    public void onClosed(PlayerEntity who) {
-                        super.onClosed(who);
-                        for (int i = 0; i < inv.size(); i++) {
-                            ItemStack left = inv.removeStack(i);
-                            if (!left.isEmpty()) who.getInventory().offerOrDrop(left);
+                    public void removed(Player who) {
+                        super.removed(who);
+                        for (int i = 0; i < inv.getContainerSize(); i++) {
+                            ItemStack left = inv.removeItemNoUpdate(i);
+                            if (!left.isEmpty()) who.getInventory().placeItemBackInInventory(left, net.minecraft.util.Prediction.SERVER_ONLY);
                         }
                     }
-                }, Text.literal(tier.title + " (Lv " + level + ")")));
+                }, Component.literal(tier.title + " (Lv " + level + ")")));
     }
 }
