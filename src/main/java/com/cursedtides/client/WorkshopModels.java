@@ -123,7 +123,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(28, 0).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(12, 33).addBox(-4.3f, -8.3f, 0.5f, 8.6f, 10.0f, 4.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(12, 33).addBox(-4.3f, -8.3f, 0.5f, 8.6f, 10.0f, 4.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 17).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(0, 0).addBox(-4.5f, 0.0f, -2.5f, 9.0f, 12.0f, 5.0f).texOffs(38, 33).addBox(-4.5f, 12.0f, 1.5f, 9.0f, 6.0f, 1.5f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(24, 17).addBox(-2.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(36, 17).addBox(-1.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -136,7 +136,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(28, 0).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 48).addBox(-6.0f, -9.0f, -6.0f, 12.0f, 1.0f, 12.0f).texOffs(0, 61).addBox(-4.5f, -11.5f, -4.5f, 9.0f, 3.0f, 9.0f).texOffs(0, 73).addBox(-5.5f, -10.5f, -6.5f, 11.0f, 2.0f, 1.0f).texOffs(12, 33).addBox(-4.3f, -8.3f, 0.5f, 8.6f, 10.0f, 4.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 48).addBox(-6.0f, -9.0f, -6.0f, 12.0f, 1.0f, 12.0f).texOffs(0, 61).addBox(-4.5f, -11.5f, -4.5f, 9.0f, 3.0f, 9.0f).texOffs(0, 73).addBox(-5.5f, -10.5f, -6.5f, 11.0f, 2.0f, 1.0f).texOffs(12, 33).addBox(-4.3f, -8.3f, 0.5f, 8.6f, 10.0f, 4.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 17).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(0, 0).addBox(-4.5f, 0.0f, -2.5f, 9.0f, 12.0f, 5.0f).texOffs(36, 61).addBox(-4.5f, 12.0f, 1.5f, 9.0f, 6.0f, 1.5f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(24, 17).addBox(-2.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(36, 17).addBox(-1.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -149,7 +149,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 0).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 31).addBox(-4.5f, -8.6f, -4.5f, 9.0f, 3.0f, 9.0f).texOffs(36, 31).addBox(-1.0f, -6.5f, 4.4f, 2.0f, 3.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 31).addBox(-4.5f, -8.6f, -4.5f, 9.0f, 3.0f, 9.0f).texOffs(36, 31).addBox(-1.0f, -6.5f, 4.4f, 2.0f, 3.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(32, 0).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(48, 16).addBox(-3.5f, 3.0f, -2.6f, 7.0f, 13.0f, 0.6f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(0, 16).addBox(-2.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(12, 16).addBox(-1.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -162,7 +162,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(28, 0).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f).texOffs(0, 67).addBox(-4.0f, -2.0f, -4.6f, 8.0f, 3.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 59).addBox(-7.0f, -12.0f, -2.0f, 14.0f, 4.0f, 4.0f).texOffs(0, 49).addBox(-4.5f, -9.0f, -4.5f, 9.0f, 1.0f, 9.0f).texOffs(18, 67).addBox(-1.0f, -13.0f, -2.5f, 2.0f, 2.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 59).addBox(-7.0f, -12.0f, -2.0f, 14.0f, 4.0f, 4.0f).texOffs(0, 49).addBox(-4.5f, -9.0f, -4.5f, 9.0f, 1.0f, 9.0f).texOffs(18, 67).addBox(-1.0f, -13.0f, -2.5f, 2.0f, 2.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 17).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(0, 0).addBox(-4.5f, 0.0f, -2.5f, 9.0f, 12.0f, 5.0f).texOffs(36, 59).addBox(-4.5f, 12.0f, 1.5f, 9.0f, 6.0f, 1.5f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(24, 17).addBox(-3.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(40, 17).addBox(-1.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -175,7 +175,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(28, 0).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 48).addBox(-7.0f, -12.0f, -2.0f, 14.0f, 4.0f, 4.0f).texOffs(12, 33).addBox(-4.5f, -9.0f, -4.5f, 9.0f, 1.0f, 9.0f).texOffs(58, 48).addBox(-1.0f, -13.0f, -2.5f, 2.0f, 2.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 48).addBox(-7.0f, -12.0f, -2.0f, 14.0f, 4.0f, 4.0f).texOffs(12, 33).addBox(-4.5f, -9.0f, -4.5f, 9.0f, 1.0f, 9.0f).texOffs(58, 48).addBox(-1.0f, -13.0f, -2.5f, 2.0f, 2.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 17).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(0, 0).addBox(-4.5f, 0.0f, -2.5f, 9.0f, 12.0f, 5.0f).texOffs(36, 48).addBox(-4.5f, 12.0f, 1.5f, 9.0f, 6.0f, 1.5f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(24, 17).addBox(-2.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(36, 17).addBox(-1.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -188,7 +188,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 18).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 49).addBox(-4.3f, -8.3f, 0.5f, 8.6f, 10.0f, 4.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 49).addBox(-4.3f, -8.3f, 0.5f, 8.6f, 10.0f, 4.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(32, 18).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(0, 0).addBox(-4.6f, 0.0f, -2.6f, 9.2f, 12.0f, 5.2f).texOffs(32, 0).addBox(-4.8f, 12.0f, -2.8f, 9.6f, 11.0f, 5.6f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(0, 34).addBox(-2.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(12, 34).addBox(-1.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -201,7 +201,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(28, 0).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f).texOffs(0, 74).addBox(-4.0f, -2.0f, -4.6f, 8.0f, 3.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 49).addBox(-6.0f, -9.0f, -6.0f, 12.0f, 1.0f, 12.0f).texOffs(0, 62).addBox(-4.5f, -11.5f, -4.5f, 9.0f, 3.0f, 9.0f).texOffs(18, 74).addBox(-5.5f, -10.5f, -6.5f, 11.0f, 2.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 49).addBox(-6.0f, -9.0f, -6.0f, 12.0f, 1.0f, 12.0f).texOffs(0, 62).addBox(-4.5f, -11.5f, -4.5f, 9.0f, 3.0f, 9.0f).texOffs(18, 74).addBox(-5.5f, -10.5f, -6.5f, 11.0f, 2.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 17).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(0, 0).addBox(-4.5f, 0.0f, -2.5f, 9.0f, 12.0f, 5.0f).texOffs(36, 62).addBox(-4.5f, 12.0f, 1.5f, 9.0f, 6.0f, 1.5f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(24, 17).addBox(-3.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(40, 17).addBox(-1.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -219,7 +219,7 @@ public final class WorkshopModels {
         PartDefinition p3 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(40, 17).addBox(-1.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("right_leg", CubeListBuilder.create().texOffs(0, 33).addBox(-2.0f, 0.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(-1.9f, 12.0f, 0.0f));
         PartDefinition p5 = root.addOrReplaceChild("left_leg", CubeListBuilder.create().texOffs(16, 33).addBox(-2.0f, 0.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(1.9f, 12.0f, 0.0f));
-        PartDefinition p6 = root.addOrReplaceChild("hat", CubeListBuilder.create(), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p6 = p0.addOrReplaceChild("hat", CubeListBuilder.create(), PartPose.offset(0.0f, 0.0f, 0.0f));
         return LayerDefinition.create(data, 64, 64);
     }
 
@@ -227,7 +227,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 38).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 0).addBox(-4.6f, -8.6f, -4.6f, 9.2f, 9.2f, 9.2f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 0).addBox(-4.6f, -8.6f, -4.6f, 9.2f, 9.2f, 9.2f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(32, 38).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(0, 20).addBox(-4.6f, 0.0f, -2.6f, 9.2f, 12.0f, 5.2f).texOffs(32, 20).addBox(-4.8f, 12.0f, -2.8f, 9.6f, 11.0f, 5.6f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(0, 54).addBox(-3.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(16, 54).addBox(-1.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -240,7 +240,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 18).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 49).addBox(-4.3f, -8.3f, 0.5f, 8.6f, 10.0f, 4.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 49).addBox(-4.3f, -8.3f, 0.5f, 8.6f, 10.0f, 4.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(32, 18).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(0, 0).addBox(-4.6f, 0.0f, -2.6f, 9.2f, 12.0f, 5.2f).texOffs(32, 0).addBox(-4.8f, 12.0f, -2.8f, 9.6f, 11.0f, 5.6f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(0, 34).addBox(-2.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(12, 34).addBox(-1.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -253,7 +253,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(28, 0).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 48).addBox(-6.0f, -9.0f, -6.0f, 12.0f, 1.0f, 12.0f).texOffs(0, 61).addBox(-4.5f, -11.5f, -4.5f, 9.0f, 3.0f, 9.0f).texOffs(0, 73).addBox(-5.5f, -10.5f, -6.5f, 11.0f, 2.0f, 1.0f).texOffs(12, 33).addBox(-4.3f, -8.3f, 0.5f, 8.6f, 10.0f, 4.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 48).addBox(-6.0f, -9.0f, -6.0f, 12.0f, 1.0f, 12.0f).texOffs(0, 61).addBox(-4.5f, -11.5f, -4.5f, 9.0f, 3.0f, 9.0f).texOffs(0, 73).addBox(-5.5f, -10.5f, -6.5f, 11.0f, 2.0f, 1.0f).texOffs(12, 33).addBox(-4.3f, -8.3f, 0.5f, 8.6f, 10.0f, 4.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 17).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(0, 0).addBox(-4.5f, 0.0f, -2.5f, 9.0f, 12.0f, 5.0f).texOffs(36, 61).addBox(-4.5f, 12.0f, 1.5f, 9.0f, 6.0f, 1.5f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(24, 17).addBox(-2.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(36, 17).addBox(-1.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -266,7 +266,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 38).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 0).addBox(-4.6f, -8.6f, -4.6f, 9.2f, 9.2f, 9.2f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 0).addBox(-4.6f, -8.6f, -4.6f, 9.2f, 9.2f, 9.2f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(32, 38).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(0, 20).addBox(-4.6f, 0.0f, -2.6f, 9.2f, 12.0f, 5.2f).texOffs(32, 20).addBox(-4.8f, 12.0f, -2.8f, 9.6f, 11.0f, 5.6f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(0, 54).addBox(-2.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(12, 54).addBox(-1.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -279,7 +279,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 38).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 0).addBox(-4.6f, -8.6f, -4.6f, 9.2f, 9.2f, 9.2f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 0).addBox(-4.6f, -8.6f, -4.6f, 9.2f, 9.2f, 9.2f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(32, 38).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(0, 20).addBox(-4.6f, 0.0f, -2.6f, 9.2f, 12.0f, 5.2f).texOffs(32, 20).addBox(-4.8f, 12.0f, -2.8f, 9.6f, 11.0f, 5.6f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(0, 54).addBox(-2.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(12, 54).addBox(-1.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -292,7 +292,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(28, 0).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(12, 33).addBox(-4.5f, -9.5f, -4.5f, 9.0f, 2.0f, 9.0f).texOffs(22, 48).addBox(-4.5f, -8.0f, -6.5f, 9.0f, 1.0f, 3.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(12, 33).addBox(-4.5f, -9.5f, -4.5f, 9.0f, 2.0f, 9.0f).texOffs(22, 48).addBox(-4.5f, -8.0f, -6.5f, 9.0f, 1.0f, 3.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 17).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(0, 0).addBox(-4.5f, 0.0f, -2.5f, 9.0f, 12.0f, 5.0f).texOffs(0, 48).addBox(-4.5f, 12.0f, 1.5f, 9.0f, 6.0f, 1.5f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(24, 17).addBox(-2.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(36, 17).addBox(-1.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -305,7 +305,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 0).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 31).addBox(-4.5f, -9.5f, -4.5f, 9.0f, 2.0f, 9.0f).texOffs(36, 31).addBox(-4.5f, -8.0f, -6.5f, 9.0f, 1.0f, 3.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 31).addBox(-4.5f, -9.5f, -4.5f, 9.0f, 2.0f, 9.0f).texOffs(36, 31).addBox(-4.5f, -8.0f, -6.5f, 9.0f, 1.0f, 3.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(32, 0).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(48, 16).addBox(-3.5f, 3.0f, -2.6f, 7.0f, 13.0f, 0.6f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(0, 16).addBox(-2.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(12, 16).addBox(-1.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -318,7 +318,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 0).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f).texOffs(36, 32).addBox(-4.0f, -2.0f, -4.6f, 8.0f, 3.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 32).addBox(-4.5f, -8.6f, -4.5f, 9.0f, 3.0f, 9.0f).texOffs(54, 32).addBox(-1.0f, -6.5f, 4.4f, 2.0f, 3.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 32).addBox(-4.5f, -8.6f, -4.5f, 9.0f, 3.0f, 9.0f).texOffs(54, 32).addBox(-1.0f, -6.5f, 4.4f, 2.0f, 3.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(32, 0).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(0, 16).addBox(-3.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(16, 16).addBox(-1.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -331,7 +331,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 0).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 31).addBox(-4.5f, -8.6f, -4.5f, 9.0f, 3.0f, 9.0f).texOffs(36, 31).addBox(-1.0f, -6.5f, 4.4f, 2.0f, 3.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 31).addBox(-4.5f, -8.6f, -4.5f, 9.0f, 3.0f, 9.0f).texOffs(36, 31).addBox(-1.0f, -6.5f, 4.4f, 2.0f, 3.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(32, 0).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(0, 16).addBox(-2.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(12, 16).addBox(-1.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -349,7 +349,7 @@ public final class WorkshopModels {
         PartDefinition p3 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(40, 17).addBox(-1.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("right_leg", CubeListBuilder.create().texOffs(0, 33).addBox(-2.0f, 0.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(-1.9f, 12.0f, 0.0f));
         PartDefinition p5 = root.addOrReplaceChild("left_leg", CubeListBuilder.create().texOffs(16, 33).addBox(-2.0f, 0.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(1.9f, 12.0f, 0.0f));
-        PartDefinition p6 = root.addOrReplaceChild("hat", CubeListBuilder.create(), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p6 = p0.addOrReplaceChild("hat", CubeListBuilder.create(), PartPose.offset(0.0f, 0.0f, 0.0f));
         return LayerDefinition.create(data, 64, 64);
     }
 
@@ -362,7 +362,7 @@ public final class WorkshopModels {
         PartDefinition p3 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(40, 17).addBox(-1.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("right_leg", CubeListBuilder.create().texOffs(0, 33).addBox(-2.0f, 0.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(-1.9f, 12.0f, 0.0f));
         PartDefinition p5 = root.addOrReplaceChild("left_leg", CubeListBuilder.create().texOffs(16, 33).addBox(-2.0f, 0.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(1.9f, 12.0f, 0.0f));
-        PartDefinition p6 = root.addOrReplaceChild("hat", CubeListBuilder.create(), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p6 = p0.addOrReplaceChild("hat", CubeListBuilder.create(), PartPose.offset(0.0f, 0.0f, 0.0f));
         return LayerDefinition.create(data, 64, 64);
     }
 
@@ -370,7 +370,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(28, 0).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f).texOffs(24, 60).addBox(-4.0f, -2.0f, -4.6f, 8.0f, 3.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 49).addBox(-4.5f, -9.5f, -4.5f, 9.0f, 2.0f, 9.0f).texOffs(0, 60).addBox(-4.5f, -8.0f, -6.5f, 9.0f, 1.0f, 3.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 49).addBox(-4.5f, -9.5f, -4.5f, 9.0f, 2.0f, 9.0f).texOffs(0, 60).addBox(-4.5f, -8.0f, -6.5f, 9.0f, 1.0f, 3.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 17).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(0, 0).addBox(-4.5f, 0.0f, -2.5f, 9.0f, 12.0f, 5.0f).texOffs(36, 49).addBox(-4.5f, 12.0f, 1.5f, 9.0f, 6.0f, 1.5f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(24, 17).addBox(-3.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(40, 17).addBox(-1.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -383,7 +383,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 0).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 32).addBox(-4.5f, -9.5f, -4.5f, 9.0f, 2.0f, 9.0f).texOffs(36, 32).addBox(-4.5f, -8.0f, -6.5f, 9.0f, 1.0f, 3.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 32).addBox(-4.5f, -9.5f, -4.5f, 9.0f, 2.0f, 9.0f).texOffs(36, 32).addBox(-4.5f, -8.0f, -6.5f, 9.0f, 1.0f, 3.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(32, 0).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(0, 16).addBox(-3.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(16, 16).addBox(-1.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -401,7 +401,7 @@ public final class WorkshopModels {
         PartDefinition p3 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(40, 17).addBox(-1.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("right_leg", CubeListBuilder.create().texOffs(0, 33).addBox(-2.0f, 0.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(-1.9f, 12.0f, 0.0f));
         PartDefinition p5 = root.addOrReplaceChild("left_leg", CubeListBuilder.create().texOffs(16, 33).addBox(-2.0f, 0.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(1.9f, 12.0f, 0.0f));
-        PartDefinition p6 = root.addOrReplaceChild("hat", CubeListBuilder.create(), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p6 = p0.addOrReplaceChild("hat", CubeListBuilder.create(), PartPose.offset(0.0f, 0.0f, 0.0f));
         return LayerDefinition.create(data, 64, 64);
     }
 
@@ -409,7 +409,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(28, 0).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 49).addBox(-4.5f, -9.5f, -4.5f, 9.0f, 2.0f, 9.0f).texOffs(0, 60).addBox(-4.5f, -8.0f, -6.5f, 9.0f, 1.0f, 3.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 49).addBox(-4.5f, -9.5f, -4.5f, 9.0f, 2.0f, 9.0f).texOffs(0, 60).addBox(-4.5f, -8.0f, -6.5f, 9.0f, 1.0f, 3.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 17).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(0, 0).addBox(-4.5f, 0.0f, -2.5f, 9.0f, 12.0f, 5.0f).texOffs(36, 49).addBox(-4.5f, 12.0f, 1.5f, 9.0f, 6.0f, 1.5f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(24, 17).addBox(-3.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(40, 17).addBox(-1.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -422,7 +422,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 35).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(32, 35).addBox(-4.3f, -8.3f, 0.5f, 8.6f, 10.0f, 4.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(32, 35).addBox(-4.3f, -8.3f, 0.5f, 8.6f, 10.0f, 4.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 0).addBox(-5.0f, 0.0f, -3.0f, 10.0f, 12.0f, 6.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(32, 0).addBox(-4.0f, -2.0f, -2.5f, 5.0f, 12.0f, 5.0f), PartPose.offset(-6.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(0, 18).addBox(-1.0f, -2.0f, -2.5f, 5.0f, 12.0f, 5.0f), PartPose.offset(6.0f, 2.0f, 0.0f));
@@ -435,7 +435,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(28, 0).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 49).addBox(-6.0f, -9.0f, -6.0f, 12.0f, 1.0f, 12.0f).texOffs(0, 62).addBox(-4.5f, -11.5f, -4.5f, 9.0f, 3.0f, 9.0f).texOffs(0, 74).addBox(-5.5f, -10.5f, -6.5f, 11.0f, 2.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 49).addBox(-6.0f, -9.0f, -6.0f, 12.0f, 1.0f, 12.0f).texOffs(0, 62).addBox(-4.5f, -11.5f, -4.5f, 9.0f, 3.0f, 9.0f).texOffs(0, 74).addBox(-5.5f, -10.5f, -6.5f, 11.0f, 2.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 17).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(0, 0).addBox(-4.5f, 0.0f, -2.5f, 9.0f, 12.0f, 5.0f).texOffs(36, 62).addBox(-4.5f, 12.0f, 1.5f, 9.0f, 6.0f, 1.5f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(24, 17).addBox(-3.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(40, 17).addBox(-1.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -448,7 +448,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 18).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 49).addBox(-4.3f, -8.3f, 0.5f, 8.6f, 10.0f, 4.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 49).addBox(-4.3f, -8.3f, 0.5f, 8.6f, 10.0f, 4.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(32, 18).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(0, 0).addBox(-4.6f, 0.0f, -2.6f, 9.2f, 12.0f, 5.2f).texOffs(32, 0).addBox(-4.8f, 12.0f, -2.8f, 9.6f, 11.0f, 5.6f).texOffs(26, 49).addBox(-3.5f, 3.0f, -2.6f, 7.0f, 13.0f, 0.6f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(0, 34).addBox(-2.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(12, 34).addBox(-1.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -461,7 +461,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 0).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 32).addBox(-4.5f, -8.6f, -4.5f, 9.0f, 3.0f, 9.0f).texOffs(36, 32).addBox(-1.0f, -6.5f, 4.4f, 2.0f, 3.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 32).addBox(-4.5f, -8.6f, -4.5f, 9.0f, 3.0f, 9.0f).texOffs(36, 32).addBox(-1.0f, -6.5f, 4.4f, 2.0f, 3.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(32, 0).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(0, 16).addBox(-3.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(16, 16).addBox(-1.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -479,7 +479,7 @@ public final class WorkshopModels {
         PartDefinition p3 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(40, 17).addBox(-1.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("right_leg", CubeListBuilder.create().texOffs(0, 33).addBox(-2.0f, 0.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(-1.9f, 12.0f, 0.0f));
         PartDefinition p5 = root.addOrReplaceChild("left_leg", CubeListBuilder.create().texOffs(16, 33).addBox(-2.0f, 0.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(1.9f, 12.0f, 0.0f));
-        PartDefinition p6 = root.addOrReplaceChild("hat", CubeListBuilder.create(), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p6 = p0.addOrReplaceChild("hat", CubeListBuilder.create(), PartPose.offset(0.0f, 0.0f, 0.0f));
         return LayerDefinition.create(data, 64, 64);
     }
 
@@ -487,7 +487,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(28, 0).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 49).addBox(-4.5f, -9.5f, -4.5f, 9.0f, 2.0f, 9.0f).texOffs(0, 60).addBox(-4.5f, -8.0f, -6.5f, 9.0f, 1.0f, 3.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 49).addBox(-4.5f, -9.5f, -4.5f, 9.0f, 2.0f, 9.0f).texOffs(0, 60).addBox(-4.5f, -8.0f, -6.5f, 9.0f, 1.0f, 3.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 17).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(0, 0).addBox(-4.5f, 0.0f, -2.5f, 9.0f, 12.0f, 5.0f).texOffs(36, 49).addBox(-4.5f, 12.0f, 1.5f, 9.0f, 6.0f, 1.5f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(24, 17).addBox(-3.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(40, 17).addBox(-1.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -500,7 +500,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 0).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f).texOffs(0, 43).addBox(-4.0f, -2.0f, -4.6f, 8.0f, 3.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 32).addBox(-4.5f, -9.5f, -4.5f, 9.0f, 2.0f, 9.0f).texOffs(36, 32).addBox(-4.5f, -8.0f, -6.5f, 9.0f, 1.0f, 3.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 32).addBox(-4.5f, -9.5f, -4.5f, 9.0f, 2.0f, 9.0f).texOffs(36, 32).addBox(-4.5f, -8.0f, -6.5f, 9.0f, 1.0f, 3.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(32, 0).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(0, 16).addBox(-3.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(16, 16).addBox(-1.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -513,7 +513,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(28, 0).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(12, 33).addBox(-6.0f, -9.0f, -6.0f, 12.0f, 1.0f, 12.0f).texOffs(0, 48).addBox(-4.5f, -11.5f, -4.5f, 9.0f, 3.0f, 9.0f).texOffs(0, 60).addBox(-5.5f, -10.5f, -6.5f, 11.0f, 2.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(12, 33).addBox(-6.0f, -9.0f, -6.0f, 12.0f, 1.0f, 12.0f).texOffs(0, 48).addBox(-4.5f, -11.5f, -4.5f, 9.0f, 3.0f, 9.0f).texOffs(0, 60).addBox(-5.5f, -10.5f, -6.5f, 11.0f, 2.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 17).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(0, 0).addBox(-4.5f, 0.0f, -2.5f, 9.0f, 12.0f, 5.0f).texOffs(36, 48).addBox(-4.5f, 12.0f, 1.5f, 9.0f, 6.0f, 1.5f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(24, 17).addBox(-2.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(36, 17).addBox(-1.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -526,7 +526,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 18).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 49).addBox(-4.3f, -8.3f, 0.5f, 8.6f, 10.0f, 4.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 49).addBox(-4.3f, -8.3f, 0.5f, 8.6f, 10.0f, 4.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(32, 18).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(0, 0).addBox(-4.6f, 0.0f, -2.6f, 9.2f, 12.0f, 5.2f).texOffs(32, 0).addBox(-4.8f, 12.0f, -2.8f, 9.6f, 11.0f, 5.6f).texOffs(26, 49).addBox(-3.5f, 3.0f, -2.6f, 7.0f, 13.0f, 0.6f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(0, 34).addBox(-2.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(12, 34).addBox(-1.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -544,7 +544,7 @@ public final class WorkshopModels {
         PartDefinition p3 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(16, 32).addBox(-1.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("right_leg", CubeListBuilder.create().texOffs(0, 48).addBox(-2.0f, 0.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(-1.9f, 12.0f, 0.0f));
         PartDefinition p5 = root.addOrReplaceChild("left_leg", CubeListBuilder.create().texOffs(16, 48).addBox(-2.0f, 0.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(1.9f, 12.0f, 0.0f));
-        PartDefinition p6 = root.addOrReplaceChild("hat", CubeListBuilder.create(), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p6 = p0.addOrReplaceChild("hat", CubeListBuilder.create(), PartPose.offset(0.0f, 0.0f, 0.0f));
         return LayerDefinition.create(data, 32, 64);
     }
 
@@ -552,7 +552,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 0).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f).texOffs(0, 46).addBox(-4.0f, -2.0f, -4.6f, 8.0f, 3.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(16, 32).addBox(-4.5f, -8.6f, -4.5f, 9.0f, 3.0f, 9.0f).texOffs(18, 46).addBox(-1.0f, -6.5f, 4.4f, 2.0f, 3.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(16, 32).addBox(-4.5f, -8.6f, -4.5f, 9.0f, 3.0f, 9.0f).texOffs(18, 46).addBox(-1.0f, -6.5f, 4.4f, 2.0f, 3.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(32, 0).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(0, 32).addBox(-3.5f, 3.0f, -2.6f, 7.0f, 13.0f, 0.6f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(0, 16).addBox(-3.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(16, 16).addBox(-1.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -565,7 +565,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 0).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(16, 32).addBox(-4.5f, -9.5f, -4.5f, 9.0f, 2.0f, 9.0f).texOffs(0, 46).addBox(-4.5f, -8.0f, -6.5f, 9.0f, 1.0f, 3.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(16, 32).addBox(-4.5f, -9.5f, -4.5f, 9.0f, 2.0f, 9.0f).texOffs(0, 46).addBox(-4.5f, -8.0f, -6.5f, 9.0f, 1.0f, 3.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(32, 0).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(0, 32).addBox(-3.5f, 3.0f, -2.6f, 7.0f, 13.0f, 0.6f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(0, 16).addBox(-3.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(16, 16).addBox(-1.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -578,7 +578,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(28, 0).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 49).addBox(-6.0f, -9.0f, -6.0f, 12.0f, 1.0f, 12.0f).texOffs(0, 62).addBox(-4.5f, -11.5f, -4.5f, 9.0f, 3.0f, 9.0f).texOffs(0, 74).addBox(-5.5f, -10.5f, -6.5f, 11.0f, 2.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 49).addBox(-6.0f, -9.0f, -6.0f, 12.0f, 1.0f, 12.0f).texOffs(0, 62).addBox(-4.5f, -11.5f, -4.5f, 9.0f, 3.0f, 9.0f).texOffs(0, 74).addBox(-5.5f, -10.5f, -6.5f, 11.0f, 2.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 17).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(0, 0).addBox(-4.5f, 0.0f, -2.5f, 9.0f, 12.0f, 5.0f).texOffs(36, 62).addBox(-4.5f, 12.0f, 1.5f, 9.0f, 6.0f, 1.5f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(24, 17).addBox(-3.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(40, 17).addBox(-1.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -591,7 +591,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 0).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 32).addBox(-4.5f, -8.6f, -4.5f, 9.0f, 3.0f, 9.0f).texOffs(36, 32).addBox(-1.0f, -6.5f, 4.4f, 2.0f, 3.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 32).addBox(-4.5f, -8.6f, -4.5f, 9.0f, 3.0f, 9.0f).texOffs(36, 32).addBox(-1.0f, -6.5f, 4.4f, 2.0f, 3.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(32, 0).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(0, 16).addBox(-3.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(16, 16).addBox(-1.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -604,7 +604,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 35).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f).texOffs(0, 62).addBox(-4.0f, -2.0f, -4.6f, 8.0f, 3.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 51).addBox(-4.5f, -9.5f, -4.5f, 9.0f, 2.0f, 9.0f).texOffs(36, 51).addBox(-4.5f, -8.0f, -6.5f, 9.0f, 1.0f, 3.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 51).addBox(-4.5f, -9.5f, -4.5f, 9.0f, 2.0f, 9.0f).texOffs(36, 51).addBox(-4.5f, -8.0f, -6.5f, 9.0f, 1.0f, 3.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 0).addBox(-5.0f, 0.0f, -3.0f, 10.0f, 12.0f, 6.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(32, 0).addBox(-4.0f, -2.0f, -2.5f, 5.0f, 12.0f, 5.0f), PartPose.offset(-6.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(0, 18).addBox(-1.0f, -2.0f, -2.5f, 5.0f, 12.0f, 5.0f), PartPose.offset(6.0f, 2.0f, 0.0f));
@@ -617,7 +617,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(28, 0).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 49).addBox(-6.0f, -9.0f, -6.0f, 12.0f, 1.0f, 12.0f).texOffs(0, 62).addBox(-4.5f, -11.5f, -4.5f, 9.0f, 3.0f, 9.0f).texOffs(0, 74).addBox(-5.5f, -10.5f, -6.5f, 11.0f, 2.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 49).addBox(-6.0f, -9.0f, -6.0f, 12.0f, 1.0f, 12.0f).texOffs(0, 62).addBox(-4.5f, -11.5f, -4.5f, 9.0f, 3.0f, 9.0f).texOffs(0, 74).addBox(-5.5f, -10.5f, -6.5f, 11.0f, 2.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 17).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(0, 0).addBox(-4.5f, 0.0f, -2.5f, 9.0f, 12.0f, 5.0f).texOffs(36, 62).addBox(-4.5f, 12.0f, 1.5f, 9.0f, 6.0f, 1.5f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(24, 17).addBox(-3.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(40, 17).addBox(-1.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -630,7 +630,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(28, 0).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f).texOffs(0, 74).addBox(-4.0f, -2.0f, -4.6f, 8.0f, 3.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 49).addBox(-6.0f, -9.0f, -6.0f, 12.0f, 1.0f, 12.0f).texOffs(0, 62).addBox(-4.5f, -11.5f, -4.5f, 9.0f, 3.0f, 9.0f).texOffs(18, 74).addBox(-5.5f, -10.5f, -6.5f, 11.0f, 2.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 49).addBox(-6.0f, -9.0f, -6.0f, 12.0f, 1.0f, 12.0f).texOffs(0, 62).addBox(-4.5f, -11.5f, -4.5f, 9.0f, 3.0f, 9.0f).texOffs(18, 74).addBox(-5.5f, -10.5f, -6.5f, 11.0f, 2.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 17).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(0, 0).addBox(-4.5f, 0.0f, -2.5f, 9.0f, 12.0f, 5.0f).texOffs(36, 62).addBox(-4.5f, 12.0f, 1.5f, 9.0f, 6.0f, 1.5f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(24, 17).addBox(-3.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(40, 17).addBox(-1.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -643,7 +643,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(28, 0).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f).texOffs(0, 74).addBox(-4.0f, -2.0f, -4.6f, 8.0f, 3.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 49).addBox(-6.0f, -9.0f, -6.0f, 12.0f, 1.0f, 12.0f).texOffs(0, 62).addBox(-4.5f, -11.5f, -4.5f, 9.0f, 3.0f, 9.0f).texOffs(18, 74).addBox(-5.5f, -10.5f, -6.5f, 11.0f, 2.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 49).addBox(-6.0f, -9.0f, -6.0f, 12.0f, 1.0f, 12.0f).texOffs(0, 62).addBox(-4.5f, -11.5f, -4.5f, 9.0f, 3.0f, 9.0f).texOffs(18, 74).addBox(-5.5f, -10.5f, -6.5f, 11.0f, 2.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 17).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(0, 0).addBox(-4.5f, 0.0f, -2.5f, 9.0f, 12.0f, 5.0f).texOffs(36, 62).addBox(-4.5f, 12.0f, 1.5f, 9.0f, 6.0f, 1.5f).texOffs(42, 74).addBox(-4.0f, 9.0f, -2.4f, 8.0f, 1.0f, 0.4f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(24, 17).addBox(-3.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(40, 17).addBox(-1.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -656,7 +656,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 0).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(24, 16).addBox(-4.5f, -8.6f, -4.5f, 9.0f, 3.0f, 9.0f).texOffs(0, 30).addBox(-1.0f, -6.5f, 4.4f, 2.0f, 3.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(24, 16).addBox(-4.5f, -8.6f, -4.5f, 9.0f, 3.0f, 9.0f).texOffs(0, 30).addBox(-1.0f, -6.5f, 4.4f, 2.0f, 3.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(32, 0).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(56, 0).addBox(-1.0f, -2.0f, -1.0f, 2.0f, 12.0f, 2.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(0, 16).addBox(-1.0f, -2.0f, -1.0f, 2.0f, 12.0f, 2.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -674,7 +674,7 @@ public final class WorkshopModels {
         PartDefinition p3 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(8, 34).addBox(-1.0f, -2.0f, -1.0f, 2.0f, 12.0f, 2.0f), PartPose.offset(6.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("right_leg", CubeListBuilder.create().texOffs(16, 34).addBox(-1.0f, 0.0f, -1.0f, 2.0f, 12.0f, 2.0f), PartPose.offset(-2.4f, 12.0f, 0.0f));
         PartDefinition p5 = root.addOrReplaceChild("left_leg", CubeListBuilder.create().texOffs(24, 34).addBox(-1.0f, 0.0f, -1.0f, 2.0f, 12.0f, 2.0f), PartPose.offset(2.4f, 12.0f, 0.0f));
-        PartDefinition p6 = root.addOrReplaceChild("hat", CubeListBuilder.create(), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p6 = p0.addOrReplaceChild("hat", CubeListBuilder.create(), PartPose.offset(0.0f, 0.0f, 0.0f));
         return LayerDefinition.create(data, 32, 64);
     }
 
@@ -682,7 +682,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(28, 0).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 33).addBox(-6.0f, -9.0f, -6.0f, 12.0f, 1.0f, 12.0f).texOffs(0, 46).addBox(-4.5f, -11.5f, -4.5f, 9.0f, 3.0f, 9.0f).texOffs(22, 58).addBox(-5.5f, -10.5f, -6.5f, 11.0f, 2.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 33).addBox(-6.0f, -9.0f, -6.0f, 12.0f, 1.0f, 12.0f).texOffs(0, 46).addBox(-4.5f, -11.5f, -4.5f, 9.0f, 3.0f, 9.0f).texOffs(22, 58).addBox(-5.5f, -10.5f, -6.5f, 11.0f, 2.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 17).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(0, 0).addBox(-4.5f, 0.0f, -2.5f, 9.0f, 12.0f, 5.0f).texOffs(0, 58).addBox(-4.5f, 12.0f, 1.5f, 9.0f, 6.0f, 1.5f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(24, 17).addBox(-1.0f, -2.0f, -1.0f, 2.0f, 12.0f, 2.0f).texOffs(36, 46).addBox(-1.5f, -2.5f, -1.5f, 3.0f, 7.0f, 3.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(32, 17).addBox(-1.0f, -2.0f, -1.0f, 2.0f, 12.0f, 2.0f).texOffs(48, 46).addBox(-1.5f, -2.5f, -1.5f, 3.0f, 7.0f, 3.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -695,7 +695,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 45).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(32, 45).addBox(-4.5f, -10.0f, -4.5f, 9.0f, 2.0f, 9.0f).texOffs(92, 45).addBox(-4.5f, -12.0f, -4.5f, 1.0f, 2.0f, 1.0f).texOffs(96, 45).addBox(3.5f, -12.0f, -4.5f, 1.0f, 2.0f, 1.0f).texOffs(100, 45).addBox(-4.5f, -12.0f, 3.5f, 1.0f, 2.0f, 1.0f).texOffs(104, 45).addBox(3.5f, -12.0f, 3.5f, 1.0f, 2.0f, 1.0f).texOffs(108, 45).addBox(-0.5f, -12.0f, -4.5f, 1.0f, 2.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(32, 45).addBox(-4.5f, -10.0f, -4.5f, 9.0f, 2.0f, 9.0f).texOffs(92, 45).addBox(-4.5f, -12.0f, -4.5f, 1.0f, 2.0f, 1.0f).texOffs(96, 45).addBox(3.5f, -12.0f, -4.5f, 1.0f, 2.0f, 1.0f).texOffs(100, 45).addBox(-4.5f, -12.0f, 3.5f, 1.0f, 2.0f, 1.0f).texOffs(104, 45).addBox(3.5f, -12.0f, 3.5f, 1.0f, 2.0f, 1.0f).texOffs(108, 45).addBox(-0.5f, -12.0f, -4.5f, 1.0f, 2.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 27).addBox(-5.0f, 0.0f, -3.0f, 10.0f, 12.0f, 6.0f).texOffs(28, 0).addBox(-5.6f, 0.0f, -3.6f, 11.2f, 12.0f, 7.2f).texOffs(68, 0).addBox(-5.8f, 12.0f, -3.8f, 11.6f, 11.0f, 7.6f).texOffs(0, 61).addBox(-5.0f, 9.0f, -3.4f, 10.0f, 1.0f, 0.4f).texOffs(4, 0).addBox(-5.5f, 0.0f, 3.6f, 11.0f, 20.0f, 1.0f).texOffs(112, 45).addBox(-6.0f, -3.0f, -1.0f, 1.0f, 2.0f, 1.0f).texOffs(84, 45).addBox(-5.0f, -4.5f, 0.0f, 1.0f, 3.0f, 1.0f).texOffs(76, 45).addBox(-4.0f, -6.0f, -1.0f, 1.0f, 4.0f, 1.0f).texOffs(116, 45).addBox(5.0f, -3.0f, -1.0f, 1.0f, 2.0f, 1.0f).texOffs(88, 45).addBox(4.0f, -4.5f, 0.0f, 1.0f, 3.0f, 1.0f).texOffs(80, 45).addBox(3.0f, -6.0f, -1.0f, 1.0f, 4.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(32, 27).addBox(-4.0f, -2.0f, -2.5f, 5.0f, 12.0f, 5.0f).texOffs(0, 0).addBox(-3.0f, -8.0f, -5.5f, 1.0f, 26.0f, 1.0f).texOffs(68, 45).addBox(-3.5f, -11.0f, -6.0f, 2.0f, 3.0f, 2.0f), PartPose.offset(-6.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(52, 27).addBox(-1.0f, -2.0f, -2.5f, 5.0f, 12.0f, 5.0f), PartPose.offset(6.0f, 2.0f, 0.0f));
@@ -708,7 +708,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 39).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(20, 0).addBox(-4.6f, -8.6f, -4.6f, 9.2f, 9.2f, 9.2f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(20, 0).addBox(-4.6f, -8.6f, -4.6f, 9.2f, 9.2f, 9.2f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(32, 39).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(0, 21).addBox(-4.6f, 0.0f, -2.6f, 9.2f, 12.0f, 5.2f).texOffs(32, 21).addBox(-4.8f, 12.0f, -2.8f, 9.6f, 11.0f, 5.6f).texOffs(0, 0).addBox(-4.5f, 0.0f, 2.6f, 9.0f, 20.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(0, 55).addBox(-3.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(16, 55).addBox(-1.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f).texOffs(12, 71).addBox(-0.5f, 10.0f, -3.0f, 1.0f, 2.0f, 1.0f).texOffs(0, 71).addBox(-1.5f, 12.0f, -4.0f, 3.0f, 4.0f, 3.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -721,7 +721,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(32, 40).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 72).addBox(-4.5f, -10.0f, -4.5f, 9.0f, 2.0f, 9.0f).texOffs(12, 83).addBox(-4.5f, -12.0f, -4.5f, 1.0f, 2.0f, 1.0f).texOffs(16, 83).addBox(3.5f, -12.0f, -4.5f, 1.0f, 2.0f, 1.0f).texOffs(20, 83).addBox(-4.5f, -12.0f, 3.5f, 1.0f, 2.0f, 1.0f).texOffs(24, 83).addBox(3.5f, -12.0f, 3.5f, 1.0f, 2.0f, 1.0f).texOffs(28, 83).addBox(-0.5f, -12.0f, -4.5f, 1.0f, 2.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 72).addBox(-4.5f, -10.0f, -4.5f, 9.0f, 2.0f, 9.0f).texOffs(12, 83).addBox(-4.5f, -12.0f, -4.5f, 1.0f, 2.0f, 1.0f).texOffs(16, 83).addBox(3.5f, -12.0f, -4.5f, 1.0f, 2.0f, 1.0f).texOffs(20, 83).addBox(-4.5f, -12.0f, 3.5f, 1.0f, 2.0f, 1.0f).texOffs(24, 83).addBox(3.5f, -12.0f, 3.5f, 1.0f, 2.0f, 1.0f).texOffs(28, 83).addBox(-0.5f, -12.0f, -4.5f, 1.0f, 2.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 40).addBox(-5.0f, 0.0f, -3.0f, 10.0f, 12.0f, 6.0f).texOffs(24, 0).addBox(-5.6f, 0.0f, -3.6f, 11.2f, 12.0f, 7.2f).texOffs(0, 21).addBox(-5.8f, 12.0f, -3.8f, 11.6f, 11.0f, 7.6f).texOffs(0, 0).addBox(-5.5f, 0.0f, 3.6f, 11.0f, 20.0f, 1.0f).texOffs(32, 83).addBox(-6.0f, -3.0f, -1.0f, 1.0f, 2.0f, 1.0f).texOffs(4, 83).addBox(-5.0f, -4.5f, 0.0f, 1.0f, 3.0f, 1.0f).texOffs(60, 72).addBox(-4.0f, -6.0f, -1.0f, 1.0f, 4.0f, 1.0f).texOffs(36, 83).addBox(5.0f, -3.0f, -1.0f, 1.0f, 2.0f, 1.0f).texOffs(8, 83).addBox(4.0f, -4.5f, 0.0f, 1.0f, 3.0f, 1.0f).texOffs(0, 83).addBox(3.0f, -6.0f, -1.0f, 1.0f, 4.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(0, 58).addBox(-1.0f, -2.0f, -1.0f, 2.0f, 12.0f, 2.0f).texOffs(36, 72).addBox(-1.5f, -2.5f, -1.5f, 3.0f, 7.0f, 3.0f), PartPose.offset(-6.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(8, 58).addBox(-1.0f, -2.0f, -1.0f, 2.0f, 12.0f, 2.0f).texOffs(48, 72).addBox(-1.5f, -2.5f, -1.5f, 3.0f, 7.0f, 3.0f), PartPose.offset(6.0f, 2.0f, 0.0f));
@@ -734,7 +734,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 45).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(4, 0).addBox(-4.6f, -8.6f, -4.6f, 9.2f, 9.2f, 9.2f).texOffs(0, 76).addBox(-4.4f, -6.0f, -4.9f, 8.8f, 7.0f, 0.4f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(4, 0).addBox(-4.6f, -8.6f, -4.6f, 9.2f, 9.2f, 9.2f).texOffs(0, 76).addBox(-4.4f, -6.0f, -4.9f, 8.8f, 7.0f, 0.4f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(32, 45).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(0, 27).addBox(-4.6f, 0.0f, -2.6f, 9.2f, 12.0f, 5.2f).texOffs(32, 27).addBox(-4.8f, 12.0f, -2.8f, 9.6f, 11.0f, 5.6f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(0, 61).addBox(-2.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f).texOffs(0, 0).addBox(-2.0f, -8.0f, -4.5f, 1.0f, 26.0f, 1.0f).texOffs(20, 76).addBox(-2.5f, -11.0f, -5.0f, 2.0f, 3.0f, 2.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(12, 61).addBox(-1.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -747,7 +747,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 56).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f).texOffs(46, 97).addBox(-4.0f, -2.0f, -4.6f, 8.0f, 3.0f, 1.0f).texOffs(24, 106).addBox(1.0f, -5.0f, -4.3f, 2.0f, 2.0f, 0.3f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 72).addBox(-6.0f, -9.0f, -6.0f, 12.0f, 1.0f, 12.0f).texOffs(0, 85).addBox(-4.5f, -11.5f, -4.5f, 9.0f, 3.0f, 9.0f).texOffs(0, 106).addBox(-5.5f, -10.5f, -6.5f, 11.0f, 2.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 72).addBox(-6.0f, -9.0f, -6.0f, 12.0f, 1.0f, 12.0f).texOffs(0, 85).addBox(-4.5f, -11.5f, -4.5f, 9.0f, 3.0f, 9.0f).texOffs(0, 106).addBox(-5.5f, -10.5f, -6.5f, 11.0f, 2.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 21).addBox(-5.0f, 0.0f, -3.0f, 10.0f, 12.0f, 6.0f).texOffs(24, 0).addBox(-5.5f, 0.0f, -3.5f, 11.0f, 12.0f, 7.0f).texOffs(20, 97).addBox(-5.5f, 12.0f, 2.5f, 11.0f, 6.0f, 1.5f).texOffs(0, 0).addBox(-5.5f, 0.0f, 3.6f, 11.0f, 20.0f, 1.0f).texOffs(36, 85).addBox(-7.0f, -1.0f, -3.5f, 3.0f, 1.5f, 7.0f).texOffs(0, 97).addBox(4.0f, -1.0f, -3.5f, 3.0f, 1.5f, 7.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(32, 21).addBox(-4.0f, -2.0f, -2.5f, 5.0f, 12.0f, 5.0f), PartPose.offset(-6.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(0, 39).addBox(-1.0f, -2.0f, -2.5f, 5.0f, 12.0f, 5.0f), PartPose.offset(6.0f, 2.0f, 0.0f));
@@ -760,7 +760,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 45).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(4, 0).addBox(-4.6f, -8.6f, -4.6f, 9.2f, 9.2f, 9.2f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(4, 0).addBox(-4.6f, -8.6f, -4.6f, 9.2f, 9.2f, 9.2f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(32, 45).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(0, 27).addBox(-4.6f, 0.0f, -2.6f, 9.2f, 12.0f, 5.2f).texOffs(32, 27).addBox(-4.8f, 12.0f, -2.8f, 9.6f, 11.0f, 5.6f).texOffs(56, 61).addBox(3.0f, 10.0f, -4.0f, 2.0f, 2.0f, 2.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(56, 45).addBox(-1.0f, -2.0f, -1.0f, 2.0f, 12.0f, 2.0f).texOffs(24, 61).addBox(-1.5f, -2.5f, -1.5f, 3.0f, 7.0f, 3.0f).texOffs(0, 0).addBox(-1.5f, -8.0f, -4.0f, 1.0f, 26.0f, 1.0f).texOffs(48, 61).addBox(-2.0f, -11.0f, -4.5f, 2.0f, 3.0f, 2.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(0, 61).addBox(-1.0f, -2.0f, -1.0f, 2.0f, 12.0f, 2.0f).texOffs(36, 61).addBox(-1.5f, -2.5f, -1.5f, 3.0f, 7.0f, 3.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -773,7 +773,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 21).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 53).addBox(-4.5f, -10.0f, -4.5f, 9.0f, 2.0f, 9.0f).texOffs(32, 64).addBox(-4.5f, -12.0f, -4.5f, 1.0f, 2.0f, 1.0f).texOffs(36, 64).addBox(3.5f, -12.0f, -4.5f, 1.0f, 2.0f, 1.0f).texOffs(40, 64).addBox(-4.5f, -12.0f, 3.5f, 1.0f, 2.0f, 1.0f).texOffs(44, 64).addBox(3.5f, -12.0f, 3.5f, 1.0f, 2.0f, 1.0f).texOffs(48, 64).addBox(-0.5f, -12.0f, -4.5f, 1.0f, 2.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 53).addBox(-4.5f, -10.0f, -4.5f, 9.0f, 2.0f, 9.0f).texOffs(32, 64).addBox(-4.5f, -12.0f, -4.5f, 1.0f, 2.0f, 1.0f).texOffs(36, 64).addBox(3.5f, -12.0f, -4.5f, 1.0f, 2.0f, 1.0f).texOffs(40, 64).addBox(-4.5f, -12.0f, 3.5f, 1.0f, 2.0f, 1.0f).texOffs(44, 64).addBox(3.5f, -12.0f, 3.5f, 1.0f, 2.0f, 1.0f).texOffs(48, 64).addBox(-0.5f, -12.0f, -4.5f, 1.0f, 2.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(32, 21).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(20, 0).addBox(-4.5f, 0.0f, -2.5f, 9.0f, 12.0f, 5.0f).texOffs(36, 53).addBox(-4.5f, 12.0f, 1.5f, 9.0f, 6.0f, 1.5f).texOffs(0, 71).addBox(-4.0f, 9.0f, -2.4f, 8.0f, 1.0f, 0.4f).texOffs(0, 0).addBox(-4.5f, 0.0f, 2.6f, 9.0f, 20.0f, 1.0f).texOffs(0, 64).addBox(-6.0f, -1.0f, -2.5f, 3.0f, 1.5f, 5.0f).texOffs(16, 64).addBox(3.0f, -1.0f, -2.5f, 3.0f, 1.5f, 5.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(0, 37).addBox(-3.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(16, 37).addBox(-1.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -805,7 +805,7 @@ public final class WorkshopModels {
         PartDefinition p3 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(0, 18).addBox(-1.0f, -2.0f, -2.5f, 5.0f, 12.0f, 5.0f), PartPose.offset(6.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("right_leg", CubeListBuilder.create().texOffs(20, 18).addBox(-2.5f, 0.0f, -2.5f, 5.0f, 12.0f, 5.0f), PartPose.offset(-2.4f, 12.0f, 0.0f));
         PartDefinition p5 = root.addOrReplaceChild("left_leg", CubeListBuilder.create().texOffs(40, 18).addBox(-2.5f, 0.0f, -2.5f, 5.0f, 12.0f, 5.0f), PartPose.offset(2.4f, 12.0f, 0.0f));
-        PartDefinition p6 = root.addOrReplaceChild("hat", CubeListBuilder.create(), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p6 = p0.addOrReplaceChild("hat", CubeListBuilder.create(), PartPose.offset(0.0f, 0.0f, 0.0f));
         return LayerDefinition.create(data, 64, 64);
     }
 
@@ -813,7 +813,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 45).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(4, 0).addBox(-4.6f, -8.6f, -4.6f, 9.2f, 9.2f, 9.2f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(4, 0).addBox(-4.6f, -8.6f, -4.6f, 9.2f, 9.2f, 9.2f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(32, 45).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(0, 27).addBox(-4.6f, 0.0f, -2.6f, 9.2f, 12.0f, 5.2f).texOffs(32, 27).addBox(-4.8f, 12.0f, -2.8f, 9.6f, 11.0f, 5.6f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(56, 45).addBox(-1.0f, -2.0f, -1.0f, 2.0f, 12.0f, 2.0f).texOffs(24, 61).addBox(-1.5f, -2.5f, -1.5f, 3.0f, 7.0f, 3.0f).texOffs(0, 0).addBox(-1.5f, -8.0f, -4.0f, 1.0f, 26.0f, 1.0f).texOffs(0, 75).addBox(-2.0f, -11.0f, -4.5f, 2.0f, 3.0f, 2.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(0, 61).addBox(-1.0f, -2.0f, -1.0f, 2.0f, 12.0f, 2.0f).texOffs(36, 61).addBox(-1.5f, -2.5f, -1.5f, 3.0f, 7.0f, 3.0f).texOffs(8, 75).addBox(-0.5f, 10.0f, -2.0f, 1.0f, 2.0f, 1.0f).texOffs(48, 61).addBox(-1.5f, 12.0f, -3.0f, 3.0f, 4.0f, 3.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -826,7 +826,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 38).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 0).addBox(-4.6f, -8.6f, -4.6f, 9.2f, 9.2f, 9.2f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 0).addBox(-4.6f, -8.6f, -4.6f, 9.2f, 9.2f, 9.2f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(32, 38).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(0, 20).addBox(-4.6f, 0.0f, -2.6f, 9.2f, 12.0f, 5.2f).texOffs(32, 20).addBox(-4.8f, 12.0f, -2.8f, 9.6f, 11.0f, 5.6f).texOffs(0, 54).addBox(-13.0f, -2.0f, 2.0f, 9.0f, 14.0f, 1.0f).texOffs(20, 54).addBox(4.0f, -2.0f, 2.0f, 9.0f, 14.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(40, 54).addBox(-2.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(52, 54).addBox(-1.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -839,7 +839,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(32, 66).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(32, 84).addBox(-3.5f, -14.0f, -3.0f, 7.0f, 6.0f, 6.0f).texOffs(24, 98).addBox(-0.5f, -15.0f, -3.2f, 1.0f, 6.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(32, 84).addBox(-3.5f, -14.0f, -3.0f, 7.0f, 6.0f, 6.0f).texOffs(24, 98).addBox(-0.5f, -15.0f, -3.2f, 1.0f, 6.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 66).addBox(-5.0f, 0.0f, -3.0f, 10.0f, 12.0f, 6.0f).texOffs(0, 27).addBox(-5.6f, 0.0f, -3.6f, 11.2f, 12.0f, 7.2f).texOffs(0, 47).addBox(-5.8f, 12.0f, -3.8f, 11.6f, 11.0f, 7.6f).texOffs(4, 0).addBox(-5.5f, 0.0f, 3.6f, 11.0f, 20.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(0, 84).addBox(-1.0f, -2.0f, -1.0f, 2.0f, 12.0f, 2.0f).texOffs(0, 98).addBox(-1.5f, -2.5f, -1.5f, 3.0f, 7.0f, 3.0f).texOffs(0, 0).addBox(-1.5f, -8.0f, -4.0f, 1.0f, 26.0f, 1.0f).texOffs(28, 98).addBox(-2.0f, -11.0f, -4.5f, 2.0f, 3.0f, 2.0f), PartPose.offset(-6.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(8, 84).addBox(-1.0f, -2.0f, -1.0f, 2.0f, 12.0f, 2.0f).texOffs(12, 98).addBox(-1.5f, -2.5f, -1.5f, 3.0f, 7.0f, 3.0f), PartPose.offset(6.0f, 2.0f, 0.0f));
@@ -852,7 +852,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 38).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 0).addBox(-4.6f, -8.6f, -4.6f, 9.2f, 9.2f, 9.2f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 0).addBox(-4.6f, -8.6f, -4.6f, 9.2f, 9.2f, 9.2f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(32, 38).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(0, 20).addBox(-4.6f, 0.0f, -2.6f, 9.2f, 12.0f, 5.2f).texOffs(32, 20).addBox(-4.8f, 12.0f, -2.8f, 9.6f, 11.0f, 5.6f).texOffs(16, 69).addBox(-4.0f, 9.0f, -2.4f, 8.0f, 1.0f, 0.4f).texOffs(8, 69).addBox(-5.0f, -3.0f, -1.0f, 1.0f, 2.0f, 1.0f).texOffs(0, 69).addBox(-4.0f, -4.5f, 0.0f, 1.0f, 3.0f, 1.0f).texOffs(48, 54).addBox(-3.0f, -6.0f, -1.0f, 1.0f, 4.0f, 1.0f).texOffs(12, 69).addBox(4.0f, -3.0f, -1.0f, 1.0f, 2.0f, 1.0f).texOffs(4, 69).addBox(3.0f, -4.5f, 0.0f, 1.0f, 3.0f, 1.0f).texOffs(52, 54).addBox(2.0f, -6.0f, -1.0f, 1.0f, 4.0f, 1.0f).texOffs(56, 54).addBox(3.0f, 10.0f, -4.0f, 2.0f, 2.0f, 2.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(0, 54).addBox(-2.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(12, 54).addBox(-1.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -881,7 +881,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 35).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f).texOffs(0, 62).addBox(-4.0f, -2.0f, -4.6f, 8.0f, 3.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 51).addBox(-4.5f, -9.5f, -4.5f, 9.0f, 2.0f, 9.0f).texOffs(36, 51).addBox(-4.5f, -8.0f, -6.5f, 9.0f, 1.0f, 3.0f).texOffs(18, 62).addBox(-1.0f, -10.0f, -5.2f, 2.0f, 2.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 51).addBox(-4.5f, -9.5f, -4.5f, 9.0f, 2.0f, 9.0f).texOffs(36, 51).addBox(-4.5f, -8.0f, -6.5f, 9.0f, 1.0f, 3.0f).texOffs(18, 62).addBox(-1.0f, -10.0f, -5.2f, 2.0f, 2.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 0).addBox(-5.0f, 0.0f, -3.0f, 10.0f, 12.0f, 6.0f).texOffs(32, 35).addBox(-4.5f, 3.0f, -3.6f, 9.0f, 13.0f, 0.6f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(32, 0).addBox(-4.0f, -2.0f, -2.5f, 5.0f, 12.0f, 5.0f), PartPose.offset(-6.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(0, 18).addBox(-1.0f, -2.0f, -2.5f, 5.0f, 12.0f, 5.0f), PartPose.offset(6.0f, 2.0f, 0.0f));
@@ -894,7 +894,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(32, 27).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(12, 60).addBox(-4.3f, -8.3f, 0.5f, 8.6f, 10.0f, 4.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(12, 60).addBox(-4.3f, -8.3f, 0.5f, 8.6f, 10.0f, 4.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 44).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(4, 0).addBox(-4.6f, 0.0f, -2.6f, 9.2f, 12.0f, 5.2f).texOffs(0, 27).addBox(-4.8f, 12.0f, -2.8f, 9.6f, 11.0f, 5.6f).texOffs(8, 75).addBox(-4.0f, 9.0f, -2.4f, 8.0f, 1.0f, 0.4f).texOffs(50, 60).addBox(-4.0f, 2.0f, -2.7f, 1.0f, 9.0f, 0.5f).texOffs(42, 60).addBox(-2.4f, 4.0f, -2.7f, 1.0f, 11.0f, 0.5f).texOffs(38, 60).addBox(-0.8f, 2.0f, -2.7f, 1.0f, 13.0f, 0.5f).texOffs(54, 60).addBox(0.8f, 4.0f, -2.7f, 1.0f, 9.0f, 0.5f).texOffs(46, 60).addBox(2.4f, 2.0f, -2.7f, 1.0f, 11.0f, 0.5f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(24, 44).addBox(-2.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f).texOffs(0, 0).addBox(-2.0f, -8.0f, -4.5f, 1.0f, 26.0f, 1.0f).texOffs(0, 75).addBox(-2.5f, -11.0f, -5.0f, 2.0f, 3.0f, 2.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(36, 44).addBox(-1.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -920,7 +920,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 94).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 0).addBox(-4.6f, -8.6f, -4.6f, 9.2f, 9.2f, 9.2f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 0).addBox(-4.6f, -8.6f, -4.6f, 9.2f, 9.2f, 9.2f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 59).addBox(-5.0f, 0.0f, -3.0f, 10.0f, 12.0f, 6.0f).texOffs(0, 20).addBox(-5.6f, 0.0f, -3.6f, 11.2f, 12.0f, 7.2f).texOffs(0, 40).addBox(-5.8f, 12.0f, -3.8f, 11.6f, 11.0f, 7.6f).texOffs(44, 94).addBox(-1.5f, 3.0f, -5.5f, 3.0f, 4.0f, 2.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(32, 59).addBox(-4.0f, -2.0f, -2.5f, 5.0f, 12.0f, 5.0f), PartPose.offset(-6.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(0, 77).addBox(-1.0f, -2.0f, -2.5f, 5.0f, 12.0f, 5.0f).texOffs(54, 94).addBox(-0.5f, 10.0f, -3.5f, 1.0f, 2.0f, 1.0f).texOffs(32, 94).addBox(-1.5f, 12.0f, -4.5f, 3.0f, 4.0f, 3.0f), PartPose.offset(6.0f, 2.0f, 0.0f));
@@ -933,7 +933,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(32, 27).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 78).addBox(-7.0f, -12.0f, -2.0f, 14.0f, 4.0f, 4.0f).texOffs(0, 59).addBox(-4.5f, -9.0f, -4.5f, 9.0f, 1.0f, 9.0f).texOffs(8, 86).addBox(-1.0f, -13.0f, -2.5f, 2.0f, 2.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 78).addBox(-7.0f, -12.0f, -2.0f, 14.0f, 4.0f, 4.0f).texOffs(0, 59).addBox(-4.5f, -9.0f, -4.5f, 9.0f, 1.0f, 9.0f).texOffs(8, 86).addBox(-1.0f, -13.0f, -2.5f, 2.0f, 2.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 27).addBox(-5.0f, 0.0f, -3.0f, 10.0f, 12.0f, 6.0f).texOffs(28, 0).addBox(-5.5f, 0.0f, -3.5f, 11.0f, 12.0f, 7.0f).texOffs(36, 78).addBox(-5.5f, 12.0f, 2.5f, 11.0f, 6.0f, 1.5f).texOffs(4, 0).addBox(-5.5f, 0.0f, 3.6f, 11.0f, 20.0f, 1.0f).texOffs(0, 69).addBox(-7.0f, -1.0f, -3.5f, 3.0f, 1.5f, 7.0f).texOffs(20, 69).addBox(4.0f, -1.0f, -3.5f, 3.0f, 1.5f, 7.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(0, 45).addBox(-1.0f, -2.0f, -1.0f, 2.0f, 12.0f, 2.0f).texOffs(36, 59).addBox(-1.5f, -2.5f, -1.5f, 3.0f, 7.0f, 3.0f).texOffs(0, 0).addBox(-1.5f, -8.0f, -4.0f, 1.0f, 26.0f, 1.0f).texOffs(0, 86).addBox(-2.0f, -11.0f, -4.5f, 2.0f, 3.0f, 2.0f), PartPose.offset(-6.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(8, 45).addBox(-1.0f, -2.0f, -1.0f, 2.0f, 12.0f, 2.0f).texOffs(48, 59).addBox(-1.5f, -2.5f, -1.5f, 3.0f, 7.0f, 3.0f), PartPose.offset(6.0f, 2.0f, 0.0f));
@@ -946,7 +946,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 21).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f).texOffs(46, 76).addBox(1.0f, -5.0f, -4.3f, 2.0f, 2.0f, 0.3f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 51).addBox(-6.0f, -9.0f, -6.0f, 12.0f, 1.0f, 12.0f).texOffs(0, 64).addBox(-4.5f, -11.5f, -4.5f, 9.0f, 3.0f, 9.0f).texOffs(22, 76).addBox(-5.5f, -10.5f, -6.5f, 11.0f, 2.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 51).addBox(-6.0f, -9.0f, -6.0f, 12.0f, 1.0f, 12.0f).texOffs(0, 64).addBox(-4.5f, -11.5f, -4.5f, 9.0f, 3.0f, 9.0f).texOffs(22, 76).addBox(-5.5f, -10.5f, -6.5f, 11.0f, 2.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(32, 21).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(20, 0).addBox(-4.5f, 0.0f, -2.5f, 9.0f, 12.0f, 5.0f).texOffs(0, 76).addBox(-4.5f, 12.0f, 1.5f, 9.0f, 6.0f, 1.5f).texOffs(0, 0).addBox(-4.5f, 0.0f, 2.6f, 9.0f, 20.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(56, 21).addBox(-1.0f, -2.0f, -1.0f, 2.0f, 12.0f, 2.0f).texOffs(36, 64).addBox(-1.5f, -2.5f, -1.5f, 3.0f, 7.0f, 3.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(0, 37).addBox(-1.0f, -2.0f, -1.0f, 2.0f, 12.0f, 2.0f).texOffs(48, 64).addBox(-1.5f, -2.5f, -1.5f, 3.0f, 7.0f, 3.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -959,7 +959,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 38).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 0).addBox(-4.6f, -8.6f, -4.6f, 9.2f, 9.2f, 9.2f).texOffs(4, 69).addBox(-4.4f, -6.0f, -4.9f, 8.8f, 7.0f, 0.4f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 0).addBox(-4.6f, -8.6f, -4.6f, 9.2f, 9.2f, 9.2f).texOffs(4, 69).addBox(-4.4f, -6.0f, -4.9f, 8.8f, 7.0f, 0.4f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(32, 38).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(0, 20).addBox(-4.6f, 0.0f, -2.6f, 9.2f, 12.0f, 5.2f).texOffs(32, 20).addBox(-4.8f, 12.0f, -2.8f, 9.6f, 11.0f, 5.6f).texOffs(24, 69).addBox(-4.0f, 9.0f, -2.4f, 8.0f, 1.0f, 0.4f).texOffs(60, 54).addBox(-4.0f, 2.0f, -2.7f, 1.0f, 9.0f, 0.5f).texOffs(52, 54).addBox(-2.4f, 4.0f, -2.7f, 1.0f, 11.0f, 0.5f).texOffs(48, 54).addBox(-0.8f, 2.0f, -2.7f, 1.0f, 13.0f, 0.5f).texOffs(0, 69).addBox(0.8f, 4.0f, -2.7f, 1.0f, 9.0f, 0.5f).texOffs(56, 54).addBox(2.4f, 2.0f, -2.7f, 1.0f, 11.0f, 0.5f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(0, 54).addBox(-2.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(12, 54).addBox(-1.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -972,7 +972,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 62).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(4, 0).addBox(-4.6f, -8.6f, -4.6f, 9.2f, 9.2f, 9.2f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(4, 0).addBox(-4.6f, -8.6f, -4.6f, 9.2f, 9.2f, 9.2f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 27).addBox(-5.0f, 0.0f, -3.0f, 10.0f, 12.0f, 6.0f).texOffs(32, 62).addBox(-4.5f, 3.0f, -3.6f, 9.0f, 13.0f, 0.6f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(32, 27).addBox(-4.0f, -2.0f, -2.5f, 5.0f, 12.0f, 5.0f).texOffs(0, 0).addBox(-3.0f, -8.0f, -5.5f, 1.0f, 26.0f, 1.0f).texOffs(52, 62).addBox(-3.5f, -11.0f, -6.0f, 2.0f, 3.0f, 2.0f), PartPose.offset(-6.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(0, 45).addBox(-1.0f, -2.0f, -2.5f, 5.0f, 12.0f, 5.0f), PartPose.offset(6.0f, 2.0f, 0.0f));
@@ -985,7 +985,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 45).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(4, 0).addBox(-4.6f, -8.6f, -4.6f, 9.2f, 9.2f, 9.2f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(4, 0).addBox(-4.6f, -8.6f, -4.6f, 9.2f, 9.2f, 9.2f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(32, 45).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(0, 27).addBox(-4.6f, 0.0f, -2.6f, 9.2f, 12.0f, 5.2f).texOffs(32, 27).addBox(-4.8f, 12.0f, -2.8f, 9.6f, 11.0f, 5.6f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(0, 61).addBox(-2.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f).texOffs(0, 0).addBox(-2.0f, -8.0f, -4.5f, 1.0f, 26.0f, 1.0f).texOffs(0, 76).addBox(-2.5f, -11.0f, -5.0f, 2.0f, 3.0f, 2.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(12, 61).addBox(-1.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f).texOffs(8, 76).addBox(-0.5f, 10.0f, -2.5f, 1.0f, 2.0f, 1.0f).texOffs(48, 61).addBox(-1.5f, 12.0f, -3.5f, 3.0f, 4.0f, 3.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -998,7 +998,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(28, 0).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 43).addBox(-7.0f, -12.0f, -2.0f, 14.0f, 4.0f, 4.0f).texOffs(0, 33).addBox(-4.5f, -9.0f, -4.5f, 9.0f, 1.0f, 9.0f).texOffs(44, 51).addBox(-1.0f, -13.0f, -2.5f, 2.0f, 2.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 43).addBox(-7.0f, -12.0f, -2.0f, 14.0f, 4.0f, 4.0f).texOffs(0, 33).addBox(-4.5f, -9.0f, -4.5f, 9.0f, 1.0f, 9.0f).texOffs(44, 51).addBox(-1.0f, -13.0f, -2.5f, 2.0f, 2.0f, 1.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(0, 17).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(0, 0).addBox(-4.5f, 0.0f, -2.5f, 9.0f, 12.0f, 5.0f).texOffs(36, 43).addBox(-4.5f, 12.0f, 1.5f, 9.0f, 6.0f, 1.5f).texOffs(0, 51).addBox(-6.0f, -1.0f, -2.5f, 3.0f, 1.5f, 5.0f).texOffs(16, 51).addBox(3.0f, -1.0f, -2.5f, 3.0f, 1.5f, 5.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(24, 17).addBox(-1.0f, -2.0f, -1.0f, 2.0f, 12.0f, 2.0f).texOffs(36, 33).addBox(-1.5f, -2.5f, -1.5f, 3.0f, 7.0f, 3.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(32, 17).addBox(-1.0f, -2.0f, -1.0f, 2.0f, 12.0f, 2.0f).texOffs(48, 33).addBox(-1.5f, -2.5f, -1.5f, 3.0f, 7.0f, 3.0f).texOffs(50, 51).addBox(-0.5f, 10.0f, -2.0f, 1.0f, 2.0f, 1.0f).texOffs(32, 51).addBox(-1.5f, 12.0f, -3.0f, 3.0f, 4.0f, 3.0f), PartPose.offset(5.0f, 2.0f, 0.0f));
@@ -1025,7 +1025,7 @@ public final class WorkshopModels {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition p0 = root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 18).addBox(-4.0f, -8.0f, -4.0f, 8.0f, 8.0f, 8.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
-        PartDefinition p1 = root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 49).addBox(-4.3f, -8.3f, 0.5f, 8.6f, 10.0f, 4.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
+        PartDefinition p1 = p0.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(0, 49).addBox(-4.3f, -8.3f, 0.5f, 8.6f, 10.0f, 4.0f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p2 = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(32, 18).addBox(-4.0f, 0.0f, -2.0f, 8.0f, 12.0f, 4.0f).texOffs(0, 0).addBox(-4.6f, 0.0f, -2.6f, 9.2f, 12.0f, 5.2f).texOffs(32, 0).addBox(-4.8f, 12.0f, -2.8f, 9.6f, 11.0f, 5.6f).texOffs(46, 49).addBox(-4.0f, 9.0f, -2.4f, 8.0f, 1.0f, 0.4f).texOffs(38, 49).addBox(-4.0f, 2.0f, -2.7f, 1.0f, 9.0f, 0.5f).texOffs(30, 49).addBox(-2.4f, 4.0f, -2.7f, 1.0f, 11.0f, 0.5f).texOffs(26, 49).addBox(-0.8f, 2.0f, -2.7f, 1.0f, 13.0f, 0.5f).texOffs(42, 49).addBox(0.8f, 4.0f, -2.7f, 1.0f, 9.0f, 0.5f).texOffs(34, 49).addBox(2.4f, 2.0f, -2.7f, 1.0f, 11.0f, 0.5f), PartPose.offset(0.0f, 0.0f, 0.0f));
         PartDefinition p3 = root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(0, 34).addBox(-2.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), PartPose.offset(-5.0f, 2.0f, 0.0f));
         PartDefinition p4 = root.addOrReplaceChild("left_arm", CubeListBuilder.create().texOffs(12, 34).addBox(-1.0f, -2.0f, -1.5f, 3.0f, 12.0f, 3.0f), PartPose.offset(5.0f, 2.0f, 0.0f));

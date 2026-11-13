@@ -67,11 +67,11 @@ jobs:
         run: |
           set +e
           sudo apt-get update -q > /dev/null 2>&1
-          sudo apt-get install -y -q xvfb libgl1-mesa-dri libegl1 imagemagick > /dev/null 2>&1
+          sudo apt-get install -y -q xvfb libgl1-mesa-dri libglx-mesa0 libegl-mesa0 mesa-vulkan-drivers mesa-utils imagemagick > /dev/null 2>&1
           mkdir -p ci-out run/saves && rm -rf run/saves/smoke && cp -r run/world run/saves/smoke
           printf 'onboardAccessibility:false\nnarrator:0\ntutorialStep:none\nskipMultiplayerWarning:true\nrenderDistance:6\n' > run/options.txt
-          export LIBGL_ALWAYS_SOFTWARE=1
-          (xvfb-run -n 99 -s "-screen 0 1280x720x24" timeout 480 ./gradlew runClient --no-daemon --args="--quickPlaySingleplayer smoke" > client-run.log 2>&1 &)
+          export LIBGL_ALWAYS_SOFTWARE=1 MESA_GL_VERSION_OVERRIDE=4.6 MESA_GLSL_VERSION_OVERRIDE=460
+          (xvfb-run -n 99 -s "-screen 0 1280x720x24 +extension GLX +render -noreset" timeout 480 ./gradlew runClient --no-daemon --args="--quickPlaySingleplayer smoke" > client-run.log 2>&1 &)
           for i in $(seq 1 90); do
             if grep -q "joined the game\|Crash report\|BUILD FAILED" client-run.log run/logs/latest.log 2>/dev/null; then break; fi
             sleep 5
